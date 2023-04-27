@@ -1,0 +1,1027 @@
+[
+    {
+        "name": "The Simple Lords",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Nova",
+            "faction": "Uterra",
+            "abilities": {
+                "Nova's Dominion": "Play up to two Wisp <b>Minions</b>.",
+                "Nova's Wrath": "Give one of your creatures +6A. \n \n If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature.",
+                "Nova's Might": "Give your creatures +5A,+5H."
+            }
+        },
+        "cards": [
+            "Combat Matriarch",
+            "Druid's Chant",
+            "Feral Instinct",
+            "Hibernating Decayasaur",
+            "Lysian Rain",
+            "Regenerating Packmaster",
+            "Shardplate Delver",
+            "Toorgmai Guardian",
+            "Venerable Basher",
+            "Vine Lash"
+        ]
+    },
+    {
+        "name": "The Fire Breathers of the Heartseeker",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Sunder",
+            "faction": "Tempys",
+            "abilities": {
+                "Summon the Swarm": "Play up to two Spell Sprite <b>Minions</b>.",
+                "Gathering Storm": "When you play a spell this turn, deal 5 damage to a creature or player.",
+                "Stim bolt": "Play a spell for <b>Free</b>."
+            }
+        },
+        "cards": [
+            "Abetting Warstoker",
+            "Assailing Lasher",
+            "Conflagrate",
+            "Everflame Phoenix",
+            "Flamebreak Invoker",
+            "Pyre Song",
+            "Raging Adept",
+            "Thundersaur",
+            "Turnabout",
+            "Undeati"
+        ]
+    },
+    {
+        "name": "Army of Alpha and Curing",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Nova",
+            "faction": "Uterra",
+            "abilities": {
+                "Nova's Might": "Give your creatures +2A,+2H.",
+                "Nova's Dominion": "Play an Oakfather <b>Minion</b>.",
+                "Nova's Wrath": "Give one of your creatures +8A. \n \n If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature."
+            }
+        },
+        "cards": [
+            "Druid's Chant",
+            "Grove Mother",
+            "Lead the Charge",
+            "Rooted Mantis",
+            "Shifting Keeper",
+            "Shroudthorn Splicer",
+            "Stampeding Bartok",
+            "Stouthide Stegadon",
+            "Toorgmai Guardian",
+            "Vine Lash"
+        ]
+    },
+    {
+        "name": "The Mothers of the Plutonium Echo",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Ironbeard",
+            "faction": "Alloyin",
+            "abilities": {
+                "Knockback": "Move a creature to the back row of its lane. You may give it -5A.",
+                "Reinforce": "Give a creature +8A. This turn, it gets 8D.",
+                "Intimidate": "Set a creature's A to 0."
+            }
+        },
+        "cards": [
+            "Armored Technohulk",
+            "Brightsteel Sentinel",
+            "Charge Plated Techtician",
+            "Drix",
+            "Epoch Soldier",
+            "Forcefield",
+            "Forgeplate Yeti",
+            "Lucid Echoes",
+            "Recycling Captain",
+            "Synapse Sentry"
+        ]
+    },
+    {
+        "name": "The Hurting Demons Larvae",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Nix Nekyia",
+            "faction": "Nekrium",
+            "abilities": {
+                "Army of the Damned": "Play up to two Mindless Zombies <b>Minions</b>.",
+                "Soulrip": "Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.",
+                "Raising Dead": "You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +6A."
+            }
+        },
+        "cards": [
+            "Blight Witch",
+            "Camouflaged Skeleton",
+            "Combat Spectre",
+            "Hematophagic Moeba",
+            "Spiritleash",
+            "Spitemaiden",
+            "Steadfast Fiend",
+            "Steadfast Spirit",
+            "Vyric's Embrace",
+            "Xrath's Will"
+        ]
+    },
+    {
+        "name": "The Aunts of Bleeding Brightsteel",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Steel Rosetta",
+            "faction": "Alloyin",
+            "abilities": {
+                "Repurpose": "Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",
+                "Enhance": "Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.",
+                "Inspire": "This has the [l4] ability of your unused Forgeborn."
+            }
+        },
+        "cards": [
+            "Apocymancer",
+            "Armored Inventor",
+            "Combat Warcharger",
+            "Electronet",
+            "Energy Prison",
+            "Nanoswarm",
+            "Palladium Pulsemage",
+            "Stout Assassin",
+            "Suppressing Operator",
+            "War Machine"
+        ]
+    },
+    {
+        "name": "The Liches of Rebirth and Duskmaw",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Nix Nekyia",
+            "faction": "Nekrium",
+            "abilities": {
+                "Raising Dead": "You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +2A.",
+                "Dark Summoning": "Play a [l1] creature from your discard pile for <b>Free</b>.",
+                "Army of the Damned": "Play up to one Zombie Brute <b>Minion</b> in each lane."
+            }
+        },
+        "cards": [
+            "Broodfang",
+            "Cercee's Call",
+            "Grimgaunt Predator",
+            "Hibernating Spectre",
+            "Indomitable Fiend",
+            "Lyria",
+            "Scourge Hydra",
+            "Vyric's Embrace",
+            "Xithian Dreadmaw",
+            "Xrath's Will"
+        ]
+    },
+    {
+        "name": "The Fortelling Aggravating Ticklers",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Korok",
+            "faction": "Tempys",
+            "abilities": {
+                "Lightning Speed": "Give your creatures +2A. This turn, they get <b>Aggressive</b>.",
+                "Whirlwind": "Give a creature +6A and move it to any lane.",
+                "Demolish": "Destroy a creature with decreased H."
+            }
+        },
+        "cards": [
+            "Arrogant Icecrusher",
+            "Assailing Wurm",
+            "Burnout",
+            "Chant of Umbruk",
+            "Firefist Uranti",
+            "Flame Jet",
+            "Sparking Stormling",
+            "Stampeding Mystic",
+            "Stone Skin",
+            "Uranti Elementalist"
+        ]
+    },
+    {
+        "name": "The Opening Sisters Liches",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Cercee",
+            "faction": "Nekrium",
+            "abilities": {
+                "Deathtouch": "Destroy a [l1] creature.",
+                "Life Drain": "Deal 6 damage to a creature. You gain 6H.",
+                "Soul Syphon": "Destroy one of your creatures to give a creature +12A,+12H."
+            }
+        },
+        "cards": [
+            "Arrogant Geist",
+            "Blight Witch",
+            "Commanding Slime",
+            "Devouring Harvester",
+            "Dr. Frankenbaum",
+            "Dreadbolt",
+            "Necrovive",
+            "Ossuary Mech",
+            "Portal Shade",
+            "Spiritleash"
+        ]
+    },
+    {
+        "name": "Vindicators of Sobbing and Baking",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Sunder",
+            "faction": "Tempys",
+            "abilities": {
+                "Summon the Swarm": "Play up to two Spell Sprite <b>Minions</b>.",
+                "Gathering Storm": "When you play a spell this turn, deal 5 damage to a creature or player.",
+                "Stim bolt": "Play a spell for <b>Free</b>."
+            }
+        },
+        "cards": [
+            "Blizzard Shaman",
+            "Combat Glider",
+            "Druid's Chant",
+            "Firestorm",
+            "Hibernating Mystic",
+            "Ice Storm",
+            "Inflaming Wrecks",
+            "Staff of Vaerus",
+            "Undeati",
+            "Unstable Stonefist"
+        ]
+    },
+    {
+        "name": "Brigade of Druid and Weird",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Nova",
+            "faction": "Uterra",
+            "abilities": {
+                "Nova's Might": "Give your creatures +2A,+2H.",
+                "Nova's Wrath": "Give one of your creatures +6A. \n \n If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature.",
+                "Nova's Dominion": "Play up to two Oakfather <b>Minions</b>."
+            }
+        },
+        "cards": [
+            "Camouflaged Hunter",
+            "Chrogias",
+            "Glowhive Siren",
+            "Leyline Vermin",
+            "Magnivorous Ranger",
+            "Primal Surge",
+            "Shroudthorn Splicer",
+            "Soothing Raptor",
+            "Uterradon Mauler",
+            "Vine Lash"
+        ]
+    },
+    {
+        "name": "Sparky's Attentive Combatants",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Steel Rosetta",
+            "faction": "Alloyin",
+            "abilities": {
+                "Tinker": "Play up to two Gizmo <b>Minions</b>.",
+                "Repurpose": "Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",
+                "Inspire": "This has the [l4] ability of your unused Forgeborn."
+            }
+        },
+        "cards": [
+            "Aetherforge Oracle",
+            "Arrogant Captain",
+            "Bolstering Justicar",
+            "Combat Virtuoso",
+            "Energy Prison",
+            "Epoch Hawk",
+            "Nanoswarm",
+            "Palladium Simulacrum",
+            "Taunting Prophet",
+            "Tech Upgrade"
+        ]
+    },
+    {
+        "name": "The Raiders of Hound and Mask",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Cercee",
+            "faction": "Nekrium",
+            "abilities": {
+                "Soul Syphon": "Destroy one of your creatures to give a creature +5A,+5H.",
+                "Army Commander": "<b>Upgrade</b> up to two cards in your discard pile, then return one of them to your hand.",
+                "Deathtouch": "Destroy a creature."
+            }
+        },
+        "cards": [
+            "Bonescythe Reaver",
+            "Combat Apparition",
+            "Dreadbolt",
+            "Hibernating Summoner",
+            "Indomitable Fiend",
+            "Infernal Ritual",
+            "Necrovive",
+            "Sigmund Fraud",
+            "Spiritleash",
+            "Vampiric Slime"
+        ]
+    },
+    {
+        "name": "The Serious Silver Soldiers",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Ironbeard",
+            "faction": "Alloyin",
+            "abilities": {
+                "Intimidate": "Set a creature's A to 0.",
+                "Shields Up": "You and your creatures get 6D this turn.",
+                "Knockback": "Move up to two creatures to the back row of their lanes. You may give them -10A."
+            }
+        },
+        "cards": [
+            "Aegis Wings",
+            "Arrogant Scavenger",
+            "Energy Prison",
+            "Forcefield",
+            "Forgeplate Yeti",
+            "Oreian Battledroid",
+            "Protective Warcharger",
+            "Sonic Burst",
+            "Stout Justicar",
+            "War Machine"
+        ]
+    },
+    {
+        "name": "The Sorcerers of the Oratek Eruptor",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Sunder",
+            "faction": "Tempys",
+            "abilities": {
+                "Stim bolt": "Play a spell for <b>Free</b>.",
+                "Summon the Swarm": "Play a Spell Swarm <b>Minion</b>.",
+                "Gathering Storm": "When you play a spell this turn, deal 8 damage to a creature or player."
+            }
+        },
+        "cards": [
+            "Burnout",
+            "Chaining Giant",
+            "Freezing Omni",
+            "Ice Storm",
+            "Inflaming Invokist",
+            "Lightning Spark",
+            "Primordial Slam",
+            "Raging Lasher",
+            "Staff of Vaerus",
+            "Undeati"
+        ]
+    },
+    {
+        "name": "The Farmers of the Spiky Tunnels",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Oros",
+            "faction": "Uterra",
+            "abilities": {
+                "Shapeshift": "Give a creature +3A,+3H and it has all creature types this turn.",
+                "Growth Aura": "Give your creautures +4H. You gain 4H.",
+                "Barkskin": "Give up to two of your creatures 12D this turn."
+            }
+        },
+        "cards": [
+            "Esperian Steelplate",
+            "Ferocious Wartusk",
+            "Grove Mother",
+            "Mystical Keeper",
+            "Shardplate Delver",
+            "Shifting Basher",
+            "Shifting Decayasaur",
+            "Summoning Council",
+            "Talisan",
+            "Toxic Spores"
+        ]
+    },
+    {
+        "name": "The Sixth Barb Band",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Cercee",
+            "faction": "Nekrium",
+            "abilities": {
+                "Soul Syphon": "Destroy one of your creatures to give a creature +5A,+5H.",
+                "Life Drain": "Deal 6 damage to a creature. You gain 6H.",
+                "Deathtouch": "Destroy a creature."
+            }
+        },
+        "cards": [
+            "Combat Walker",
+            "Epidemic",
+            "Ghoulish Reaper",
+            "Gloomreaper Hag",
+            "Group Meal",
+            "Indomitable Fiend",
+            "Infernal Ritual",
+            "Scourge Hydra",
+            "Soulreap",
+            "Spirit Reaver"
+        ]
+    },
+    {
+        "name": "The Masters of Swearing",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Korok",
+            "faction": "Tempys",
+            "abilities": {
+                "Whirlwind": "Give a creature +4A and move it to any lane.",
+                "Flame Strike": "Deal 8 damage to a creature.",
+                "Demolish": "Destroy a creature with decreased H."
+            }
+        },
+        "cards": [
+            "Blizzard Shaman",
+            "Chant of Umbruk",
+            "Lightning Spark",
+            "Raging Mystic",
+            "Summoning Warhound",
+            "Thundersaur",
+            "Turnabout",
+            "Unstable Master",
+            "Venerable Wurm",
+            "Windspark Elemental"
+        ]
+    },
+    {
+        "name": "The Quantums of Metal and Faith",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Steel Rosetta",
+            "faction": "Alloyin",
+            "abilities": {
+                "Enhance": "Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.",
+                "Repurpose": "Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",
+                "Tinker": "Play up to two Mega Gizmo <b>Minions</b>."
+            }
+        },
+        "cards": [
+            "Adaptive Sculptor",
+            "Aegis Knight",
+            "Aegis Wings",
+            "Drix",
+            "Electronet",
+            "Epoch Soldier",
+            "Heavy Artillery",
+            "Salvage Operator",
+            "Venerable Virtuoso",
+            "Voltaic Prophet"
+        ]
+    },
+    {
+        "name": "The Phalanx of Everflow Treefolk",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Oros",
+            "faction": "Uterra",
+            "abilities": {
+                "Barkskin": "Give up to two of your creatures 4D this turn.",
+                "Growth Aura": "Give your creautures +4H. You gain 4H.",
+                "Shapeshift": "Give a creature +10A,+10H and it has all creature types this turn."
+            }
+        },
+        "cards": [
+            "Arrogant Bartok",
+            "Botanimate",
+            "Dendrify",
+            "Esperian Steelplate",
+            "Ferocious Packmaster",
+            "Mystical Rex",
+            "Relentless Wanderers",
+            "Savage Oath",
+            "Swampmoss Lurker",
+            "Toorgmai Guardian"
+        ]
+    },
+    {
+        "name": "The Champions of the Whisker",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Nova",
+            "faction": "Uterra",
+            "abilities": {
+                "Nova's Might": "Give your creatures +2A,+2H.",
+                "Nova's Touch": "Choose a [l1] or [l2] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.",
+                "Nova's Wrath": "Give one of your creatures +8A. \n \n If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature."
+            }
+        },
+        "cards": [
+            "Arrogant Mantis",
+            "Chrogias",
+            "Everflow Eidolon",
+            "Feral Instinct",
+            "Lysian Rain",
+            "Pack's Blessing",
+            "Roaring Druid",
+            "Shroudthorn Splicer",
+            "Soothing Decayasaur",
+            "Stouthide Stegadon"
+        ]
+    },
+    {
+        "name": "The Overseers of Sparky",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Steel Rosetta",
+            "faction": "Alloyin",
+            "abilities": {
+                "Tinker": "Play up to two Gizmo <b>Minions</b>.",
+                "Enhance": "Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.",
+                "Repurpose": "Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it."
+            }
+        },
+        "cards": [
+            "Charge Plated Warcharger",
+            "Combat Techtician",
+            "Energy Surge",
+            "Forcefield",
+            "Metasight",
+            "Palladium Pulsemage",
+            "Protective Scavenger",
+            "Salvage Tinker",
+            "Stout Justicar",
+            "Suppressing Prophet"
+        ]
+    },
+    {
+        "name": "Doctors of Tatoo and Comparing",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Korok",
+            "faction": "Tempys",
+            "abilities": {
+                "Whirlwind": "Give a creature +4A and move it to any lane.",
+                "Demolish": "Destroy a creature with decreased H.",
+                "Lightning Speed": "Give your creatures +4A. This turn, they get <b>Aggressive</b>."
+            }
+        },
+        "cards": [
+            "Conflagrate",
+            "Ice Storm",
+            "Lightning Tamer",
+            "Piercing Mystic",
+            "Raging Wurm",
+            "Staff of Vaerus",
+            "Stout Spellknight",
+            "Thundersaur",
+            "Venerable Lasher",
+            "Yeti Warcaller"
+        ]
+    },
+    {
+        "name": "The Savants of the Ending Predator",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Nix Nekyia",
+            "faction": "Nekrium",
+            "abilities": {
+                "Raising Dead": "You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +2A.",
+                "Army of the Damned": "Play up to two Zombie Brute <b>Minions</b>.",
+                "Soulrip": "Destroy one of your creatures to play a creature for <b>Free</b>."
+            }
+        },
+        "cards": [
+            "Bonescythe Reaver",
+            "Camouflaged Demon",
+            "Darkheart Sorcerer",
+            "Dreadbolt",
+            "Ghastly Renewal",
+            "Gloomreaper Hag",
+            "Ossuary Mech",
+            "Sigmund Fraud",
+            "Varna's Pact",
+            "Venerable Spectre"
+        ]
+    },
+    {
+        "name": "The Hermit Spiders",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Nova",
+            "faction": "Uterra",
+            "abilities": {
+                "Nova's Touch": "Choose a [l1] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.",
+                "Nova's Might": "Give your creatures +3A,+3H.",
+                "Nova's Dominion": "Play up to two Oakfather <b>Minions</b>."
+            }
+        },
+        "cards": [
+            "Combat Basher",
+            "Forge Seal",
+            "Glowhive Siren",
+            "Grove Mother",
+            "Lead the Charge",
+            "Mystical Tanglesprout",
+            "Shardplate Delver",
+            "Shifting Batterhide",
+            "Shroudthorn Splicer",
+            "Uterra Charger"
+        ]
+    },
+    {
+        "name": "The Host of the Confident Miracles",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Sunder",
+            "faction": "Tempys",
+            "abilities": {
+                "Gathering Storm": "When you play a spell this turn, deal 3 damage to a creature or player.",
+                "Stim bolt": "Play a spell for <b>Free</b>.",
+                "Ice Armor": "You and one of your creatures get 15D this turn."
+            }
+        },
+        "cards": [
+            "Arrogant Stormling",
+            "Fleet Warstoker",
+            "Lightning Brand",
+            "Primordial Slam",
+            "Pyre Song",
+            "Pyromantic Colossus",
+            "Reckless Mystic",
+            "Sparking Stonefist",
+            "Stampeding Mongosaur",
+            "Steadfast Giant"
+        ]
+    },
+    {
+        "name": "The King Varna Generals",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Cercee",
+            "faction": "Nekrium",
+            "abilities": {
+                "Soul Syphon": "Destroy one of your creatures to give a creature +5A,+5H.",
+                "Deathtouch": "Destroy a [l1] or [l2] creature.",
+                "Army Commander": "<b>Upgrade</b> a card in your discard pile up to two times. Then, you may play it for <b>Free</b>."
+            }
+        },
+        "cards": [
+            "Camouflaged Spirit",
+            "Cutthroat Slime",
+            "Dreadbolt",
+            "Gloomreaper Hag",
+            "Indomitable Fiend",
+            "Omnomnom",
+            "Raging Demon",
+            "Spiritleash",
+            "Xithian Dreadmaw",
+            "Zimus"
+        ]
+    },
+    {
+        "name": "The Pondering Iron Advisers",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Ironbeard",
+            "faction": "Alloyin",
+            "abilities": {
+                "Reinforce": "Give a creature +4A. This turn, it gets 4D.",
+                "Intimidate": "Set a creature's A to 0.",
+                "Knockback": "Move up to two creatures to the back row of their lanes. You may give them -10A."
+            }
+        },
+        "cards": [
+            "Brightsteel Gargoyle",
+            "Brightsteel Sentinel",
+            "Combat Assassin",
+            "Drix",
+            "Energy Surge",
+            "Forcefield",
+            "Lucid Echoes",
+            "Palladium Pulsemage",
+            "Reinforced Warcharger",
+            "Spiritforge Sentinel"
+        ]
+    },
+    {
+        "name": "The Company of Botany",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Oros",
+            "faction": "Uterra",
+            "abilities": {
+                "Barkskin": "Give up to two of your creatures 4D this turn.",
+                "Darkforge Drain": "Give a creature +2A,+2H for each spell in your banish pile.",
+                "Shapeshift": "Give a creature +10A,+10H and it has all creature types this turn."
+            }
+        },
+        "cards": [
+            "Chrogias",
+            "Feral Instinct",
+            "Glowhive Siren",
+            "Pack Decayasaur",
+            "Shroudthorn Splicer",
+            "Spring Dryad",
+            "Stampeding Druid",
+            "Stampeding Slayer",
+            "Toxic Spores",
+            "Vine Lash"
+        ]
+    },
+    {
+        "name": "The Raiders of Leading Capitals",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Ironbeard",
+            "faction": "Alloyin",
+            "abilities": {
+                "Shields Up": "You and your creatures get 4D this turn.",
+                "Intimidate": "Set a creature's A to 0.",
+                "Reinforce": "Give a creature +12A. This turn, it gets 12D."
+            }
+        },
+        "cards": [
+            "Aegis Knight",
+            "Brightsteel Sentinel",
+            "Charge Plated Assassin",
+            "Cypien Experimentation",
+            "Electronet",
+            "Energy Prison",
+            "Energy Surge",
+            "Epoch Soldier",
+            "Oreian Battledroid",
+            "Warmonger Mod"
+        ]
+    },
+    {
+        "name": "The Monks of the Great Quitting Fire",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Sunder",
+            "faction": "Tempys",
+            "abilities": {
+                "Gathering Storm": "When you play a spell this turn, deal 3 damage to a creature or player.",
+                "Summon the Swarm": "Play a Spell Swarm <b>Minion</b>.",
+                "Ice Armor": "You and one of your creatures get 15D this turn."
+            }
+        },
+        "cards": [
+            "Conflagrate",
+            "Firefist Uranti",
+            "Flamebreak Invoker",
+            "Flameshaper Savant",
+            "Inflaming Stormling",
+            "Rimehorn Charger",
+            "Scorchmane Dragon",
+            "Undeati",
+            "Venerable Icecrusher",
+            "Windspark Elemental"
+        ]
+    },
+    {
+        "name": "The Mice of the Fierce Fur",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Oros",
+            "faction": "Uterra",
+            "abilities": {
+                "Darkforge Drain": "Give a creature +2A,+2H for each spell in your banish pile.",
+                "Growth Aura": "Give your creautures +4H. You gain 4H.",
+                "Shapeshift": "Give a creature +10A,+10H and it has all creature types this turn."
+            }
+        },
+        "cards": [
+            "Botanimate",
+            "Chrogias",
+            "Combat Ranger",
+            "Grave Pact",
+            "Leyline Vermin",
+            "Naptime",
+            "Pack's Blessing",
+            "Roaring Featherfang",
+            "Spring Dryad",
+            "Uterra Charger"
+        ]
+    },
+    {
+        "name": "The Senseis who became Champs",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Korok",
+            "faction": "Tempys",
+            "abilities": {
+                "Demolish": "Destroy a creature with decreased H.",
+                "Lightning Speed": "Give your creatures +3A. This turn, they get <b>Aggressive</b>.",
+                "Whirlwind": "Give a creature +8A and move it to any lane."
+            }
+        },
+        "cards": [
+            "Combat Icecrusher",
+            "Firefist Uranti",
+            "Lightning Brand",
+            "Lightning Spark",
+            "Reckless Breaker",
+            "Reckless Invokist",
+            "Rimehorn Charger",
+            "Stone Skin",
+            "Venerable Razortooth",
+            "Volcanic Glider"
+        ]
+    },
+    {
+        "name": "The Protectors of the Saving Herbs",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Ironbeard",
+            "faction": "Alloyin",
+            "abilities": {
+                "Knockback": "Move a creature to the back row of its lane. You may give it -5A.",
+                "Shields Up": "You and your creatures get 6D this turn.",
+                "Intimidate": "Set a creature's A to 0."
+            }
+        },
+        "cards": [
+            "Aegis Knight",
+            "Aetherforge Oracle",
+            "Brightsteel Sentinel",
+            "Charge Plated Technohulk",
+            "Drix",
+            "Electronet",
+            "Heavy Artillery",
+            "Spiritforge Sentinel",
+            "Steeleye Researcher",
+            "Tech Upgrade"
+        ]
+    },
+    {
+        "name": "The Crossing Soul Hags",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Cercee",
+            "faction": "Nekrium",
+            "abilities": {
+                "Deathtouch": "Destroy a [l1] creature.",
+                "Army Commander": "<b>Upgrade</b> up to two cards in your discard pile, then return one of them to your hand.",
+                "Life Drain": "Deal 8 damage to a creature. You gain 8H."
+            }
+        },
+        "cards": [
+            "Dreadbolt",
+            "Epidemic",
+            "Ghoulish Moeba",
+            "Grimgaunt Predator",
+            "Howl of Xith",
+            "Necrotic Drake",
+            "Ossuary Mech",
+            "Raging Apparition",
+            "Scourge Hydra",
+            "Sigmund Fraud"
+        ]
+    },
+    {
+        "name": "The Professing Watchdogs",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Ironbeard",
+            "faction": "Alloyin",
+            "abilities": {
+                "Knockback": "Move a creature to the back row of its lane. You may give it -5A.",
+                "Reinforce": "Give a creature +8A. This turn, it gets 8D.",
+                "Shields Up": "You and your creatures get 10D this turn."
+            }
+        },
+        "cards": [
+            "Aetherforge Oracle",
+            "Brightsteel Sentinel",
+            "Charge Plated Inventor",
+            "Charge Plated Techtician",
+            "Combat Warcharger",
+            "Energy Prison",
+            "Lucid Echoes",
+            "Oreian Battledroid",
+            "Steadfast Drone",
+            "Stout Technohulk"
+        ]
+    },
+    {
+        "name": "The Group of Brass Conspiracies",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Nix Nekyia",
+            "faction": "Nekrium",
+            "abilities": {
+                "Raising Dead": "You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +2A.",
+                "Army of the Damned": "Play up to two Zombie Brute <b>Minions</b>.",
+                "Soulrip": "Destroy one of your creatures to play a creature for <b>Free</b>."
+            }
+        },
+        "cards": [
+            "Broodfang",
+            "Infernal Ritual",
+            "Necrotic Slime",
+            "Raging Apparition",
+            "Raging Moeba",
+            "Spirit Reaver",
+            "Spiritleash",
+            "Spite Hydra",
+            "Vyric's Embrace",
+            "Xrath's Will"
+        ]
+    },
+    {
+        "name": "The Fleeing Feasting Brother Flock",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Nova",
+            "faction": "Uterra",
+            "abilities": {
+                "Nova's Dominion": "Play up to two Wisp <b>Minions</b>.",
+                "Nova's Wrath": "Give one of your creatures +6A. \n \n If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature.",
+                "Nova's Might": "Give your creatures +5A,+5H."
+            }
+        },
+        "cards": [
+            "Glowhive Siren",
+            "Kindred Wartusk",
+            "Pack Reveler",
+            "Savage Oath",
+            "Shifting Scavenger",
+            "Spring Dryad",
+            "Summoning Council",
+            "Uterra Charger",
+            "Uterradon Mauler",
+            "Vine Lash"
+        ]
+    },
+    {
+        "name": "The Squadron of the Fire",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Sunder",
+            "faction": "Tempys",
+            "abilities": {
+                "Gathering Storm": "When you play a spell this turn, deal 3 damage to a creature or player.",
+                "Stim bolt": "Play a spell for <b>Free</b>.",
+                "Summon the Swarm": "Play up to two Spell Swarm <b>Minions</b>."
+            }
+        },
+        "cards": [
+            "Conflagrate",
+            "Everflame Aura",
+            "Everflame Phoenix",
+            "Flamebreak Invoker",
+            "Reckless Glider",
+            "Stampeding Mongosaur",
+            "Stout Stormling",
+            "Thundersaur",
+            "Thunderstomper",
+            "Undeati"
+        ]
+    },
+    {
+        "name": "The Imps of Descending Chiron",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Cercee",
+            "faction": "Nekrium",
+            "abilities": {
+                "Life Drain": "Deal 4 damage to a creature. You gain 4H.",
+                "Soul Syphon": "Destroy one of your creatures to give a creature +8A,+8H.",
+                "Deathtouch": "Destroy a creature."
+            }
+        },
+        "cards": [
+            "Camouflaged Reaper",
+            "Corrupt Shambler",
+            "Ossuary Mech",
+            "Shambling Skeleton",
+            "Sigmund Fraud",
+            "Stout Drake",
+            "Vampiric Spirit",
+            "Venerable Fiend",
+            "Vyric's Embrace",
+            "Xithian Dreadmaw"
+        ]
+    },
+    {
+        "name": "Outfit of Camping and Waving",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Oros",
+            "faction": "Uterra",
+            "abilities": {
+                "Growth Aura": "Give your creautures +3H. You gain 3H.",
+                "Barkskin": "Give up to two of your creatures 8D this turn.",
+                "Darkforge Drain": "Give a creature +2A,+2H for each spell in your banish pile."
+            }
+        },
+        "cards": [
+            "Combat Mantis",
+            "Combat Polymorpher",
+            "Esperian Steelplate",
+            "Feral Instinct",
+            "Hibernating Bear",
+            "Lead the Charge",
+            "Leyline Vermin",
+            "Naptime",
+            "Regenerating Slayer",
+            "Savage Oath"
+        ]
+    }
+]

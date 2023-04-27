@@ -27,9 +27,9 @@ Synerginary = {
 
             "DAMAGE"      :  [ 1.0,    ["Decreased Health Synergy" ],[ "Damage"                 ]],                
             "SELFDAMAGE"  :  [ 0.5,    ["Self Damage Payoff"       ],[ "Self Damage Activator"  ]],                
-            "DESTRUCTION" :  [ 1.0,    ["Destruction Synergy"      ],[ "Destruction Activator"  ]],
-            "REANIMATE"   :  [ 1.0,    ["Reanimate Activator"      ],[ "Deploy","Activate"      ]],
-            "REANIMATOR"  :  [ 0.75,   ["Destruction Activator"    ],[ "Reanimate"              ]],
+            "DESTRUCTION" :  [ 1.0,    ["Destruction Synergy","Minion","Reanimate"],[ "Destruction Activator"  ]],
+            #"REANIMATE"   :  [ 1.0,    ["Reanimate Activator"      ],[ "Deploy","Activate"      ]],
+            #"REANIMATOR"  :  [ 0.75,   ["Destruction Activator"    ],[ "Reanimate"              ]],
             #"AGGRESSIVEATTACK" :  [ 0.5,  ["Stat Buff", "Attack Buff"],["Aggressive","Aggressive Giver"     ]],    
             #"STEALTHATTACK"    :  [ 0.5,  ["Stealth","Stealth Giver"           ],["Stat Buff", "Attack Buff"]],    
             #"BREAKTHROUGH"     :  [ 0.5,  ["Breakthrough","Breakthrough Giver" ],["Stat Buff", "Attack Buff"]],
@@ -64,6 +64,14 @@ class SynergyTemplate:
     def get_synergies_by_source_tag(self, tag):
         return [synergy for synergy in self.synergies.values() if tag in synergy.source_tags]
     
+    def get_source_tags_by_synergy(self, synergyname):
+        synergy = self.get_synergy_by_name(synergyname)
+        return synergy.source_tags
+
+    def get_target_tags_by_synergy(self, synergyname):
+        synergy = self.get_synergy_by_name(synergyname)
+        return synergy.target_tags
+
     def get_source_tags(self):
         source_tags = set()
         for synergy in self.synergies.values():

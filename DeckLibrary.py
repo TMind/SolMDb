@@ -1,10 +1,10 @@
 import Card_Library
 from Synergy import SynergyTemplate
 
-def create_fusions(deck1, deck2):
-    deck1 = Fusion(deck1, deck2, deck1.forgeborn)
-    deck2 = Fusion(deck2, deck1, deck2.forgeborn)
-    return (deck1, deck2)
+#def create_fusions(deck1, deck2):
+#    deck1 = Fusion(deck1, deck2, deck1.forgeborn)
+#    deck2 = Fusion(deck2, deck1, deck2.forgeborn)
+#    return (deck1, deck2)
 
 class DeckLibrary:
     def __init__(self, decks):
@@ -38,14 +38,6 @@ class DeckLibrary:
                     self.synergy_stats[synergy_name]['source'][source_count] = 0
                 self.synergy_stats[synergy_name]['source'][source_count] += 1
 
-        print("Best decks per synergy:")
-        for synergy_name, data in self.synergy_stats.items():
-            for type in data:
-                numbers = data[type]
-                print(f"{synergy_name} ({len(numbers)}) {type}")
-                for count in sorted(numbers.values(), reverse=True):
-                    print(f"   #{count}")
-  
     def print_fusion_synergies(self):
         for fusion in self.fusions:
             print("========================================")
@@ -57,11 +49,94 @@ class DeckLibrary:
                 target_count     = sum(synergy.get_target_counts().values())
                 source_ratio     = source_count*100/source_count_max  
                 target_ratio     = target_count*100/target_count_max 
-                mult = source_ratio * target_ratio / 100
-                syn_sources_string = f"{synergy.get_source_counts()} / {source_count_max:<4} [{source_ratio:.0f}]"
-                syn_targets_string = f"[{target_ratio:.0f}] {synergy.get_target_counts()} / {target_count_max:<4}"
-                print(f"{synergy_name:<15} : {syn_sources_string:>40} ** {syn_targets_string:>40} -> {mult:>4.1f}")
+                mean_ratio       =  (source_ratio + target_ratio) / 2
+                syn_sources_string = f"{synergy.get_source_counts()} / {source_count_max:<4}"
+                syn_targets_string = f"{synergy.get_target_counts()} / {target_count_max:<4}"
+                print(f"{synergy_name:<15} : {syn_sources_string:>60} [{source_ratio:>3.0f}] ** [{target_ratio:>3.0f}] {syn_targets_string:>60} -> {mean_ratio:>3.0f}")
+        
+             # check if any synergy is missing in the fusion
+            missing_synergies = set(SynergyTemplate().get_synergies()) - set(fusion.synergy_collection.synergies.keys())
+
+            #num_missing = len(missing_synergies)
+            #num_syn     = len(fusion.synergy_collection.synergies.items())
+
+
+            # print missing synergies
+            for missing_synergy in missing_synergies:                                
+                source_tags = SynergyTemplate().get_source_tags_by_synergy(missing_synergy)
+                target_tags = SynergyTemplate().get_target_tags_by_synergy(missing_synergy)
+
+                source_count = 0
+                for tag in source_tags:
+                    if tag in fusion.synergy_collection.sources:
+                        source_count += fusion.synergy_collection.sources[tag]
+
+                target_count = 0
+                for tag in target_tags:
+                    if tag in fusion.synergy_collection.targets:
+                        target_count += fusion.synergy_collection.targets[tag]
+
+                target_count_max = max(self.synergy_stats[missing_synergy]['target'].keys(), default=0)
+                source_count_max = max(self.synergy_stats[missing_synergy]['source'].keys(), default=0)                
+                source_ratio     = source_count*100/source_count_max if source_count_max else 0 
+                target_ratio     = target_count*100/target_count_max if target_count_max else 0
+
+                if (source_count > 0 or target_count > 0):   
+                    syn_sources_string = f"{source_count} / {source_count_max:<4}"
+                    syn_targets_string = f"{target_count} / {target_count_max:<4}"
+                    #print(f"{missing_synergy:<15} : {syn_sources_string:>60} [{source_ratio:>3.0f}] ** [{target_ratio:>3.0f}] {syn_targets_string:>60}")
+
+            nm_mean_p = self.get_normalized_mean_percentage(fusion)
+            print(f"Normalized mean percentage: '{nm_mean_p}':\n")
+
         return
+
+
+    def get_normalized_mean_percentage(self, fusion):
+        normalized_percentages = []
+        for synergy_name, synergy in fusion.synergy_collection.synergies.items():
+            source_count = sum(synergy.get_source_counts().values())
+            target_count = sum(synergy.get_target_counts().values())
+            source_ratio = source_count * 100 / max(self.synergy_stats[synergy_name]['source'])
+            target_ratio = target_count * 100 / max(self.synergy_stats[synergy_name]['target'])
+            normalized_percentages.append((source_ratio + target_ratio) / 2)
+
+        missing_synergies = set(SynergyTemplate().get_synergies()) - set(fusion.synergy_collection.synergies.keys())
+
+        for missing_synergy in missing_synergies:                                
+            source_tags = SynergyTemplate().get_source_tags_by_synergy(missing_synergy)
+            target_tags = SynergyTemplate().get_target_tags_by_synergy(missing_synergy)
+
+            source_count = 0
+            for tag in source_tags:
+                if tag in fusion.synergy_collection.sources:
+                    source_count += fusion.synergy_collection.sources[tag]
+
+            target_count = 0
+            for tag in target_tags:
+                if tag in fusion.synergy_collection.targets:
+                    target_count += fusion.synergy_collection.targets[tag]
+
+            target_count_max = max(self.synergy_stats[missing_synergy]['target'].keys(), default=0)
+            source_count_max = max(self.synergy_stats[missing_synergy]['source'].keys(), default=0)                
+            source_ratio     = source_count*100/source_count_max if source_count_max else 0 
+            target_ratio     = target_count*100/target_count_max if target_count_max else 0
+
+            normalized_percentages.append(-(source_ratio + target_ratio)/2)
+
+
+
+        if len(normalized_percentages) == 0:
+            return 0
+
+        return sum(normalized_percentages) / len(normalized_percentages)
+
+
+
+
+                
+
+      
  
     # def evaluate_library(self, synergy_template):
     #     library_syn_pairs = SynergyPairs(synergy_template=synergy_template)

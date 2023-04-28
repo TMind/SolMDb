@@ -1,41 +1,61 @@
+from scipy.stats import hypergeom
+
+
+
+def calc_probability(t, s, N, c, n, m):
+    # Calculate probability of drawing n out of t cards and m out of s cards
+    pn = hypergeom.cdf(k=n, M=N, n=t, N=c)
+    pm = hypergeom.pmf(k=m, M=N, n=s, N=c)
+    
+    print(f"Drawing at least {n} from {t} in a hand of {c} out of a total {N}")
+    print(f"Drawing exactly  {m} from {s} in a hand of {c} out of a total {N}")
+
+    return pn * pm
+
+
+def calc_synergy_validity(s, t):
+    # Calculate probability of meeting condition in a single turn
+
+
+    p_target_no_source_first_turn  = calc_probability(s, t, 20, 5, 1, 0)
+    p_target_no_source_second_turn = calc_probability(s, t, 15, 5, 1, 0)
+    p_target_no_source_third_turn  = calc_probability(s, t, 10, 5, 1, 0)
+
+    p_target_first_turn  = 1 - hypergeom.pmf(k=0, M=20, n=t, N=5)
+    p_target_second_turn = 1 - hypergeom.pmf(k=0, M=15, n=t, N=5)
+
+    p_target_no_source_three_turns = (                                                          p_target_no_source_first_turn  + 
+                                     (1 - p_target_first_turn) *                                p_target_no_source_second_turn + 
+                                     (1 - p_target_first_turn) * (1 - p_target_second_turn) *   p_target_no_source_third_turn
+    )
+
+    print(f"Target only Turn 1: {p_target_no_source_first_turn}\n "
+          f"Target only Turn 2: {p_target_no_source_second_turn}\n"
+          f"Target only Turn 3: {p_target_no_source_third_turn}\n "
+          f"Target First  Turn: {p_target_first_turn}\n"
+          f"Target Second Turn: {p_target_second_turn}\n"
+          f"Target only 3 Turns: {p_target_no_source_three_turns}"  )
+
+    # Return True if probability exceeds threshold, False otherwise
+    return 1 - p_target_no_source_three_turns
+
+
 
 class Evaluation:
     def __init__(self, synergy_stats):
         self.synergy_stats = synergy_stats
-        self.engine_ratio = 1/3
-    
-    def calculate_splits(self, sources, targets):
-        splits = 0
-        remaining_sources = sources
-        remaining_targets = targets
-        
-        while remaining_sources >= 2 and remaining_targets >= 1:
-            splits += 1
-            remaining_sources -= 2
-            remaining_targets -= 1
-        
-        return (splits, remaining_sources, remaining_targets)
-
+  
 
     def evaluate_deck(self, deck):
         # loop through each synergy in the deck
-        splits = 0
-        remaining_sources = 0
-        remaining_targets = 0
+
         for synergy_name, synergy in deck.synergy_collection.synergies.items():
             # determine the number of sources and targets in the synergy
             source_count = sum(synergy.get_source_counts().values())
             target_count = sum(synergy.get_target_counts().values())
 
-            # Lets define a general ratio for source : targets 
-            (new_splits, new_remaining_sources, new_remaining_targets)  = self.calculate_splits(source_count, target_count)
-            splits += new_splits
-            remaining_sources += new_remaining_sources
-            remaining_targets += new_remaining_targets
-            print(f"{synergy_name:<15}: {new_splits} , {new_remaining_sources} / {new_remaining_targets}")
-            # TODO: match sources against targets and determine score
-        print(f"Total splits: {splits} - Remaining Sources : {remaining_sources} / {remaining_targets} : Remaining Targets")
-        # TODO: calculate final score for entire deck
-        # Note: the score should be higher the more sources and targets are matched, so consider
-        # penalizing the score for each unmatched source or target
-        return 
+            synergy_prob = calc_synergy_validity(source_count, target_count)        
+
+            print(f"{synergy_name:<15}: {source_count} / {target_count} -> {synergy_prob} ")
+
+        return

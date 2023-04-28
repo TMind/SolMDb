@@ -48,14 +48,21 @@ class Evaluation:
     def evaluate_deck(self, deck):
         # loop through each synergy in the deck
 
+        synergy_total = 0
         for synergy_name, synergy in deck.synergy_collection.synergies.items():
             # determine the number of sources and targets in the synergy
             source_count = sum(synergy.get_source_counts().values())
             target_count = sum(synergy.get_target_counts().values())
 
             synergy_prob = calc_synergy_validity(source_count, target_count)   
-            target_prob  =      
+            target_prob = 0
+            total_prob = 0
+            
+            if synergy_prob >= 0.5 :
+                target_prob  = 1 - (hypergeom.pmf(k=0, M=20, n=target_count, N=5) ** 3)
+                total_prob   = synergy_prob * target_prob * 100 
 
-            print(f"{synergy_name:<15}: {source_count} / {target_count} -> {synergy_prob} ")
+            print(f"{synergy_name:<15}: {source_count} / {target_count} -> {synergy_prob:.2f} => {target_prob:.2f} => {total_prob:.2f} ")
+            synergy_total += total_prob
 
-        return
+        print(f"Total synergy = {synergy_total / len(deck.synergy_collection.synergies.values())}")

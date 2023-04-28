@@ -1,17 +1,13 @@
 import Card_Library
+from Evaluation import Evaluation
 from Synergy import SynergyTemplate
-
-#def create_fusions(deck1, deck2):
-#    deck1 = Fusion(deck1, deck2, deck1.forgeborn)
-#    deck2 = Fusion(deck2, deck1, deck2.forgeborn)
-#    return (deck1, deck2)
-
 class DeckLibrary:
     def __init__(self, decks):
         self.decks = decks
         self.fusions = self.get_fusions()
         self.synergy_stats = {synergy_name: {'target': {}, 'source': {}} for synergy_name in SynergyTemplate().get_synergies() }
         self.build_stats()
+        self.evaluator = Evaluation(self.synergy_stats)
 
     def get_fusions(self):
         fusions = []
@@ -52,14 +48,10 @@ class DeckLibrary:
                 mean_ratio       =  (source_ratio + target_ratio) / 2
                 syn_sources_string = f"{synergy.get_source_counts()} / {source_count_max:<4}"
                 syn_targets_string = f"{synergy.get_target_counts()} / {target_count_max:<4}"
-                print(f"{synergy_name:<15} : {syn_sources_string:>60} [{source_ratio:>3.0f}] ** [{target_ratio:>3.0f}] {syn_targets_string:>60} -> {mean_ratio:>3.0f}")
+                print(f"{synergy_name:<15} : {syn_sources_string:>50} [{source_ratio:>3.0f}] ** [{target_ratio:>3.0f}] {syn_targets_string:>50} -> {mean_ratio:>3.0f}")
         
              # check if any synergy is missing in the fusion
             missing_synergies = set(SynergyTemplate().get_synergies()) - set(fusion.synergy_collection.synergies.keys())
-
-            #num_missing = len(missing_synergies)
-            #num_syn     = len(fusion.synergy_collection.synergies.items())
-
 
             # print missing synergies
             for missing_synergy in missing_synergies:                                
@@ -88,7 +80,7 @@ class DeckLibrary:
 
             nm_mean_p = self.get_normalized_mean_percentage(fusion)
             print(f"Normalized mean percentage: '{nm_mean_p}':\n")
-
+            self.evaluator.evaluate_deck(fusion)
         return
 
 

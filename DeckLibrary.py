@@ -18,7 +18,13 @@ class DeckLibrary:
                     fusions.append(fusion)
         return fusions
 
-        
+    def evaluate_decks(self):
+        evaluation = {}
+        for fusion in self.fusions:
+            score = self.evaluator.evaluate_deck(fusion)
+            evaluation[fusion.name]  = score
+            print(f"Deck Evaluation added: {fusion.name} {score}")
+        return evaluation
                             
     def build_stats(self):
         

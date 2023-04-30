@@ -1,17 +1,19 @@
-from DeckLibrary import DeckEvaluator
+from DeckLibrary import DeckEvaluator, DeckLibrary
 import networkx as nx
 import matplotlib.pyplot as plt
 
 def create_synergy_graph(decks, min_level=1):
     G = nx.Graph()
     decks = list(decks.values())
-    for i in range(len(decks)):
-        for j in range(i+1, len(decks)):
-            if decks[i].faction != decks[j].faction:
-                DeckEvaluation = DeckEvaluator([decks[i],decks[j]])                         
-                for fb_name, score in DeckEvaluation.scores.items():
-                    if score >= min_level:                        
-                        G.add_edge(decks[i].name, decks[j].name, weight=score, label=fb_name)
+
+    LibDeck = DeckLibrary(decks)
+    eval_decks = LibDeck.evaluate_decks()
+
+    for deck_name, score in eval_decks.items():
+        deck_name2 = deck_name.split('|')[1] + '|' + deck_name.split('|')[0] 
+        if eval_decks[deck_name2] < score :
+            print(f"Score {deck_name2} :  {eval_decks[deck_name2]} < {score} ")
+            G.add_edge(deck_name.split('|')[0], deck_name.split('|')[1], weight=score, label=deck_name.split('|')[0])
 
     # Remove nodes with no edges
     nodes_to_remove = [node for node, degree in dict(G.degree()).items() if degree == 0]

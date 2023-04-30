@@ -16,23 +16,23 @@ Synerginary = {
             "ELEMENTAL"   :  [ 1.0,    ["Elemental Synergy"        ],[ "Elemental"              ]],                
             "PLANT"       :  [ 1.0,    ["Plant Synergy"            ],[ "Plant"                  ]],
 
-            "SPELL"       :  [ 0.5,    ["Spell Synergy"            ],[ "Spell"                  ]],
+            "SPELL"       :  [ 1.0,    ["Spell Synergy"            ],[ "Spell"                  ]],
             "HEALING"     :  [ 1.0,    ["Healing Synergy"          ],[ "Healing Source"         ]],
             "MOVEMENT"    :  [ 1.0,    ["Movement Benefit"         ],[ "Movement"               ]],
             "ARMOR"       :  [ 1.0,    ["Armor Synergy"            ],[ "Armor","Armor Giver "   ]],
             "ACTIVATION"  :  [ 1.0,    ["Ready"                    ],[ "Activate"               ]],
-            "FREE"        :  [ 0.6,    ["Free"                     ],[ "Free"                   ]],
+            "FREE"        :  [ 1.0,    ["Free"                     ],[ "Free"                   ]],
             "UPGRADE"     :  [ 1.0,    ["Upgrade Synergy"          ],[ "Upgrade"                ]],
             "REPLACE"     :  [ 1.0,    ["Replace Profit"           ],[ "Replace Setup"          ]],
 
             "DAMAGE"      :  [ 1.0,    ["Decreased Health Synergy" ],[ "Damage"                 ]],                
-            "SELFDAMAGE"  :  [ 0.5,    ["Self Damage Payoff"       ],[ "Self Damage Activator"  ]],                
+            "SELFDAMAGE"  :  [ 0.5,    ["Self Damage Payoff","Destruction Synergy"],[ "Self Damage Activator"  ]],                
             "DESTRUCTION" :  [ 1.0,    ["Destruction Synergy","Minion","Reanimate"],[ "Destruction Activator"  ]],
             #"REANIMATE"   :  [ 1.0,    ["Reanimate Activator"      ],[ "Deploy","Activate"      ]],
             #"REANIMATOR"  :  [ 0.75,   ["Destruction Activator"    ],[ "Reanimate"              ]],
             #"AGGRESSIVEATTACK" :  [ 0.5,  ["Stat Buff", "Attack Buff"],["Aggressive","Aggressive Giver"     ]],    
             #"STEALTHATTACK"    :  [ 0.5,  ["Stealth","Stealth Giver"           ],["Stat Buff", "Attack Buff"]],    
-            #"BREAKTHROUGH"     :  [ 0.5,  ["Breakthrough","Breakthrough Giver" ],["Stat Buff", "Attack Buff"]],
+            #"BREAKTHROUGH"     :  [ 0.5,  ["Breakthrough","Breakthro,ugh Giver" ],["Stat Buff", "Attack Buff"]],
             
 }
 

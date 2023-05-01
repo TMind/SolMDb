@@ -27,12 +27,12 @@ Synerginary = {
 
             "DAMAGE"      :  [ 1.0,    ["Decreased Health Synergy" ],[ "Damage"                 ]],                
             "SELFDAMAGE"  :  [ 0.5,    ["Self Damage Payoff","Destruction Synergy"],[ "Self Damage Activator"  ]],                
-            "DESTRUCTION" :  [ 1.0,    ["Destruction Synergy","Minion","Reanimate"],[ "Destruction Activator"  ]],
+            "DESTRUCTION" :  [ 1.0,    [ "Destruction Activator"  ],["Destruction Synergy","Minion","Reanimate"]],
             #"REANIMATE"   :  [ 1.0,    ["Reanimate Activator"      ],[ "Deploy","Activate"      ]],
             #"REANIMATOR"  :  [ 0.75,   ["Destruction Activator"    ],[ "Reanimate"              ]],
             #"AGGRESSIVEATTACK" :  [ 0.5,  ["Stat Buff", "Attack Buff"],["Aggressive","Aggressive Giver"     ]],    
             #"STEALTHATTACK"    :  [ 0.5,  ["Stealth","Stealth Giver"           ],["Stat Buff", "Attack Buff"]],    
-            #"BREAKTHROUGH"     :  [ 0.5,  ["Breakthrough","Breakthro,ugh Giver" ],["Stat Buff", "Attack Buff"]],
+            #"BREAKTHROUGH"     :  [ 0.5,  ["Breakthrough","Breakthrough Giver" ],["Stat Buff", "Attack Buff"]],
             
 }
 
@@ -227,45 +227,13 @@ class SynergyCollection:
 
             if synergy.is_synergy():                    
                 self.synergies[synergy.name] = synergy                
-                        
-    def evaluate_synergy(self, synergy, stats=None):
-        score = 0
-        if stats is None:
-            targets = sum(synergy.get_target_counts().values()) * synergy.weight
-            sources = sum(synergy.get_source_counts().values()) * synergy.weight
-            score = sources ** (math.log(targets) + math.exp(-1)) 
-        else:
-            source_score = synergy.stats(stats,'source')
-            target_score = synergy.stats(stats,'target')
-            score = (1 + source_score) ** (1 + target_score) 
-
-        return score
-
-    def calculate_scores(self, stats=None):
-        scores = 0
-        for syn in self.synergies.values():
-            score = self.evaluate_synergy(syn,stats=None)
-            print(f"{syn} -> {score:.2g}")
-            scores += score
-        return scores
-
-    def calculate_percentage(self):            
-        percentage_used = len(self.synergies) / len(self.targets) 
-        #print(f"Paired / Total : {len(self.synergies)}/{len(self.targets)}")
-        return percentage_used
-    
-    def calculate_average(self, scores):
-        if len(self.synergies) == 0: 
-            return 0             
-        score_avg  = scores / len(self.synergies)
-        return score_avg
 
     def __str__(self):
         sources_str = f"Sources: {self.sources}\n" if isinstance(self.sources, dict) else ""
         targets_str = f"Targets: {self.targets}\n" if isinstance(self.targets, dict) else ""
         synergies_str = "Synergies:\n"
         for synergy in self.synergies.values():                        
-            synergies_str += f"{str(synergy)} => {self.evaluate_synergy(synergy):.2g}\n"
+            synergies_str += f"{str(synergy)}\n"
         return synergies_str # + sources_str + targets_str
 
 

@@ -12,7 +12,7 @@ def create_synergy_graph(decks, min_level=1):
     for deck_name, score in eval_decks.items():
         deck_name2 = deck_name.split('|')[1] + '|' + deck_name.split('|')[0] 
         if eval_decks[deck_name2] < score :
-            print(f"Score {deck_name2} :  {eval_decks[deck_name2]} < {score} ")
+            #print(f"Score {deck_name2} :  {eval_decks[deck_name2]} < {score} ")
             G.add_edge(deck_name.split('|')[0], deck_name.split('|')[1], weight=score, label=deck_name.split('|')[0])
 
     # Remove nodes with no edges

@@ -94,15 +94,26 @@ class UniversalCardLibrary:
 
         decks_data = data['Items']
         decks = []
+        
 
         for deck_data in decks_data:
             forgeborn_data = deck_data['forgeborn']
-            forgeborn = Forgeborn(forgeborn_data['title'], deck_data['faction'],
-                                {
-                                    forgeborn_data['a2n']: forgeborn_data['a2t'],
-                                    forgeborn_data['a3n']: forgeborn_data['a3t'],
-                                    forgeborn_data['a4n']: forgeborn_data['a4t']
-                                })
+            abilities = {}
+            for ability_code in ['a2n','a3n','a4n']:
+                ability_name = forgeborn_data[ability_code]
+                ability = self.search_entity(ability_name)
+                abilities[ability_name] = ability
+                #print(f"Ability Code: {ability_code} -> {ability_name} -> {ability}")
+                
+
+            forgeborn = Forgeborn(forgeborn_data['title'], deck_data['faction'],abilities)
+
+            #forgeborn = Forgeborn(forgeborn_data['title'], deck_data['faction'],
+                                #{
+            #                        forgeborn_data['a2n']: forgeborn_data['a2t'],
+            #                        forgeborn_data['a3n']: forgeborn_data['a3t'],
+            #                        forgeborn_data['a4n']: forgeborn_data['a4t']
+            #                    })
 
             cards_data = deck_data['cards']
             cards = {}
@@ -216,7 +227,7 @@ class Forgeborn:
         return {
             "title": self.name,
             "faction": self.faction,
-            "abilities": self.abilities
+            "abilities": list(self.abilities.keys())
         }
 
 class Card():

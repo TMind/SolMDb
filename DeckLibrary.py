@@ -1,5 +1,5 @@
 import Card_Library
-from Evaluation import Evaluation
+from Evaluation import Evaluation, calc_synergy_validity
 from Synergy import SynergyTemplate
 class DeckLibrary:
     def __init__(self, decks):
@@ -39,6 +39,26 @@ class DeckLibrary:
                 if source_count not in self.synergy_stats[synergy_name]['source']:
                     self.synergy_stats[synergy_name]['source'][source_count] = 0
                 self.synergy_stats[synergy_name]['source'][source_count] += 1
+
+    def get_best_synergies(self):
+
+        best_synergy_decks = {}
+      
+        for synergy in SynergyTemplate().synergies:  
+            max_percentage = 0 
+            for fusion in self.fusions:                  
+                if synergy in fusion.synergy_collection.synergies:
+                    deck_synergy = fusion.synergy_collection.synergies[synergy] 
+                    p = Evaluation(self.synergy_stats).evaluate_synergy(deck_synergy)
+                    if p > max_percentage :
+                        max_percentage = p
+                        best_synergy_decks[synergy] = fusion 
+
+        for synergy, fusion in best_synergy_decks.items():
+            deck_synergy = fusion.synergy_collection.synergies[synergy]
+            sources = sum(deck_synergy.get_source_counts().values())
+            targets = sum(deck_synergy.get_target_counts().values())
+            print(f"Synergy: {synergy} in '{fusion.name}' = {sources} / {targets} =>  {Evaluation(self.synergy_stats).evaluate_synergy(deck_synergy)}")
 
     def print_fusion_synergies(self):
         for fusion in self.fusions:

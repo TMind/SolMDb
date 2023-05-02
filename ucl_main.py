@@ -29,9 +29,10 @@ if (0):
         json.dump(deck_data, f)
 
 decks = myUCL.load_decks('card_base.json')
-if (0):
+if (1):
     DeckCollection = DeckLibrary(list(decks.values()))    
     DeckCollection.print_fusion_synergies()
+    #DeckCollection.get_best_synergies()
     #DeckCollection.get_best_synergies()
 
 if (0):
@@ -47,7 +48,7 @@ if (0):
                 for ability, value in abilities.items():
                     writer.writerow([name, ability, value])
 
-if (1):
+if (0):
 
     SynergyGraph = Graph.create_synergy_graph(decks)
     #Graph.plot_synergy_graph(SynergyGraph)

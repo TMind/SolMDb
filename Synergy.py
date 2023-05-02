@@ -27,8 +27,8 @@ Synerginary = {
 
             "DAMAGE"      :  [ 1.0,    ["Decreased Health Synergy" ],[ "Damage"                 ]],                
             "SELFDAMAGE"  :  [ 0.5,    ["Self Damage Payoff","Destruction Synergy"],[ "Self Damage Activator"  ]],                
-            "DESTRUCTION" :  [ 1.0,    [ "Destruction Activator"  ],["Destruction Synergy","Minion","Reanimate"]],
-            #"REANIMATE"   :  [ 1.0,    ["Reanimate Activator"      ],[ "Deploy","Activate"      ]],
+            "DESTRUCTION" :  [ 1.0,    [ "Destruction Activator"   ],["Destruction Synergy","Minion","Reanimate"]],            
+            # "REANIMATE"   :  [ 1.0,    ["Reanimate Activator"      ],[ "Deploy","Activate"      ]],
             #"REANIMATOR"  :  [ 0.75,   ["Destruction Activator"    ],[ "Reanimate"              ]],
             #"AGGRESSIVEATTACK" :  [ 0.5,  ["Stat Buff", "Attack Buff"],["Aggressive","Aggressive Giver"     ]],    
             #"STEALTHATTACK"    :  [ 0.5,  ["Stealth","Stealth Giver"           ],["Stat Buff", "Attack Buff"]],    

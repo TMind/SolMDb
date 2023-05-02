@@ -39,12 +39,14 @@ def calc_synergy_validity(synergy):
         sources = [s]
         for k in range(2):
             pmf = []        
-            for j in range(s+1):            
+            for j in range(min(s+1,5)):            
                 p_source = hypergeom.pmf(k=j, M=20-5*k, n=s, N=5)
                 pmf.append(p_source)                 
-            #print(pmf)    
-            #print(f"Most probably number of sources drawn from {s}: {pmf.index(max(pmf))} ")
-            s -= pmf.index(max(pmf))             
+
+            sources_drawn = sum([pmf[i] * i for i in range(min(int(s)+1,5))])
+            print(pmf)    
+            print(f"Most probably number of sources drawn from {s}: {sources_drawn}")
+            s -= round(sources_drawn) #pmf.index(max(pmf))             
             sources.append(s)
 
         #print(f"Sources drawn over three turns: {sources}")
@@ -115,8 +117,10 @@ class Evaluation:
        
         synergy_prob = calc_synergy_validity(synergy)  
         target_prob = 0
-        if synergy_prob > 0.5 :         
-            target_prob  = math.prod([1 - hypergeom.cdf(k=0, M=20-5*i, n=target_count, N=5) for i in range(2)])
+        if synergy_prob > 0.5 :        
+            t_cond1 = [1 - hypergeom.cdf(k=0, M=20-5*i, n=target_count, N=5) for i in range(2)]
+            t_cond2 = [0] + t_cond1
+            target_prob  = sum([ (1 - t_cond2[j]) * t_cond1[j]  for j in range(2)  ])
               
         total_prob = synergy_prob * target_prob * 100     
         

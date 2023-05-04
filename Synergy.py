@@ -181,6 +181,9 @@ class SynergyCollection:
 
         return cls(sources,targets, synergy_template=synergy_template)
 
+    @classmethod
+    def from_card(cls, card, synergy_template=None):        
+        return cls.from_entities(card.entities, synergy_template=synergy_template)
 
     @classmethod
     def from_deck(cls, deck, synergy_template=None):       

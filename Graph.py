@@ -1,4 +1,5 @@
 from DeckLibrary import DeckEvaluator, DeckLibrary
+from Synergy import SynergyCollection
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -9,6 +10,9 @@ def create_synergy_graph(decks, min_level=1):
     LibDeck = DeckLibrary(decks)
     eval_decks = LibDeck.evaluate_decks()
 
+    for fusion in LibDeck.fusions:
+        create_deck_graph(fusion)
+
     for deck_name, score in eval_decks.items():
         deck_name2 = deck_name.split('|')[1] + '|' + deck_name.split('|')[0] 
         if eval_decks[deck_name2] < score :
@@ -18,6 +22,37 @@ def create_synergy_graph(decks, min_level=1):
     # Remove nodes with no edges
     nodes_to_remove = [node for node, degree in dict(G.degree()).items() if degree == 0]
     G.remove_nodes_from(nodes_to_remove)
+
+    return G
+
+def create_deck_graph(deck):
+    G = nx.Graph()
+    
+    card_traits = {}
+
+
+    for card_name, card in deck.cards.items():
+        G.add_node(card_name)
+        
+        synergy_collection = SynergyCollection.from_card(card)
+        card_sources = synergy_collection.sources
+        card_targets = synergy_collection.targets        
+
+        card_traits[card_name] = synergy_collection
+        print(f"Deck {deck.name} :: {card_name} = {card_sources} | {card_targets}")
+
+
+    for card_name in card_traits:         
+        card_targets = card_traits[card_name].synergy_collection.targets
+
+        for card_name in card_traits:
+            card_sources = card_traits[card_name].synergy_collection.Sources
+
+            for target in card_targets:
+                synergies = SynergyTemplate().get_synergies_by_target_tag(target)
+                
+
+    #    G.add_edge(deck_name.split('|')[0], deck_name.split('|')[1], weight=score, label=deck_name.split('|')[0])
 
     return G
 

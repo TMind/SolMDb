@@ -49,10 +49,14 @@ if (0):
                     writer.writerow([name, ability, value])
 
 if (1):
-    
-    SynergyGraph = Graph.create_synergy_graph(decks)
+    DeckCollection = DeckLibrary(list(decks.values()))        
+    #SynergyGraph = Graph.create_synergy_graph(decks)
+    for i in range(5):
+        SynergyGraph = Graph.create_deck_graph(DeckCollection.fusions[i])
+        filename = f"{DeckCollection.fusions[i].name}.gephi"
+        Graph.write_gephi_file(SynergyGraph,filename.replace("|","_"))
     #Graph.plot_synergy_graph(SynergyGraph)
-    Graph.write_gephi_file(SynergyGraph,'mygraph')
+    
 
 
 

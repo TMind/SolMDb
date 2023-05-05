@@ -44,8 +44,8 @@ def calc_synergy_validity(synergy):
                 pmf.append(p_source)                 
 
             sources_drawn = sum([pmf[i] * i for i in range(min(int(s)+1,5))])
-            print(pmf)    
-            print(f"Most probably number of sources drawn from {s}: {sources_drawn}")
+            #print(pmf)    
+            #print(f"Most probably number of sources drawn from {s}: {sources_drawn}")
             s -= round(sources_drawn) #pmf.index(max(pmf))             
             sources.append(s)
 

@@ -27,34 +27,44 @@ def create_synergy_graph(decks, min_level=1):
 
 def create_deck_graph(deck):
     G = nx.Graph()
-
-    print(f"Card Synergies between decks: {deck.name}")    
+    #print(f"Card Synergies between decks: {deck.name}")    
 
     for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
-        for j, (card_name_2, card_2) in enumerate(deck.cards.items()):
+        for j, (card_name_2, card_2) in enumerate(deck.cards.items()):                
+
+            if i == j:
+                syn1 = SynergyCollection.from_card(card_1,SynergyTemplate())
+                
+                if len(syn1.synergies) > 0:
+                    syn_str = ", ".join([f"{syn}" for syn in syn1.synergies])
+                  #  print(f"{card_name_1} => {syn_str}")
+                    G.add_edge(card_name_1, card_name_1, label={syn_str}, weight = len(syn1.synergies))            
+        
             if i < j:
             # compare only cards whose indices are greater        
-                # Check if the cards have any synergies
-                
+                # Check if the cards have any synergies                
                 syn1 = SynergyCollection.from_card(card_1,SynergyTemplate())
                 syn2 = SynergyCollection.from_card(card_2,SynergyTemplate())
                             
                 c1_2 = SynergyCollection(syn1.sources, syn2.targets, SynergyTemplate())
                 c2_1 = SynergyCollection(syn2.sources, syn1.targets, SynergyTemplate())
 
-                if 'FREE' in c1_2.synergies : del c1_2.synergies['FREE'] 
-                if 'FREE' in c2_1.synergies : del c2_1.synergies['FREE']
+                #if 'FREE' in c1_2.synergies : del c1_2.synergies['FREE'] 
+                #if 'FREE' in c2_1.synergies : del c2_1.synergies['FREE']
 
                 if len(c1_2.synergies) > 0 :                    
                     syn_str = ", ".join([f"{syn}" for syn in c1_2.synergies])
-                    print(f"{card_name_1} + {card_name_2} => {syn_str}")
-                    G.add_edge(card_name_1, card_name_2)            
+                #    print(f"{card_name_1} + {card_name_2} => {syn_str}")
+                    G.add_edge(card_name_1, card_name_2, label={syn_str}, weight = len(c1_2.synergies))            
 
                 if len(c2_1.synergies) > 0:
                     syn_str = ", ".join([f"{syn}" for syn in c2_1.synergies])
-                    print(f"{card_name_2} + {card_name_1} => {syn_str}")
-                    G.add_edge(card_name_2, card_name_1, label={syn_str})            
-                                    
+               #    print(f"{card_name_2} + {card_name_1} => {syn_str}")
+                    G.add_edge(card_name_2, card_name_1, label={syn_str}, weight = len(c2_1.synergies))            
+                
+                
+
+
                 #for name, synergy in Synergies.synergies.items():
                 #    print(f"Deck {deck.name} :: {card_name_1} + {card_name_2} = {synergy}")
                     

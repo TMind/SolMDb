@@ -1,7 +1,7 @@
 import math
 from itertools import islice
 from scipy.stats import hypergeom
-from Synergy import SynergyTemplate
+from Synergy import SynergyTemplate, SynergyCollection
 
 
 def product(l):
@@ -124,7 +124,7 @@ class Evaluation:
               
         total_prob = synergy_prob * target_prob * 100     
         
-        print(f"{synergy.name:<15}: {source_count} / {target_count} -> Validity: {synergy_prob:.2f} => Target: {target_prob:.2f} => {total_prob:.2f} ")
+#       print(f"{synergy.name:<15}: {source_count} / {target_count} -> Validity: {synergy_prob:.2f} => Target: {target_prob:.2f} => {total_prob:.2f} ")
         return  total_prob
     
 
@@ -132,27 +132,66 @@ class Evaluation:
         # loop through each synergy in the deck
         print(f"=====================================")
         print(f"Evaluating Deck: {deck.name}")
-        synergy_total = 0
+        evaluation = {}
+        
+        synergy_template = SynergyTemplate()
 
-        #total_sources = set(deck.synergy_collection.sources.keys())
-        #total_targets = set(deck.synergy_collection.targets.keys())
+        #for synergy in deck.synergy_collection.synergies.values():
+        #    synergy_total += self.evaluate_synergy(synergy)
 
-        for synergy in deck.synergy_collection.synergies.values():
-            synergy_total += self.evaluate_synergy(synergy)
-            #total_sources -= set(synergy.source_counts.keys())
-            #total_targets -= set(synergy.target_counts.keys())
-
-        #total_sources_sum = sum(deck.synergy_collection.sources[source] for source in total_sources)
-        #total_targets_sum = sum(deck.synergy_collection.targets[target] for target in total_targets)
-
-        #percentage_sources = total_sources_sum / sum(deck.synergy_collection.sources.values())
-        #percentage_targets = total_targets_sum / sum(deck.synergy_collection.targets.values())
+        for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
+            for j, (card_name_2, card_2) in enumerate(deck.cards.items()): 
+                    
+                #if not card_name_1 in evaluation: evaluation[card_name_1] = {} 
+                #if not card_name_2 in evaluation: evaluation[card_name_2] = {}           
                 
-        #print(f"Missing percentage of sources : {percentage_sources * 100 :.2f}%")
-        #print(f"Missing percentage of targets:  {percentage_targets * 100 :.2f}%")
+                if i == j:
+                    syn1 = SynergyCollection.from_card(card_1,synergy_template)
+                    
+                    if len(syn1.synergies) > 0:
+                        syn_str = ", ".join([f"{syn}" for syn in syn1.synergies])
+                        #print(f"{card_name_1} => {syn_str}")
+                        for synergy in syn1.synergies: 
+                            print(f"Adding self-referential synergy for {card_name_1} ({synergy})")
+                            #evaluation.setdefault(card_name_1, {}).setdefault(synergy, {'SELF': []})['SELF'].append(card_name_1)
 
-        #synergy_total *= (1 -  percentage_targets) * (1 - percentage_sources)
+                        
+                if i < j:
+                # compare only cards whose indices are greater        
+                    # Check if the cards have any synergies                
 
-        print(f"{synergy_total} <- Total synergy ")
+                    syn1 = SynergyCollection.from_card(card_1,synergy_template)
+                    syn2 = SynergyCollection.from_card(card_2,synergy_template)
+                   #                                                                         OUT IN
+                    c1_2 = SynergyCollection(syn1.sources, syn2.targets, synergy_template) # 1 -> 2
+                    c2_1 = SynergyCollection(syn2.sources, syn1.targets, synergy_template) # 2 -> 1
 
-        return synergy_total
+                    if len(c1_2.synergies) > 0 :                        
+                        for synergy in c1_2.synergies: 
+                            evaluation.setdefault(card_name_1, {}).setdefault(synergy, {'OUT': []})['OUT'].append(card_name_2)
+                            evaluation.setdefault(card_name_2, {}).setdefault(synergy, {'IN' : []})['IN'].append(card_name_1)
+
+                    if len(c2_1.synergies) > 0:
+                        for synergy in c2_1.synergies: 
+                            evaluation.setdefault(card_name_1, {}).setdefault(synergy, {'IN' : []})['IN'].append(card_name_2)
+                            evaluation.setdefault(card_name_2, {}).setdefault(synergy, {'OUT': []})['OUT'].append(card_name_1)
+
+
+        for card_name, card in evaluation.items():
+            print(f"Synergy: {card_name}")
+            for synergy_name, synergy in card.items():
+                synergy_SELFs = "\n".join(cardname for cardname in synergy['SELF'])
+                print(f"Target: {synergy_name} OUT ")
+                print(synergy_SELFs)
+                synergy_INs = "\n".join(cardname for cardname in synergy['IN'])
+                print(f"Target: {synergy_name} IN ")
+                print(synergy_INs)
+                synergy_OUTs = "\n".join(cardname for cardname in synergy['OUT'])
+                print(f"Target: {synergy_name} OUT ")
+                print(synergy_OUTs)
+               
+
+
+        #print(f"{synergy_total} <- Total synergy ")
+
+        return #synergy_total

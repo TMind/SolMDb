@@ -37,21 +37,37 @@ class UniversalCardLibrary:
                                   
                 sources = {}
                 targets = {}
+                range   = ""
                 read_synergies = False
                 for key, value in row.items():
                     if key == "3text":
                         read_synergies = True   
                     elif read_synergies:
-                        if value and int(value) > 0:                            
-                            if key in self.synergy_template.get_source_tags():
-                                sources.setdefault(key, 0)
-                                sources[key] += int(value)
-                            if key in self.synergy_template.get_target_tags():
-                                targets.setdefault(key, 0)
-                                targets[key] += int(value)
+                        if value is not None:                            
+                            if not value.isnumeric():
+                                if key == "Free":                                    
+                                    key = f"Free {value}"            
+                                    value = 1
+                                else: 
+                                    if value == '*':
+                                        range = '*'
+                                        value = 1                                        
+                                    if value == '+': 
+                                        range = '+'
+                                        value = 1
+                                    if value == '.': 
+                                        range == '.'     
+                                        value = 0
+                                    
+                            elif int(value) > 0:                                                                    
+                                if key in self.synergy_template.get_source_tags():
+                                    sources.setdefault(key, 0)
+                                    sources[key] += 1                                    
+                                if key in self.synergy_template.get_target_tags():                                
+                                    targets.setdefault(key, 0)  
+                                    targets[key] += 1                               
 
-
-                self.entities.append(Entity(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, sources, targets))
+                self.entities.append(Entity(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, range, sources, targets))
         return self.entities
 
     def search_entity(self,name):
@@ -108,13 +124,6 @@ class UniversalCardLibrary:
 
             forgeborn = Forgeborn(forgeborn_data['title'], deck_data['faction'],abilities)
 
-            #forgeborn = Forgeborn(forgeborn_data['title'], deck_data['faction'],
-                                #{
-            #                        forgeborn_data['a2n']: forgeborn_data['a2t'],
-            #                        forgeborn_data['a3n']: forgeborn_data['a3t'],
-            #                        forgeborn_data['a4n']: forgeborn_data['a4t']
-            #                    })
-
             cards_data = deck_data['cards']
             cards = {}
 
@@ -156,7 +165,7 @@ class UniversalCardLibrary:
 
 
 class Entity:
-    def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, sources, targets=None):
+    def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, range, sources, targets=None):
         self.name = name
         self.faction = faction
         self.rarity = rarity
@@ -165,6 +174,7 @@ class Entity:
         self.spliced = spliced
         self.solbind = solbind        
         self.abilities = abilities
+        self.range = range
         self.sources = sources
         self.targets = targets or {}
   

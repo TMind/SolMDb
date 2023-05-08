@@ -1,5 +1,6 @@
 from DeckLibrary import DeckEvaluator, DeckLibrary
 from Synergy import SynergyCollection,SynergyTemplate
+import community
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -37,7 +38,6 @@ def create_deck_graph(deck):
                 
                 if len(syn1.synergies) > 0:
                     syn_str = ", ".join([f"{syn}" for syn in syn1.synergies])
-                  #  print(f"{card_name_1} => {syn_str}")
                     G.add_edge(card_name_1, card_name_1, label={syn_str}, weight = len(syn1.synergies))            
         
             if i < j:
@@ -49,28 +49,32 @@ def create_deck_graph(deck):
                 c1_2 = SynergyCollection(syn1.sources, syn2.targets, SynergyTemplate())
                 c2_1 = SynergyCollection(syn2.sources, syn1.targets, SynergyTemplate())
 
-                #if 'FREE' in c1_2.synergies : del c1_2.synergies['FREE'] 
-                #if 'FREE' in c2_1.synergies : del c2_1.synergies['FREE']
-
                 if len(c1_2.synergies) > 0 :                    
                     syn_str = ", ".join([f"{syn}" for syn in c1_2.synergies])
-                #    print(f"{card_name_1} + {card_name_2} => {syn_str}")
                     G.add_edge(card_name_1, card_name_2, label={syn_str}, weight = len(c1_2.synergies))            
 
                 if len(c2_1.synergies) > 0:
                     syn_str = ", ".join([f"{syn}" for syn in c2_1.synergies])
-               #    print(f"{card_name_2} + {card_name_1} => {syn_str}")
                     G.add_edge(card_name_2, card_name_1, label={syn_str}, weight = len(c2_1.synergies))            
-                
-                
+    
 
-
-                #for name, synergy in Synergies.synergies.items():
-                #    print(f"Deck {deck.name} :: {card_name_1} + {card_name_2} = {synergy}")
-                    
-        #G.add_edge(deck_name.split('|')[0], deck_name.split('|')[1], weight=score, label=deck_name.split('|')[0])
+    # partition = community.best_partition(G)
+    # for node in partition:
+    #     print(node, partition[node])
 
     return G
+
+
+def count_cycles(G):
+    cycles = list(nx.simple_cycles(G))
+    num_cycles = len(cycles)
+    cycle_lengths = [len(cycle) for cycle in cycles]
+    avg_cycle_length = sum(cycle_lengths) / num_cycles if num_cycles > 0 else 0
+
+    print(f"Detected {num_cycles} cycles in the deck graph.")
+    if num_cycles > 0:
+        print(f"Average cycle length: {avg_cycle_length:.2f} cards.")
+        #print(f"Cycle lengths: {cycle_lengths}")
 
 def plot_synergy_graph(G):
     pos = nx.spring_layout(G)

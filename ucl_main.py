@@ -31,14 +31,14 @@ if (0):
         json.dump(deck_data, f)
 
 decks = myUCL.load_decks('deck_base.json')
-if (1):
+if (0):
     DeckCollection = DeckLibrary(list(decks.values())) 
-    evaluator = Evaluation(None)
-    for fusion in DeckCollection.fusions:
-        evaluator.evaluate_deck(fusion) 
+    #evaluator = Evaluation(None)
+    #for fusion in DeckCollection.fusions:
+    #    evaluator.evaluate_deck(fusion) 
          
     #DeckCollection.print_fusion_synergies()
-    #DeckCollection.get_best_synergies()
+    DeckCollection.get_best_synergies()
     
 if (0):
     forgeborn_abilities = defaultdict(list)
@@ -53,14 +53,15 @@ if (0):
                 for ability, value in abilities.items():
                     writer.writerow([name, ability, value])
 
-if (0):
-    SynergyGraph = Graph.create_synergy_graph(decks)
-    Graph.write_gephi_file(SynergyGraph,"mygraph")
-    #DeckCollection = DeckLibrary(list(decks.values()))        
-    #for fusion in DeckCollection.fusions:
-    #    DeckGraph = Graph.create_deck_graph(fusion)
-    #    filename = f"{fusion.name}"
-    #    Graph.write_gephi_file(DeckGraph,'./gephi/' + filename.replace("|","_"))
+if (1):
+    #SynergyGraph = Graph.create_synergy_graph(decks)
+    #Graph.write_gephi_file(SynergyGraph,"mygraph")
+    DeckCollection = DeckLibrary(list(decks.values()))        
+    #for fusion in DeckCollection.fusions:        
+    fusion = next((x for x in DeckCollection.fusions if x.name == 'The Tentacles of the Diseased Bone|The Sentrys of Failure Faith'), None)
+    DeckGraph = Graph.create_deck_graph(fusion)        
+    filename = f"{fusion.name}"
+    Graph.write_gephi_file(DeckGraph,'./gephi/' + filename.replace("|","_"))
     #Graph.plot_synergy_graph(SynergyGraph)
     
 

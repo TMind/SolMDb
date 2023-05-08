@@ -1,5 +1,6 @@
 import math
 from itertools import islice
+from collections import defaultdict
 from scipy.stats import hypergeom
 from Synergy import SynergyTemplate, SynergyCollection
 
@@ -131,31 +132,23 @@ class Evaluation:
     def evaluate_deck(self, deck):
         # loop through each synergy in the deck
         print(f"=====================================")
-        print(f"Evaluating Deck: {deck.name}")
-        evaluation = {}
+        print(f"Evaluating Deck: {deck.name}")        
+        evaluation = defaultdict(lambda: defaultdict(lambda: {'IN': set(), 'OUT': set(), 'SELF': set()}))
+
         
         synergy_template = SynergyTemplate()
 
-        #for synergy in deck.synergy_collection.synergies.values():
-        #    synergy_total += self.evaluate_synergy(synergy)
-
         for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
             for j, (card_name_2, card_2) in enumerate(deck.cards.items()): 
-                    
-                #if not card_name_1 in evaluation: evaluation[card_name_1] = {} 
-                #if not card_name_2 in evaluation: evaluation[card_name_2] = {}           
+                            
                 
-                if i == j:
+                if card_name_1 == card_name_2:
                     syn1 = SynergyCollection.from_card(card_1,synergy_template)
-                    
-                    if len(syn1.synergies) > 0:
-                        syn_str = ", ".join([f"{syn}" for syn in syn1.synergies])
-                        #print(f"{card_name_1} => {syn_str}")
-                        for synergy in syn1.synergies: 
-                            print(f"Adding self-referential synergy for {card_name_1} ({synergy})")
-                            #evaluation.setdefault(card_name_1, {}).setdefault(synergy, {'SELF': []})['SELF'].append(card_name_1)
-
-                        
+                                        
+                    if len(syn1.synergies) > 0:                    
+                        for synergy in syn1.synergies:                             
+                            evaluation[card_name_1][synergy]['SELF'].add(card_name_2)                            
+                                                            
                 if i < j:
                 # compare only cards whose indices are greater        
                     # Check if the cards have any synergies                
@@ -167,31 +160,29 @@ class Evaluation:
                     c2_1 = SynergyCollection(syn2.sources, syn1.targets, synergy_template) # 2 -> 1
 
                     if len(c1_2.synergies) > 0 :                        
-                        for synergy in c1_2.synergies: 
-                            evaluation.setdefault(card_name_1, {}).setdefault(synergy, {'OUT': []})['OUT'].append(card_name_2)
-                            evaluation.setdefault(card_name_2, {}).setdefault(synergy, {'IN' : []})['IN'].append(card_name_1)
+                        for synergy in c1_2.synergies:                             
+                            evaluation[card_name_1][synergy]['OUT'].add(card_name_2)                                                     
+                            evaluation[card_name_2][synergy]['IN'].add(card_name_1)
 
                     if len(c2_1.synergies) > 0:
-                        for synergy in c2_1.synergies: 
-                            evaluation.setdefault(card_name_1, {}).setdefault(synergy, {'IN' : []})['IN'].append(card_name_2)
-                            evaluation.setdefault(card_name_2, {}).setdefault(synergy, {'OUT': []})['OUT'].append(card_name_1)
+                        for synergy in c2_1.synergies:                                                                         
+                            evaluation[card_name_1][synergy]['IN'].add(card_name_2)                                            
+                            evaluation[card_name_2][synergy]['OUT'].add(card_name_1)       
 
 
-        for card_name, card in evaluation.items():
-            print(f"Synergy: {card_name}")
-            for synergy_name, synergy in card.items():
-                synergy_SELFs = "\n".join(cardname for cardname in synergy['SELF'])
-                print(f"Target: {synergy_name} OUT ")
-                print(synergy_SELFs)
-                synergy_INs = "\n".join(cardname for cardname in synergy['IN'])
-                print(f"Target: {synergy_name} IN ")
-                print(synergy_INs)
-                synergy_OUTs = "\n".join(cardname for cardname in synergy['OUT'])
-                print(f"Target: {synergy_name} OUT ")
-                print(synergy_OUTs)
-               
+        arrows = {'IN' : '<-', 'OUT' : '->', 'SELF' : '<=>'}
 
-
-        #print(f"{synergy_total} <- Total synergy ")
-
-        return #synergy_total
+        for card_name, card_eval in evaluation.items():
+            print(f"Card: {card_name}")
+            for direction in ['IN', 'OUT', 'SELF']:
+                card_sets_by_synergy = defaultdict(list)
+                for synergy_name, synergy_eval in card_eval.items():
+                    card_set = synergy_eval[direction]
+                    if len(card_set) > 0:
+                        for card in card_set:
+                            card_sets_by_synergy[synergy_name].append(card)
+                for synergy_name, card_list in card_sets_by_synergy.items():
+                    card_names = ", ".join(card for card in card_list)
+                    print(f"\t{arrows[direction]} [{synergy_name}] : {card_names}")
+  
+        return 

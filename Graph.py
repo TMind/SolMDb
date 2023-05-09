@@ -27,7 +27,7 @@ def create_synergy_graph(decks, min_level=1):
     return G
 
 def create_deck_graph(deck):
-    G = nx.DiGraph()
+    G = nx.DiGraph(name = deck.name, between = 0, mod = 0, hubs = 0, pagerank = 0)
     #print(f"Card Synergies between decks: {deck.name}")    
 
     for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
@@ -65,15 +65,24 @@ def create_deck_graph(deck):
     pr = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
     for card_name, value in pr.items():
         G.nodes[card_name]['pagerank'] = value
-        print(f"{card_name} -> {value} ")
+        G.graph['pagerank'] += value
+        #print(f"{card_name} -> {value} ")
     
     # Calculate modularity
     partition = community.greedy_modularity_communities(G)
     mod = community.modularity(G, partition)
 
-    # Convert partition list to dictionary    
-    for i, comm in enumerate(partition):        
-        print(f"Community {i} : {comm}")    
+
+    # calculate the number of hubs in the graph
+    degree_dict = dict(G.degree(G.nodes()))
+    hub_dict = {k: v for k, v in sorted(degree_dict.items(), key=lambda item: item[1], reverse=True)}
+    num_hubs = len([k for k, v in hub_dict.items() if v > 2]) # change the threshold as needed
+
+    betweenness_centrality = nx.betweenness_centrality(G)
+
+    G.graph['between']  = betweenness_centrality
+    G.graph['hubs']     = num_hubs
+    G.graph['mod']      = mod
 
     return G
 

@@ -54,16 +54,28 @@ if (0):
                     writer.writerow([name, ability, value])
 
 if (1):
-    #SynergyGraph = Graph.create_synergy_graph(decks)
-    #Graph.write_gephi_file(SynergyGraph,"mygraph")
-    DeckCollection = DeckLibrary(list(decks.values()))        
-    #for fusion in DeckCollection.fusions:        
-    fusion = next((x for x in DeckCollection.fusions if x.name == 'The Tentacles of the Diseased Bone|The Sentrys of Failure Faith'), None)
-    DeckGraph = Graph.create_deck_graph(fusion)        
-    filename = f"{fusion.name}"
-    Graph.write_gephi_file(DeckGraph,'./gephi/' + filename.replace("|","_"))
-    #Graph.plot_synergy_graph(SynergyGraph)
-    
+    #SynergyGraph = Graph.create_synergy_graph(decks)    
+    EvaluatedGraphs = {}
+    DeckCollection = DeckLibrary(list(decks.values()))
+    deck_name = 'The Sentrys of Failure Faith|The Tentacles of the Diseased Bone'
+    for fusion in DeckCollection.fusions:
+        if fusion.name == deck_name:
+            DeckGraph = Graph.create_deck_graph(fusion)        
+            EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph
+            Graph.write_gephi_file(DeckGraph,"mygraph")        
+
+if (0):
+   # Open the csv file in write mode and write the header row
+    with open("deck_metrics.csv", "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=["deckname", "pagerank", "modularity", "number of hubs"])
+        writer.writeheader()
+
+        for i, (key, EGraph) in enumerate(EvaluatedGraphs.items()):
+            filename = f"{EGraph.graph['name']}"
+            #Graph.write_gephi_file(EvaluatedGraphs[key], filename.replace('|','_'))
+           #print(f"{i+1}. {key} -> value: {EvaluatedGraphs[key].graph['value']}")
+            writer.writerow({"deckname": EGraph.graph['name'], "pagerank": EGraph.graph['pagerank'], "modularity": EGraph.graph['mod'], "number of hubs": EGraph.graph['hubs']})
+        
 
 
 

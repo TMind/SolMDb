@@ -62,7 +62,7 @@ def create_deck_graph(deck):
     
 
     # Calculate personalized PageRank
-    pr = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=100, tol=1e-06, nstart=None, weight='weight', dangling=None)
+    pr = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
     for card_name, value in pr.items():
         G.nodes[card_name]['pagerank'] = value
         print(f"{card_name} -> {value} ")
@@ -70,7 +70,10 @@ def create_deck_graph(deck):
     # Calculate modularity
     partition = community.greedy_modularity_communities(G)
     mod = community.modularity(G, partition)
-    print(mod)
+
+    # Convert partition list to dictionary    
+    for i, comm in enumerate(partition):        
+        print(f"Community {i} : {comm}")    
 
     return G
 

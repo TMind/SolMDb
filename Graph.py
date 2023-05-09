@@ -1,6 +1,6 @@
 from DeckLibrary import DeckEvaluator, DeckLibrary
 from Synergy import SynergyCollection,SynergyTemplate
-import community
+from networkx.algorithms import community
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -27,7 +27,7 @@ def create_synergy_graph(decks, min_level=1):
     return G
 
 def create_deck_graph(deck):
-    G = nx.Graph()
+    G = nx.DiGraph()
     #print(f"Card Synergies between decks: {deck.name}")    
 
     for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
@@ -38,8 +38,9 @@ def create_deck_graph(deck):
                 
                 if len(syn1.synergies) > 0:
                     syn_str = ", ".join([f"{syn}" for syn in syn1.synergies])
-                    G.add_edge(card_name_1, card_name_1, label={syn_str}, weight = len(syn1.synergies))            
-        
+                    for syn in syn1.synergies:
+                        G.add_edge(card_name_1, card_name_1, label=syn)  
+                     
             if i < j:
             # compare only cards whose indices are greater        
                 # Check if the cards have any synergies                
@@ -51,19 +52,27 @@ def create_deck_graph(deck):
 
                 if len(c1_2.synergies) > 0 :                    
                     syn_str = ", ".join([f"{syn}" for syn in c1_2.synergies])
-                    G.add_edge(card_name_1, card_name_2, label={syn_str}, weight = len(c1_2.synergies))            
+                    for syn in c1_2.synergies:
+                        G.add_edge(card_name_1, card_name_2, label=syn)            
 
                 if len(c2_1.synergies) > 0:
                     syn_str = ", ".join([f"{syn}" for syn in c2_1.synergies])
-                    G.add_edge(card_name_2, card_name_1, label={syn_str}, weight = len(c2_1.synergies))            
+                    for syn in c2_1.synergies:
+                        G.add_edge(card_name_2, card_name_1, label=syn)            
     
 
-    # partition = community.best_partition(G)
-    # for node in partition:
-    #     print(node, partition[node])
+    # Calculate personalized PageRank
+    pr = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=100, tol=1e-06, nstart=None, weight='weight', dangling=None)
+    for card_name, value in pr.items():
+        G.nodes[card_name]['pagerank'] = value
+        print(f"{card_name} -> {value} ")
+    
+    # Calculate modularity
+    partition = community.greedy_modularity_communities(G)
+    mod = community.modularity(G, partition)
+    print(mod)
 
     return G
-
 
 def count_cycles(G):
     cycles = list(nx.simple_cycles(G))

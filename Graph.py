@@ -27,28 +27,44 @@ def create_synergy_graph(decks, min_level=1):
     return G
 
 def create_deck_graph(deck):
-    G = nx.DiGraph(name = deck.name, mod = 0, hubs = 0, value = 0)
+    G = nx.DiGraph(name = deck.name, mod = 0, value = 0)
     #print(f"Card Synergies between decks: {deck.name}")    
+    synergy_template = SynergyTemplate()
+    
+
 
     for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
         for j, (card_name_2, card_2) in enumerate(deck.cards.items()):                
 
             if i == j:
-                syn1 = SynergyCollection.from_card(card_1,SynergyTemplate())
+                synC = SynergyCollection.from_card(card_1,)
+                synF = SynergyCollection.from_forgeborn(deck.forgeborn, synergy_template)
                 
-                if len(syn1.synergies) > 0:
-                    syn_str = ", ".join([f"{syn}" for syn in syn1.synergies])
-                    for syn in syn1.synergies:
-                        G.add_edge(card_name_1, card_name_1, label=syn)  
+                if len(synC.synergies) > 0:
+                   syn_str = ", ".join([f"{syn}" for syn in synC.synergies])
+                   for syn in synC.synergies:
+                       G.add_edge(card_name_1, card_name_1, label=syn)  
+
+                synCF = SynergyCollection(synC.sources, synF.targets)
+                synFC = SynergyCollection(synF.sources, synC.targets)
+
+                if len(synCF.synergies) > 0:
+                    for syn in synCF.synergies:
+                        G.add_edge(card_name_1, deck.forgeborn.name, label=syn)            
+
+                if len(synFC.synergies) > 0:
+                    for syn in synFC.synergies:
+                        G.add_edge(deck.forgeborn.name, card_name_1, label=syn)            
+
                      
             if i < j:
             # compare only cards whose indices are greater        
                 # Check if the cards have any synergies                
-                syn1 = SynergyCollection.from_card(card_1,SynergyTemplate())
-                syn2 = SynergyCollection.from_card(card_2,SynergyTemplate())
+                syn1 = SynergyCollection.from_card(card_1,synergy_template)
+                syn2 = SynergyCollection.from_card(card_2,synergy_template)
                             
-                c1_2 = SynergyCollection(syn1.sources, syn2.targets, SynergyTemplate())
-                c2_1 = SynergyCollection(syn2.sources, syn1.targets, SynergyTemplate())
+                c1_2 = SynergyCollection(syn1.sources, syn2.targets, synergy_template)
+                c2_1 = SynergyCollection(syn2.sources, syn1.targets, synergy_template)
 
                 if len(c1_2.synergies) > 0 :                    
                     syn_str = ", ".join([f"{syn}" for syn in c1_2.synergies])
@@ -72,6 +88,7 @@ def create_deck_graph(deck):
     betweenness_centrality = nx.betweenness_centrality(G)
     partition = community.greedy_modularity_communities(G)
     mod = community.modularity(G, partition)
+    G.graph['mod'] = mod
     for node_name in G.nodes:
         #print(f"EigenVector_Centrality: {eigenvector_centrality[node_name]}")
         #print(f"Betweenness_Centrality: {betweenness_centrality[node_name]}")
@@ -107,4 +124,4 @@ def plot_synergy_graph(G):
     plt.show()
 
 def write_gephi_file(graph, filename):
-    nx.write_gexf(graph, filename + '.gexf')
+    nx.write_gexf(graph, './gephi/' + filename + '.gexf')

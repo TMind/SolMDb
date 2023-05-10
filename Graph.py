@@ -42,19 +42,19 @@ def create_deck_graph(deck):
                 
                 if len(synC.synergies) > 0:
                    syn_str = ", ".join([f"{syn}" for syn in synC.synergies])
-                   for syn in synC.synergies:
-                       G.add_edge(card_name_1, card_name_1, label=syn)  
+                   for name, syn in synC.synergies.items():
+                       G.add_edge(card_name_1, card_name_1, label=name, weight = syn.weight)  
 
                 synCF = SynergyCollection(synC.sources, synF.targets)
                 synFC = SynergyCollection(synF.sources, synC.targets)
 
                 if len(synCF.synergies) > 0:
-                    for syn in synCF.synergies:
-                        G.add_edge(card_name_1, deck.forgeborn.name, label=syn)            
+                    for name, syn in synCF.synergies.items():
+                        G.add_edge(card_name_1, deck.forgeborn.name, label=name, weight = syn.weight)            
 
                 if len(synFC.synergies) > 0:
-                    for syn in synFC.synergies:
-                        G.add_edge(deck.forgeborn.name, card_name_1, label=syn)            
+                    for name, syn in synFC.synergies.items():
+                        G.add_edge(deck.forgeborn.name, card_name_1, label=name, weight = syn.weight)            
 
                      
             if i < j:
@@ -68,13 +68,13 @@ def create_deck_graph(deck):
 
                 if len(c1_2.synergies) > 0 :                    
                     syn_str = ", ".join([f"{syn}" for syn in c1_2.synergies])
-                    for syn in c1_2.synergies:
-                        G.add_edge(card_name_1, card_name_2, label=syn)            
+                    for name, syn in c1_2.synergies.items():
+                        G.add_edge(card_name_1, card_name_2, label=name, weight = syn.weight)            
 
                 if len(c2_1.synergies) > 0:
                     syn_str = ", ".join([f"{syn}" for syn in c2_1.synergies])
-                    for syn in c2_1.synergies:
-                        G.add_edge(card_name_2, card_name_1, label=syn)            
+                    for name, syn in c2_1.synergies.items():
+                        G.add_edge(card_name_2, card_name_1, label=name, weight = syn.weight)            
     
     Metric = { "katz" : 0,
                "between" : 0,

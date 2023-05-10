@@ -143,12 +143,26 @@ class Evaluation:
                             
                 
                 if card_name_1 == card_name_2:
-                    syn1 = SynergyCollection.from_card(card_1,synergy_template)
+                    synC = SynergyCollection.from_card(card_1,synergy_template)
+                    synF = SynergyCollection.from_forgeborn(deck.forgeborn, synergy_template)                              
                                         
-                    if len(syn1.synergies) > 0:                    
-                        for synergy in syn1.synergies:                             
+                    if len(synC.synergies) > 0:                    
+                        for synergy in synC.synergies:                             
                             evaluation[card_name_1][synergy]['SELF'].add(card_name_2)                            
-                                                            
+
+                    synCF = SynergyCollection(synC.sources, synF.targets)
+                    synFC = SynergyCollection(synF.sources, synC.targets)
+
+                    if len(synCF.synergies) > 0:                    
+                        for synergy in synCF.synergies:                             
+                            evaluation[card_name_1][synergy]['OUT'].add(deck.forgeborn.name)                                                     
+                            evaluation[deck.forgeborn.name][synergy]['IN'].add(card_name_1)
+
+                    if len(synFC.synergies) > 0:                    
+                        for synergy in synFC.synergies:                                                         
+                            evaluation[deck.forgeborn.name][synergy]['OUT'].add(card_name_1)
+                            evaluation[card_name_1][synergy]['IN'].add(deck.forgeborn.name)                                                     
+                
                 if i < j:
                 # compare only cards whose indices are greater        
                     # Check if the cards have any synergies                

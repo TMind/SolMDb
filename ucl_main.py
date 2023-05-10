@@ -33,12 +33,12 @@ if (0):
 decks = myUCL.load_decks('deck_base.json')
 if (0):
     DeckCollection = DeckLibrary(list(decks.values())) 
-    #evaluator = Evaluation(None)
-    #for fusion in DeckCollection.fusions:
-    #    evaluator.evaluate_deck(fusion) 
+    evaluator = Evaluation(None)
+    for fusion in DeckCollection.fusions:
+        evaluator.evaluate_deck(fusion) 
          
     #DeckCollection.print_fusion_synergies()
-    DeckCollection.get_best_synergies()
+    #DeckCollection.get_best_synergies()
     
 if (0):
     forgeborn_abilities = defaultdict(list)
@@ -56,15 +56,16 @@ if (0):
 if (1):
     #SynergyGraph = Graph.create_synergy_graph(decks)    
     EvaluatedGraphs = {}
-    DeckCollection = DeckLibrary(list(decks.values()))
-    deck_name = 'The Sorcerers of the Oratek Eruptor|The Hurting Demons Larvae'
+    DeckCollection = DeckLibrary(list(decks.values()))    
     for fusion in DeckCollection.fusions:
+        deck_name = fusion.name
+        #deck_name = 'The Sorcerers of the Oratek Eruptor|The Hurting Demons Larvae'
         if fusion.name == deck_name:
             DeckGraph = Graph.create_deck_graph(fusion)        
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph
             Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))        
 
-if (0):
+if (1):
    # Open the csv file in write mode and write the header row
     with open("deck_metrics.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=["deckname", "modularity", "value"])

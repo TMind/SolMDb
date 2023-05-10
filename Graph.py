@@ -31,7 +31,7 @@ def create_deck_graph(deck):
     #print(f"Card Synergies between decks: {deck.name}")    
     synergy_template = SynergyTemplate()
     
-
+    G.add_nodes_from(deck.cards)
 
     for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
         for j, (card_name_2, card_2) in enumerate(deck.cards.items()):                
@@ -76,25 +76,39 @@ def create_deck_graph(deck):
                     for syn in c2_1.synergies:
                         G.add_edge(card_name_2, card_name_1, label=syn)            
     
+    Metric = { "katz" : 0,
+               "between" : 0,
+               #"eigenvector" : 0,
+               "degree" : 0,
+               "PageRank" : 0
+    }
 
     # Calculate personalized PageRank
-    pr = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
-    for card_name, value in pr.items():
-        G.nodes[card_name]['pagerank'] = value
+    #pr = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
+
+    #for card_name, value in pr.items():
+    #    G.nodes[card_name]['MyPageRank'] = value
 
 
-    degree_centrality = nx.degree_centrality(G)
-    #eigenvector_centrality = nx.eigenvector_centrality(G,max_iter=1000)
-    betweenness_centrality = nx.betweenness_centrality(G)
+    
+    Metric['PageRank'] = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
+    Metric['degree'] = nx.degree_centrality(G)
+    #Metric['eigenvector'] = nx.eigenvector_centrality(G,max_iter=1000)
+    Metric['between']    = nx.betweenness_centrality(G)
+    Metric['katz'] = nx.katz_centrality(G, alpha=0.1, beta=1.0)
     partition = community.greedy_modularity_communities(G)
     mod = community.modularity(G, partition)
-    G.graph['mod'] = mod
-    for node_name in G.nodes:
-        #print(f"EigenVector_Centrality: {eigenvector_centrality[node_name]}")
-        #print(f"Betweenness_Centrality: {betweenness_centrality[node_name]}")
-        #print(f"Degree_Centrality:      {degree_centrality[node_name]}")
-        total = betweenness_centrality[node_name] + degree_centrality[node_name] 
-        G.nodes[node_name]['product'] = total + G.nodes[node_name]['pagerank']
+    
+       
+    G.graph['mod'] = mod    
+
+    for name, metric in Metric.items():
+        nx.set_node_attributes(G, metric, name)
+    
+    for node_name in G.nodes:       
+        total = sum([ metric[node_name] for metric in Metric.values()]) 
+        G.nodes[node_name]['total'] = total
+        #G.nodes[node_name]['total'] = total + G.nodes[node_name]['MyPageRank']
         G.graph['value'] += total 
 
     # calculate the number of hubs in the graph

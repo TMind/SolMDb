@@ -59,24 +59,25 @@ if (1):
     DeckCollection = DeckLibrary(list(decks.values()))    
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
-        #deck_name = 'The Sorcerers of the Oratek Eruptor|The Hurting Demons Larvae'
+        deck_name = 'The Sixth Barb Band|The Senseis who became Champs'
         if fusion.name == deck_name:
             DeckGraph = Graph.create_deck_graph(fusion)        
-            EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph
+            EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph        
             Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))        
 
-if (1):
+if (0):
    # Open the csv file in write mode and write the header row
     with open("deck_metrics.csv", "w", newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=["deckname", "modularity", "value"])
+        writer = csv.DictWriter(csvfile, fieldnames=["deckname", "modularity", "value", "final"], delimiter=';')
         writer.writeheader()
 
-        for i, (key, EGraph) in enumerate(EvaluatedGraphs.items()):
-            filename = f"{EGraph.graph['name']}"
-            #Graph.write_gephi_file(EvaluatedGraphs[key], filename.replace('|','_'))
-           #print(f"{i+1}. {key} -> value: {EvaluatedGraphs[key].graph['value']}")
-            writer.writerow({"deckname": EGraph.graph['name'], "modularity": EGraph.graph['mod'], "value": EGraph.graph['value']})
-        
+        for i, (key, EGraph) in enumerate(EvaluatedGraphs.items()):            
+            name  = EGraph.graph['name']
+            mod   = EGraph.graph['mod']
+            value = EGraph.graph['value']
+            final = value / mod            
+            writer.writerow({"deckname": name, "modularity": f"{mod:.4f}", "value": f"{value:.4f}", "final": f"{final:.4f}" })
+
 
 
 

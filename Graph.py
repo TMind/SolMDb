@@ -77,18 +77,18 @@ def create_deck_graph(deck):
                         G.add_edge(card_name_2, card_name_1, label=name, weight = syn.weight)            
     
     Metric = { "katz" : 0,
-               "between" : 0,
-               #"eigenvector" : 0,
+               "between" : 0,               
                "degree" : 0,
                "PageRank" : 0
     }
 
-    # Calculate personalized PageRank
-    #pr = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
+    # Apply Girvan-Newman algorithm
+    comp = community.girvan_newman(G)
 
-    #for card_name, value in pr.items():
-    #    G.nodes[card_name]['MyPageRank'] = value
+    # Extract the communities
+    communities = tuple(sorted(c) for c in next(comp))
 
+    print(communities)
 
     
     Metric['PageRank'] = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
@@ -99,6 +99,7 @@ def create_deck_graph(deck):
     partition = community.greedy_modularity_communities(G)
     mod = community.modularity(G, partition)
     
+
        
     G.graph['mod'] = mod    
 
@@ -107,14 +108,8 @@ def create_deck_graph(deck):
     
     for node_name in G.nodes:       
         total = sum([ metric[node_name] for metric in Metric.values()]) 
-        G.nodes[node_name]['total'] = total
-        #G.nodes[node_name]['total'] = total + G.nodes[node_name]['MyPageRank']
-        G.graph['value'] += total 
-
-    # calculate the number of hubs in the graph
-    #degree_dict = dict(G.degree(G.nodes()))
-    #hub_dict = {k: v for k, v in sorted(degree_dict.items(), key=lambda item: item[1], reverse=True)}
-    #num_hubs = len([k for k, v in hub_dict.items() if v > 2]) # change the threshold as needed
+        G.nodes[node_name]['total'] = total        
+        G.graph['value'] += total     
     
     return G
 

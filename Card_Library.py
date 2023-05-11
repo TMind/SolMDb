@@ -37,6 +37,7 @@ class UniversalCardLibrary:
                                   
                 sources = {}
                 targets = {}
+                Interfaces = []
                 range   = ""
                 read_synergies = False
                 for key, value in row.items():
@@ -63,9 +64,11 @@ class UniversalCardLibrary:
                                 if key in self.synergy_template.get_source_tags():
                                     sources.setdefault(key, 0)
                                     sources[key] += 1                                    
+                                    Interfaces.append(Interface('OUT','key'))
                                 if key in self.synergy_template.get_target_tags():                                
                                     targets.setdefault(key, 0)  
                                     targets[key] += 1                               
+                                    Interfaces.append(Interface('IN','key'))
 
                 self.entities.append(Entity(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, range, sources, targets))
         return self.entities
@@ -257,3 +260,10 @@ class Card():
         return {
             "title": self.title
         }
+
+class Interface():
+    def __init__(self, type, tags):
+        self.type = type    #Input or Output
+        self.tags = tags 
+
+        

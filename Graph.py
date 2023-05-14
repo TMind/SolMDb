@@ -1,5 +1,6 @@
 from DeckLibrary import DeckEvaluator, DeckLibrary
-from Synergy import SynergyCollection,SynergyTemplate
+from Synergy import SynergyTemplate
+from Interface import InterfaceCollection
 from networkx.algorithms import community
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -36,46 +37,44 @@ def create_deck_graph(deck):
     for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
         for j, (card_name_2, card_2) in enumerate(deck.cards.items()):                
 
-            if i == j:
-                synC = SynergyCollection.from_card(card_1,)
-                synF = SynergyCollection.from_forgeborn(deck.forgeborn, synergy_template)
+            if card_name_1 == card_name_2:
+
+                synCC_matches = InterfaceCollection.match_synergies(card_1.ICollection, card_2.ICollection)                                        
+                synCF_matches = InterfaceCollection.match_synergies(card_1.ICollection, deck.forgeborn.ICollection)
+                synFC_matches = InterfaceCollection.match_synergies(deck.forgeborn.ICollection, card_1.ICollection)
+
+                if len(synCC_matches) > 0:                    
+                    for synergy, count in synCC_matches.items(): 
+                        if count > 0:
+                            G.add_edge(card_name_1, card_name_1, label=synergy, weight = count_cycles)                              
                 
-                if len(synC.synergies) > 0:
-                   syn_str = ", ".join([f"{syn}" for syn in synC.synergies])
-                   for name, syn in synC.synergies.items():
-                       G.add_edge(card_name_1, card_name_1, label=name, weight = syn.weight)  
+                if len(synCF_matches) > 0:                    
+                    for synergy, count in synCF_matches.items():                             
+                        if count > 0:
+                            G.add_edge(card_name_1, deck.forgeborn.name, label=synergy, weight = count) 
 
-                synCF = SynergyCollection(synC.sources, synF.targets)
-                synFC = SynergyCollection(synF.sources, synC.targets)
+                if len(synFC_matches) > 0:                    
+                    for synergy, count in synFC_matches.items():
+                        if count > 0:
+                            G.add_edge(deck.forgeborn.name, card_name_1, label=synergy, weight = count)                                                     
+                
+                if i < j:
+                    # compare only cards whose indices are greater        
+                    # Check if the cards have any synergies                
 
-                if len(synCF.synergies) > 0:
-                    for name, syn in synCF.synergies.items():
-                        G.add_edge(card_name_1, deck.forgeborn.name, label=name, weight = syn.weight)            
+                    c12_matches = InterfaceCollection.match_synergies(card_1.ICollection, card_2.ICollection)
+                    c21_matches = InterfaceCollection.match_synergies(card_2.ICollection, card_1.ICollection)
 
-                if len(synFC.synergies) > 0:
-                    for name, syn in synFC.synergies.items():
-                        G.add_edge(deck.forgeborn.name, card_name_1, label=name, weight = syn.weight)            
+                    if len(c12_matches) > 0 :                        
+                        for synergy, count in c12_matches.items():
+                            if count > 0:
+                               G.add_edge(card_name_1, card_name_2, label=synergy, weight = count) 
 
-                     
-            if i < j:
-            # compare only cards whose indices are greater        
-                # Check if the cards have any synergies                
-                syn1 = SynergyCollection.from_card(card_1,synergy_template)
-                syn2 = SynergyCollection.from_card(card_2,synergy_template)
-                            
-                c1_2 = SynergyCollection(syn1.sources, syn2.targets, synergy_template)
-                c2_1 = SynergyCollection(syn2.sources, syn1.targets, synergy_template)
-
-                if len(c1_2.synergies) > 0 :                    
-                    syn_str = ", ".join([f"{syn}" for syn in c1_2.synergies])
-                    for name, syn in c1_2.synergies.items():
-                        G.add_edge(card_name_1, card_name_2, label=name, weight = syn.weight)            
-
-                if len(c2_1.synergies) > 0:
-                    syn_str = ", ".join([f"{syn}" for syn in c2_1.synergies])
-                    for name, syn in c2_1.synergies.items():
-                        G.add_edge(card_name_2, card_name_1, label=name, weight = syn.weight)            
-    
+                    if len(c21_matches) > 0 :                        
+                        for synergy, count in c21_matches.items():
+                            if count > 0:
+                                G.add_edge(card_name_2, card_name_1, label=synergy, weight = count)
+                                    
     Metric = { "katz" : 0,
                "between" : 0,               
                "degree" : 0,

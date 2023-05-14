@@ -1,8 +1,6 @@
-import math
-import collections
 
 Synerginary = {
-    #        <NAME>          <WEIGHT>  <TRIGGER>                       <SOURCE>
+    #        <NAME>          <WEIGHT>  <TRIGGER>                       <output>
             "BEAST"       :  [ 1.0,    ["Beast Synergy"            ],[ "Beast"                  ]],     
             "DINOSAUR"    :  [ 1.0,    ["Dinosaur Synergy"         ],[ "Dinosaur"               ]],
             "MAGE"        :  [ 1.0,    ["Mage Synergy"             ],[ "Mage"                   ]],
@@ -50,11 +48,11 @@ class SynergyTemplate:
         self.synergies = {}
 
         for name, synergy_data in Synerginary.items():
-            weight, target_tags, source_tags = synergy_data
-            self.add_synergy(name, weight, target_tags, source_tags)        
+            weight, input_tags, output_tags = synergy_data
+            self.add_synergy(name, weight, input_tags, output_tags)        
 
-    def add_synergy(self, name, weight, target_tags, source_tags):
-        synergy = Synergy(name, weight, target_tags, source_tags)
+    def add_synergy(self, name, weight, input_tags, output_tags):
+        synergy = Synergy(name, weight, input_tags, output_tags)
         self.synergies[name] = synergy
 
     def get_synergies(self):
@@ -63,187 +61,102 @@ class SynergyTemplate:
     def get_synergy_by_name(self, name):
         return self.synergies[name]        
 
-    def get_synergies_by_target_tag(self, tag):
-        return [synergy for synergy in self.synergies.values() if tag in synergy.target_tags]
+    def get_synergies_by_tag(self, tag):
+        input_synergies = [synergy for synergy in self.synergies.values() if tag in synergy.input_tags]
+        output_synergies = [synergy for synergy in self.synergies.values() if tag in synergy.output_tags]
+        return input_synergies + output_synergies
 
-    def get_synergies_by_source_tag(self, tag):
-        return [synergy for synergy in self.synergies.values() if tag in synergy.source_tags]
+    def get_output_tags_by_synergy(self, synergyname):
+        synergy = self.get_synergy_by_name(synergyname)
+        return synergy.output_tags
+
+    def get_input_tags_by_synergy(self, synergyname):
+        synergy = self.get_synergy_by_name(synergyname)
+        return synergy.input_tags
+
+    def get_output_tags(self):
+        output_tags = set()
+        for synergy in self.synergies.values():
+            output_tags.update(synergy.output_tags)
+        return output_tags
+
+    def get_input_tags(self):
+        input_tags = set()
+        for synergy in self.synergies.values():
+            input_tags.update(synergy.input_tags)
+        return input_tags
     
-    def get_source_tags_by_synergy(self, synergyname):
-        synergy = self.get_synergy_by_name(synergyname)
-        return synergy.source_tags
-
-    def get_target_tags_by_synergy(self, synergyname):
-        synergy = self.get_synergy_by_name(synergyname)
-        return synergy.target_tags
-
-    def get_source_tags(self):
-        source_tags = set()
-        for synergy in self.synergies.values():
-            source_tags.update(synergy.source_tags)
-        return source_tags
-
-    def get_target_tags(self):
-        target_tags = set()
-        for synergy in self.synergies.values():
-            target_tags.update(synergy.target_tags)
-        return target_tags
 
     def __str__(self):
         output = "Synergies:\n"
         for name, synergy in self.synergies.items():
             output += f"{synergy}\n"
         return output
+    
 
 class Synergy:
-    def __init__(self, name, weight, target_tags, source_tags):
+    def __init__(self, name, weight, input_tags, output_tags):
         self.name = name
         self.weight = weight
-        self.target_tags = target_tags 
-        self.source_tags = source_tags 
-        self.source_counts = {tag: 0 for tag in source_tags}
-        self.target_counts = {tag: 0 for tag in target_tags}
+        self.input_tags = input_tags 
+        self.output_tags = output_tags 
+        self.output_counts = {tag: 0 for tag in output_tags}
+        self.input_counts = {tag: 0 for tag in input_tags}
 
-    def add_source_tag(self, tag, value=1):
-        set(self.source_tags).update(tag)
-        self.source_counts[tag] = value
+    def add_output_tag(self, tag, value=1):
+        set(self.output_tags).update(tag)
+        self.output_counts[tag] = value
     
-    def add_target_tag(self, tag, value=1):
-        set(self.target_tags).update(tag)        
-        self.target_counts[tag] = value
+    def add_input_tag(self, tag, value=1):
+        set(self.input_tags).update(tag)        
+        self.input_counts[tag] = value
 
-    def get_target_tags(self):
-        return self.target_tags
+    def get_input_tags(self):
+        return self.input_tags
     
-    def get_source_tags(self):
-        return self.source_tags
+    def get_output_tags(self):
+        return self.output_tags
 
-    def is_tag_in_source(self,tag):
-        return tag in self.source_tags
+    def is_output_tag(self,tag):
+        return tag in self.output_tags
     
-    def is_tag_in_target(self,tag):
-        return tag in self.target_tags
+    def is_input_tag(self,tag):
+        return tag in self.input_tags
     
-    def set_source_count(self, tag, value=1):
-        if tag in self.source_counts:
-            if self.source_counts[tag] > 0:
+    def set_output_count(self, tag, value=1):
+        if tag in self.output_counts:
+            if self.output_counts[tag] > 0:
                 print(f"{tag} > 0 < {value} already! ")
-            self.source_counts[tag] = value    
+            self.output_counts[tag] = value    
 
-    def set_target_count(self, tag, value=1):
-        if tag in self.target_counts:
-            if self.target_counts[tag] > 0:
+    def set_input_count(self, tag, value=1):
+        if tag in self.input_counts:
+            if self.input_counts[tag] > 0:
                 print(f"{tag} > 0 < {value} already! ")
-            self.target_counts[tag] = value
+            self.input_counts[tag] = value
     
-    def get_source_counts(self):
-        return self.source_counts
+    def get_output_counts(self):
+        return self.output_counts
     
-    def get_target_counts(self):
-        return self.target_counts
+    def get_input_counts(self):
+        return self.input_counts
     
     def is_synergy(self):  
-        has_nonzero_sources = any(source_val > 0 for source_val in self.source_counts.values())
-        has_nonzero_targets = any(target_val > 0 for target_val in self.target_counts.values())
-        return has_nonzero_sources and has_nonzero_targets
+        has_nonzero_output = any(output_val > 0 for output_val in self.output_counts.values())
+        has_nonzero_input = any(input_val > 0 for input_val in self.input_counts.values())
+        return has_nonzero_output and has_nonzero_input
 
     def stats(self,stats,type):
         max = max(stats[self.name][type].keys())
-        if type == 'target' :
-            return self.source_counts / max
-        if type == 'source' :
-            return self.target_counts / max
+        if type == 'input' :
+            return self.output_counts / max
+        if type == 'output' :
+            return self.input_counts / max
         return None
 
     def __str__(self):
-        source_counts_str = ", ".join([f"{tag}: {count}" for tag, count in self.source_counts.items()])
-        target_counts_str = ", ".join([f"{tag}: {count}" for tag, count in self.target_counts.items()])
-        source_counts_total = sum(self.get_source_counts().values())
-        target_counts_total = sum(self.get_target_counts().values())
-        return f"{self.name:<17}: {self.weight:<7} - Sources: {source_counts_str:>40} - Targets: {target_counts_str:>40} => {source_counts_total:<5.2g}^{target_counts_total:>5.2g}"
-
-class SynergyCollection:
-
-    def __init__(self, sources=None, targets=None, synergy_template=None):
-        self.sources = sources or {}
-        self.targets = targets or {}
-        self.synergies = {}
-        self.synergy_template = synergy_template or SynergyTemplate()
-
-        if self.sources and self.targets:
-            self.find_synergy_pairs()
-            
-    @classmethod
-    def from_entities(cls, entities, synergy_template=None):
-        sources = {}
-        targets = {}
-
-        for entity in entities:                
-            for source_name in entity.sources:
-                sources[source_name] = sources.get(source_name, 0) + 1
-            for target_name in entity.targets:
-                targets[target_name] = targets.get(target_name, 0) + 1
-
-        return cls(sources,targets, synergy_template=synergy_template)
-
-    @classmethod
-    def from_card(cls, card, synergy_template=None):        
-        return cls.from_entities(card.entities, synergy_template=synergy_template)
-
-    @classmethod
-    def from_deck(cls, deck, synergy_template=None):       
-        entities = [ entity for card in deck.cards.values() for entity in card.entities ]
-        return cls.from_entities(entities, synergy_template=synergy_template)
-
-    @classmethod
-    def from_forgeborn(cls, forgeborn, synergy_template=None):
-        entities = [ability for ability in forgeborn.abilities.values()]
-        return cls.from_entities(entities, synergy_template=synergy_template)
-
-
-    def __add__(self, other):
-        
-        sources1 = collections.Counter(self.sources)
-        sources2 = collections.Counter(other.sources)
-        new_sources = sources1 + sources2
-
-        targets1 = collections.Counter(self.targets)
-        targets2 = collections.Counter(other.targets)
-        new_targets = targets1 + targets2
-
-        return SynergyCollection(new_sources, new_targets)
-    
-    def __mul__(self, other):
-
-        if isinstance(other, (int, float)):
-            sources = {k: round(v * other, 2) for k, v in self.sources.items()}
-            targets = {k: round(v * other, 2) for k, v in self.targets.items()}
-            return SynergyCollection(sources, targets)
-        else:
-            raise ValueError("Can only multiply with a number")
-                                                   
-    def find_synergy_pairs(self):        
-        for template_synergy_name, template_synergy in self.synergy_template.synergies.items():
-            synergy = Synergy(template_synergy_name, template_synergy.weight, [], [])
-            for source_tag in template_synergy.source_tags:
-                if source_tag in self.sources:                  
-                    synergy.add_source_tag(source_tag, self.sources[source_tag])
-
-            for target_tag in template_synergy.target_tags:
-                if target_tag in self.targets:                  
-                    synergy.add_target_tag(target_tag, self.targets[target_tag])
-
-            if synergy.is_synergy():                    
-                self.synergies[synergy.name] = synergy                
-
-    def __str__(self):
-        sources_str = f"Sources: {self.sources}\n" if isinstance(self.sources, dict) else ""
-        targets_str = f"Targets: {self.targets}\n" if isinstance(self.targets, dict) else ""
-        synergies_str = "Synergies:\n"
-        for synergy in self.synergies.values():                        
-            synergies_str += f"{str(synergy)}\n"
-        return synergies_str # + sources_str + targets_str
-
-
-
-
+        output_counts_str = ", ".join([f"{tag}: {count}" for tag, count in self.output_counts.items()])
+        input_counts_str = ", ".join([f"{tag}: {count}" for tag, count in self.input_counts.items()])
+        output_counts_total = sum(self.get_output_counts().values())
+        input_counts_total = sum(self.get_input_counts().values())
+        return f"{self.name:<17}: {self.weight:<7} - output: {output_counts_str:>40} - input: {input_counts_str:>40} => {output_counts_total:<5.2g}^{input_counts_total:>5.2g}"

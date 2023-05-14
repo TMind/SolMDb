@@ -31,7 +31,7 @@ if (0):
         json.dump(deck_data, f)
 
 decks = myUCL.load_decks('deck_base.json')
-if (1):
+if (0):
     DeckCollection = DeckLibrary(list(decks.values())) 
     evaluator = Evaluation(None)
     for fusion in DeckCollection.fusions:
@@ -65,7 +65,7 @@ if (1):
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph        
             #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))        
 
-if (1):
+if (0):
    # Open the csv file in write mode and write the header row
     with open("deck_metrics.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=["deckname", "modularity", "value", "final"], delimiter=';')

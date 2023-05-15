@@ -14,8 +14,8 @@ class UniversalCardLibrary:
 
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
+            reader = csv.DictReader(csvfile, delimiter=';')
+            for row in reader:                
                 name = row['Name']
                 faction = row['faction']
                 rarity = row['rarity']
@@ -50,7 +50,7 @@ class UniversalCardLibrary:
                                 if key == "Free":                                    
                                     key = f"Free {value}"            
                                     value = 1
-                                    print(f"Found: {name} -> {key} : {value}")
+                                    
                                 else: 
                                     if value == '*':
                                         range = '*'

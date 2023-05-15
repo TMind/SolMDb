@@ -59,13 +59,13 @@ if (1):
     DeckCollection = DeckLibrary(list(decks.values()))    
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
-        #deck_name = 'The Sixth Barb Band|The Senseis who became Champs'
+        #deck_name = 'The Opening Sisters Liches|Doctors of Tatoo and Comparing'
         if fusion.name == deck_name:
             DeckGraph = Graph.create_deck_graph(fusion)        
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph        
-            #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))        
+            Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))        
 
-if (0):
+if (1):
    # Open the csv file in write mode and write the header row
     with open("deck_metrics.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=["deckname", "modularity", "value", "final"], delimiter=';')

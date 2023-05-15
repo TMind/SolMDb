@@ -16,9 +16,7 @@ class InterfaceCollection:
                 syns = interface.synergies
                 for syn in syns:
                     self.interfaces[syn.name][interface.name] = interface
-
-        #TODO: self.matchInterfaces()
-
+        
 
     @classmethod
     def from_elements(cls, output, input, synergy_template=None):

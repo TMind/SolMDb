@@ -46,7 +46,7 @@ def create_deck_graph(deck):
                 if len(synCC_matches) > 0:                    
                     for synergy, count in synCC_matches.items(): 
                         if count > 0:
-                            G.add_edge(card_name_1, card_name_1, label=synergy, weight = count_cycles)                              
+                            G.add_edge(card_name_1, card_name_1, label=synergy, weight = count)                              
                 
                 if len(synCF_matches) > 0:                    
                     for synergy, count in synCF_matches.items():                             
@@ -58,38 +58,33 @@ def create_deck_graph(deck):
                         if count > 0:
                             G.add_edge(deck.forgeborn.name, card_name_1, label=synergy, weight = count)                                                     
                 
-                if i < j:
-                    # compare only cards whose indices are greater        
-                    # Check if the cards have any synergies                
+            if i < j:
+                # compare only cards whose indices are greater        
+                # Check if the cards have any synergies                
 
-                    c12_matches = InterfaceCollection.match_synergies(card_1.ICollection, card_2.ICollection)
-                    c21_matches = InterfaceCollection.match_synergies(card_2.ICollection, card_1.ICollection)
+                c12_matches = InterfaceCollection.match_synergies(card_1.ICollection, card_2.ICollection)
+                c21_matches = InterfaceCollection.match_synergies(card_2.ICollection, card_1.ICollection)
 
-                    if len(c12_matches) > 0 :                        
-                        for synergy, count in c12_matches.items():
-                            if count > 0:
-                               G.add_edge(card_name_1, card_name_2, label=synergy, weight = count) 
+                if len(c12_matches) > 0 :                        
+                    for synergy, count in c12_matches.items():
+                        if count > 0:
+                            G.add_edge(card_name_1, card_name_2, label=synergy, weight = count) 
 
-                    if len(c21_matches) > 0 :                        
-                        for synergy, count in c21_matches.items():
-                            if count > 0:
-                                G.add_edge(card_name_2, card_name_1, label=synergy, weight = count)
-                                    
-    Metric = { "katz" : 0,
-               "between" : 0,               
-               "degree" : 0,
-               "PageRank" : 0
-    }
+                if len(c21_matches) > 0 :                        
+                    for synergy, count in c21_matches.items():
+                        if count > 0:
+                            G.add_edge(card_name_2, card_name_1, label=synergy, weight = count)
 
     # Apply Girvan-Newman algorithm
-    comp = community.girvan_newman(G)
+    #comp = community.girvan_newman(G)
 
     # Extract the communities
-    communities = tuple(sorted(c) for c in next(comp))
+    #communities = tuple(sorted(c) for c in next(comp))
 
-    print(communities)
+    #print(communities)
 
-    
+    Metric = {}
+   
     Metric['PageRank'] = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
     Metric['degree'] = nx.degree_centrality(G)
     #Metric['eigenvector'] = nx.eigenvector_centrality(G,max_iter=1000)
@@ -98,8 +93,6 @@ def create_deck_graph(deck):
     partition = community.greedy_modularity_communities(G)
     mod = community.modularity(G, partition)
     
-
-       
     G.graph['mod'] = mod    
 
     for name, metric in Metric.items():
@@ -111,17 +104,6 @@ def create_deck_graph(deck):
         G.graph['value'] += total     
     
     return G
-
-def count_cycles(G):
-    cycles = list(nx.simple_cycles(G))
-    num_cycles = len(cycles)
-    cycle_lengths = [len(cycle) for cycle in cycles]
-    avg_cycle_length = sum(cycle_lengths) / num_cycles if num_cycles > 0 else 0
-
-    print(f"Detected {num_cycles} cycles in the deck graph.")
-    if num_cycles > 0:
-        print(f"Average cycle length: {avg_cycle_length:.2f} cards.")
-        #print(f"Cycle lengths: {cycle_lengths}")
 
 def plot_synergy_graph(G):
     pos = nx.spring_layout(G)

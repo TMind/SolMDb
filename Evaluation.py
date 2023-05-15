@@ -150,7 +150,13 @@ class Evaluation:
 
                     if len(synCC_matches) > 0:                    
                         for synergy, count in synCC_matches.items(): 
-                            if count > 0:
+                            if count > 0 :
+                                ranges = []
+                                for interface in card_1.ICollection[synergy]:
+                                    ranges.append(interface.range)
+                                for range in ranges:
+                                    if range == '+' : 
+                                        break
                                 evaluation[card_name_1][synergy]['SELF'].add(card_name_2)                            
                     
                     if len(synCF_matches) > 0:                    

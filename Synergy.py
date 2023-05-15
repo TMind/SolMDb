@@ -20,11 +20,12 @@ Synerginary = {
             "ARMOR"       :  [ 1.0,    ["Armor Synergy"            ],[ "Armor","Armor Giver "   ]],
             "ACTIVATION"  :  [ 1.0,    ["Ready"                    ],[ "Activate"               ]],
             "FREE"        :  [ 1.0,    ["Free"                     ],[ "Free"                   ]],
-            "FREE HEALING":  [ 1.0,    ["Free Healing Synergy"     ],[ "Healing Source"         ]],
-            "FREE DESTROY":  [ 1.0,    ["Free Destruction"         ],[ "Destruction Synergy","Minon"]],                               
+            "FREE HEALING":  [ 1.0,    ["Free Healing Source"      ],[ "Healing Source"         ]],
+            "FREE DESTROY":  [ 1.0,    ["Free Self Destruction"    ],[ "Destruction Synergy","Minon"]],                               
             "FREE UPGRADE":  [ 1.0,    ["Free Upgrade"             ],[ "Upgrade"                ]],                               
             "FREE SELFDMG":  [ 1.0,    ["Free Self Damage"         ],[ "Self Damage Activator"  ]],
             "FREE SPELL"  :  [ 1.0,    ["Free Spell"               ],[ "Spell"                  ]],                                               
+            "FREE REPLACE":  [ 1.0,    ["Free Replacement"         ],[ "Replacement Setup"      ]],                                               
             "UPGRADE"     :  [ 1.0,    ["Upgrade Synergy"          ],[ "Upgrade"                ]],
             "REPLACE"     :  [ 1.0,    ["Replace Profit"           ],[ "Replace Setup"          ]],
 
@@ -86,14 +87,12 @@ class SynergyTemplate:
             input_tags.update(synergy.input_tags)
         return input_tags
     
-
     def __str__(self):
         output = "Synergies:\n"
         for name, synergy in self.synergies.items():
             output += f"{synergy}\n"
         return output
     
-
 class Synergy:
     def __init__(self, name, weight, input_tags, output_tags):
         self.name = name

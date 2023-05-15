@@ -152,11 +152,15 @@ class Evaluation:
                         for synergy, count in synCC_matches.items(): 
                             if count > 0 :
                                 ranges = []
-                                for interface in card_1.ICollection[synergy]:
+                                for cardname, interface in card_1.ICollection.interfaces[synergy].items():                                    
+                                    #print(f"Adding Range for {synergy} :: {cardname} :: {interface.name} -> {interface.range}")
                                     ranges.append(interface.range)
                                 for range in ranges:
                                     if range == '+' : 
+                                        print(f"Range not selfreferential! Omit synergy")
                                         break
+                                print(f"Synergy Match Dict:")    
+                                print(str(synCC_matches))
                                 evaluation[card_name_1][synergy]['SELF'].add(card_name_2)                            
                     
                     if len(synCF_matches) > 0:                    
@@ -174,8 +178,9 @@ class Evaluation:
                 if i < j:
                     # compare only cards whose indices are greater        
                     # Check if the cards have any synergies                
-
+                    #print(f"Matching Cards: {card_1.title} ~ {card_2.title}")
                     c12_matches = InterfaceCollection.match_synergies(card_1.ICollection, card_2.ICollection)
+                    #print(f"Matching Cards: {card_2.title} ~ {card_1.title}")
                     c21_matches = InterfaceCollection.match_synergies(card_2.ICollection, card_1.ICollection)
 
                     if len(c12_matches) > 0 :                        
@@ -191,7 +196,7 @@ class Evaluation:
                                 evaluation[card_name_1][synergy]['IN'].add(card_name_2)
 
 
-        arrows = {'IN' : '<-', 'OUT' : '->', 'SELF' : '<=>'}
+        arrows = {'IN' : '->', 'OUT' : '<-', 'SELF' : '<=>'}
 
         for card_name, card_eval in evaluation.items():
             print(f"Card: {card_name}")

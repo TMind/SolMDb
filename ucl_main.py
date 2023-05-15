@@ -59,24 +59,47 @@ if (1):
     DeckCollection = DeckLibrary(list(decks.values()))    
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
-        #deck_name = 'The Opening Sisters Liches|Doctors of Tatoo and Comparing'
+        deck_name = 'The Hurting Demons Larvae|The Omnivore Brutish Herders'
         if fusion.name == deck_name:
             DeckGraph = Graph.create_deck_graph(fusion)        
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph        
             Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))        
 
-if (1):
+if (0):
    # Open the csv file in write mode and write the header row
     with open("deck_metrics.csv", "w", newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=["deckname", "modularity", "value", "final"], delimiter=';')
+        writer = csv.DictWriter(csvfile, fieldnames=["deckname", "modularity", "value", "final", "katz", "PageRank", "degree", "between"], delimiter=';')
         writer.writeheader()
 
         for i, (key, EGraph) in enumerate(EvaluatedGraphs.items()):            
+
+            Metrics = {
+                "katz"      : 0 ,
+                "PageRank"  : 0 ,
+                "degree"    : 0 ,
+                "between"   : 0 
+            }
+
             name  = EGraph.graph['name']
             mod   = EGraph.graph['mod']
-            value = EGraph.graph['value']
+            value = EGraph.graph['value']            
             final = value / mod            
-            writer.writerow({"deckname": name, "modularity": f"{mod:.4f}", "value": f"{value:.4f}", "final": f"{final:.4f}" })
+
+
+            for metric in Metrics:       
+                Metrics[metric] = sum([ EGraph.nodes[node_name][metric] for node_name in EGraph.nodes]) 
+
+          
+            writer.writerow({
+                "deckname": name,
+                "modularity": f"{mod:.4f}",
+                "value": f"{value:.4f}",
+                "final": f"{final:.4f}",
+                "katz": f"{Metrics['katz']:.4f}",
+                "PageRank": f"{Metrics['PageRank']:.4f}",
+                "degree": f"{Metrics['degree']:.4f}",
+                "between": f"{Metrics['between']:.4f}"
+            })
 
 
 

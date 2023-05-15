@@ -50,27 +50,27 @@ class UniversalCardLibrary:
                                 if key == "Free":                                    
                                     key = f"Free {value}"            
                                     value = 1
+                                    print(f"Found: {name} -> {key} : {value}")
                                 else: 
                                     if value == '*':
                                         range = '*'
                                         value = 1                                        
-                                    if value == '+': 
+                                    elif value == '+': 
                                         range = '+'
                                         value = 1
-                                    if value == '.': 
+                                    elif value == '.': 
                                         range = '.'     
                                         value = 0
+                                    else:
+                                        value = 0
+
                                     
-                            elif int(value) > 0:                                                                    
-                                # if key in self.synergy_template.get_source_tags():
-                                #     sources.setdefault(key, 0)
-                                #     sources[key] += 1  
+                            if int(value) > 0:                                                                    
+                                
                                     ISyn = Interface(name, key, value)
                                     ISyn.range = range
                                     Collection.add(ISyn)
-                                # if key in self.synergy_template.get_target_tags():                                
-                                #     targets.setdefault(key, 0)  
-                                #     targets[key] += 1                               
+                                
                                     
 
                 self.entities.append(Entity(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection))

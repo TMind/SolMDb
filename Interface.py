@@ -3,7 +3,7 @@ import collections
 from Synergy import SynergyTemplate
 
 class InterfaceCollection:
-    def __init__(self, interfaces=None, synergy_template=None):
+    def __init__(self, interfaces=None, synergy_template=None):        
         self.interfaces = {}
         self.synergy_template = synergy_template or SynergyTemplate()
 
@@ -57,13 +57,14 @@ class InterfaceCollection:
     def update(self, other):
         for interface_dict in other.interfaces.values():            
             for interface in interface_dict.values():
-                self.add(interface)            
+                self.add(interface)                    
         return self
 
 
     def add(self, interface):
         for syn in interface.synergies:
             self.interfaces[syn.name][interface.name] = interface
+        
 
     def get_interfaces_by_type(self, interface_type, synergy=None):
         result = {}
@@ -77,6 +78,12 @@ class InterfaceCollection:
                 if interfaces: result[synergy] = interfaces
                 
         return result  
+
+    def get_members(self, type=None):        
+        members = [f"{synergy} :: {interface_name}" for synergy, interfaces in self.interfaces.items() for interface_name in interfaces if type in interfaces[interface_name].types]
+
+        return members
+
 
     def __str__(self):
         output_str = f"output: {self.output}\n" if isinstance(self.output, dict) else ""
@@ -92,11 +99,21 @@ class InterfaceCollection:
         
         input_interfaces1 = collection1.get_interfaces_by_type("IN")
         output_interfaces2 = collection2.get_interfaces_by_type("OUT")
-
-        for synergy, input_interfaces in input_interfaces1.items():
+        
+        for synergy, input_interfaces in input_interfaces1.items():            
             output_interfaces = output_interfaces2.get(synergy, [])
-            num_connections = len(input_interfaces) * len(output_interfaces)
-            matched_synergies[synergy] = num_connections
+            if len(output_interfaces) > 0:
+                #print(f"Members Collection 1: {collection1.get_members('IN')} ")           
+                #print(f"Members Collection 2: {collection2.get_members('OUT')} ")                     
+                #print(f"Matched Interfaces for Synergy: {synergy}")            
+                #for input_interface in input_interfaces:
+                    #print(f"Input Interface: {input_interface.name}")
+                
+                #for output_interface in output_interfaces:
+                    #print(f"Output Interface: {output_interface.name}")
+                
+                num_connections = len(input_interfaces) * len(output_interfaces)
+                matched_synergies[synergy] = num_connections
 
         return matched_synergies
 

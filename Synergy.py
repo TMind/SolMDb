@@ -25,12 +25,13 @@ Synerginary = {
             "FREE UPGRADE":  [ 1.0,    ["Free Upgrade"             ],[ "Upgrade"                ]],                               
             "FREE SELFDMG":  [ 1.0,    ["Free Self Damage"         ],[ "Self Damage Activator"  ]],
             "FREE SPELL"  :  [ 1.0,    ["Free Spell"               ],[ "Spell"                  ]],                                               
-            "FREE REPLACE":  [ 1.0,    ["Free Replacement"         ],[ "Replacement Setup"      ]],                                               
+            "FREE REPLACE":  [ 1.0,    ["Free Replacement"         ],[ "Replace Setup"          ]],                                               
             "UPGRADE"     :  [ 1.0,    ["Upgrade Synergy"          ],[ "Upgrade"                ]],
             "REPLACE"     :  [ 1.0,    ["Replace Profit"           ],[ "Replace Setup"          ]],
 
             "DAMAGE"      :  [ 1.0,    ["Decreased Health Synergy" ],[ "Damage"                 ]],                
-            "SELFDAMAGE"  :  [ 0.5,    [ "Self Damage Activator"   ],["Self Damage Payoff"      ]],                
+            "SELFDAMAGE"  :  [ 0.5,    ["Self Damage Payoff"       ],["Self Damage Activator"   ]],                
+    
             "DESTRUCTION" :  [ 1.0,    [ "SelfDestruction Activator"],["Destruction Synergy","Minion"]],                        
             "REANIMATE"   :  [ 1.0,    ["Reanimate Activator"       ],[ "Deploy","Activate"      ]],
             

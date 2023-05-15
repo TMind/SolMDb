@@ -50,7 +50,7 @@ class UniversalCardLibrary:
                                 if key == "Free":                                    
                                     key = f"Free {value}"            
                                     value = 1
-                                    print(f"Found: {name} -> {key} : {value}")
+                        
                                 else: 
                                     if value == '*':
                                         range = '*'

@@ -13,7 +13,6 @@ Synerginary = {
             "DRAGON"      :  [ 1.0,    ["Dragon Synergy"           ],[ "Dragon"                 ]],
             "ELEMENTAL"   :  [ 1.0,    ["Elemental Synergy"        ],[ "Elemental"              ]],                
             "PLANT"       :  [ 1.0,    ["Plant Synergy"            ],[ "Plant"                  ]],
-            "CREATURE"    :  [ 1.0,    ["Creature Synergy"         ],[ "Creature"               ]],
             "SPELL"       :  [ 1.0,    ["Spell Synergy"            ],[ "Spell"                  ]],
             "HEALING"     :  [ 1.0,    ["Healing Synergy"          ],[ "Healing Source"         ]],
             "MOVEMENT"    :  [ 1.0,    ["Movement Benefit"         ],[ "Movement"               ]],
@@ -34,8 +33,11 @@ Synerginary = {
     
             "DESTRUCTION" :  [ 1.0,    [ "SelfDestruction Activator"],["Destruction Synergy","Minion"]],                        
             "REANIMATE"   :  [ 1.0,    ["Reanimate Activator"       ],[ "Deploy","Activate"      ]],
+            "STEALTH"     :  [ 1.0,    ["Defender Giver"            ],[ "Stealth","Stealth Giver"]],
+            "AGGRO"       :  [ 1.0,    ["Aggressive"                ],[ "Replace Setup"          ]],
             
-            #"AGGRESSIVEATTACK" :  [ 0.5,  ["Stat Buff", "Attack Buff"],["Aggressive","Aggressive Giver"     ]],    
+            
+            #"AGGRESSIVEATTACK" :  [ 0.5,  ["Stat Buff", "Attack Buff"],["gressive","Aggressive Giver"     ]],    
             #"STEALTHATTACK"    :  [ 0.5,  ["Stealth","Stealth Giver"           ],["Stat Buff", "Attack Buff"]],    
             #"BREAKTHROUGH"     :  [ 0.5,  ["Breakthrough","Breakthrough Giver" ],["Stat Buff", "Attack Buff"]],
             

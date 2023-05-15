@@ -59,7 +59,7 @@ if (1):
     DeckCollection = DeckLibrary(list(decks.values()))    
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
-        deck_name = 'The Hurting Demons Larvae|The Omnivore Brutish Herders'
+        deck_name = 'The Opening Sisters Liches|The Fleeing Feasting Brother Flock'
         if fusion.name == deck_name:
             DeckGraph = Graph.create_deck_graph(fusion)        
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph        

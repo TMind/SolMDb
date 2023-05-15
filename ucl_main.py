@@ -31,7 +31,7 @@ if (0):
         json.dump(deck_data, f)
 
 decks = myUCL.load_decks('deck_base.json')
-if (1):
+if (0):
     DeckCollection = DeckLibrary(list(decks.values())) 
     evaluator = Evaluation(None)
     for fusion in DeckCollection.fusions:
@@ -59,11 +59,11 @@ if (1):
     DeckCollection = DeckLibrary(list(decks.values()))    
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
-        #deck_name = 'The Sixth Barb Band|The Senseis who became Champs'
+        #deck_name = 'The Opening Sisters Liches|Doctors of Tatoo and Comparing'
         if fusion.name == deck_name:
             DeckGraph = Graph.create_deck_graph(fusion)        
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph        
-            #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))        
+            Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))        
 
 if (1):
    # Open the csv file in write mode and write the header row

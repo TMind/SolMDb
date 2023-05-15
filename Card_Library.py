@@ -1,7 +1,8 @@
 import csv
 from http.client import NETWORK_AUTHENTICATION_REQUIRED
 import json
-from Synergy import SynergyTemplate, SynergyCollection
+from Synergy import SynergyTemplate
+from Interface import Interface, InterfaceCollection
 
 class UniversalCardLibrary:
 
@@ -35,9 +36,9 @@ class UniversalCardLibrary:
                             'health': health
                         }
                                   
-                sources = {}
-                targets = {}
-                Interfaces = []
+               # sources = {}
+               # targets = {}
+                Collection = InterfaceCollection()
                 range   = ""
                 read_synergies = False
                 for key, value in row.items():
@@ -57,20 +58,22 @@ class UniversalCardLibrary:
                                         range = '+'
                                         value = 1
                                     if value == '.': 
-                                        range == '.'     
+                                        range = '.'     
                                         value = 0
                                     
                             elif int(value) > 0:                                                                    
-                                if key in self.synergy_template.get_source_tags():
-                                    sources.setdefault(key, 0)
-                                    sources[key] += 1                                    
-                                    Interfaces.append(Interface('OUT','key'))
-                                if key in self.synergy_template.get_target_tags():                                
-                                    targets.setdefault(key, 0)  
-                                    targets[key] += 1                               
-                                    Interfaces.append(Interface('IN','key'))
+                                # if key in self.synergy_template.get_source_tags():
+                                #     sources.setdefault(key, 0)
+                                #     sources[key] += 1  
+                                    ISyn = Interface(name, key, value)
+                                    ISyn.range = range
+                                    Collection.add(ISyn)
+                                # if key in self.synergy_template.get_target_tags():                                
+                                #     targets.setdefault(key, 0)  
+                                #     targets[key] += 1                               
+                                    
 
-                self.entities.append(Entity(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, range, sources, targets))
+                self.entities.append(Entity(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection))
         return self.entities
 
     def search_entity(self,name):
@@ -168,7 +171,7 @@ class UniversalCardLibrary:
 
 
 class Entity:
-    def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, range, sources, targets=None):
+    def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection):
         self.name = name
         self.faction = faction
         self.rarity = rarity
@@ -176,10 +179,10 @@ class Entity:
         self.card_subtype = card_subtype
         self.spliced = spliced
         self.solbind = solbind        
-        self.abilities = abilities
-        self.range = range
-        self.sources = sources
-        self.targets = targets or {}
+        self.abilities = abilities        
+        self.ICollection = Collection
+        #self.sources = sources
+        #self.targets = targets or {}
   
     def __str__(self):
         trait_str = ", ".join([f"{trait}" for trait in self.sources.items()])
@@ -197,9 +200,9 @@ class Deck:
         self.forgeborn = forgeborn
         self.faction = faction
         self.cards = cards      
-        syn_col_deck = SynergyCollection.from_deck(self,SynergyTemplate())
-        syn_col_fb   = SynergyCollection.from_forgeborn(self.forgeborn, SynergyTemplate())
-        self.synergy_collection = syn_col_deck + syn_col_fb 
+        int_col_deck = InterfaceCollection.from_deck(self,SynergyTemplate())
+        int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn, SynergyTemplate())
+        self.ICollection = int_col_deck.update(int_col_fb)
 
     def __add__(self, other):      
         name = self.name + '|' + other.name
@@ -230,7 +233,7 @@ class Forgeborn:
         self.name = name
         self.faction = faction
         self.abilities = abilities        
-        self.synergy_collection = SynergyCollection.from_forgeborn(self, SynergyTemplate())
+        self.ICollection = InterfaceCollection.from_forgeborn(self, SynergyTemplate())
 
     def __str__(self):
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
@@ -245,13 +248,14 @@ class Forgeborn:
 
 class Card():
     def __init__(self, card, modifier=None):  
-        self.entities = [card]      
+        self.entities = [card]     
         if modifier:
             self.title = modifier.name + ' ' + card.name
             if isinstance(modifier, Entity):
                 self.entities.append(modifier)
         else:
             self.title = card.name
+        self.ICollection = InterfaceCollection.from_entities(self.entities)
 
     def __str__(self):
         return self.title
@@ -260,10 +264,5 @@ class Card():
         return {
             "title": self.title
         }
-
-class Interface():
-    def __init__(self, type, tags):
-        self.type = type    #Input or Output
-        self.tags = tags 
 
         

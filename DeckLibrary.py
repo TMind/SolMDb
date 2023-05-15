@@ -6,7 +6,7 @@ class DeckLibrary:
         self.decks = decks
         self.fusions = self.get_fusions()
         self.synergy_stats = {synergy_name: {'target': {}, 'source': {}} for synergy_name in SynergyTemplate().get_synergies() }
-        self.build_stats()
+        #self.build_stats()
         self.evaluator = Evaluation(self.synergy_stats)
 
     def get_fusions(self):
@@ -26,19 +26,19 @@ class DeckLibrary:
             print(f"Deck Evaluation added: {fusion.name} {score}")
         return evaluation
                             
-    def build_stats(self):
+    # def build_stats(self):
         
-        for eval_fusion in self.fusions:
-            fusion_synergies = eval_fusion.synergy_collection
-            for synergy_name, synergy in fusion_synergies.synergies.items():
-                target_count = sum(synergy.get_target_counts().values())
-                source_count = sum(synergy.get_source_counts().values())
-                if target_count not in self.synergy_stats[synergy_name]['target']:
-                    self.synergy_stats[synergy_name]['target'][target_count] = 0
-                self.synergy_stats[synergy_name]['target'][target_count] += 1
-                if source_count not in self.synergy_stats[synergy_name]['source']:
-                    self.synergy_stats[synergy_name]['source'][source_count] = 0
-                self.synergy_stats[synergy_name]['source'][source_count] += 1
+    #     for eval_fusion in self.fusions:
+    #         fusion_synergies = eval_fusion.ICollection
+    #         for synergy_name, synergy in fusion_synergies.synergies.items():
+    #             target_count = sum(synergy.get_target_counts().values())
+    #             source_count = sum(synergy.get_source_counts().values())
+    #             if target_count not in self.synergy_stats[synergy_name]['target']:
+    #                 self.synergy_stats[synergy_name]['target'][target_count] = 0
+    #             self.synergy_stats[synergy_name]['target'][target_count] += 1
+    #             if source_count not in self.synergy_stats[synergy_name]['source']:
+    #                 self.synergy_stats[synergy_name]['source'][source_count] = 0
+    #             self.synergy_stats[synergy_name]['source'][source_count] += 1
 
     def get_best_synergies(self):
 
@@ -47,8 +47,8 @@ class DeckLibrary:
         for synergy in SynergyTemplate().synergies:  
             max_percentage = 0 
             for fusion in self.fusions:                  
-                if synergy in fusion.synergy_collection.synergies:
-                    deck_synergy = fusion.synergy_collection.synergies[synergy] 
+                if synergy in fusion.ICollection.synergies:
+                    deck_synergy = fusion.ICollection.synergies[synergy] 
                     p = Evaluation(self.synergy_stats).evaluate_synergy(deck_synergy)
                     if p == max_percentage :
                         best_synergy_decks[synergy].append(fusion)     
@@ -59,7 +59,7 @@ class DeckLibrary:
 
         for synergy, fusions in best_synergy_decks.items():
             for fusion in fusions:
-                deck_synergy = fusion.synergy_collection.synergies[synergy]
+                deck_synergy = fusion.ICollection.synergies[synergy]
                 sources = sum(deck_synergy.get_source_counts().values())
                 targets = sum(deck_synergy.get_target_counts().values())
                 print(f"Synergy: {synergy} in '{fusion.name}' = {sources} / {targets} =>  {Evaluation(self.synergy_stats).evaluate_synergy(deck_synergy)}")
@@ -68,7 +68,7 @@ class DeckLibrary:
         for fusion in self.fusions:
             print("========================================")
             print(f"Synergies for fusion '{fusion.name}':\n")
-            for synergy_name, synergy in fusion.synergy_collection.synergies.items():
+            for synergy_name, synergy in fusion.ICollection.synergies.items():
                 target_count_max = max(self.synergy_stats[synergy_name]['target'].keys())
                 source_count_max = max(self.synergy_stats[synergy_name]['source'].keys())
                 source_count     = sum(synergy.get_source_counts().values())
@@ -81,22 +81,22 @@ class DeckLibrary:
                 print(f"{synergy_name:<15} : {syn_sources_string:>50} [{source_ratio:>3.0f}] ** [{target_ratio:>3.0f}] {syn_targets_string:>50} -> {mean_ratio:>3.0f}")
         
              # check if any synergy is missing in the fusion
-            missing_synergies = set(SynergyTemplate().get_synergies()) - set(fusion.synergy_collection.synergies.keys())
+            missing_synergies = set(SynergyTemplate().get_synergies()) - set(fusion.ICollection.synergies.keys())
 
             # print missing synergies
             for missing_synergy in missing_synergies:                                
-                source_tags = SynergyTemplate().get_source_tags_by_synergy(missing_synergy)
-                target_tags = SynergyTemplate().get_target_tags_by_synergy(missing_synergy)
+                source_tags = SynergyTemplate().get_output_tags_by_synergy(missing_synergy)
+                target_tags = SynergyTemplate().get_input_tags_by_synergy(missing_synergy)
 
                 source_count = 0
                 for tag in source_tags:
-                    if tag in fusion.synergy_collection.sources:
-                        source_count += fusion.synergy_collection.sources[tag]
+                    if tag in fusion.ICollection.sources:
+                        source_count += fusion.ICollection.sources[tag]
 
                 target_count = 0
                 for tag in target_tags:
-                    if tag in fusion.synergy_collection.targets:
-                        target_count += fusion.synergy_collection.targets[tag]
+                    if tag in fusion.ICollection.targets:
+                        target_count += fusion.ICollection.targets[tag]
 
                 target_count_max = max(self.synergy_stats[missing_synergy]['target'].keys(), default=0)
                 source_count_max = max(self.synergy_stats[missing_synergy]['source'].keys(), default=0)                
@@ -116,28 +116,28 @@ class DeckLibrary:
 
     def get_normalized_mean_percentage(self, fusion):
         normalized_percentages = []
-        for synergy_name, synergy in fusion.synergy_collection.synergies.items():
+        for synergy_name, synergy in fusion.ICollection.synergies.items():
             source_count = sum(synergy.get_source_counts().values())
             target_count = sum(synergy.get_target_counts().values())
             source_ratio = source_count * 100 / max(self.synergy_stats[synergy_name]['source'])
             target_ratio = target_count * 100 / max(self.synergy_stats[synergy_name]['target'])
             normalized_percentages.append((source_ratio + target_ratio) / 2)
 
-        missing_synergies = set(SynergyTemplate().get_synergies()) - set(fusion.synergy_collection.synergies.keys())
+        missing_synergies = set(SynergyTemplate().get_synergies()) - set(fusion.ICollection.synergies.keys())
 
         for missing_synergy in missing_synergies:                                
-            source_tags = SynergyTemplate().get_source_tags_by_synergy(missing_synergy)
-            target_tags = SynergyTemplate().get_target_tags_by_synergy(missing_synergy)
+            source_tags = SynergyTemplate().get_output_tags_by_synergy(missing_synergy)
+            target_tags = SynergyTemplate().get_input_tags_by_synergy(missing_synergy)
 
             source_count = 0
             for tag in source_tags:
-                if tag in fusion.synergy_collection.sources:
-                    source_count += fusion.synergy_collection.sources[tag]
+                if tag in fusion.ICollection.sources:
+                    source_count += fusion.ICollection.sources[tag]
 
             target_count = 0
             for tag in target_tags:
-                if tag in fusion.synergy_collection.targets:
-                    target_count += fusion.synergy_collection.targets[tag]
+                if tag in fusion.ICollection.targets:
+                    target_count += fusion.ICollection.targets[tag]
 
             target_count_max = max(self.synergy_stats[missing_synergy]['target'].keys(), default=0)
             source_count_max = max(self.synergy_stats[missing_synergy]['source'].keys(), default=0)                
@@ -181,7 +181,7 @@ class DeckEvaluator:
         self.synergy_template = SynergyTemplate()
         self.synergy_pairs = SynergyCollection(synergy_template=self.synergy_template)
         self.fb_synpairs = {}
-        self.synergy_collections = {}
+        self.ICollections = {}
         self.scores = defaultdict(lambda: -1)
         self.decknames = [ deck.name for deck in decks ]
 
@@ -195,7 +195,7 @@ class DeckEvaluator:
 
             for fb_name in self.fb_synpairs:                
                 #print("----------------------------------------------")
-                self.synergy_collections[fb_name] = self.get_synergies(fb_name)
+                self.ICollections[fb_name] = self.get_synergies(fb_name)
                 self.scores[fb_name] = self.calculate_fitness_score(fb_name)                            
 
  

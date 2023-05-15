@@ -2,8 +2,8 @@ import math
 from itertools import islice
 from collections import defaultdict
 from scipy.stats import hypergeom
-from Synergy import SynergyTemplate, SynergyCollection
-
+from Synergy import SynergyTemplate
+from Interface import InterfaceCollection
 
 def product(l):
     x = 1
@@ -143,45 +143,52 @@ class Evaluation:
                             
                 
                 if card_name_1 == card_name_2:
-                    synC = SynergyCollection.from_card(card_1,synergy_template)
-                    synF = SynergyCollection.from_forgeborn(deck.forgeborn, synergy_template)                              
-                                        
-                    if len(synC.synergies) > 0:                    
-                        for synergy in synC.synergies:                             
-                            evaluation[card_name_1][synergy]['SELF'].add(card_name_2)                            
 
-                    synCF = SynergyCollection(synC.sources, synF.targets)
-                    synFC = SynergyCollection(synF.sources, synC.targets)
+                    synCC_matches = InterfaceCollection.match_synergies(card_1.ICollection, card_2.ICollection)                                        
+                    synCF_matches = InterfaceCollection.match_synergies(card_1.ICollection, deck.forgeborn.ICollection)
+                    synFC_matches = InterfaceCollection.match_synergies(deck.forgeborn.ICollection, card_1.ICollection)
 
-                    if len(synCF.synergies) > 0:                    
-                        for synergy in synCF.synergies:                             
-                            evaluation[card_name_1][synergy]['OUT'].add(deck.forgeborn.name)                                                     
-                            evaluation[deck.forgeborn.name][synergy]['IN'].add(card_name_1)
+                    if len(synCC_matches) > 0:                    
+                        for synergy, count in synCC_matches.items(): 
+                            if count > 0 :
+                                ranges = []
+                                for interface in card_1.ICollection[synergy]:
+                                    ranges.append(interface.range)
+                                for range in ranges:
+                                    if range == '+' : 
+                                        break
+                                evaluation[card_name_1][synergy]['SELF'].add(card_name_2)                            
+                    
+                    if len(synCF_matches) > 0:                    
+                        for synergy, count in synCF_matches.items():                             
+                            if count > 0:
+                                evaluation[card_name_1][synergy]['OUT'].add(deck.forgeborn.name)                                                     
+                                evaluation[deck.forgeborn.name][synergy]['IN'].add(card_name_1)
 
-                    if len(synFC.synergies) > 0:                    
-                        for synergy in synFC.synergies:                                                         
-                            evaluation[deck.forgeborn.name][synergy]['OUT'].add(card_name_1)
-                            evaluation[card_name_1][synergy]['IN'].add(deck.forgeborn.name)                                                     
+                    if len(synFC_matches) > 0:                    
+                        for synergy, count in synFC_matches.items():
+                            if count > 0:
+                                evaluation[deck.forgeborn.name][synergy]['OUT'].add(card_name_1)
+                                evaluation[card_name_1][synergy]['IN'].add(deck.forgeborn.name)                                                     
                 
                 if i < j:
-                # compare only cards whose indices are greater        
+                    # compare only cards whose indices are greater        
                     # Check if the cards have any synergies                
 
-                    syn1 = SynergyCollection.from_card(card_1,synergy_template)
-                    syn2 = SynergyCollection.from_card(card_2,synergy_template)
-                   #                                                                         OUT IN
-                    c1_2 = SynergyCollection(syn1.sources, syn2.targets, synergy_template) # 1 -> 2
-                    c2_1 = SynergyCollection(syn2.sources, syn1.targets, synergy_template) # 2 -> 1
+                    c12_matches = InterfaceCollection.match_synergies(card_1.ICollection, card_2.ICollection)
+                    c21_matches = InterfaceCollection.match_synergies(card_2.ICollection, card_1.ICollection)
 
-                    if len(c1_2.synergies) > 0 :                        
-                        for synergy in c1_2.synergies:                             
-                            evaluation[card_name_1][synergy]['OUT'].add(card_name_2)                                                     
-                            evaluation[card_name_2][synergy]['IN'].add(card_name_1)
+                    if len(c12_matches) > 0 :                        
+                        for synergy, count in c12_matches.items():
+                            if count > 0:
+                                evaluation[card_name_1][synergy]['OUT'].add(card_name_2)                                                     
+                                evaluation[card_name_2][synergy]['IN'].add(card_name_1)
 
-                    if len(c2_1.synergies) > 0:
-                        for synergy in c2_1.synergies:                                                                         
-                            evaluation[card_name_1][synergy]['IN'].add(card_name_2)                                            
-                            evaluation[card_name_2][synergy]['OUT'].add(card_name_1)       
+                    if len(c21_matches) > 0 :                        
+                        for synergy, count in c21_matches.items():
+                            if count > 0:
+                                evaluation[card_name_2][synergy]['OUT'].add(card_name_1)
+                                evaluation[card_name_1][synergy]['IN'].add(card_name_2)
 
 
         arrows = {'IN' : '<-', 'OUT' : '->', 'SELF' : '<=>'}

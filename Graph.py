@@ -1,4 +1,4 @@
-from DeckLibrary import DeckEvaluator, DeckLibrary
+from DeckLibrary import DeckLibrary
 from Synergy import SynergyTemplate
 from Interface import InterfaceCollection
 from networkx.algorithms import community

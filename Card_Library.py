@@ -1,4 +1,5 @@
 import csv
+import re
 from http.client import NETWORK_AUTHENTICATION_REQUIRED
 import json
 from Synergy import SynergyTemplate
@@ -14,7 +15,7 @@ class UniversalCardLibrary:
 
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=';')
+            reader = csv.DictReader(csvfile, delimiter=',')
             for row in reader:                
                 name = row['Name']
                 faction = row['faction']

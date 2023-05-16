@@ -6,7 +6,7 @@ class Evaluation:
     def __init__(self, synergy_stats):
         self.synergy_stats = synergy_stats
   
-
+  
     def evaluate_deck(self, deck):
         # loop through each synergy in the deck
         print(f"=====================================")

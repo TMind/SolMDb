@@ -28,7 +28,7 @@ def create_synergy_graph(decks, min_level=1):
     return G
 
 def create_deck_graph(deck):
-    G = nx.DiGraph(name = deck.name, mod = 0, value = 0)
+    G = nx.DiGraph(name = deck.name, mod = 0, value = 0, cluster_coeff = 0, density = 0)
     #print(f"Card Synergies between decks: {deck.name}")    
     synergy_template = SynergyTemplate()
     
@@ -92,8 +92,12 @@ def create_deck_graph(deck):
     Metric['katz'] = nx.katz_centrality(G, alpha=0.1, beta=1.0)
     partition = community.greedy_modularity_communities(G)
     mod = community.modularity(G, partition)
+    clustering_coefficients = nx.average_clustering(G)
+    density = nx.density(G)
     
     G.graph['mod'] = mod    
+    G.graph['cluster_coeff'] = clustering_coefficients    
+    G.graph['density'] = density
 
     for name, metric in Metric.items():
         nx.set_node_attributes(G, metric, name)
@@ -102,7 +106,7 @@ def create_deck_graph(deck):
         total = sum([ metric[node_name] for metric in Metric.values()]) 
         G.nodes[node_name]['total'] = total        
         G.graph['value'] += total     
-    
+
     return G
 
 def plot_synergy_graph(G):
@@ -112,6 +116,17 @@ def plot_synergy_graph(G):
     nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
     #nx.draw_networkx_labels(G, pos, labels={node: node for node in G.nodes()}, font_size=10)
     plt.show()
+
+def print_graph(G):
+    # Print header
+    print(f"{'Node A':<30} {'Node B':<30} {'Weight':<5} {'Label':<15}")
+
+    # Iterate through edges and print in a tabular format
+    for nodeA, nodeB, data in G.edges(data=True):
+        weight = data.get('weight', 'N/A')
+        label = data.get('label', 'N/A')
+        print(f"{nodeA:<30} {nodeB:<30} {str(weight):<5} {str(label):<15}")
+
 
 def write_gephi_file(graph, filename):
     nx.write_gexf(graph, './gephi/' + filename + '.gexf')

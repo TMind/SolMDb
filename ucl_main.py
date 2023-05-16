@@ -59,23 +59,28 @@ if (1):
     DeckCollection = DeckLibrary(list(decks.values()))    
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
-        deck_name = 'The Opening Sisters Liches|The Fleeing Feasting Brother Flock'
-        if fusion.name == deck_name:
+        #half_deck = 'Vindicators of Sobbing and Baking'
+        deck_name = "Sparky's Attentive Combatants|The Tentacles of the Diseased Bone"
+        #if half_deck in fusion.name :
+        if deck_name == fusion.name :
+
             DeckGraph = Graph.create_deck_graph(fusion)        
-            EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph        
+            EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph  
+            print(f"\nFusion: {fusion.name}\n")
+            Graph.print_graph(DeckGraph)                  
             Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))        
 
 if (0):
    # Open the csv file in write mode and write the header row
     with open("deck_metrics.csv", "w", newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=["deckname", "modularity", "value", "final", "katz", "PageRank", "degree", "between"], delimiter=';')
+        writer = csv.DictWriter(csvfile, fieldnames=["deckname", "modularity", "value", "final", "katz", "degree", "density", "cluster_coeff", "between"], delimiter=';')
         writer.writeheader()
 
         for i, (key, EGraph) in enumerate(EvaluatedGraphs.items()):            
 
             Metrics = {
                 "katz"      : 0 ,
-                "PageRank"  : 0 ,
+#                "PageRank"  : 0 ,
                 "degree"    : 0 ,
                 "between"   : 0 
             }
@@ -83,6 +88,8 @@ if (0):
             name  = EGraph.graph['name']
             mod   = EGraph.graph['mod']
             value = EGraph.graph['value']            
+            density = EGraph.graph['density'] 
+            cluster_coeff = EGraph.graph['cluster_coeff']
             final = value / mod            
 
 
@@ -96,8 +103,10 @@ if (0):
                 "value": f"{value:.4f}",
                 "final": f"{final:.4f}",
                 "katz": f"{Metrics['katz']:.4f}",
-                "PageRank": f"{Metrics['PageRank']:.4f}",
+             #   "PageRank": f"{Metrics['PageRank']:.4f}",
                 "degree": f"{Metrics['degree']:.4f}",
+                "density": f"{density:.4f}",
+                "cluster_coeff": f"{cluster_coeff:.4f}",
                 "between": f"{Metrics['between']:.4f}"
             })
 

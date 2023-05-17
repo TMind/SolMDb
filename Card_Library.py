@@ -36,11 +36,9 @@ class UniversalCardLibrary:
                             'attack': attack,
                             'health': health
                         }
-                                  
-               # sources = {}
-               # targets = {}
-                Collection = InterfaceCollection(self.synergy_template)
-                range   = ""
+                                                 
+                Collection = InterfaceCollection(name, self.synergy_template)
+                range   = ""                # Default: Any
                 read_synergies = False
                 for key, value in row.items():
                     if key == "3text":
@@ -54,13 +52,13 @@ class UniversalCardLibrary:
                                     
                                 else: 
                                     if value == '*':
-                                        range = '*'
+                                        range = '*'             # All 
                                         value = 1                                        
                                     elif value == '+': 
-                                        range = '+'
+                                        range = '+'             # All Other
                                         value = 1
                                     elif value == '.': 
-                                        range = '.'     
+                                        range = '.'             # Self 
                                         value = 0
                                     else:
                                         value = 0
@@ -184,9 +182,9 @@ class Entity:
         self.ICollection = Collection
   
     def __str__(self):
-        trait_str = ", ".join([f"{trait}" for trait in self.sources.items()])
-        synergy_str = ", ".join([str(synergy) for synergy in self.targets.values()])
-        return f"{self.name} ({self.card_type} - {self.card_subtype})\nTraits: {trait_str}\nSynergies: {synergy_str}"
+        #trait_str = ", ".join([f"{trait}" for trait in self.sources.items()])
+        #synergy_str = ", ".join([str(synergy) for synergy in self.targets.values()])
+        return f"{self.name}"
     
     def to_json(self):
         return {
@@ -199,8 +197,8 @@ class Deck:
         self.forgeborn = forgeborn
         self.faction = faction
         self.cards = cards      
-        int_col_deck = InterfaceCollection.from_deck(self,synergy_template or SynergyTemplate())
-        int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn, synergy_template or SynergyTemplate())
+        int_col_deck = InterfaceCollection.from_deck(self,synergy_template)
+        int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn, synergy_template)
         self.ICollection = int_col_deck.update(int_col_fb)
 
     def __add__(self, other):      
@@ -254,7 +252,7 @@ class Card():
                 self.entities.append(modifier)
         else:
             self.title = card.name
-        self.ICollection = InterfaceCollection.from_entities(self.entities, synergy_template=synergy_template)
+        self.ICollection = InterfaceCollection.from_card(self,synergy_template)
 
     def __str__(self):
         return self.title

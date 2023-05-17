@@ -1,12 +1,10 @@
-from Evaluation import Evaluation
+import Evaluation as ev
 from Synergy import SynergyTemplate
 class DeckLibrary:
     def __init__(self, decks, synergy_template=None):
         self.decks = decks
         self.fusions = self.get_fusions()
-        self.synergy_template = synergy_template or SynergyTemplate()
-        #self.synergy_stats = {synergy_name: {'target': {}, 'source': {}} for synergy_name in self.synergy_template.get_synergies() }        
-        self.evaluator = Evaluation()
+        self.synergy_template = synergy_template or SynergyTemplate()                
 
     def get_fusions(self):
         fusions = []
@@ -20,7 +18,7 @@ class DeckLibrary:
     def evaluate_decks(self):
         evaluation = {}
         for fusion in self.fusions:
-            score = self.evaluator.evaluate_deck(fusion)
+            score = ev.evaluate_deck(fusion)
             evaluation[fusion.name]  = score
             print(f"Deck Evaluation added: {fusion.name} {score}")
         return evaluation
@@ -34,7 +32,7 @@ class DeckLibrary:
             for fusion in self.fusions:                  
                 if synergy in fusion.ICollection.synergies:
                     deck_synergy = fusion.ICollection.synergies[synergy] 
-                    p = Evaluation().evaluate_synergy(deck_synergy)
+                    p = ev.evaluate_synergy(deck_synergy)
                     if p == max_percentage :
                         best_synergy_decks[synergy].append(fusion)     
                     if p > max_percentage :
@@ -47,6 +45,6 @@ class DeckLibrary:
                 deck_synergy = fusion.ICollection.synergies[synergy]
                 sources = sum(deck_synergy.get_source_counts().values())
                 targets = sum(deck_synergy.get_target_counts().values())
-                print(f"Synergy: {synergy} in '{fusion.name}' = {sources} / {targets} =>  {Evaluation().evaluate_synergy(deck_synergy)}")
+                print(f"Synergy: {synergy} in '{fusion.name}' = {sources} / {targets} =>  {ev.evaluate_synergy(deck_synergy)}")
 
     

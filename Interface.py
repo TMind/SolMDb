@@ -1,9 +1,9 @@
-import math
-import collections
+import copy
 from Synergy import SynergyTemplate
 
 class InterfaceCollection:
-    def __init__(self, synergy_template=None, interfaces=None ):        
+    def __init__(self, name, synergy_template=None, interfaces=None ):        
+        self.name = name
         self.interfaces = {}
         self.synergy_template = synergy_template or SynergyTemplate()
 
@@ -16,22 +16,10 @@ class InterfaceCollection:
                 syns = interface.synergies
                 for syn in syns:
                     self.interfaces[syn.name][interface.name] = interface
-        
-
+             
     @classmethod
-    def from_elements(cls, output, input, synergy_template=None):
-        
-        Interfaces = {}
-
-        for key, value in output.update(input):
-            syns = synergy_template.get_synergies_by_tag(key)
-            for syn in syns:
-                Interfaces[syn.name].append(Interface(syn.name,synergy_template, key, value))
-        return cls(synergy_template, Interfaces)
-     
-    @classmethod
-    def from_entities(cls, entities, synergy_template=None):        
-        ICollection = InterfaceCollection(synergy_template)
+    def from_entities(cls, name, entities, synergy_template=None):        
+        ICollection = InterfaceCollection(name, synergy_template)        
 
         for entity in entities:   
             ICollection.update(entity.ICollection)            
@@ -40,17 +28,17 @@ class InterfaceCollection:
 
     @classmethod
     def from_card(cls, card, synergy_template=None):        
-        return cls.from_entities(card.entities, synergy_template=synergy_template)
+        return cls.from_entities(card.title, card.entities, synergy_template=synergy_template)
 
     @classmethod
     def from_deck(cls, deck, synergy_template=None):       
         entities = [ entity for card in deck.cards.values() for entity in card.entities ]
-        return cls.from_entities(entities, synergy_template=synergy_template)
+        return cls.from_entities(deck.name, entities, synergy_template=synergy_template)
 
     @classmethod
     def from_forgeborn(cls, forgeborn, synergy_template=None):
         entities = [ability for ability in forgeborn.abilities.values()]
-        return cls.from_entities(entities, synergy_template=synergy_template)
+        return cls.from_entities(forgeborn.name, entities, synergy_template=synergy_template)
 
 
     def update(self, other):
@@ -65,6 +53,18 @@ class InterfaceCollection:
             self.interfaces[syn.name][interface.name] = interface
         
 
+    def restrict_range(self, range):
+
+        ICollection = copy.deepcopy(self)
+
+        for synergy, interfaces in self.interfaces.items():
+                 for name, interface in interfaces.items() :
+                     if interface.range == range: 
+                         #print(f"Collection restricted: {synergy} -> {name}")
+                         del ICollection.interfaces[synergy][name]   
+
+        return ICollection
+                    
     def get_interfaces_by_type(self, interface_type, synergy=None):
         result = {}
         if synergy is None:
@@ -96,12 +96,26 @@ class InterfaceCollection:
     def match_synergies(collection1, collection2):
         matched_synergies = {}
         
-        input_interfaces1 = collection1.get_interfaces_by_type("IN")
-        output_interfaces2 = collection2.get_interfaces_by_type("OUT")
+        #print(f"Match Collections: {collection1.name} <=> {collection2.name}")
+        if collection1.name == collection2.name:
+            restricted_collection = collection1.restrict_range('+')
+            collection1 = restricted_collection
+            collection2 = restricted_collection
+            
+        input_interfaces2 = collection2.get_interfaces_by_type("IN")
+        output_interfaces1 = collection1.get_interfaces_by_type("OUT")
         
-        for synergy, input_interfaces in input_interfaces1.items():            
-            output_interfaces = output_interfaces2.get(synergy, [])
+        for synergy, input_interfaces in input_interfaces2.items():            
+            output_interfaces = output_interfaces1.get(synergy, [])
+            
             if len(output_interfaces) > 0:
+
+                factor = len(input_interfaces) * len(output_interfaces)
+                input_ranges = [ interface.range for interface in input_interfaces ]
+                if '*' in input_ranges:
+                    factor *= 3
+                if '+' in input_ranges:
+                    factor *= 2
                 #print(f"Members Collection 1: {collection1.get_members('IN')} ")           
                 #print(f"Members Collection 2: {collection2.get_members('OUT')} ")                     
                 #print(f"Matched Interfaces for Synergy: {synergy}")            
@@ -109,10 +123,8 @@ class InterfaceCollection:
                     #print(f"Input Interface: {input_interface.name}")
                 
                 #for output_interface in output_interfaces:
-                    #print(f"Output Interface: {output_interface.name}")
-                
-                num_connections = len(input_interfaces) * len(output_interfaces)
-                matched_synergies[synergy] = num_connections
+                    #print(f"Output Interface: {output_interface.name}")                               
+                matched_synergies[synergy] = factor
 
         return matched_synergies
 

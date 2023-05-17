@@ -32,7 +32,8 @@ Synerginary = {
             "SELFDAMAGE"  :  [ 0.5,    ["Self Damage Payoff"       ],["Self Damage Activator"   ]],                
     
             "DESTRUCTION" :  [ 1.0,    [ "SelfDestruction Activator"],["Destruction Synergy","Minion"]],                        
-            "REANIMATE"   :  [ 1.0,    ["Reanimate Activator"       ],[ "Deploy","Activate"      ]],
+            "REDEPLOY"    :  [ 1.0,    ["Reanimate Activator"       ],[ "Deploy"                 ]],
+            "REACTIVATE"  :  [ 0.5,    ["Reanimate Activator"       ],[ "Activate"               ]],
             "STEALTH"     :  [ 1.0,    ["Defender Giver"            ],[ "Stealth","Stealth Giver"]],
             "AGGRO"       :  [ 1.0,    ["Aggressive"                ],[ "Replace Setup"          ]],
             
@@ -58,6 +59,10 @@ class SynergyTemplate:
     def add_synergy(self, name, weight, input_tags, output_tags):
         synergy = Synergy(name, weight, input_tags, output_tags)
         self.synergies[name] = synergy
+
+    def remove_synergy(self, name):
+        if name in self.synergies:
+            del self.synergies[name]
 
     def get_synergies(self):
         return self.synergies
@@ -90,6 +95,13 @@ class SynergyTemplate:
             input_tags.update(synergy.input_tags)
         return input_tags
     
+    def set_synergy_rows(self, rows):
+        
+        syn_keys = list(self.synergies.keys())
+        for key in syn_keys:
+            if key not in rows:        
+                self.remove_synergy(key)
+
     def __str__(self):
         output = "Synergies:\n"
         for name, synergy in self.synergies.items():

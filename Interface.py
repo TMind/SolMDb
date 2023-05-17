@@ -3,7 +3,7 @@ import collections
 from Synergy import SynergyTemplate
 
 class InterfaceCollection:
-    def __init__(self, interfaces=None, synergy_template=None):        
+    def __init__(self, synergy_template=None, interfaces=None ):        
         self.interfaces = {}
         self.synergy_template = synergy_template or SynergyTemplate()
 
@@ -20,19 +20,18 @@ class InterfaceCollection:
 
     @classmethod
     def from_elements(cls, output, input, synergy_template=None):
-
-        synergy_template = synergy_template or SynergyTemplate()
+        
         Interfaces = {}
 
         for key, value in output.update(input):
             syns = synergy_template.get_synergies_by_tag(key)
             for syn in syns:
-                Interfaces[syn.name].append(Interface(key,value))
-        return cls(Interfaces,synergy_template)
+                Interfaces[syn.name].append(Interface(syn.name,synergy_template, key, value))
+        return cls(synergy_template, Interfaces)
      
     @classmethod
     def from_entities(cls, entities, synergy_template=None):        
-        ICollection = InterfaceCollection()
+        ICollection = InterfaceCollection(synergy_template)
 
         for entity in entities:   
             ICollection.update(entity.ICollection)            
@@ -120,18 +119,19 @@ class InterfaceCollection:
 
 class Interface:
 
-    def __init__(self, element_name , tag=None, value=None):
+    def __init__(self, element_name , synergy_template=None, tag=None, value=None):
         self.name = element_name
         self.tag = tag 
         self.value = value
         self.types = []
         self.range = ""
         self.synergies = []
+        self.synergy_template = synergy_template or SynergyTemplate()
         if tag:  
-            self.synergies = SynergyTemplate().get_synergies_by_tag(tag)                        
-            if tag in SynergyTemplate().get_output_tags():
+            self.synergies = self.synergy_template.get_synergies_by_tag(tag)                        
+            if tag in self.synergy_template.get_output_tags():
                 self.types.append("OUT")            
-            if tag in SynergyTemplate().get_input_tags():
+            if tag in self.synergy_template.get_input_tags():
                 self.types.append("IN")                
 
     def get_type(self):
@@ -145,9 +145,9 @@ class Interface:
 
     def has_tag_of_type(self, synergy, type):
         if type == "IN":
-            return any(tag in synergy.get_target_tags() for tag in SynergyTemplate().get_input_tags())
+            return any(tag in synergy.get_target_tags() for tag in self.synergy_template.get_input_tags())
         elif type == "OUT":
-            return any(tag in synergy.get_source_tags() for tag in SynergyTemplate().get_output_tags())        
+            return any(tag in synergy.get_source_tags() for tag in self.synergy_template.get_output_tags())        
         else:
             return False
 

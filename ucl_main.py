@@ -7,9 +7,16 @@ import Graph
 from collections import defaultdict
 from DeckLibrary import DeckLibrary
 from Card_Library import UniversalCardLibrary
+from Synergy import SynergyTemplate
+
+
+synergy_template = SynergyTemplate()
+
+rows = [ 'MAGE', 'SPELL', 'FREE', 'FREE SPELL' ]
+synergy_template.set_synergy_rows(rows)
 
 # Read entities from CSV and create universal card library
-myUCL = UniversalCardLibrary('sff.csv')
+myUCL = UniversalCardLibrary('sff.csv', synergy_template)
 
 if (0):
     url = "https://ul51g2rg42.execute-api.us-east-1.amazonaws.com/main/deck/"
@@ -31,14 +38,6 @@ if (0):
         json.dump(deck_data, f)
 
 decks = myUCL.load_decks('deck_base.json')
-if (0):
-    DeckCollection = DeckLibrary(list(decks.values())) 
-    evaluator = Evaluation(None)
-    for fusion in DeckCollection.fusions:
-        evaluator.evaluate_deck(fusion) 
-         
-    #DeckCollection.print_fusion_synergies()
-    #DeckCollection.get_best_synergies()
     
 if (0):
     forgeborn_abilities = defaultdict(list)
@@ -53,14 +52,13 @@ if (0):
                 for ability, value in abilities.items():
                     writer.writerow([name, ability, value])
 
-if (1):
-    #SynergyGraph = Graph.create_synergy_graph(decks)    
+if (1):    
     EvaluatedGraphs = {}
-    DeckCollection = DeckLibrary(list(decks.values()))    
+    DeckCollection = DeckLibrary(list(decks.values()), synergy_template)    
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
         #half_deck = 'Vindicators of Sobbing and Baking'
-        deck_name = "Sparky's Attentive Combatants|The Tentacles of the Diseased Bone"
+        deck_name = "The Hurting Demons Larvae|Doctors of Tatoo and Comparing"
         #if half_deck in fusion.name :
         if deck_name == fusion.name :
 
@@ -73,7 +71,7 @@ if (1):
 if (0):
    # Open the csv file in write mode and write the header row
     with open("deck_metrics.csv", "w", newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=["deckname", "modularity", "value", "final", "katz", "degree", "density", "cluster_coeff", "between"], delimiter=';')
+        writer = csv.DictWriter(csvfile, fieldnames=["deckname", "value", "katz", "degree", "density", "cluster_coeff", "between"], delimiter=';')
         writer.writeheader()
 
         for i, (key, EGraph) in enumerate(EvaluatedGraphs.items()):            
@@ -86,11 +84,11 @@ if (0):
             }
 
             name  = EGraph.graph['name']
-            mod   = EGraph.graph['mod']
+            #mod   = EGraph.graph['mod']
             value = EGraph.graph['value']            
             density = EGraph.graph['density'] 
             cluster_coeff = EGraph.graph['cluster_coeff']
-            final = value / mod            
+            #final = value / mod            
 
 
             for metric in Metrics:       
@@ -99,9 +97,9 @@ if (0):
           
             writer.writerow({
                 "deckname": name,
-                "modularity": f"{mod:.4f}",
+             #   "modularity": f"{mod:.4f}",
                 "value": f"{value:.4f}",
-                "final": f"{final:.4f}",
+                #"final": f"{final:.4f}",
                 "katz": f"{Metrics['katz']:.4f}",
              #   "PageRank": f"{Metrics['PageRank']:.4f}",
                 "degree": f"{Metrics['degree']:.4f}",

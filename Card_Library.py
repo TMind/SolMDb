@@ -9,8 +9,8 @@ class UniversalCardLibrary:
 
     entities = []
 
-    def __init__(self, csv_path):
-        self.synergy_template = SynergyTemplate()
+    def __init__(self, csv_path, synergy_template=None):
+        self.synergy_template = synergy_template or SynergyTemplate()
         self.entities = self._read_entities_from_csv(csv_path)
 
     def _read_entities_from_csv(self, csv_path):   
@@ -39,7 +39,7 @@ class UniversalCardLibrary:
                                   
                # sources = {}
                # targets = {}
-                Collection = InterfaceCollection()
+                Collection = InterfaceCollection(self.synergy_template)
                 range   = ""
                 read_synergies = False
                 for key, value in row.items():
@@ -68,7 +68,7 @@ class UniversalCardLibrary:
                                     
                             if int(value) > 0:                                                                    
                                 
-                                    ISyn = Interface(name, key, value)
+                                    ISyn = Interface(name, self.synergy_template, key, value)
                                     ISyn.range = range
                                     Collection.add(ISyn)
                                 
@@ -158,7 +158,7 @@ class UniversalCardLibrary:
             modifier_entity = self.search_entity(modifier_title)
             card_entity = self.search_entity(card_title)
             if modifier_entity and card_entity:
-                return Card(card_entity, modifier_entity)
+                return Card(card_entity, modifier_entity, self.synergy_template)
 
         # If no entities found, create a card with just the card title
         return Card(Entity(name=card_title, card_type='Unknown'))
@@ -182,8 +182,6 @@ class Entity:
         self.solbind = solbind        
         self.abilities = abilities        
         self.ICollection = Collection
-        #self.sources = sources
-        #self.targets = targets or {}
   
     def __str__(self):
         trait_str = ", ".join([f"{trait}" for trait in self.sources.items()])
@@ -196,13 +194,13 @@ class Entity:
         }
 
 class Deck:
-    def __init__(self, name, forgeborn, faction, cards):
+    def __init__(self, name, forgeborn, faction, cards, synergy_template=None):
         self.name = name
         self.forgeborn = forgeborn
         self.faction = faction
         self.cards = cards      
-        int_col_deck = InterfaceCollection.from_deck(self,SynergyTemplate())
-        int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn, SynergyTemplate())
+        int_col_deck = InterfaceCollection.from_deck(self,synergy_template or SynergyTemplate())
+        int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn, synergy_template or SynergyTemplate())
         self.ICollection = int_col_deck.update(int_col_fb)
 
     def __add__(self, other):      
@@ -230,11 +228,11 @@ class Deck:
 
 
 class Forgeborn:
-    def __init__(self, name, faction, abilities):
+    def __init__(self, name, faction, abilities, synergy_template=None):
         self.name = name
         self.faction = faction
         self.abilities = abilities        
-        self.ICollection = InterfaceCollection.from_forgeborn(self, SynergyTemplate())
+        self.ICollection = InterfaceCollection.from_forgeborn(self, synergy_template)
 
     def __str__(self):
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
@@ -248,15 +246,15 @@ class Forgeborn:
         }
 
 class Card():
-    def __init__(self, card, modifier=None):  
-        self.entities = [card]     
+    def __init__(self, card, modifier=None, synergy_template=None):  
+        self.entities = [card]             
         if modifier:
             self.title = modifier.name + ' ' + card.name
             if isinstance(modifier, Entity):
                 self.entities.append(modifier)
         else:
             self.title = card.name
-        self.ICollection = InterfaceCollection.from_entities(self.entities)
+        self.ICollection = InterfaceCollection.from_entities(self.entities, synergy_template=synergy_template)
 
     def __str__(self):
         return self.title

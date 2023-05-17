@@ -3,18 +3,12 @@ from Synergy import SynergyTemplate
 from Interface import InterfaceCollection
 
 class Evaluation:
-    def __init__(self, synergy_stats):
-        self.synergy_stats = synergy_stats
-  
-  
+              
     def evaluate_deck(self, deck):
         # loop through each synergy in the deck
         print(f"=====================================")
         print(f"Evaluating Deck: {deck.name}")        
-        evaluation = defaultdict(lambda: defaultdict(lambda: {'IN': set(), 'OUT': set(), 'SELF': set()}))
-
-        
-        synergy_template = SynergyTemplate()
+        evaluation = defaultdict(lambda: defaultdict(lambda: {'IN': set(), 'OUT': set(), 'SELF': set()})) 
 
         for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
             for j, (card_name_2, card_2) in enumerate(deck.cards.items()): 

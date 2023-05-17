@@ -29,8 +29,7 @@ def create_synergy_graph(decks, min_level=1):
 
 def create_deck_graph(deck):
     G = nx.DiGraph(name = deck.name, mod = 0, value = 0, cluster_coeff = 0, density = 0)
-    #print(f"Card Synergies between decks: {deck.name}")    
-    synergy_template = SynergyTemplate()
+    #print(f"Card Synergies between decks: {deck.name}")        
     
     G.add_nodes_from(deck.cards)
 
@@ -90,12 +89,12 @@ def create_deck_graph(deck):
     #Metric['eigenvector'] = nx.eigenvector_centrality(G,max_iter=1000)
     Metric['between']    = nx.betweenness_centrality(G)
     Metric['katz'] = nx.katz_centrality(G, alpha=0.1, beta=1.0)
-    partition = community.greedy_modularity_communities(G)
-    mod = community.modularity(G, partition)
+    #partition = community.greedy_modularity_communities(G)
+    #mod = community.modularity(G, partition)
     clustering_coefficients = nx.average_clustering(G)
     density = nx.density(G)
     
-    G.graph['mod'] = mod    
+    #G.graph['mod'] = mod    
     G.graph['cluster_coeff'] = clustering_coefficients    
     G.graph['density'] = density
 

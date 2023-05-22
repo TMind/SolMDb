@@ -108,19 +108,18 @@ class UniversalCardLibrary:
         return decks
 
 
-    def load_decks_online(self,filename):
+    def load_decks_online(self,filename, format='list'):
         with open(filename, 'r') as f:
             content = f.read()
             data = json.loads(content)
 
-        if 'Items' in data:
+        if format == 'list' :
             decks_data = data['Items']
         else :
-            decks_data = data
+            decks_data = [data]
 
         decks = []
         
-
         for deck_data in decks_data:
             forgeborn_data = deck_data['forgeborn']
             abilities = {}
@@ -130,15 +129,17 @@ class UniversalCardLibrary:
                 abilities[ability_name] = ability
                 #print(f"Ability Code: {ability_code} -> {ability_name} -> {ability}")
                 
-
-            forgeborn = Forgeborn(forgeborn_data['title'], deck_data['faction'],abilities)
+            forgeborn_name = forgeborn_data['title'] if 'title' in forgeborn_data else forgeborn_data['name']
+            forgeborn = Forgeborn(forgeborn_name, deck_data['faction'],abilities)
 
             cards_data = deck_data['cards']
             cards = {}
 
             for card_data in cards_data.values():
-                card_title = str(card_data['title'])                                
+                card_title = str(card_data['title']) if 'title' in card_data else str(card_data['name']) 
                 card = self.create_card_from_title(card_title)
+                card.provides = card_data['provides'] if 'provides' in card_data else None
+                card.seeks = card_data['seeks'] if 'seeks' in card_data else None
                 cards[card_title] = card;
 
             deck = Deck(deck_data['name'], forgeborn, deck_data['faction'], cards)
@@ -256,6 +257,8 @@ class Card():
                 self.entities.append(modifier)
         else:
             self.title = card.name
+        self.provides = None
+        self.seeks = None
         self.ICollection = InterfaceCollection.from_card(self,synergy_template)
 
     def __str__(self):

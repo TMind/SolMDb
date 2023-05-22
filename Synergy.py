@@ -19,12 +19,13 @@ Synerginary = {
             "ARMOR"       :  [ 0.5,    ["Armor Synergy"            ],[ "Armor","Armor Giver "   ]],
             "ACTIVATION"  :  [ 1.0,    ["Ready"                    ],[ "Activate"               ]],
             "FREE"        :  [ 2.0,    ["Free"                     ],[ "Free"                   ]],
-            "FREE HEALING":  [ 2.0,    ["Free Healing Source"      ],[ "Healing Source"         ]],
-            "FREE DESTROY":  [ 2.0,    ["Free Self Destruction"    ],[ "Destruction Synergy","Minon"]],                               
+            "FREE HEALING":  [ 2.0,    ["Free Healing"             ],[ "Healing Source"         ]],
+            "FREE DESTROY":  [ 2.0,    ["Free SelfDestruction"     ],[ "Destruction Synergy","Minon"]],                               
             "FREE UPGRADE":  [ 2.0,    ["Free Upgrade"             ],[ "Upgrade"                ]],                               
             "FREE SELFDMG":  [ 2.0,    ["Free Self Damage"         ],[ "Self Damage Activator"  ]],
             "FREE SPELL"  :  [ 2.0,    ["Free Spell"               ],[ "Spell"                  ]],                                               
-            "FREE REPLACE":  [ 2.0,    ["Free Replacement"         ],[ "Replace Setup"          ]],                                               
+            "FREE REPLACE":  [ 2.0,    ["Free Replacement"         ],[ "Replace Setup","Minion" ]],                                               
+            "FREE MAGE"   :  [ 2.0,    ["Free Mage"                ],[ "Mage"                   ]], 
             "UPGRADE"     :  [ 1.0,    ["Upgrade Synergy"          ],[ "Upgrade"                ]],
             "REPLACE"     :  [ 1.0,    ["Replace Profit"           ],[ "Replace Setup"          ]],
 
@@ -37,7 +38,15 @@ Synerginary = {
             "REACTIVATE"  :  [ 0.5,    ["Reanimate Activator"      ],[ "Activate"               ]],
             "STEALTH"     :  [ 1.0,    ["Defender Giver"           ],[ "Stealth","Stealth Giver"]],
             "AGGRO"       :  [ 1.0,    ["Aggressive"               ],[ "Replace Setup"          ]],
-            
+
+
+            # General Output              
+            "DESTROY OPP" :  [ 1.0,    ["Destroy Enemy Creature"   ],[ "Removal"                ]],
+            "FACEBURN"    :  [ 1.0,    ["Deal Damage Opponent"     ],[ "Face Burn"              ]],
+            "LIFE GAIN"   :  [ 1.0,    ["Gain Life"                ],[ "Healing Source"         ]],
+            "DISRUPTION"  :  [ 0.5,    ["Lane Control"             ],[ "Disruption"             ]],
+            "SILENCE"     :  [ 0.5,    ["Creature Control"         ],[ "Silence"                ]],
+
             #STRONG ATTACK / DEFENSE 
             #"AGGRESSIVEATTACK" :  [ 0.5,  ["Stat Buff", "Attack Buff"],["gressive","Aggressive Giver"     ]],    
             #"STEALTHATTACK"    :  [ 0.5,  ["Stealth","Stealth Giver"           ],["Stat Buff", "Attack Buff"]],    

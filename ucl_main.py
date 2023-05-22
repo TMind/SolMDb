@@ -17,7 +17,7 @@ synergy_template.set_synergy_rows(rows)
 
 decks = []
 
-if (1) :
+if (0) :
     myApi = NetApi()
 
     #params = {"username": "TMind"}        
@@ -58,12 +58,12 @@ if (1):
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph  
             print(f"\nFusion: {fusion.name}\n")
             #Graph.print_graph(DeckGraph)                  
-            #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
+            Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
             #Graph.edge_statistics(DeckGraph)   
 
     ev.find_best_pairs(EvaluatedGraphs)
 
-if (0):
+if (1):
     ev.export_csv('deck_metrics', EvaluatedGraphs)
    
 

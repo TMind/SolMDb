@@ -11,10 +11,13 @@ class NetApi:
         self.base_url = "https://ul51g2rg42.execute-api.us-east-1.amazonaws.com/main/deck"
         self.params = {
             "inclCards": "true",
+            "inclDecks": "true",
         }
 
     def request_decks(self, deck_id=None, params=None):
+        format = 'list'
         if deck_id:
+            format = 'deck'
             url = f"{self.base_url}/{deck_id}"
         else:
             url = self.base_url
@@ -28,7 +31,7 @@ class NetApi:
         with open('online_request.json', 'w') as f:
             json.dump(data, f)
 
-        decks = self.ucl.load_decks_online('online_request.json')
+        decks = self.ucl.load_decks_online('online_request.json', format)
 
         deck_data = [deck.to_json() for deck in decks]
         with open("online_dump.json", "w") as f:

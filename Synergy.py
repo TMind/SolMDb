@@ -29,9 +29,10 @@ Synerginary = {
             "REPLACE"     :  [ 1.0,    ["Replace Profit"           ],[ "Replace Setup"          ]],
 
             "DAMAGE"      :  [ 1.0,    ["Decreased Health Synergy" ],[ "Damage"                 ]],                
-            "SELFDAMAGE"  :  [ 0.5,    ["Self Damage Payoff"       ],["Self Damage Activator"   ]],                
+            "SELFDAMAGE"  :  [ 0.5,    ["Self Damage Payoff"       ],[ "Self Damage Activator"  ]],                
     
-            "DESTRUCTION" :  [ 1.0,    ["SelfDestruction Activator"],["Destruction Synergy","Minion"]],                        
+            "DESTROY SYN" :  [ 1.0,    ["SelfDestruction Activator"],[ "Destruction Synergy"    ]],                        
+            "DESTROY MIN" :  [ 0.5,    ["SelfDestruction Activator"],[ "Minion"                 ]],
             "REDEPLOY"    :  [ 1.0,    ["Reanimate Activator"      ],[ "Deploy"                 ]],
             "REACTIVATE"  :  [ 0.5,    ["Reanimate Activator"      ],[ "Activate"               ]],
             "STEALTH"     :  [ 1.0,    ["Defender Giver"           ],[ "Stealth","Stealth Giver"]],

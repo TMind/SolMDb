@@ -8,37 +8,26 @@ from collections import defaultdict
 from DeckLibrary import DeckLibrary
 from Card_Library import UniversalCardLibrary
 from Synergy import SynergyTemplate
+from NetApi import NetApi
 
-
-synergy_template = SynergyTemplate()
 
 rows = [ 'REPLACE' , 'AGGRO', 'FREE UPGRADE', 'ARMOR', 'FREE REPLACE', 'UPGRADE' ]
+synergy_template = SynergyTemplate()
 synergy_template.set_synergy_rows(rows)
 
-# Read entities from CSV and create universal card library
-myUCL = UniversalCardLibrary('sff.csv')#, synergy_template)
+decks = []
 
-if (0):
-    url = "https://ul51g2rg42.execute-api.us-east-1.amazonaws.com/main/deck/"
-    params = {
-        "pageSize": "100",
-        "inclCards": "true",
-        "username": "TMind"
-    }
-    response = requests.get(url, params=params)
-    data = json.loads(response.content)
-    #Write the JSON data to a file
-    with open('decks_onl.json', 'w') as f:
-        json.dump(data, f)
+if (1) :
+    myApi = NetApi()
 
-    decks = myUCL.load_decks_online('decks_onl.json')    
+    #params = {"username": "TMind"}        
+    decks = myApi.request_decks("c9lfreiu5jkhnblp8tptvqaiqv3ter")
 
-    deck_data = [deck.to_json() for deck in decks]
-    with open("deck_base.json", "w") as f:
-        json.dump(deck_data, f)
+else:
+    # Read entities from CSV and create universal card library
+    myUCL = UniversalCardLibrary('sff.csv')#, synergy_template)
+    decks = myUCL.load_decks('deck_base.json')
 
-decks = myUCL.load_decks('deck_base.json')
-    
 if (0):
     forgeborn_abilities = defaultdict(list)
     for fusion in decks.values():
@@ -51,7 +40,6 @@ if (0):
             for abilities in abilities_list:
                 for ability, value in abilities.items():
                     writer.writerow([name, ability, value])
-
 
 EvaluatedGraphs = {}
 
@@ -70,12 +58,12 @@ if (1):
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph  
             print(f"\nFusion: {fusion.name}\n")
             #Graph.print_graph(DeckGraph)                  
-            Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
+            #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
             #Graph.edge_statistics(DeckGraph)   
 
     ev.find_best_pairs(EvaluatedGraphs)
 
-if (1):
+if (0):
     ev.export_csv('deck_metrics', EvaluatedGraphs)
    
 

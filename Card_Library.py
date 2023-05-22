@@ -113,7 +113,11 @@ class UniversalCardLibrary:
             content = f.read()
             data = json.loads(content)
 
-        decks_data = data['Items']
+        if 'Items' in data:
+            decks_data = data['Items']
+        else :
+            decks_data = data
+
         decks = []
         
 

@@ -108,18 +108,34 @@ class UniversalCardLibrary:
         return decks
 
 
-    def load_decks_online(self,filename, format='list'):
+    def load_online(self,filename):
         with open(filename, 'r') as f:
             content = f.read()
             data = json.loads(content)
 
-        if format == 'list' :
-            decks_data = data['Items']
-        else :
-            decks_data = [data]
+        decks_data = data
+
+        if 'Items' in decks_data:
+            decks_data = decks_data['Items']
+
+        if 'myDecks' in decks_data:
+            decks_data = decks_data['myDecks']
+                            
+        if len(decks_data) <= 1 :
+            decks_data = [decksdata]
 
         decks = []
+
+        if type == 'fuseddeck' and not id: 
+            return self.load_fusions(decks_data)        
         
+        return self.load_decks(deck_data)
+
+
+
+    def load_decks(self,decks_data):
+        decks = []
+
         for deck_data in decks_data:
             forgeborn_data = deck_data['forgeborn']
             abilities = {}
@@ -146,7 +162,20 @@ class UniversalCardLibrary:
             decks.append(deck)
 
         return decks
-    
+        
+    def load_fusions(self, fusions_data):
+        fusions = []
+
+        for fusion_data in fusions_data:
+            
+            decks = self.load_decks(fusion_data)
+            
+
+            fusion = Deck(deck_data['name'], forgeborn, deck_data['faction'], cards)
+            fusions.append(fusion)
+
+        return fusions
+
     def create_card_from_title(self, card_title):
         # First try with full title
         card_entity = self.search_entity(card_title)
@@ -228,6 +257,11 @@ class Deck:
     def __str__(self):     
         card_titles = [card.title for card in self.cards.values()]
         return f"Deck Name: {self.name}\nFaction: {self.faction}\nForgeborn: {self.forgeborn}\nCards:\n{', '.join(card_titles)}\n"   
+
+
+class Fusion:
+    def __init__(self, decks):
+        self.decks = decks
 
 
 class Forgeborn:

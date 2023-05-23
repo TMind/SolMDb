@@ -17,11 +17,13 @@ synergy_template.set_synergy_rows(rows)
 
 decks = []
 
-if (0) :
+if (1) :
     myApi = NetApi()
-
-    #params = {"username": "TMind"}        
-    decks = myApi.request_decks("c9lfreiu5jkhnblp8tptvqaiqv3ter")
+        
+    decks = myApi.request_decks()
+    decks = myApi.request_decks(type='fuseddeck')
+    decks = myApi.request_decks(id='Fused_ehq68lhuujg9s')
+    decks = myApi.request_decks(id='d5zenofhekurl3sn7iotspbdqn3qrx' )
 
 else:
     # Read entities from CSV and create universal card library
@@ -63,7 +65,7 @@ if (1):
 
     ev.find_best_pairs(EvaluatedGraphs)
 
-if (1):
+if (0):
     ev.export_csv('deck_metrics', EvaluatedGraphs)
    
 

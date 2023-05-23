@@ -82,7 +82,7 @@ class UniversalCardLibrary:
                 return entity
         return None
 
-    def load_decks(self,filepath):
+    def load_offline(self,filepath):
         with open(filepath, 'r') as f:
             data = json.load(f)
 
@@ -108,7 +108,7 @@ class UniversalCardLibrary:
         return decks
 
 
-    def load_online(self,filename):
+    def load_online(self,filename, type='deck'):
         with open(filename, 'r') as f:
             content = f.read()
             data = json.loads(content)
@@ -117,19 +117,15 @@ class UniversalCardLibrary:
 
         if 'Items' in decks_data:
             decks_data = decks_data['Items']
-
-        if 'myDecks' in decks_data:
-            decks_data = decks_data['myDecks']
-                            
-        if len(decks_data) <= 1 :
-            decks_data = [decksdata]
+        else:                                
+            decks_data = [decks_data]
 
         decks = []
 
-        if type == 'fuseddeck' and not id: 
+        if type == 'fuseddeck': 
             return self.load_fusions(decks_data)        
         
-        return self.load_decks(deck_data)
+        return self.load_decks(decks_data)
 
 
 
@@ -140,9 +136,10 @@ class UniversalCardLibrary:
             forgeborn_data = deck_data['forgeborn']
             abilities = {}
             for ability_code in ['a2n','a3n','a4n']:
-                ability_name = forgeborn_data[ability_code]
-                ability = self.search_entity(ability_name)
-                abilities[ability_name] = ability
+                if ability_code in forgeborn_data:
+                    ability_name = forgeborn_data[ability_code]
+                    ability = self.search_entity(ability_name)
+                    abilities[ability_name] = ability
                 #print(f"Ability Code: {ability_code} -> {ability_name} -> {ability}")
                 
             forgeborn_name = forgeborn_data['title'] if 'title' in forgeborn_data else forgeborn_data['name']
@@ -166,12 +163,11 @@ class UniversalCardLibrary:
     def load_fusions(self, fusions_data):
         fusions = []
 
-        for fusion_data in fusions_data:
-            
-            decks = self.load_decks(fusion_data)
-            
-
-            fusion = Deck(deck_data['name'], forgeborn, deck_data['faction'], cards)
+        for fusion_data in fusions_data:                        
+            decks = self.load_decks(fusion_data['myDecks'])
+            name = fusion_data['name']
+            #"|".join(deck.name for deck in decks) 
+            fusion = Fusion(name, decks)            
             fusions.append(fusion)
 
         return fusions
@@ -260,8 +256,15 @@ class Deck:
 
 
 class Fusion:
-    def __init__(self, decks):
+    def __init__(self, name, decks):
+        self.name = name
         self.decks = decks
+
+    def getDeck(self):
+        fusion = self.decks[0]
+        for deck in self.decks[1:]:            
+            fusion += deck
+        return fusion
 
 
 class Forgeborn:

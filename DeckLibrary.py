@@ -1,9 +1,18 @@
 import Evaluation as ev
 from Synergy import SynergyTemplate
+import Card_Library
 class DeckLibrary:
     def __init__(self, decks, synergy_template=None):
-        self.decks = decks
-        self.fusions = self.get_fusions()
+        self.decks = []
+        self.fusions = []
+
+        for obj in decks:
+            if isinstance(obj, Card_Library.Deck):
+                self.decks.append(obj)
+            if isinstance(obj, Card_Library.Fusion):
+                self.fusions.append(obj.getDeck())
+        
+        self.fusions += self.get_fusions()
         self.synergy_template = synergy_template or SynergyTemplate()                
 
     def get_fusions(self):

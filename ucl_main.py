@@ -20,10 +20,10 @@ decks = []
 if (1) :
     myApi = NetApi()
         
-    decks = myApi.request_decks()
-    decks = myApi.request_decks(type='fuseddeck')
-    decks = myApi.request_decks(id='Fused_ehq68lhuujg9s')
-    decks = myApi.request_decks(id='d5zenofhekurl3sn7iotspbdqn3qrx' )
+    #decks = myApi.request_decks()
+    #decks = myApi.request_decks(type='fuseddeck')
+    decks = myApi.request_decks(id='Fused_1h488lejubv0c')
+    #decks = myApi.request_decks(id='d5zenofhekurl3sn7iotspbdqn3qrx' )
 
 else:
     # Read entities from CSV and create universal card library
@@ -46,7 +46,7 @@ if (0):
 EvaluatedGraphs = {}
 
 if (1):        
-    DeckCollection = DeckLibrary(list(decks.values()), synergy_template)    
+    DeckCollection = DeckLibrary(decks, synergy_template)    
     
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name

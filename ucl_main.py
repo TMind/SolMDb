@@ -1,6 +1,4 @@
 from stat import FILE_ATTRIBUTE_REPARSE_POINT
-import requests
-import json
 import csv
 import Evaluation as ev
 import Graph
@@ -9,6 +7,7 @@ from DeckLibrary import DeckLibrary
 from Card_Library import UniversalCardLibrary
 from Synergy import SynergyTemplate
 from NetApi import NetApi
+
 
 
 rows = [ 'REPLACE' , 'AGGRO', 'FREE UPGRADE', 'ARMOR', 'FREE REPLACE', 'UPGRADE' ]
@@ -21,8 +20,8 @@ if (1) :
     myApi = NetApi()
         
     #decks = myApi.request_decks()
-    #decks = myApi.request_decks(type='fuseddeck')
-    decks = myApi.request_decks(id='Fused_1h488lejubv0c')
+    decks = myApi.request_decks(type='fuseddeck')
+    #decks = myApi.request_decks(id='Fused_1h488lejubv0c',filename='jb')
     #decks = myApi.request_decks(id='d5zenofhekurl3sn7iotspbdqn3qrx' )
 
 else:
@@ -60,7 +59,7 @@ if (1):
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph  
             print(f"\nFusion: {fusion.name}\n")
             #Graph.print_graph(DeckGraph)                  
-            Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
+            #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
             #Graph.edge_statistics(DeckGraph)   
 
     ev.find_best_pairs(EvaluatedGraphs)

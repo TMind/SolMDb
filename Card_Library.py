@@ -107,25 +107,34 @@ class UniversalCardLibrary:
             
         return decks
 
-
-    def load_online(self,filename, type='deck'):
+    def load_online(self, filename):
         with open(filename, 'r') as f:
             content = f.read()
             data = json.loads(content)
 
-        decks_data = data
-
-        if 'Items' in decks_data:
-            decks_data = decks_data['Items']
+        if 'Items' in data:
+            return data['Items']
         else:                                
-            decks_data = [decks_data]
+            return [data]
 
-        decks = []
+    # def load_online(self,filename, type='deck'):
+    #     with open(filename, 'r') as f:
+    #         content = f.read()
+    #         data = json.loads(content)
 
-        if type == 'fuseddeck': 
-            return self.load_fusions(decks_data)        
+    #     decks_data = data
+
+    #     if 'Items' in decks_data:
+    #         decks_data = decks_data['Items']
+    #     else:                                
+    #         decks_data = [decks_data]
+
+    #     decks = []
+
+    #     if type == 'fuseddeck': 
+    #         return self.load_fusions(decks_data)        
         
-        return self.load_decks(decks_data)
+    #     return self.load_decks(decks_data)
 
 
 
@@ -162,15 +171,18 @@ class UniversalCardLibrary:
         
     def load_fusions(self, fusions_data):
         fusions = []
+        incomplete_fusion_data = []
 
-        for fusion_data in fusions_data:                        
-            decks = self.load_decks(fusion_data['myDecks'])
-            name = fusion_data['name']
-            #"|".join(deck.name for deck in decks) 
-            fusion = Fusion(name, decks)            
-            fusions.append(fusion)
+        for fusion_data in fusions_data:
+            try:    
+                decks = self.load_decks(fusion_data['myDecks'])
+                name = fusion_data['name']
+                fusion = Fusion(name, decks)
+                fusions.append(fusion)
+            except Exception as e: 
+                incomplete_fusion_data.append(fusion_data)
 
-        return fusions
+        return fusions, incomplete_fusion_data
 
     def create_card_from_title(self, card_title):
         # First try with full title
@@ -266,6 +278,11 @@ class Fusion:
             fusion += deck
         return fusion
 
+    def to_json(self):
+        return {
+            "name": self.name,                        
+            "decks": [deck.to_json() for deck in self.decks]            
+        }    
 
 class Forgeborn:
     def __init__(self, name, faction, abilities, synergy_template=None):

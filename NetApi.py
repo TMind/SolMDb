@@ -2,6 +2,7 @@ from attr import dataclass
 import requests
 import json
 from Card_Library import UniversalCardLibrary, Fusion
+from typing import List, Tuple, Dict
 
 
 class NetApi:
@@ -17,9 +18,7 @@ class NetApi:
         }        
 
     def make_request(self, id="", type="deck", username="TMind"):
-        if id.startswith('Fused'):
-            type = 'fuseddeck'         
-
+        
         endpoint = f"{self.base_url}/{type}/{id}"
 
         self.params.update({"username" : username})
@@ -30,34 +29,33 @@ class NetApi:
         with open('online_request.json', 'w') as f:
             json.dump(data, f)
 
-        decks_data = self.ucl.load_online('online_request.json')
+        decks_data = self.ucl.load_data('online_request.json')
         return decks_data
 
     def handle_response(self, data, type):
         decks_data = data
 
         if type == 'fuseddeck':
-            fusions, incomplete_fusions = self.ucl.load_fusions(decks_data)
+            fusions, incomplete_fusionsdata = self.ucl.load_fusions(decks_data)
 
+            incomplete_decks_data = []
             # Fetch the incomplete decks
-            for incomplete_fusion in incomplete_fusions:
-                fusion_data = {'myDecks' : []}
-                for deck_data in incomplete_fusion['myDecks']:
-                    data = self.make_request(id=deck_data['id'])                
-                    fusion_data['myDecks'].extend(self.ucl.load_decks(data))
-                complete_fusion, incomplete_fusion_data = self.ucl.load_fusions([fusion_data])
-                if incomplete_fusion_data:
-                    incomplete_fusions.extend(incomplete_fusion_data)    
-                if complete_fusion:
-                    fusions.extend(complete_fusion)
-
+            for incomplete_fusiondata in incomplete_fusionsdata:
+                fusion_decks = []                
+                for incomplete_deckdata in incomplete_fusiondata['myDecks']:
+                    deckdata = self.make_request(id=incomplete_deckdata['id'])    
+                    deck_loaded, incomplete_deckdata_loaded = self.ucl.load_decks_from_data(deckdata)                                        
+                    fusion_decks.extend(deck_loaded)
+                if fusion_decks:
+                    fusions.append(Fusion(incomplete_fusiondata['name'], fusion_decks))                                                    
             return fusions
         else:
-            decks = self.ucl.load_decks(decks_data)
+            decks, incompletes = self.ucl.load_decks_from_data(decks_data)
             return decks
 
 
     def request_decks(self, id="", type="deck", username="TMind", filename=None):
+        if id.startswith('Fused'):  type = 'fuseddeck'         
         decks_data = self.make_request(id, type, username)
         decks = self.handle_response(decks_data, type)
 

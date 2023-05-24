@@ -16,18 +16,18 @@ synergy_template.set_synergy_rows(rows)
 
 decks = []
 
-if (1) :
+if (0) :
     myApi = NetApi()
         
     #decks = myApi.request_decks()
-    decks = myApi.request_decks(type='fuseddeck')
-    #decks = myApi.request_decks(id='Fused_1h488lejubv0c',filename='jb')
+    decks = myApi.request_decks(type='fuseddeck', filename='fusions')
+    #decks = myApi.request_decks(id='Fused_d7w2v8li1eyb45',filename='heartseeker')
     #decks = myApi.request_decks(id='d5zenofhekurl3sn7iotspbdqn3qrx' )
 
 else:
     # Read entities from CSV and create universal card library
     myUCL = UniversalCardLibrary('sff.csv')#, synergy_template)
-    decks = myUCL.load_decks('deck_base.json')
+    decks, incompletes = myUCL.load_decks_from_file('deck_base.json')
 
 if (0):
     forgeborn_abilities = defaultdict(list)
@@ -54,12 +54,12 @@ if (1):
         #if half_deck in fusion.name :
         if deck_name == fusion.name :
 
-            DeckGraph = Graph.create_deck_graph(fusion, ev.calculate_weight)        
+            DeckGraph = Graph.create_deck_graph(fusion, ev.calculate_weight,mode='Diff')        
             ev.evaluate_graph(DeckGraph)
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph  
             print(f"\nFusion: {fusion.name}\n")
             #Graph.print_graph(DeckGraph)                  
-            #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
+            Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
             #Graph.edge_statistics(DeckGraph)   
 
     ev.find_best_pairs(EvaluatedGraphs)

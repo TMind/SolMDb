@@ -25,14 +25,17 @@ from collections import defaultdict
 
 #     return G
 
-def create_deck_graph(deck, eval_func):
+def create_deck_graph(deck, eval_func, mode=None):
     G = nx.DiGraph(name = deck.name, mod = 0, value = 0, cluster_coeff = 0, density = 0, avglbl = 0, community_labels = {})
     #print(f"Card Synergies between decks: {deck.name}")        
     
     G.add_nodes_from(deck.cards)
-
+    
     for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
         for j, (card_name_2, card_2) in enumerate(deck.cards.items()):                
+
+            if mode and card_1.faction == card_2.faction:
+                continue
 
             if card_name_1 == card_name_2:
 

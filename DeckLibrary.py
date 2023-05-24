@@ -10,16 +10,18 @@ class DeckLibrary:
             if isinstance(obj, Card_Library.Deck):
                 self.decks.append(obj)
             if isinstance(obj, Card_Library.Fusion):
-                self.fusions.append(obj.getDeck())
+                FusionDeck = obj.getDeck()                
+                self.fusions.append(FusionDeck)
         
-        self.fusions += self.get_fusions()
+        self.fusions.extend(self.get_fusions())
         self.synergy_template = synergy_template or SynergyTemplate()                
 
     def get_fusions(self):
         fusions = []
         for deck1 in self.decks:
             for deck2 in self.decks:
-                fusion = deck1 + deck2
+                name = deck1.name + '|' + deck2.name                
+                fusion = Fusion(name, [deck1, deck2]).getDeck()
                 if fusion is not None:
                     fusions.append(fusion)
         return fusions

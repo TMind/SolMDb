@@ -4,6 +4,122 @@ from http.client import NETWORK_AUTHENTICATION_REQUIRED
 import json
 from Synergy import SynergyTemplate
 from Interface import Interface, InterfaceCollection
+from typing import List, Tuple, Dict
+
+
+class Entity:
+    def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection):
+        self.name = name
+        self.faction = faction
+        self.rarity = rarity
+        self.card_type = card_type
+        self.card_subtype = card_subtype
+        self.spliced = spliced
+        self.solbind = solbind        
+        self.abilities = abilities        
+        self.ICollection = Collection
+  
+    def __str__(self):
+        #trait_str = ", ".join([f"{trait}" for trait in self.sources.items()])
+        #synergy_str = ", ".join([str(synergy) for synergy in self.targets.values()])
+        return f"{self.name}"
+    
+    def to_json(self):
+        return {
+            "title": self.name
+        }
+
+class Deck:
+    def __init__(self, name, forgeborn, faction, cards, synergy_template=None):
+        self.name = name
+        self.forgeborn = forgeborn
+        self.faction = faction
+        self.cards = cards      
+        int_col_deck = InterfaceCollection.from_deck(self,synergy_template)
+        int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn, synergy_template)
+        self.ICollection = int_col_deck.update(int_col_fb)
+
+    def __add__(self, other):      
+        name = self.name + '|' + other.name
+        if self.faction == other.faction : 
+            #print(f"{name} : Deck fusion invalid. Same faction {self.faction}\n")
+            return 
+        forgeborn = self.forgeborn
+        faction = self.faction + '|' + other.faction 
+        cards = { **self.cards, **other.cards} 
+        #cards = dict(list(self.cards.items()) + list(other.cards.items()))
+        return Deck(name, forgeborn, faction, cards)
+
+    def to_json(self):
+        return {
+            "name": self.name,
+            "faction": self.faction,
+            "forgeborn": self.forgeborn.to_json(),
+            "cards": [str(card) for card in self.cards.values()]
+        }    
+    
+    def __str__(self):     
+        card_titles = [card.title for card in self.cards.values()]
+        return f"Deck Name: {self.name}\nFaction: {self.faction}\nForgeborn: {self.forgeborn}\nCards:\n{', '.join(card_titles)}\n"   
+
+
+class Fusion:
+    def __init__(self, name, decks):
+        self.name = name
+        self.decks = decks
+
+    def getDeck(self):        
+        fusion = self.decks[0]
+        fusion.name = self.name
+        for deck in self.decks[1:]:            
+            fusion += deck
+        return fusion
+
+    def to_json(self):
+        return {
+            "name": self.name,                        
+            "decks": [deck.to_json() for deck in self.decks]            
+        }    
+
+class Forgeborn:
+    def __init__(self, name, faction, abilities, synergy_template=None):
+        self.name = name
+        self.faction = faction
+        self.abilities = abilities        
+        self.ICollection = InterfaceCollection.from_forgeborn(self, synergy_template)
+
+    def __str__(self):
+        abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
+        return f"Forgeborn Name: {self.name}\nFaction: {self.faction}\nAbilities:\n{abilities_str}\n"
+
+    def to_json(self):
+        return {
+            "title": self.name,
+            "faction": self.faction,
+            "abilities": list(self.abilities.keys())
+        }
+
+class Card():
+    def __init__(self, card, modifier=None, synergy_template=None):  
+        self.entities = [card]             
+        self.faction  = card.faction
+        if modifier:
+            self.title = modifier.name + ' ' + card.name
+            if isinstance(modifier, Entity):
+                self.entities.append(modifier)
+        else:
+            self.title = card.name
+        self.provides = None
+        self.seeks = None
+        self.ICollection = InterfaceCollection.from_card(self,synergy_template)
+
+    def __str__(self):
+        return self.title
+
+    def to_json(self):
+        return {
+            "title": self.title
+        }
 
 class UniversalCardLibrary:
 
@@ -82,32 +198,12 @@ class UniversalCardLibrary:
                 return entity
         return None
 
-    def load_offline(self,filepath):
+    def load_decks_from_file(self, filepath):
         with open(filepath, 'r') as f:
-            data = json.load(f)
+            data = json.load(f)            
+        return self.load_decks_from_data(data)
 
-        decks = {}
-
-        for deck_data in data:
-            forgeborn_data = deck_data['forgeborn']
-            abilities = {}
-            for ability_name in forgeborn_data['abilities']:
-                ability = self.search_entity(ability_name)
-                abilities[ability_name] = ability
-            forgeborn = Forgeborn(forgeborn_data['title'], deck_data['faction'],abilities)
-                                  #forgeborn_data['abilities'])
-
-            cards = {}
-            card_titles = deck_data['cards']
-            for card_title in card_titles:
-                card = self.create_card_from_title(card_title)
-                cards[card_title] = card
-            deck = Deck(deck_data['name'], forgeborn, deck_data['faction'], cards)
-            decks[deck.name] = (deck)
-            
-        return decks
-
-    def load_online(self, filename):
+    def load_data(self, filename):
         with open(filename, 'r') as f:
             content = f.read()
             data = json.loads(content)
@@ -117,72 +213,84 @@ class UniversalCardLibrary:
         else:                                
             return [data]
 
-    # def load_online(self,filename, type='deck'):
-    #     with open(filename, 'r') as f:
-    #         content = f.read()
-    #         data = json.loads(content)
+    def load_decks_from_data(self, decks_data: List[Dict]) -> Tuple[List[Deck], List[Dict]]:
 
-    #     decks_data = data
-
-    #     if 'Items' in decks_data:
-    #         decks_data = decks_data['Items']
-    #     else:                                
-    #         decks_data = [decks_data]
-
-    #     decks = []
-
-    #     if type == 'fuseddeck': 
-    #         return self.load_fusions(decks_data)        
-        
-    #     return self.load_decks(decks_data)
-
-
-
-    def load_decks(self,decks_data):
         decks = []
-
+        incomplete_data = []
+        
         for deck_data in decks_data:
-            forgeborn_data = deck_data['forgeborn']
-            abilities = {}
-            for ability_code in ['a2n','a3n','a4n']:
-                if ability_code in forgeborn_data:
-                    ability_name = forgeborn_data[ability_code]
-                    ability = self.search_entity(ability_name)
-                    abilities[ability_name] = ability
-                #print(f"Ability Code: {ability_code} -> {ability_name} -> {ability}")
+            
+            try:
+                forgeborn_data = deck_data['forgeborn']
+                abilities = {}
                 
-            forgeborn_name = forgeborn_data['title'] if 'title' in forgeborn_data else forgeborn_data['name']
-            forgeborn = Forgeborn(forgeborn_name, deck_data['faction'],abilities)
+                if 'abilities' in forgeborn_data:
+                    for ability_name in forgeborn_data['abilities']:                        
+                        ability = self.search_entity(ability_name)
+                        abilities[ability_name] = ability
+                else:    
+                    for ability_code in ['a2n','a3n','a4n']:
+                        if ability_code in forgeborn_data:
+                            ability_name = forgeborn_data[ability_code]
+                            ability = self.search_entity(ability_name)
+                            abilities[ability_name] = ability                            
+                    
+                forgeborn_name = forgeborn_data['title'] if 'title' in forgeborn_data else forgeborn_data['name']
+                forgeborn = Forgeborn(forgeborn_name, deck_data['faction'],abilities)
+            except Exception as e:
+                print(f"Exception: {e}")
+                #print(f"Could not load Forgeborn data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
+                
+                incomplete_data.append(deck_data)
+                continue
 
-            cards_data = deck_data['cards']
-            cards = {}
+            try: 
+                cards_data = deck_data['cards']
+                cards = {}
 
-            for card_data in cards_data.values():
-                card_title = str(card_data['title']) if 'title' in card_data else str(card_data['name']) 
-                card = self.create_card_from_title(card_title)
-                card.provides = card_data['provides'] if 'provides' in card_data else None
-                card.seeks = card_data['seeks'] if 'seeks' in card_data else None
-                cards[card_title] = card;
+
+                cards_data_it = cards_data
+
+                if isinstance(cards_data, list):
+                    cards_data_it = enumerate(cards_data)
+
+                for card_data in cards_data_it.values():
+                    card_title = str(card_data['title']) if 'title' in card_data else str(card_data['name']) 
+                    card = self.create_card_from_title(card_title)
+                    card.provides = card_data['provides'] if 'provides' in card_data else None
+                    card.seeks = card_data['seeks'] if 'seeks' in card_data else None
+                    cards[card_title] = card;
+            except Exception as e:
+                print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
+                print(f"Exception: {e}")
+                incomplete_data.append(deck_data)
+                continue
 
             deck = Deck(deck_data['name'], forgeborn, deck_data['faction'], cards)
             decks.append(deck)
+            
+        return decks, incomplete_data
 
-        return decks
         
-    def load_fusions(self, fusions_data):
+    def load_fusions(self, fusions_data: List[Dict]) -> Tuple[List[Fusion], List[Dict]]:
         fusions = []
-        incomplete_fusion_data = []
+        incomplete_fusionsdata = []
 
-        for fusion_data in fusions_data:
-            try:    
-                decks = self.load_decks(fusion_data['myDecks'])
-                name = fusion_data['name']
-                fusion = Fusion(name, decks)
-                fusions.append(fusion)
-            except Exception as e: 
-                incomplete_fusion_data.append(fusion_data)
-
-        return fusions, incomplete_fusion_data
+        for fusion_data in fusions_data:            
+                decks, incomplete_decksdata = self.load_decks_from_data(fusion_data['myDecks'])
+                name = fusion_data['name'] if 'name' in fusion_data else ""
+                if decks:
+                    fusion = Fusion(name, decks)
+                    fusions.append(fusion)
+                if incomplete_decksdata:
+                   incomplete_fusionsdata.append(
+                        {
+                            'name': name, 
+                            'myDecks': incomplete_decksdata
+                        }
+                    )
+                
+        return fusions, incomplete_fusionsdata
 
     def create_card_from_title(self, card_title):
         # First try with full title
@@ -211,116 +319,6 @@ class UniversalCardLibrary:
   
 
 
-class Entity:
-    def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection):
-        self.name = name
-        self.faction = faction
-        self.rarity = rarity
-        self.card_type = card_type
-        self.card_subtype = card_subtype
-        self.spliced = spliced
-        self.solbind = solbind        
-        self.abilities = abilities        
-        self.ICollection = Collection
-  
-    def __str__(self):
-        #trait_str = ", ".join([f"{trait}" for trait in self.sources.items()])
-        #synergy_str = ", ".join([str(synergy) for synergy in self.targets.values()])
-        return f"{self.name}"
-    
-    def to_json(self):
-        return {
-            "title": self.name
-        }
 
-class Deck:
-    def __init__(self, name, forgeborn, faction, cards, synergy_template=None):
-        self.name = name
-        self.forgeborn = forgeborn
-        self.faction = faction
-        self.cards = cards      
-        int_col_deck = InterfaceCollection.from_deck(self,synergy_template)
-        int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn, synergy_template)
-        self.ICollection = int_col_deck.update(int_col_fb)
-
-    def __add__(self, other):      
-        name = self.name + '|' + other.name
-        if self.faction == other.faction : 
-            #print(f"{name} : Deck fusion invalid. Same faction {self.faction}\n")
-            return 
-        forgeborn = self.forgeborn
-        faction = self.faction + '|' + other.faction 
-        cards = { **self.cards, **other.cards} 
-        #cards = dict(list(self.cards.items()) + list(other.cards.items()))
-        return Deck(name, forgeborn, faction, cards)
-
-    def to_json(self):
-        return {
-            "name": self.name,
-            "faction": self.faction,
-            "forgeborn": self.forgeborn.to_json(),
-            "cards": [str(card) for card in self.cards.values()]
-        }    
-    
-    def __str__(self):     
-        card_titles = [card.title for card in self.cards.values()]
-        return f"Deck Name: {self.name}\nFaction: {self.faction}\nForgeborn: {self.forgeborn}\nCards:\n{', '.join(card_titles)}\n"   
-
-
-class Fusion:
-    def __init__(self, name, decks):
-        self.name = name
-        self.decks = decks
-
-    def getDeck(self):
-        fusion = self.decks[0]
-        for deck in self.decks[1:]:            
-            fusion += deck
-        return fusion
-
-    def to_json(self):
-        return {
-            "name": self.name,                        
-            "decks": [deck.to_json() for deck in self.decks]            
-        }    
-
-class Forgeborn:
-    def __init__(self, name, faction, abilities, synergy_template=None):
-        self.name = name
-        self.faction = faction
-        self.abilities = abilities        
-        self.ICollection = InterfaceCollection.from_forgeborn(self, synergy_template)
-
-    def __str__(self):
-        abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
-        return f"Forgeborn Name: {self.name}\nFaction: {self.faction}\nAbilities:\n{abilities_str}\n"
-
-    def to_json(self):
-        return {
-            "title": self.name,
-            "faction": self.faction,
-            "abilities": list(self.abilities.keys())
-        }
-
-class Card():
-    def __init__(self, card, modifier=None, synergy_template=None):  
-        self.entities = [card]             
-        if modifier:
-            self.title = modifier.name + ' ' + card.name
-            if isinstance(modifier, Entity):
-                self.entities.append(modifier)
-        else:
-            self.title = card.name
-        self.provides = None
-        self.seeks = None
-        self.ICollection = InterfaceCollection.from_card(self,synergy_template)
-
-    def __str__(self):
-        return self.title
-
-    def to_json(self):
-        return {
-            "title": self.title
-        }
 
         

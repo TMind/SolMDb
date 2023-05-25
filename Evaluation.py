@@ -186,13 +186,13 @@ def evaluate_graph(G):
         for label, weight in label_weights.items():
             print(f"Label: {label}, Weight: {weight}")
 
-    avg_lbl_com = total_community_labels / len(community_labels)
+    avg_lbl_com = total_community_labels / len(community_labels) if community_labels else 0
     print(f"Avg Labels: {total_community_labels} / {len(community_labels)} = {avg_lbl_com}")
 
 
     # G.graph('community_labels') = community_labels
-    partition = nx.community.greedy_modularity_communities(G)
-    mod = nx.community.modularity(G, partition)
+    #partition = nx.community.greedy_modularity_communities(G)
+    #mod = nx.community.modularity(G, partition)
     clustering_coefficients = nx.average_clustering(G)
     density = nx.density(G)
 

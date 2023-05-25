@@ -1,3 +1,4 @@
+from pyexpat import model
 from stat import FILE_ATTRIBUTE_REPARSE_POINT
 import csv
 import Evaluation as ev
@@ -10,9 +11,9 @@ from NetApi import NetApi
 
 
 
-rows = [ 'REPLACE' , 'AGGRO', 'FREE UPGRADE', 'ARMOR', 'FREE REPLACE', 'UPGRADE' ]
-synergy_template = SynergyTemplate()
-synergy_template.set_synergy_rows(rows)
+#rows = [ 'REPLACE' , 'WARRIOR', 'ACTIVATION', 'REDEPLOY', 'REACTIVATION' ,'AGGRO', 'FREE UPGRADE', 'FREE REPLACE', 'UPGRADE' ]
+#synergy_template = SynergyTemplate()
+#synergy_template.set_synergy_rows(rows)
 
 decks = []
 
@@ -45,27 +46,27 @@ if (0):
 EvaluatedGraphs = {}
 
 if (1):        
-    DeckCollection = DeckLibrary(decks, synergy_template)    
+    DeckCollection = DeckLibrary(decks)    
     
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
-        #half_deck = 'The Aunts of Bleeding Brightsteel'
+        half_deck = 'The Masters of Swearing'
         #deck_name = "The Mixing Figment Collectors|The People of Bearing"
-        #if half_deck in fusion.name :
-        if deck_name == fusion.name :
+        if half_deck in fusion.name :
+        #if deck_name == fusion.name :
 
-            DeckGraph = Graph.create_deck_graph(fusion, ev.calculate_weight,mode='Diff')        
+            DeckGraph = Graph.create_deck_graph(fusion, ev.calculate_weight)        
             ev.evaluate_graph(DeckGraph)
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph  
             print(f"\nFusion: {fusion.name}\n")
-            #Graph.print_graph(DeckGraph)                  
+            Graph.print_graph(DeckGraph)                  
             Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
             #Graph.edge_statistics(DeckGraph)   
 
     ev.find_best_pairs(EvaluatedGraphs)
 
-if (0):
-    ev.export_csv('deck_metrics', EvaluatedGraphs)
+if (1):
+    ev.export_csv('master_metrics', EvaluatedGraphs)
    
 
 

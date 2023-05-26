@@ -153,36 +153,32 @@ class UniversalCardLibrary:
                         }
                                                  
                 Collection = InterfaceCollection(name, self.synergy_template)
-                range   = ""                # Default: Any
+                
                 read_synergies = False
                 for key, value in row.items():
                     if key == "3text":
                         read_synergies = True   
                     elif read_synergies:
-                        if value is not None:                            
+                        range   = None                # Default: Any                           
+                        if value is not None:                             
                             if not value.isnumeric():
                                 if key == "Free":                                    
                                     key = f"Free {value}"            
                                     value = 1
                                     
                                 else: 
-                                    if value == '*':
-                                        range = '*'             # All 
-                                        value = 1                                        
-                                    elif value == '+': 
-                                        range = '+'             # All Other
-                                        value = 1
-                                    elif value == '.': 
-                                        range = '.'             # Self 
-                                        value = 0
+                                    range = value
+                                    if   value == '*':  value = 1                                        
+                                    elif value == '+':  value = 1
+                                    elif value == '.':  value = 0
                                     else:
+                                        range = ''
                                         value = 0
 
                                     
                             if int(value) > 0:                                                                    
                                 
-                                    ISyn = Interface(name, self.synergy_template, key, value)
-                                    ISyn.range = range
+                                    ISyn = Interface(name, self.synergy_template, key=key, value=value, range=range)                                    
                                     Collection.add(ISyn)
                                 
                                     
@@ -190,11 +186,12 @@ class UniversalCardLibrary:
                 self.entities.append(Entity(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection))
         return self.entities
 
-    def search_entity(self,name):
+    def search_entity(self,name, card_type=None):
         #print(f"Searching Entity: {name}")
         for entity in self.entities:
-            if entity.name == name:
-                return entity
+            if card_type is None or entity.card_type == card_type:
+                if entity.name == name:
+                    return entity
         return None
 
     def load_decks_from_file(self, filepath):
@@ -227,7 +224,7 @@ class UniversalCardLibrary:
                 else:
                     abilities_data = [forgeborn_data[code] for code in ['a2n', 'a3n', 'a4n'] if code in forgeborn_data]
                 # Now abilities_data is always a list, so we can create the abilities.
-                abilities = {ability_name: self.search_entity(ability_name) for ability_name in abilities_data}
+                abilities = {ability_name: self.search_entity(ability_name,card_type='Ability') for ability_name in abilities_data}
        
                 forgeborn_name = forgeborn_data['title'] if 'title' in forgeborn_data else forgeborn_data['name']
                 forgeborn = Forgeborn(forgeborn_name, deck_data['faction'],abilities)
@@ -288,7 +285,7 @@ class UniversalCardLibrary:
         for i in range(1, len(parts)):
             modifier_title = ' '.join(parts[:i])
             card_title = ' '.join(parts[i:])
-            modifier_entity = self.search_entity(modifier_title)
+            modifier_entity = self.search_entity(modifier_title, 'Modifier')
             card_entity = self.search_entity(card_title)
             if modifier_entity and card_entity:
                 return Card(card_entity, modifier_entity, self.synergy_template)

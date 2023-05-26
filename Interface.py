@@ -15,11 +15,12 @@ class InterfaceCollection:
             for interface in interfaces:
                 syns = interface.synergies
                 for syn in syns:
-                    if interface.name in self.interfaces[syn]:
-                       myInterface = self.interfaces[syn.name][interface.name]
+                    if interface.tag in self.interfaces[syn]:
+                       myInterface = self.interfaces[syn.name][interface.tag]
                        myInterface.types.update(interface.types)
+                       myInterface.ranges.update(interface.ranges)
                     else:
-                        self.interfaces[syn.name][interface.name] = interface
+                        self.interfaces[syn.name][interface.tag] = interface
              
     @classmethod
     def from_entities(cls, name, entities, synergy_template=None):        
@@ -54,11 +55,11 @@ class InterfaceCollection:
 
     def add(self, interface):
         for syn in interface.synergies:
-            if interface.name in self.interfaces[syn.name]:
-                existing_interface = self.interfaces[syn.name][interface.name]
+            if interface.tag in self.interfaces[syn.name]:
+                existing_interface = self.interfaces[syn.name][interface.tag]
                 existing_interface.types.update(interface.types)  # Add interface.types as a single item to the set
             else:
-                self.interfaces[syn.name][interface.name] = interface
+                self.interfaces[syn.name][interface.tag] = interface
 
 
     def restrict_range(self, range):
@@ -66,10 +67,10 @@ class InterfaceCollection:
         ICollection = copy.deepcopy(self)
 
         for synergy, interfaces in self.interfaces.items():
-                 for name, interface in interfaces.items() :
-                     if interface.range == range: 
-                         #print(f"Collection restricted: {synergy} -> {name}")
-                         del ICollection.interfaces[synergy][name]   
+                for name, interface in interfaces.items() :
+                    if range in interface.ranges: 
+                        #print(f"Collection restricted: {synergy} -> {name}")
+                        del ICollection.interfaces[synergy][name]   
 
         return ICollection
                     
@@ -87,7 +88,7 @@ class InterfaceCollection:
         return result  
 
     def get_members(self, type=None):        
-        members = [f"{synergy} :: {interface_name}" for synergy, interfaces in self.interfaces.items() for interface_name in interfaces if type in interfaces[interface_name].types]
+        members = [f"{synergy} :: {interface_tag.name} - {interface_tag}" for synergy, interfaces in self.interfaces.items() for interface_tag in interfaces if type in interfaces[interface_tag].types]
 
         return members
 
@@ -119,7 +120,9 @@ class InterfaceCollection:
             if len(output_interfaces) > 0:
 
                 factor = len(input_interfaces) * len(output_interfaces)
-                input_ranges = [ interface.range for interface in input_interfaces ]
+                input_ranges = set()
+                for interface in input_interfaces:
+                    input_ranges.update(interface.ranges) 
                 if '*' in input_ranges:
                     factor *= 1
                 if '+' in input_ranges:
@@ -139,19 +142,19 @@ class InterfaceCollection:
 
 class Interface:
 
-    def __init__(self, element_name , synergy_template=None, tag=None, value=None):
+    def __init__(self, element_name , synergy_template=None, key=None, value=None, range=None):
         self.name = element_name
-        self.tag = tag 
+        self.tag = key 
         self.value = value
         self.types = set()
-        self.range = ""
+        self.ranges = set(range) if range is not None else set()
         self.synergies = []
         self.synergy_template = synergy_template or SynergyTemplate()
-        if tag:  
-            self.synergies = self.synergy_template.get_synergies_by_tag(tag)                        
-            if tag in self.synergy_template.get_output_tags():
+        if key:  
+            self.synergies = self.synergy_template.get_synergies_by_tag(key)                        
+            if key in self.synergy_template.get_output_tags():
                 self.types.update("O")            
-            if tag in self.synergy_template.get_input_tags():
+            if key in self.synergy_template.get_input_tags():
                 self.types.update("I")                
 
     def get_type(self):

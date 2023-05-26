@@ -27,8 +27,8 @@ if (0) :
 
 else:
     # Read entities from CSV and create universal card library
-    myUCL = UniversalCardLibrary('sff.csv')#, synergy_template)
-    decks, incompletes = myUCL.load_decks_from_file('deck_base.json')
+    myUCL = UniversalCardLibrary('csv/sff.csv')#, synergy_template)
+    decks, incompletes = myUCL.load_decks_from_file('data/deck_base.json')
 
 if (0):
     forgeborn_abilities = defaultdict(list)
@@ -54,8 +54,8 @@ if (1):
         #deck_name = "The Mixing Figment Collectors|The People of Bearing"
         if half_deck in fusion.name :
         #if deck_name == fusion.name :
-
-            DeckGraph = Graph.create_deck_graph(fusion, ev.calculate_weight)        
+            mode = None 
+            DeckGraph = Graph.create_deck_graph(fusion, ev.calculate_weight,mode=mode)        
             ev.evaluate_graph(DeckGraph)
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph  
             print(f"\nFusion: {fusion.name}\n")

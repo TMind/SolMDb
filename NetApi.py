@@ -26,10 +26,10 @@ class NetApi:
         response = requests.get(endpoint, params=self.params)
         data = json.loads(response.content)
 
-        with open('online_request.json', 'w') as f:
+        with open('data/online_request.json', 'w') as f:
             json.dump(data, f)
 
-        decks_data = self.ucl.load_data('online_request.json')
+        decks_data = self.ucl.load_data('data/online_request.json')
         return decks_data
 
     def handle_response(self, data, type):
@@ -61,51 +61,7 @@ class NetApi:
 
         if filename:
             deck_data = [deck.to_json() for deck in decks]
-            with open(f"{filename}.json", "w") as f:
+            with open(f"data/{filename}.json", "w") as f:
                 json.dump(deck_data, f)
 
         return decks
-
-
-
-
-
-    # def request_decks(self, id="", type="deck", username="TMind", filename=None):
-                
-    #     if id.startswith('Fused') :
-    #         type = 'fuseddeck'         
-
-    #     endpoint = f"{self.base_url}/{type}/{id}"
-
-    #     self.params.update({"username" : username})
-        
-    #     response = requests.get(endpoint, params=self.params)
-    #     data = json.loads(response.content)
-
-    #     with open('online_request.json', 'w') as f:
-    #         json.dump(data, f)
-
-    #     if type=='fuseddeck' and id=="":
-    #         # Request each deck separately 
-    #         fusions = []            
-    #         for fused_deck in decks:                
-    #             # Getting the individual decks from the fused deck
-    #             fusion_decks = []
-    #             for deck_id in fused_deck.decks:
-    #                 deck = self.request_decks(id=deck_id)
-    #                 fusion_decks.append(deck)
-    #             name = "|".join(deck.name for deck in fused_deck.decks)
-    #             fusions.append(Fusion(name,fusion_decks))
-    #         # Replace decks with the full decks
-    #         decks = fusions
-    #     else:
-    #         decks = self.ucl.load_online('online_request.json', type)        
-            
-    #     if filename:
-    #         deck_data = [deck.to_json() for deck in decks]
-    #         with open(f"{filename}.json", "w") as f:
-    #              json.dump(deck_data, f)
-
-    #         #decks = self.ucl.load_offline('online_dump.json')
-
-    #     return decks

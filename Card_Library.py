@@ -1,7 +1,5 @@
-import csv
-import re
+import csv, json, copy
 from http.client import NETWORK_AUTHENTICATION_REQUIRED
-import json
 from Synergy import SynergyTemplate
 from Interface import Interface, InterfaceCollection
 from typing import List, Tuple, Dict
@@ -69,17 +67,18 @@ class Fusion:
         self.decks = decks
 
     def getDeck(self):        
-        fusion = self.decks[0]
+        fusion = copy.deepcopy(self.decks[0])  # Creates a new copy of the first deck in self.decks
         fusion.name = self.name
         for deck in self.decks[1:]:            
-            fusion += deck
+            fusion += deck  # You should ensure the += operator is correctly overloaded in the Deck class
         return fusion
 
     def to_json(self):
         return {
             "name": self.name,                        
             "decks": [deck.to_json() for deck in self.decks]            
-        }    
+        }
+
 
 class Forgeborn:
     def __init__(self, name, faction, abilities, synergy_template=None):
@@ -218,51 +217,37 @@ class UniversalCardLibrary:
         decks = []
         incomplete_data = []
         
-        for deck_data in decks_data:
-            
+        for deck_data in decks_data:            
             try:
                 forgeborn_data = deck_data['forgeborn']
-                abilities = {}
-                
+                # If 'abilities' key is in forgeborn_data, use it.
+                # Else, create a list from the keys 'a2n', 'a3n', 'a4n' if they exist.
                 if 'abilities' in forgeborn_data:
-                    for ability_name in forgeborn_data['abilities']:                        
-                        ability = self.search_entity(ability_name)
-                        abilities[ability_name] = ability
-                else:    
-                    for ability_code in ['a2n','a3n','a4n']:
-                        if ability_code in forgeborn_data:
-                            ability_name = forgeborn_data[ability_code]
-                            ability = self.search_entity(ability_name)
-                            abilities[ability_name] = ability                            
-                    
+                    abilities_data = forgeborn_data['abilities']
+                else:
+                    abilities_data = [forgeborn_data[code] for code in ['a2n', 'a3n', 'a4n'] if code in forgeborn_data]
+                # Now abilities_data is always a list, so we can create the abilities.
+                abilities = {ability_name: self.search_entity(ability_name) for ability_name in abilities_data}
+       
                 forgeborn_name = forgeborn_data['title'] if 'title' in forgeborn_data else forgeborn_data['name']
                 forgeborn = Forgeborn(forgeborn_name, deck_data['faction'],abilities)
             except Exception as e:
-                print(f"Exception: {e}")
+                #print(f"Exception: {e}")
                 #print(f"Could not load Forgeborn data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
                 
                 incomplete_data.append(deck_data)
                 continue
 
             try: 
-                cards_data = deck_data['cards']
-                cards = {}
-
-
-                cards_data_it = cards_data
-
-                if isinstance(cards_data, list):
-                    cards_data_it = enumerate(cards_data)
-
-                for card_data in cards_data_it.values():
-                    card_title = str(card_data['title']) if 'title' in card_data else str(card_data['name']) 
-                    card = self.create_card_from_title(card_title)
-                    card.provides = card_data['provides'] if 'provides' in card_data else None
-                    card.seeks = card_data['seeks'] if 'seeks' in card_data else None
-                    cards[card_title] = card;
+                cards_data = deck_data['cards']               
+                 # Handle the case when cards_data is a dictionary
+                if isinstance(cards_data, dict):
+                    cards_data = [str(card['title']) if 'title' in card else str(card['name']) for card in cards_data.values() ]                
+                cards = {card_title: self.create_card_from_title(card_title) for card_title in cards_data}
+                
             except Exception as e:
-                print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
-                print(f"Exception: {e}")
+                #print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
+                #print(f"Exception: {e}")
                 incomplete_data.append(deck_data)
                 continue
 

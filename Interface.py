@@ -15,7 +15,11 @@ class InterfaceCollection:
             for interface in interfaces:
                 syns = interface.synergies
                 for syn in syns:
-                    self.interfaces[syn.name][interface.name] = interface
+                    if interface.name in self.interfaces[syn]:
+                       myInterface = self.interfaces[syn.name][interface.name]
+                       myInterface.types.update(interface.types)
+                    else:
+                        self.interfaces[syn.name][interface.name] = interface
              
     @classmethod
     def from_entities(cls, name, entities, synergy_template=None):        
@@ -50,8 +54,12 @@ class InterfaceCollection:
 
     def add(self, interface):
         for syn in interface.synergies:
-            self.interfaces[syn.name][interface.name] = interface
-        
+            if interface.name in self.interfaces[syn.name]:
+                existing_interface = self.interfaces[syn.name][interface.name]
+                existing_interface.types.update(interface.types)  # Add interface.types as a single item to the set
+            else:
+                self.interfaces[syn.name][interface.name] = interface
+
 
     def restrict_range(self, range):
 
@@ -102,8 +110,8 @@ class InterfaceCollection:
             collection1 = restricted_collection
             collection2 = restricted_collection
             
-        input_interfaces2 = collection2.get_interfaces_by_type("IN")
-        output_interfaces1 = collection1.get_interfaces_by_type("OUT")
+        input_interfaces2 = collection2.get_interfaces_by_type("I")
+        output_interfaces1 = collection1.get_interfaces_by_type("O")
         
         for synergy, input_interfaces in input_interfaces2.items():            
             output_interfaces = output_interfaces1.get(synergy, [])
@@ -113,9 +121,9 @@ class InterfaceCollection:
                 factor = len(input_interfaces) * len(output_interfaces)
                 input_ranges = [ interface.range for interface in input_interfaces ]
                 if '*' in input_ranges:
-                    factor *= 3
+                    factor *= 1
                 if '+' in input_ranges:
-                    factor *= 2
+                    factor *= 1
                 #print(f"Members Collection 1: {collection1.get_members('IN')} ")           
                 #print(f"Members Collection 2: {collection2.get_members('OUT')} ")                     
                 #print(f"Matched Interfaces for Synergy: {synergy}")            
@@ -135,16 +143,16 @@ class Interface:
         self.name = element_name
         self.tag = tag 
         self.value = value
-        self.types = []
+        self.types = set()
         self.range = ""
         self.synergies = []
         self.synergy_template = synergy_template or SynergyTemplate()
         if tag:  
             self.synergies = self.synergy_template.get_synergies_by_tag(tag)                        
             if tag in self.synergy_template.get_output_tags():
-                self.types.append("OUT")            
+                self.types.update("O")            
             if tag in self.synergy_template.get_input_tags():
-                self.types.append("IN")                
+                self.types.update("I")                
 
     def get_type(self):
         return self.types
@@ -156,11 +164,9 @@ class Interface:
         return [synergy for synergy in self.synergies if self.has_tag_of_type(synergy, type)]
 
     def has_tag_of_type(self, synergy, type):
-        if type == "IN":
+        if type == "I":
             return any(tag in synergy.get_target_tags() for tag in self.synergy_template.get_input_tags())
-        elif type == "OUT":
+        elif type == "O":
             return any(tag in synergy.get_source_tags() for tag in self.synergy_template.get_output_tags())        
         else:
             return False
-
-            

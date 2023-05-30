@@ -109,7 +109,7 @@ class Card():
         else:
             self.title = card.name
         self.provides = None
-        self.seeks = None
+        self.seeks = None        
         self.ICollection = InterfaceCollection.from_card(self,synergy_template)
 
     def __str__(self):
@@ -237,10 +237,29 @@ class UniversalCardLibrary:
 
             try: 
                 cards_data = deck_data['cards']               
+                
+                cards_title = []
+                cards_additional_data = {}
+
                  # Handle the case when cards_data is a dictionary
-                if isinstance(cards_data, dict):
-                    cards_data = [str(card['title']) if 'title' in card else str(card['name']) for card in cards_data.values() ]                
-                cards = {card_title: self.create_card_from_title(card_title) for card_title in cards_data}
+                if isinstance(cards_data, dict):                    
+                    #cards_title = [str(card['title']) if 'title' in card else str(card['name']) for card in cards_data.values() ]    
+                    
+                    for card in cards_data.values():
+                        card_title = str(card.get('title')) if 'title' in card else str(card.get('name'))
+                        cards_title.append(card_title)
+
+                        # Extract additional data from the card dictionary
+                        cards_additional_data['betrayer'] = card.get('betrayer')
+                        cards_additional_data['provides'] = card.get('provides')
+                        cards_additional_data['seeks']    = card.get('seeks')   
+
+                        if cards_additional_data['betrayer'] == True:
+                            print(f"Betrayer found: {card_title}")
+
+                else:
+                    cards_title = cards_data
+                cards = {card_title: self.create_card_from_title(card_title,cards_additional_data) for card_title in cards_title} 
                 
             except Exception as e:
                 #print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
@@ -274,10 +293,12 @@ class UniversalCardLibrary:
                 
         return fusions, incomplete_fusionsdata
 
-    def create_card_from_title(self, card_title):
+    def create_card_from_title(self, card_title, card_data_additional):
         # First try with full title
-        card_entity = self.search_entity(card_title)
+        card_entity = self.search_entity(card_title)        
         if card_entity:
+            for key, value in card_data_additional.items():                
+                setattr(card_entity, key, value)
             return Card(card_entity)
 
         # If not found, try with decreasing title length
@@ -288,6 +309,8 @@ class UniversalCardLibrary:
             modifier_entity = self.search_entity(modifier_title, 'Modifier')
             card_entity = self.search_entity(card_title)
             if modifier_entity and card_entity:
+                for key, value in card_data_additional.items():
+                    setattr(card_entity, key, value)
                 return Card(card_entity, modifier_entity, self.synergy_template)
 
         # If no entities found, create a card with just the card title

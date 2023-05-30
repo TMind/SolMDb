@@ -3,7 +3,7 @@ from http.client import NETWORK_AUTHENTICATION_REQUIRED
 from Synergy import SynergyTemplate
 from Interface import Interface, InterfaceCollection
 from typing import List, Tuple, Dict
-
+from collections import Counter
 
 class Entity:
     def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection):
@@ -32,20 +32,31 @@ class Deck:
         self.name = name
         self.forgeborn = forgeborn
         self.faction = faction
-        self.cards = cards      
+        self.cards = cards
+        self.seeks = {}
+        self.provides = {}                
         int_col_deck = InterfaceCollection.from_deck(self,synergy_template)
         int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn, synergy_template)
         self.ICollection = int_col_deck.update(int_col_fb)
+        self.populate()
+
+    def populate(self):
+
+        for card_name, card in self.cards.items():            
+            if card.provides :
+                self.provides = Counter({**self.provides , **card.provides })
+            if card.seeks :
+                self.seeks    = Counter({**self.seeks , **card.seeks })
 
     def __add__(self, other):      
         name = self.name + '|' + other.name
         if self.faction == other.faction : 
             #print(f"{name} : Deck fusion invalid. Same faction {self.faction}\n")
             return 
-        forgeborn = self.forgeborn
-        faction = self.faction + '|' + other.faction 
+        forgeborn = self.forgeborn        
+        faction = self.faction + '|' + other.faction                 
         cards = { **self.cards, **other.cards} 
-        #cards = dict(list(self.cards.items()) + list(other.cards.items()))
+        
         return Deck(name, forgeborn, faction, cards)
 
     def to_json(self):
@@ -66,12 +77,12 @@ class Fusion:
         self.name = name
         self.decks = decks
 
-    def getDeck(self):        
-        fusion = copy.deepcopy(self.decks[0])  # Creates a new copy of the first deck in self.decks
-        fusion.name = self.name
-        for deck in self.decks[1:]:            
-            fusion += deck  # You should ensure the += operator is correctly overloaded in the Deck class
-        return fusion
+    # def getDeck(self):        
+    #     fusion = copy.deepcopy(self.decks[0])  # Creates a new copy of the first deck in self.decks
+    #     fusion.name = self.name
+    #     for deck in self.decks[1:]:            
+    #         fusion += deck  # You should ensure the += operator is correctly overloaded in the Deck class
+    #     return fusion
 
     def to_json(self):
         return {
@@ -108,8 +119,8 @@ class Card():
                 self.entities.append(modifier)
         else:
             self.title = card.name
-        self.provides = None
-        self.seeks = None        
+        self.provides = card.provides
+        self.seeks = card.seeks
         self.ICollection = InterfaceCollection.from_card(self,synergy_template)
 
     def __str__(self):
@@ -250,16 +261,21 @@ class UniversalCardLibrary:
                         cards_title.append(card_title)
 
                         # Extract additional data from the card dictionary
+                        default_value = 1
                         cards_additional_data['betrayer'] = card.get('betrayer')
-                        cards_additional_data['provides'] = card.get('provides')
-                        cards_additional_data['seeks']    = card.get('seeks')   
+                        provides = card.get('provides')
+                        seeks   = card.get('seeks')
+                        list_provides = provides.split(', ') if provides else {}
+                        list_seeks    = seeks.split(', ') if seeks else {}
+                        cards_additional_data[card_title]['provides'] = {key: default_value for key in list_provides}  
+                        cards_additional_data[card_title]['seeks']    = {key: default_value for key in list_seeks}   
 
                         if cards_additional_data['betrayer'] == True:
                             print(f"Betrayer found: {card_title}")
 
                 else:
                     cards_title = cards_data
-                cards = {card_title: self.create_card_from_title(card_title,cards_additional_data) for card_title in cards_title} 
+                cards = {card_title: self.create_card_from_title(card_title,cards_additional_data[card_title]) for card_title in cards_title} 
                 
             except Exception as e:
                 #print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")

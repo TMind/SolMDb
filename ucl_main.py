@@ -17,7 +17,7 @@ from NetApi import NetApi
 
 decks = []
 
-if (0) :
+if (1) :
     myApi = NetApi()
         
     #decks = myApi.request_decks()
@@ -50,22 +50,24 @@ if (1):
     
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
-        half_deck = 'The Masters of Swearing'
+        half_deck = 'The Raiders of Hound and Mask'
         #deck_name = "The Mixing Figment Collectors|The People of Bearing"
-        if half_deck in fusion.name :
-        #if deck_name == fusion.name :
+        #if half_deck in fusion.name :
+        if deck_name == fusion.name :
             mode = None 
             DeckGraph = Graph.create_deck_graph(fusion, ev.calculate_weight,mode=mode)        
             ev.evaluate_graph(DeckGraph)
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph  
             print(f"\nFusion: {fusion.name}\n")
             Graph.print_graph(DeckGraph)                  
-            Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
+            #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
             #Graph.edge_statistics(DeckGraph)   
+            print(f"Provides: {fusion.provides}")
+            print(f"Seeks: {fusion.seeks}")
 
     ev.find_best_pairs(EvaluatedGraphs)
 
-if (1):
+if (0):
     ev.export_csv('master_metrics', EvaluatedGraphs)
    
 

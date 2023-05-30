@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Python: Current File",
             "type": "python",
@@ -13,16 +14,9 @@
             "name": "Python: UCL",
             "type": "python",
             "request": "launch",
-            "program": "C:/Tools/Code/Repos/SolDB/ucl_main.py",
+            "program": "ucl_main.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
-        {
-            "name": "Python: File",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "justMyCode": true
-        }
     ]
 }

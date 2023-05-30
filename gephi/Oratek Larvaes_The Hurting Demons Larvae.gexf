@@ -1,0 +1,348 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="Oratek Larvaes|The Hurting Demons Larvae">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="double" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Burnout" label="Burnout">
+        <attvalues>
+          <attvalue for="0" value="SPELL" />
+          <attvalue for="1" value="0.045030015977068405" />
+          <attvalue for="2" value="0.6818181818181819" />
+          <attvalue for="3" value="0.24285714285714285" />
+          <attvalue for="4" value="0.09848484848484848" />
+          <attvalue for="5" value="0.2566757721296077" />
+          <attvalue for="6" value="0.023917748917748918" />
+        </attvalues>
+      </node>
+      <node id="Chaining Giant" label="Chaining Giant">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.08391168273168066" />
+          <attvalue for="2" value="0.4090909090909091" />
+          <attvalue for="3" value="0.12857142857142856" />
+          <attvalue for="4" value="0.03463203463203463" />
+          <attvalue for="5" value="0.28234334025470426" />
+          <attvalue for="6" value="0.004452690166975881" />
+        </attvalues>
+      </node>
+      <node id="Freezing Omni" label="Freezing Omni">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012527472856837075" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13843744084823473" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Ice Storm" label="Ice Storm">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012527472856837075" />
+          <attvalue for="2" value="0.3181818181818182" />
+          <attvalue for="3" value="0.14285714285714285" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13843744084823473" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Inflaming Invokist" label="Inflaming Invokist">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.04821957779425887" />
+          <attvalue for="2" value="0.4090909090909091" />
+          <attvalue for="3" value="0.12857142857142856" />
+          <attvalue for="4" value="0.007936507936507938" />
+          <attvalue for="5" value="0.28234334025470426" />
+          <attvalue for="6" value="0.0010204081632653062" />
+        </attvalues>
+      </node>
+      <node id="Lightning Spark" label="Lightning Spark">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012527472856837075" />
+          <attvalue for="2" value="0.3181818181818182" />
+          <attvalue for="3" value="0.14285714285714285" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13843744084823473" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Primordial Slam" label="Primordial Slam">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.08917515810457606" />
+          <attvalue for="2" value="0.4090909090909091" />
+          <attvalue for="3" value="0.1" />
+          <attvalue for="4" value="0.03571428571428571" />
+          <attvalue for="5" value="0.18051550630728466" />
+          <attvalue for="6" value="0.0035714285714285713" />
+        </attvalues>
+      </node>
+      <node id="Raging Lasher" label="Raging Lasher">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012527472856837075" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13843744084823473" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Staff of Vaerus" label="Staff of Vaerus">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.19064360502845448" />
+          <attvalue for="2" value="0.5" />
+          <attvalue for="3" value="0.08653846153846154" />
+          <attvalue for="4" value="0.11255411255411256" />
+          <attvalue for="5" value="0.2398913353135505" />
+          <attvalue for="6" value="0.00974025974025974" />
+        </attvalues>
+      </node>
+      <node id="Undeati" label="Undeati">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017851711490269234" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1522811849330582" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Blight Witch" label="Blight Witch">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.06489282753273318" />
+          <attvalue for="2" value="0.5" />
+          <attvalue for="3" value="0.08333333333333333" />
+          <attvalue for="4" value="0.029581529581529584" />
+          <attvalue for="5" value="0.3114152028328335" />
+          <attvalue for="6" value="0.0024651274651274653" />
+        </attvalues>
+      </node>
+      <node id="Camouflaged Skeleton" label="Camouflaged Skeleton">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012527472856837075" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13843744084823473" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Combat Spectre" label="Combat Spectre">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012527472856837075" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13843744084823473" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Hematophagic Moeba" label="Hematophagic Moeba">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02540722512393739" />
+          <attvalue for="2" value="0.2272727272727273" />
+          <attvalue for="3" value="0.1111111111111111" />
+          <attvalue for="4" value="0.049783549783549784" />
+          <attvalue for="5" value="0.21051008887882458" />
+          <attvalue for="6" value="0.005531505531505531" />
+        </attvalues>
+      </node>
+      <node id="Spiritleash" label="Spiritleash">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.039448012956393205" />
+          <attvalue for="2" value="0.4090909090909091" />
+          <attvalue for="3" value="0.09722222222222222" />
+          <attvalue for="4" value="0.050865800865800864" />
+          <attvalue for="5" value="0.1733321895981834" />
+          <attvalue for="6" value="0.004945286195286195" />
+        </attvalues>
+      </node>
+      <node id="Spitemaiden" label="Spitemaiden">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.08391168273168066" />
+          <attvalue for="2" value="0.4090909090909091" />
+          <attvalue for="3" value="0.12857142857142856" />
+          <attvalue for="4" value="0.007936507936507938" />
+          <attvalue for="5" value="0.28234334025470426" />
+          <attvalue for="6" value="0.0010204081632653062" />
+        </attvalues>
+      </node>
+      <node id="Steadfast Fiend" label="Steadfast Fiend">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017851711490269234" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.028138528138528143" />
+          <attvalue for="5" value="0.1522811849330582" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Steadfast Spirit" label="Steadfast Spirit">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02540722512393739" />
+          <attvalue for="2" value="0.2272727272727273" />
+          <attvalue for="3" value="0.1" />
+          <attvalue for="4" value="0.049783549783549784" />
+          <attvalue for="5" value="0.21051008887882458" />
+          <attvalue for="6" value="0.004978354978354979" />
+        </attvalues>
+      </node>
+      <node id="Vyric's Embrace" label="Vyric's Embrace">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012527472856837075" />
+          <attvalue for="2" value="0.36363636363636365" />
+          <attvalue for="3" value="0.23214285714285715" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13843744084823473" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Xrath's Will" label="Xrath's Will">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.0358985205341051" />
+          <attvalue for="2" value="0.5" />
+          <attvalue for="3" value="0.14814814814814814" />
+          <attvalue for="4" value="0.04220779220779221" />
+          <attvalue for="5" value="0.1733321895981834" />
+          <attvalue for="6" value="0.006253006253006252" />
+        </attvalues>
+      </node>
+      <node id="Stim bolt" label="Stim bolt">
+        <attvalues>
+          <attvalue for="1" value="0.08391168273168066" />
+          <attvalue for="2" value="0.36363636363636365" />
+          <attvalue for="3" value="0.14285714285714285" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.28234334025470426" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Gathering Storm" label="Gathering Storm">
+        <attvalues>
+          <attvalue for="1" value="0.04821957779425887" />
+          <attvalue for="2" value="0.36363636363636365" />
+          <attvalue for="3" value="0.14285714285714285" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.28234334025470426" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Summon the Swarm" label="Summon the Swarm">
+        <attvalues>
+          <attvalue for="1" value="0.012527472856837075" />
+          <attvalue for="2" value="0.13636363636363635" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13843744084823473" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Burnout" target="Stim bolt" id="0" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Burnout" target="Gathering Storm" id="1" label="SPELL" weight="1" />
+      <edge source="Burnout" target="Chaining Giant" id="2" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Burnout" target="Inflaming Invokist" id="3" label="SPELL" weight="1" />
+      <edge source="Burnout" target="Blight Witch" id="4" label="SPELL,DESTROY MIN" weight="2" />
+      <edge source="Burnout" target="Hematophagic Moeba" id="5" label="DESTROY MIN" weight="1" />
+      <edge source="Burnout" target="Spitemaiden" id="6" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Burnout" target="Steadfast Spirit" id="7" label="DESTROY MIN" weight="1" />
+      <edge source="Chaining Giant" target="Primordial Slam" id="8" label="WARRIOR" weight="1" />
+      <edge source="Freezing Omni" target="Staff of Vaerus" id="9" label="MAGE" weight="1" />
+      <edge source="Ice Storm" target="Burnout" id="10" label="SPELL" weight="1" />
+      <edge source="Ice Storm" target="Chaining Giant" id="11" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Ice Storm" target="Stim bolt" id="12" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Ice Storm" target="Gathering Storm" id="13" label="SPELL" weight="1" />
+      <edge source="Ice Storm" target="Inflaming Invokist" id="14" label="SPELL" weight="1" />
+      <edge source="Ice Storm" target="Blight Witch" id="15" label="SPELL" weight="1" />
+      <edge source="Ice Storm" target="Spitemaiden" id="16" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Inflaming Invokist" target="Staff of Vaerus" id="17" label="MAGE" weight="1" />
+      <edge source="Lightning Spark" target="Burnout" id="18" label="SPELL" weight="1" />
+      <edge source="Lightning Spark" target="Chaining Giant" id="19" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Lightning Spark" target="Inflaming Invokist" id="20" label="SPELL" weight="1" />
+      <edge source="Lightning Spark" target="Stim bolt" id="21" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Lightning Spark" target="Gathering Storm" id="22" label="SPELL" weight="1" />
+      <edge source="Lightning Spark" target="Blight Witch" id="23" label="SPELL" weight="1" />
+      <edge source="Lightning Spark" target="Spitemaiden" id="24" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Primordial Slam" target="Burnout" id="25" label="SPELL" weight="1" />
+      <edge source="Primordial Slam" target="Chaining Giant" id="26" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Primordial Slam" target="Inflaming Invokist" id="27" label="SPELL" weight="1" />
+      <edge source="Primordial Slam" target="Stim bolt" id="28" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Primordial Slam" target="Gathering Storm" id="29" label="SPELL" weight="1" />
+      <edge source="Primordial Slam" target="Blight Witch" id="30" label="SPELL" weight="1" />
+      <edge source="Primordial Slam" target="Spitemaiden" id="31" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Raging Lasher" target="Undeati" id="32" label="FREE SELFDMG" weight="1" />
+      <edge source="Raging Lasher" target="Steadfast Fiend" id="33" label="SELFDAMAGE" weight="1" />
+      <edge source="Staff of Vaerus" target="Burnout" id="34" label="SPELL" weight="1" />
+      <edge source="Staff of Vaerus" target="Chaining Giant" id="35" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Staff of Vaerus" target="Inflaming Invokist" id="36" label="SPELL" weight="1" />
+      <edge source="Staff of Vaerus" target="Stim bolt" id="37" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Staff of Vaerus" target="Gathering Storm" id="38" label="SPELL" weight="1" />
+      <edge source="Staff of Vaerus" target="Blight Witch" id="39" label="SPELL" weight="1" />
+      <edge source="Staff of Vaerus" target="Spitemaiden" id="40" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Blight Witch" target="Staff of Vaerus" id="41" label="MAGE" weight="1" />
+      <edge source="Combat Spectre" target="Primordial Slam" id="42" label="WARRIOR" weight="1" />
+      <edge source="Combat Spectre" target="Spiritleash" id="43" label="SPIRIT" weight="1" />
+      <edge source="Hematophagic Moeba" target="Xrath's Will" id="44" label="HEALING,FREE HEALING" weight="2" />
+      <edge source="Spiritleash" target="Burnout" id="45" label="SPELL" weight="1" />
+      <edge source="Spiritleash" target="Chaining Giant" id="46" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Spiritleash" target="Inflaming Invokist" id="47" label="SPELL" weight="1" />
+      <edge source="Spiritleash" target="Blight Witch" id="48" label="SPELL" weight="1" />
+      <edge source="Spiritleash" target="Stim bolt" id="49" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Spiritleash" target="Gathering Storm" id="50" label="SPELL" weight="1" />
+      <edge source="Spiritleash" target="Spitemaiden" id="51" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Spitemaiden" target="Staff of Vaerus" id="52" label="MAGE" weight="1" />
+      <edge source="Steadfast Fiend" target="Blight Witch" id="53" label="FREE DESTROY,DESTROY SYN" weight="2" />
+      <edge source="Steadfast Fiend" target="Hematophagic Moeba" id="54" label="DESTROY SYN" weight="1" />
+      <edge source="Steadfast Fiend" target="Steadfast Spirit" id="55" label="DESTROY SYN" weight="1" />
+      <edge source="Steadfast Spirit" target="Spiritleash" id="56" label="SPIRIT" weight="1" />
+      <edge source="Vyric's Embrace" target="Burnout" id="57" label="SPELL" weight="1" />
+      <edge source="Vyric's Embrace" target="Chaining Giant" id="58" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Vyric's Embrace" target="Inflaming Invokist" id="59" label="SPELL" weight="1" />
+      <edge source="Vyric's Embrace" target="Blight Witch" id="60" label="SPELL" weight="1" />
+      <edge source="Vyric's Embrace" target="Spitemaiden" id="61" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Vyric's Embrace" target="Stim bolt" id="62" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Vyric's Embrace" target="Gathering Storm" id="63" label="SPELL" weight="1" />
+      <edge source="Vyric's Embrace" target="Xrath's Will" id="64" label="HEALING,FREE HEALING" weight="2" />
+      <edge source="Xrath's Will" target="Burnout" id="65" label="SPELL" weight="1" />
+      <edge source="Xrath's Will" target="Chaining Giant" id="66" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Xrath's Will" target="Inflaming Invokist" id="67" label="SPELL" weight="1" />
+      <edge source="Xrath's Will" target="Blight Witch" id="68" label="SPELL,DESTROY MIN" weight="2" />
+      <edge source="Xrath's Will" target="Hematophagic Moeba" id="69" label="DESTROY MIN" weight="1" />
+      <edge source="Xrath's Will" target="Spitemaiden" id="70" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Xrath's Will" target="Steadfast Spirit" id="71" label="DESTROY MIN" weight="1" />
+      <edge source="Xrath's Will" target="Stim bolt" id="72" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Xrath's Will" target="Gathering Storm" id="73" label="SPELL" weight="1" />
+      <edge source="Summon the Swarm" target="Blight Witch" id="74" label="DESTROY MIN" weight="1" />
+      <edge source="Summon the Swarm" target="Hematophagic Moeba" id="75" label="DESTROY MIN" weight="1" />
+      <edge source="Summon the Swarm" target="Steadfast Spirit" id="76" label="DESTROY MIN" weight="1" />
+    </edges>
+  </graph>
+</gexf>

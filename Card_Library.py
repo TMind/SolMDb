@@ -44,9 +44,9 @@ class Deck:
 
         for card_name, card in self.cards.items():            
             if card.provides :
-                self.provides = Counter({**self.provides , **card.provides })
+                self.provides = dict(Counter(self.provides) + Counter(card.provides))
             if card.seeks :
-                self.seeks    = Counter({**self.seeks , **card.seeks })
+                self.seeks    = dict(Counter(self.seeks) + Counter(card.seeks))
 
     def __add__(self, other):      
         name = self.name + '|' + other.name
@@ -77,12 +77,12 @@ class Fusion:
         self.name = name
         self.decks = decks
 
-    # def getDeck(self):        
-    #     fusion = copy.deepcopy(self.decks[0])  # Creates a new copy of the first deck in self.decks
-    #     fusion.name = self.name
-    #     for deck in self.decks[1:]:            
-    #         fusion += deck  # You should ensure the += operator is correctly overloaded in the Deck class
-    #     return fusion
+    def getDeck(self):        
+        fusion = copy.deepcopy(self.decks[0])  # Creates a new copy of the first deck in self.decks
+        fusion.name = self.name
+        for deck in self.decks[1:]:            
+            fusion += deck  # You should ensure the += operator is correctly overloaded in the Deck class
+        return fusion
 
     def to_json(self):
         return {
@@ -267,8 +267,8 @@ class UniversalCardLibrary:
                         seeks   = card.get('seeks')
                         list_provides = provides.split(', ') if provides else {}
                         list_seeks    = seeks.split(', ') if seeks else {}
-                        cards_additional_data[card_title]['provides'] = {key: default_value for key in list_provides}  
-                        cards_additional_data[card_title]['seeks']    = {key: default_value for key in list_seeks}   
+                        cards_additional_data.setdefault(card_title, {})['provides'] = {key: default_value for key in list_provides}
+                        cards_additional_data.setdefault(card_title, {})['seeks']    = {key: default_value for key in list_seeks}   
 
                         if cards_additional_data['betrayer'] == True:
                             print(f"Betrayer found: {card_title}")

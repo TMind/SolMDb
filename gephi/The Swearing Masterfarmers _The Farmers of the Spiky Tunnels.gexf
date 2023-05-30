@@ -1,0 +1,269 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="The Swearing Masterfarmers |The Farmers of the Spiky Tunnels">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="long" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Blizzard Shaman" label="Blizzard Shaman">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02190444457885573" />
+          <attvalue for="2" value="0.10526315789473684" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18901249052256314" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Chant of Umbruk" label="Chant of Umbruk">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.10429372352448435" />
+          <attvalue for="2" value="0.3157894736842105" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.04093567251461988" />
+          <attvalue for="5" value="0.26839773654203963" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Lightning Spark" label="Lightning Spark">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02190444457885573" />
+          <attvalue for="2" value="0.10526315789473684" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18901249052256314" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Raging Mystic" label="Raging Mystic">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.025007617510265263" />
+          <attvalue for="2" value="0.10526315789473684" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.20791373957481946" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Summoning Warhound" label="Summoning Warhound">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.10657069775887809" />
+          <attvalue for="2" value="0.3684210526315789" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.03070175438596491" />
+          <attvalue for="5" value="0.31035850943804866" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Thundersaur" label="Thundersaur">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028110790441674804" />
+          <attvalue for="2" value="0.10526315789473684" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.008771929824561403" />
+          <attvalue for="5" value="0.20791373957481946" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Turnabout" label="Turnabout">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02190444457885573" />
+          <attvalue for="2" value="0.10526315789473684" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18901249052256314" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Unstable Master" label="Unstable Master">
+        <attvalues>
+          <attvalue for="0" value="MAGE" />
+          <attvalue for="1" value="0.27010974809650645" />
+          <attvalue for="2" value="0.5263157894736842" />
+          <attvalue for="3" value="0.011111111111111112" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.3951364708246245" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Venerable Wurm" label="Venerable Wurm">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02190444457885573" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18901249052256314" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Windspark Elemental" label="Windspark Elemental">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.025007617510265263" />
+          <attvalue for="2" value="0.05263157894736842" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.20791373957481946" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Esperian Steelplate" label="Esperian Steelplate">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.025007617510265263" />
+          <attvalue for="2" value="0.10526315789473684" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0014619883040935672" />
+          <attvalue for="5" value="0.20791373957481946" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Ferocious Wartusk" label="Ferocious Wartusk">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02190444457885573" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18901249052256314" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Grove Mother" label="Grove Mother">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02190444457885573" />
+          <attvalue for="2" value="0.3157894736842105" />
+          <attvalue for="3" value="0.03333333333333333" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18901249052256314" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Mystical Keeper" label="Mystical Keeper">
+        <attvalues>
+          <attvalue for="0" value="BEAST" />
+          <attvalue for="1" value="0.13374532013917392" />
+          <attvalue for="2" value="0.15789473684210525" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.005847953216374269" />
+          <attvalue for="5" value="0.24083971542384994" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Shardplate Delver" label="Shardplate Delver">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.025007617510265263" />
+          <attvalue for="2" value="0.10526315789473684" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0029239766081871343" />
+          <attvalue for="5" value="0.20791373957481946" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Shifting Basher" label="Shifting Basher">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02190444457885573" />
+          <attvalue for="2" value="0.05263157894736842" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18901249052256314" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Shifting Decayasaur" label="Shifting Decayasaur">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02190444457885573" />
+          <attvalue for="2" value="0.05263157894736842" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18901249052256314" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Summoning Council" label="Summoning Council">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02190444457885573" />
+          <attvalue for="2" value="0.10526315789473684" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18901249052256314" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Talisan" label="Talisan">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.03809480420966425" />
+          <attvalue for="2" value="0.15789473684210525" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.21001385735701564" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Toxic Spores" label="Toxic Spores">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02190444457885573" />
+          <attvalue for="2" value="0.10526315789473684" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18901249052256314" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Blizzard Shaman" target="Thundersaur" id="0" label="SELFDAMAGE" weight="1" />
+      <edge source="Blizzard Shaman" target="Unstable Master" id="1" label="MAGE,SELFDAMAGE" weight="2" />
+      <edge source="Chant of Umbruk" target="Summoning Warhound" id="2" label="SPELL" weight="1" />
+      <edge source="Chant of Umbruk" target="Unstable Master" id="3" label="SPELL" weight="1" />
+      <edge source="Lightning Spark" target="Summoning Warhound" id="4" label="SPELL" weight="1" />
+      <edge source="Lightning Spark" target="Unstable Master" id="5" label="SPELL" weight="1" />
+      <edge source="Raging Mystic" target="Unstable Master" id="6" label="MAGE" weight="1" />
+      <edge source="Summoning Warhound" target="Mystical Keeper" id="7" label="BEAST" weight="1" />
+      <edge source="Thundersaur" target="Chant of Umbruk" id="8" label="DINOSAUR" weight="1" />
+      <edge source="Turnabout" target="Summoning Warhound" id="9" label="SPELL" weight="1" />
+      <edge source="Turnabout" target="Unstable Master" id="10" label="SPELL" weight="1" />
+      <edge source="Esperian Steelplate" target="Mystical Keeper" id="11" label="BEAST" weight="1" />
+      <edge source="Grove Mother" target="Raging Mystic" id="12" label="AGGRO" weight="1" />
+      <edge source="Grove Mother" target="Summoning Warhound" id="13" label="REPLACE" weight="1" />
+      <edge source="Grove Mother" target="Unstable Master" id="14" label="MAGE" weight="1" />
+      <edge source="Grove Mother" target="Windspark Elemental" id="15" label="AGGRO" weight="1" />
+      <edge source="Grove Mother" target="Esperian Steelplate" id="16" label="REPLACE" weight="1" />
+      <edge source="Grove Mother" target="Shardplate Delver" id="17" label="REPLACE" weight="1" />
+      <edge source="Mystical Keeper" target="Unstable Master" id="18" label="MAGE" weight="1" />
+      <edge source="Shardplate Delver" target="Chant of Umbruk" id="19" label="DINOSAUR" weight="1" />
+      <edge source="Shifting Basher" target="Chant of Umbruk" id="20" label="DINOSAUR" weight="1" />
+      <edge source="Shifting Decayasaur" target="Chant of Umbruk" id="21" label="DINOSAUR" weight="1" />
+      <edge source="Summoning Council" target="Summoning Warhound" id="22" label="SPELL" weight="1" />
+      <edge source="Summoning Council" target="Unstable Master" id="23" label="SPELL" weight="1" />
+      <edge source="Talisan" target="Unstable Master" id="24" label="MAGE" weight="1" />
+      <edge source="Talisan" target="Talisan" id="25" label="FREE" weight="1" />
+      <edge source="Toxic Spores" target="Summoning Warhound" id="26" label="SPELL" weight="1" />
+      <edge source="Toxic Spores" target="Unstable Master" id="27" label="SPELL" weight="1" />
+    </edges>
+  </graph>
+</gexf>

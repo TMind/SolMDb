@@ -1,0 +1,327 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="A) Upgraded Mobile Spell Mages|Doctors of Tatoo and Comparing">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="long" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Charge Plated Warcharger" label="Charge Plated Warcharger">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014922703897384329" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.150691708052866" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Combat Techtician" label="Combat Techtician">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014922703897384329" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.150691708052866" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Energy Surge" label="Energy Surge">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.023792905160913275" />
+          <attvalue for="2" value="0.4545454545454546" />
+          <attvalue for="3" value="0.08928571428571429" />
+          <attvalue for="4" value="0.016233766233766232" />
+          <attvalue for="5" value="0.18417875428650135" />
+          <attvalue for="6" value="0.001449443413729128" />
+        </attvalues>
+      </node>
+      <node id="Forcefield" label="Forcefield">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.04928090729994461" />
+          <attvalue for="2" value="0.2727272727272727" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.04599567099567099" />
+          <attvalue for="5" value="0.21252540756090704" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Metasight" label="Metasight">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014922703897384329" />
+          <attvalue for="2" value="0.13636363636363635" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.150691708052866" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Palladium Pulsemage" label="Palladium Pulsemage">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.055521166185140344" />
+          <attvalue for="2" value="0.3181818181818182" />
+          <attvalue for="3" value="0.21428571428571427" />
+          <attvalue for="4" value="0.024891774891774892" />
+          <attvalue for="5" value="0.2309432829892558" />
+          <attvalue for="6" value="0.005333951762523191" />
+        </attvalues>
+      </node>
+      <node id="Protective Scavenger" label="Protective Scavenger">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014922703897384329" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.150691708052866" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Salvage Tinker" label="Salvage Tinker">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.034957742667972524" />
+          <attvalue for="2" value="0.3181818181818182" />
+          <attvalue for="3" value="0.07142857142857142" />
+          <attvalue for="4" value="0.07702020202020202" />
+          <attvalue for="5" value="0.19288904605923235" />
+          <attvalue for="6" value="0.005501443001443001" />
+        </attvalues>
+      </node>
+      <node id="Stout Justicar" label="Stout Justicar">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014922703897384329" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.150691708052866" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Suppressing Prophet" label="Suppressing Prophet">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014922703897384329" />
+          <attvalue for="2" value="0.13636363636363635" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.150691708052866" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Conflagrate" label="Conflagrate">
+        <attvalues>
+          <attvalue for="0" value="MAGE" />
+          <attvalue for="1" value="0.09297912979494467" />
+          <attvalue for="2" value="0.4545454545454546" />
+          <attvalue for="3" value="0.03571428571428571" />
+          <attvalue for="4" value="0.12337662337662338" />
+          <attvalue for="5" value="0.2712821095200612" />
+          <attvalue for="6" value="0.004406307977736549" />
+        </attvalues>
+      </node>
+      <node id="Ice Storm" label="Ice Storm">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014922703897384329" />
+          <attvalue for="2" value="0.13636363636363635" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.150691708052866" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Lightning Tamer" label="Lightning Tamer">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.08202200529140877" />
+          <attvalue for="2" value="0.4090909090909091" />
+          <attvalue for="3" value="0.07352941176470588" />
+          <attvalue for="4" value="0.040223665223665224" />
+          <attvalue for="5" value="0.27475678266732967" />
+          <attvalue for="6" value="0.0029576224429165607" />
+        </attvalues>
+      </node>
+      <node id="Piercing Mystic" label="Piercing Mystic">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.08202200529140877" />
+          <attvalue for="2" value="0.4545454545454546" />
+          <attvalue for="3" value="0.023255813953488372" />
+          <attvalue for="4" value="0.06024531024531025" />
+          <attvalue for="5" value="0.27475678266732967" />
+          <attvalue for="6" value="0.001401053726635122" />
+        </attvalues>
+      </node>
+      <node id="Raging Wurm" label="Raging Wurm">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02169548102854755" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1883984722019716" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Staff of Vaerus" label="Staff of Vaerus">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.09297912979494467" />
+          <attvalue for="2" value="0.36363636363636365" />
+          <attvalue for="3" value="0.04" />
+          <attvalue for="4" value="0.021103896103896104" />
+          <attvalue for="5" value="0.2712821095200612" />
+          <attvalue for="6" value="0.0008441558441558442" />
+        </attvalues>
+      </node>
+      <node id="Stout Spellknight" label="Stout Spellknight">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.08202200529140877" />
+          <attvalue for="2" value="0.4545454545454546" />
+          <attvalue for="3" value="0.011904761904761904" />
+          <attvalue for="4" value="0.04761904761904762" />
+          <attvalue for="5" value="0.27475678266732967" />
+          <attvalue for="6" value="0.0005668934240362812" />
+        </attvalues>
+      </node>
+      <node id="Thundersaur" label="Thundersaur">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.034957742667972524" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.19288904605923235" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Venerable Lasher" label="Venerable Lasher">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014922703897384329" />
+          <attvalue for="2" value="0.13636363636363635" />
+          <attvalue for="3" value="0.16666666666666666" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.150691708052866" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Yeti Warcaller" label="Yeti Warcaller">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.05772052847778175" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0.08333333333333333" />
+          <attvalue for="4" value="0.004329004329004329" />
+          <attvalue for="5" value="0.2083056896454368" />
+          <attvalue for="6" value="0.00036075036075036075" />
+        </attvalues>
+      </node>
+      <node id="Tinker" label="Tinker">
+        <attvalues>
+          <attvalue for="1" value="0.02169548102854755" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1883984722019716" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Enhance" label="Enhance">
+        <attvalues>
+          <attvalue for="1" value="0.014922703897384329" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.150691708052866" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Repurpose" label="Repurpose">
+        <attvalues>
+          <attvalue for="1" value="0.13404943494260513" />
+          <attvalue for="2" value="0.36363636363636365" />
+          <attvalue for="3" value="0.10714285714285714" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.31741296104482486" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Charge Plated Warcharger" target="Yeti Warcaller" id="0" label="MOVEMENT" weight="1" />
+      <edge source="Energy Surge" target="Tinker" id="1" label="REPLACE" weight="1" />
+      <edge source="Energy Surge" target="Repurpose" id="2" label="REPLACE" weight="1" />
+      <edge source="Energy Surge" target="Energy Surge" id="3" label="FREE UPGRADE" weight="1" />
+      <edge source="Energy Surge" target="Palladium Pulsemage" id="4" label="DESTROY MIN" weight="1" />
+      <edge source="Energy Surge" target="Lightning Tamer" id="5" label="SPELL" weight="1" />
+      <edge source="Energy Surge" target="Piercing Mystic" id="6" label="SPELL" weight="1" />
+      <edge source="Energy Surge" target="Raging Wurm" id="7" label="AGGRO" weight="1" />
+      <edge source="Energy Surge" target="Stout Spellknight" id="8" label="SPELL" weight="1" />
+      <edge source="Forcefield" target="Lightning Tamer" id="9" label="SPELL" weight="1" />
+      <edge source="Forcefield" target="Piercing Mystic" id="10" label="SPELL" weight="1" />
+      <edge source="Forcefield" target="Stout Spellknight" id="11" label="SPELL" weight="1" />
+      <edge source="Metasight" target="Lightning Tamer" id="12" label="SPELL" weight="1" />
+      <edge source="Metasight" target="Piercing Mystic" id="13" label="SPELL" weight="1" />
+      <edge source="Metasight" target="Stout Spellknight" id="14" label="SPELL" weight="1" />
+      <edge source="Palladium Pulsemage" target="Repurpose" id="15" label="REACTIVATE" weight="1" />
+      <edge source="Palladium Pulsemage" target="Conflagrate" id="16" label="MAGE" weight="1" />
+      <edge source="Palladium Pulsemage" target="Staff of Vaerus" id="17" label="MAGE" weight="1" />
+      <edge source="Protective Scavenger" target="Yeti Warcaller" id="18" label="MOVEMENT" weight="1" />
+      <edge source="Salvage Tinker" target="Forcefield" id="19" label="WARRIOR" weight="1" />
+      <edge source="Salvage Tinker" target="Palladium Pulsemage" id="20" label="DESTROY SYN,DESTROY MIN" weight="2" />
+      <edge source="Salvage Tinker" target="Tinker" id="21" label="REPLACE" weight="1" />
+      <edge source="Salvage Tinker" target="Repurpose" id="22" label="REPLACE,REDEPLOY" weight="2" />
+      <edge source="Salvage Tinker" target="Raging Wurm" id="23" label="AGGRO" weight="1" />
+      <edge source="Stout Justicar" target="Forcefield" id="24" label="WARRIOR" weight="1" />
+      <edge source="Suppressing Prophet" target="Repurpose" id="25" label="REDEPLOY" weight="1" />
+      <edge source="Suppressing Prophet" target="Conflagrate" id="26" label="MAGE" weight="1" />
+      <edge source="Suppressing Prophet" target="Staff of Vaerus" id="27" label="MAGE" weight="1" />
+      <edge source="Conflagrate" target="Salvage Tinker" id="28" label="SELFDAMAGE" weight="1" />
+      <edge source="Conflagrate" target="Lightning Tamer" id="29" label="SPELL" weight="1" />
+      <edge source="Conflagrate" target="Piercing Mystic" id="30" label="SPELL" weight="1" />
+      <edge source="Conflagrate" target="Stout Spellknight" id="31" label="SPELL" weight="1" />
+      <edge source="Conflagrate" target="Thundersaur" id="32" label="SELFDAMAGE" weight="1" />
+      <edge source="Ice Storm" target="Lightning Tamer" id="33" label="SPELL" weight="1" />
+      <edge source="Ice Storm" target="Piercing Mystic" id="34" label="SPELL" weight="1" />
+      <edge source="Ice Storm" target="Stout Spellknight" id="35" label="SPELL" weight="1" />
+      <edge source="Lightning Tamer" target="Palladium Pulsemage" id="36" label="DESTROY MIN" weight="1" />
+      <edge source="Lightning Tamer" target="Conflagrate" id="37" label="MAGE" weight="1" />
+      <edge source="Lightning Tamer" target="Staff of Vaerus" id="38" label="MAGE" weight="1" />
+      <edge source="Piercing Mystic" target="Conflagrate" id="39" label="MAGE" weight="1" />
+      <edge source="Piercing Mystic" target="Repurpose" id="40" label="REDEPLOY" weight="1" />
+      <edge source="Piercing Mystic" target="Staff of Vaerus" id="41" label="MAGE" weight="1" />
+      <edge source="Piercing Mystic" target="Yeti Warcaller" id="42" label="MOVEMENT" weight="1" />
+      <edge source="Staff of Vaerus" target="Lightning Tamer" id="43" label="SPELL" weight="1" />
+      <edge source="Staff of Vaerus" target="Piercing Mystic" id="44" label="SPELL" weight="1" />
+      <edge source="Staff of Vaerus" target="Stout Spellknight" id="45" label="SPELL" weight="1" />
+      <edge source="Stout Spellknight" target="Forcefield" id="46" label="WARRIOR" weight="1" />
+      <edge source="Stout Spellknight" target="Conflagrate" id="47" label="MAGE" weight="1" />
+      <edge source="Stout Spellknight" target="Staff of Vaerus" id="48" label="MAGE" weight="1" />
+      <edge source="Stout Spellknight" target="Repurpose" id="49" label="REACTIVATE" weight="1" />
+      <edge source="Venerable Lasher" target="Salvage Tinker" id="50" label="SELFDAMAGE" weight="1" />
+      <edge source="Venerable Lasher" target="Thundersaur" id="51" label="SELFDAMAGE" weight="1" />
+      <edge source="Venerable Lasher" target="Repurpose" id="52" label="REDEPLOY" weight="1" />
+      <edge source="Yeti Warcaller" target="Repurpose" id="53" label="REACTIVATE" weight="1" />
+      <edge source="Enhance" target="Energy Surge" id="54" label="FREE UPGRADE" weight="1" />
+      <edge source="Enhance" target="Palladium Pulsemage" id="55" label="DESTROY MIN" weight="1" />
+    </edges>
+  </graph>
+</gexf>

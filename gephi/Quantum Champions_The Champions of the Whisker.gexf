@@ -1,0 +1,328 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="Quantum Champions|The Champions of the Whisker">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="double" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Adaptive Sculptor" label="Adaptive Sculptor">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.04856145400195777" />
+          <attvalue for="2" value="0.5454545454545454" />
+          <attvalue for="3" value="0.16666666666666666" />
+          <attvalue for="4" value="0.011544011544011544" />
+          <attvalue for="5" value="0.35568950045748826" />
+          <attvalue for="6" value="0.0019240019240019239" />
+        </attvalues>
+      </node>
+      <node id="Aegis Knight" label="Aegis Knight">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02243910892394903" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18907325788432286" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Aegis Wings" label="Aegis Wings">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.0101867290133596" />
+          <attvalue for="2" value="0.13636363636363635" />
+          <attvalue for="3" value="0.16666666666666666" />
+          <attvalue for="4" value="0.0021645021645021645" />
+          <attvalue for="5" value="0.1633836597763986" />
+          <attvalue for="6" value="0.00036075036075036075" />
+        </attvalues>
+      </node>
+      <node id="Drix" label="Drix">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.3181818181818182" />
+          <attvalue for="3" value="0.38095238095238093" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Electronet" label="Electronet">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Epoch Soldier" label="Epoch Soldier">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Heavy Artillery" label="Heavy Artillery">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Salvage Operator" label="Salvage Operator">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.01657925827521463" />
+          <attvalue for="2" value="0.4545454545454546" />
+          <attvalue for="3" value="0.2857142857142857" />
+          <attvalue for="4" value="0.01948051948051948" />
+          <attvalue for="5" value="0.19804079972401697" />
+          <attvalue for="6" value="0.0055658627087198514" />
+        </attvalues>
+      </node>
+      <node id="Venerable Virtuoso" label="Venerable Virtuoso">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Voltaic Prophet" label="Voltaic Prophet">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.02618322556154317" />
+          <attvalue for="2" value="0.36363636363636365" />
+          <attvalue for="3" value="0.03571428571428571" />
+          <attvalue for="4" value="0.0367965367965368" />
+          <attvalue for="5" value="0.25689603612468304" />
+          <attvalue for="6" value="0.0013141620284477429" />
+        </attvalues>
+      </node>
+      <node id="Arrogant Mantis" label="Arrogant Mantis">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.3326839179487534" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.002886002886002886" />
+          <attvalue for="5" value="0.21770837037170135" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Chrogias" label="Chrogias">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Everflow Eidolon" label="Everflow Eidolon">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Feral Instinct" label="Feral Instinct">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.009247818546991419" />
+          <attvalue for="2" value="0.2727272727272727" />
+          <attvalue for="3" value="0.4166666666666667" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16503399977248964" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Lysian Rain" label="Lysian Rain">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.026526953211640565" />
+          <attvalue for="2" value="0.5454545454545454" />
+          <attvalue for="3" value="0.2840909090909091" />
+          <attvalue for="4" value="0.023809523809523808" />
+          <attvalue for="5" value="0.3096450145205032" />
+          <attvalue for="6" value="0.006764069264069264" />
+        </attvalues>
+      </node>
+      <node id="Pack's Blessing" label="Pack's Blessing">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0.4166666666666667" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Roaring Druid" label="Roaring Druid">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.009832203993638195" />
+          <attvalue for="2" value="0.2727272727272727" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18318773974434435" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Shroudthorn Splicer" label="Shroudthorn Splicer">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.029702570788862973" />
+          <attvalue for="2" value="0.5454545454545454" />
+          <attvalue for="3" value="0.3068181818181818" />
+          <attvalue for="4" value="0.005050505050505051" />
+          <attvalue for="5" value="0.3096450145205032" />
+          <attvalue for="6" value="0.0015495867768595044" />
+        </attvalues>
+      </node>
+      <node id="Soothing Decayasaur" label="Soothing Decayasaur">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Stouthide Stegadon" label="Stouthide Stegadon">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Enhance" label="Enhance">
+        <attvalues>
+          <attvalue for="1" value="0.00793771091950079" />
+          <attvalue for="2" value="0.2272727272727273" />
+          <attvalue for="3" value="0.25" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14853059979672598" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Repurpose" label="Repurpose">
+        <attvalues>
+          <attvalue for="1" value="0.3709097356259424" />
+          <attvalue for="2" value="0.5" />
+          <attvalue for="3" value="0.09259259259259259" />
+          <attvalue for="4" value="0.031385281385281384" />
+          <attvalue for="5" value="0.3600595491538233" />
+          <attvalue for="6" value="0.002906044572711239" />
+        </attvalues>
+      </node>
+      <node id="Tinker" label="Tinker">
+        <attvalues>
+          <attvalue for="1" value="0.009832203993638195" />
+          <attvalue for="2" value="0.13636363636363635" />
+          <attvalue for="3" value="0.16666666666666666" />
+          <attvalue for="4" value="0.003246753246753247" />
+          <attvalue for="5" value="0.18318773974434435" />
+          <attvalue for="6" value="0.0005411255411255411" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Adaptive Sculptor" target="Repurpose" id="0" label="REDEPLOY" weight="1" />
+      <edge source="Aegis Wings" target="Adaptive Sculptor" id="1" label="SPELL" weight="1" />
+      <edge source="Aegis Wings" target="Voltaic Prophet" id="2" label="SPELL" weight="1" />
+      <edge source="Drix" target="Adaptive Sculptor" id="3" label="FREE REPLACE,REPLACE" weight="3" />
+      <edge source="Drix" target="Repurpose" id="4" label="REPLACE,REACTIVATE" weight="2" />
+      <edge source="Drix" target="Tinker" id="5" label="REPLACE" weight="1" />
+      <edge source="Drix" target="Salvage Operator" id="6" label="SCIENTIST" weight="1" />
+      <edge source="Drix" target="Lysian Rain" id="7" label="MINION" weight="1" />
+      <edge source="Drix" target="Roaring Druid" id="8" label="REPLACE" weight="1" />
+      <edge source="Drix" target="Shroudthorn Splicer" id="9" label="REPLACE,DESTROY MIN" weight="2" />
+      <edge source="Electronet" target="Adaptive Sculptor" id="10" label="SPELL" weight="1" />
+      <edge source="Electronet" target="Voltaic Prophet" id="11" label="SPELL" weight="1" />
+      <edge source="Heavy Artillery" target="Adaptive Sculptor" id="12" label="SPELL" weight="1" />
+      <edge source="Heavy Artillery" target="Voltaic Prophet" id="13" label="SPELL" weight="1" />
+      <edge source="Salvage Operator" target="Adaptive Sculptor" id="14" label="FREE REPLACE,REPLACE" weight="3" />
+      <edge source="Salvage Operator" target="Repurpose" id="15" label="REPLACE" weight="1" />
+      <edge source="Salvage Operator" target="Tinker" id="16" label="REPLACE" weight="1" />
+      <edge source="Salvage Operator" target="Salvage Operator" id="17" label="SCIENTIST" weight="1" />
+      <edge source="Salvage Operator" target="Lysian Rain" id="18" label="MINION" weight="1" />
+      <edge source="Salvage Operator" target="Roaring Druid" id="19" label="REPLACE" weight="1" />
+      <edge source="Salvage Operator" target="Shroudthorn Splicer" id="20" label="REPLACE,DESTROY SYN,DESTROY MIN" weight="3" />
+      <edge source="Venerable Virtuoso" target="Salvage Operator" id="21" label="SCIENTIST" weight="1" />
+      <edge source="Voltaic Prophet" target="Aegis Knight" id="22" label="ARMOR" weight="1" />
+      <edge source="Voltaic Prophet" target="Repurpose" id="23" label="REACTIVATE" weight="1" />
+      <edge source="Arrogant Mantis" target="Repurpose" id="24" label="REDEPLOY,REACTIVATE" weight="2" />
+      <edge source="Everflow Eidolon" target="Aegis Knight" id="25" label="ARMOR" weight="1" />
+      <edge source="Everflow Eidolon" target="Repurpose" id="26" label="REACTIVATE" weight="1" />
+      <edge source="Feral Instinct" target="Adaptive Sculptor" id="27" label="SPELL,FREE REPLACE" weight="2" />
+      <edge source="Feral Instinct" target="Voltaic Prophet" id="28" label="SPELL" weight="1" />
+      <edge source="Feral Instinct" target="Feral Instinct" id="29" label="FREE" weight="1" />
+      <edge source="Feral Instinct" target="Lysian Rain" id="30" label="MINION" weight="1" />
+      <edge source="Feral Instinct" target="Shroudthorn Splicer" id="31" label="DESTROY MIN" weight="1" />
+      <edge source="Lysian Rain" target="Adaptive Sculptor" id="32" label="SPELL,FREE REPLACE" weight="2" />
+      <edge source="Lysian Rain" target="Voltaic Prophet" id="33" label="SPELL" weight="1" />
+      <edge source="Lysian Rain" target="Lysian Rain" id="34" label="MINION" weight="1" />
+      <edge source="Lysian Rain" target="Shroudthorn Splicer" id="35" label="DESTROY MIN" weight="1" />
+      <edge source="Pack's Blessing" target="Adaptive Sculptor" id="36" label="SPELL,FREE REPLACE" weight="2" />
+      <edge source="Pack's Blessing" target="Voltaic Prophet" id="37" label="SPELL" weight="1" />
+      <edge source="Pack's Blessing" target="Lysian Rain" id="38" label="MINION" weight="1" />
+      <edge source="Pack's Blessing" target="Shroudthorn Splicer" id="39" label="DESTROY MIN" weight="1" />
+      <edge source="Roaring Druid" target="Adaptive Sculptor" id="40" label="FREE REPLACE" weight="1" />
+      <edge source="Roaring Druid" target="Lysian Rain" id="41" label="MINION" weight="1" />
+      <edge source="Roaring Druid" target="Repurpose" id="42" label="REDEPLOY" weight="1" />
+      <edge source="Roaring Druid" target="Shroudthorn Splicer" id="43" label="DESTROY MIN" weight="1" />
+      <edge source="Shroudthorn Splicer" target="Adaptive Sculptor" id="44" label="FREE REPLACE" weight="1" />
+      <edge source="Shroudthorn Splicer" target="Lysian Rain" id="45" label="MINION" weight="1" />
+      <edge source="Shroudthorn Splicer" target="Repurpose" id="46" label="REDEPLOY" weight="1" />
+      <edge source="Shroudthorn Splicer" target="Shroudthorn Splicer" id="47" label="DESTROY MIN" weight="1" />
+      <edge source="Soothing Decayasaur" target="Repurpose" id="48" label="REDEPLOY" weight="1" />
+      <edge source="Stouthide Stegadon" target="Repurpose" id="49" label="REDEPLOY" weight="1" />
+      <edge source="Enhance" target="Adaptive Sculptor" id="50" label="FREE REPLACE" weight="1" />
+      <edge source="Enhance" target="Aegis Wings" id="51" label="FREE UPGRADE,UPGRADE" weight="2" />
+      <edge source="Enhance" target="Arrogant Mantis" id="52" label="FORGEBORN" weight="1" />
+      <edge source="Enhance" target="Lysian Rain" id="53" label="MINION" weight="1" />
+      <edge source="Enhance" target="Shroudthorn Splicer" id="54" label="DESTROY MIN" weight="1" />
+      <edge source="Repurpose" target="Arrogant Mantis" id="55" label="FORGEBORN" weight="1" />
+      <edge source="Tinker" target="Arrogant Mantis" id="56" label="FORGEBORN" weight="1" />
+    </edges>
+  </graph>
+</gexf>

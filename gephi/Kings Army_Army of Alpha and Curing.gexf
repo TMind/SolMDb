@@ -1,0 +1,326 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="Kings Army|Army of Alpha and Curing">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="double" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Camouflaged Spirit" label="Camouflaged Spirit">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.04612500540757626" />
+          <attvalue for="2" value="0.36363636363636365" />
+          <attvalue for="3" value="0.17857142857142858" />
+          <attvalue for="4" value="0.003968253968253968" />
+          <attvalue for="5" value="0.2822847119956107" />
+          <attvalue for="6" value="0.0007086167800453515" />
+        </attvalues>
+      </node>
+      <node id="Cutthroat Slime" label="Cutthroat Slime">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.04612500540757626" />
+          <attvalue for="2" value="0.3181818181818182" />
+          <attvalue for="3" value="0.16666666666666666" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.2822847119956107" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Dreadbolt" label="Dreadbolt">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Gloomreaper Hag" label="Gloomreaper Hag">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.3181818181818182" />
+          <attvalue for="3" value="0.2619047619047619" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Indomitable Fiend" label="Indomitable Fiend">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.2272727272727273" />
+          <attvalue for="3" value="0.2" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Omnomnom" label="Omnomnom">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.2272727272727273" />
+          <attvalue for="3" value="0.2" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Raging Demon" label="Raging Demon">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.022615813706708874" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0010822510822510823" />
+          <attvalue for="5" value="0.1710991042265877" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Spiritleash" label="Spiritleash">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.07242338836906935" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0.4166666666666667" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.24829532275752636" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Xithian Dreadmaw" label="Xithian Dreadmaw">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.04612500540757626" />
+          <attvalue for="2" value="0.4090909090909091" />
+          <attvalue for="3" value="0.1111111111111111" />
+          <attvalue for="4" value="0.024891774891774892" />
+          <attvalue for="5" value="0.2822847119956107" />
+          <attvalue for="6" value="0.0027657527657527657" />
+        </attvalues>
+      </node>
+      <node id="Zimus" label="Zimus">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.2272727272727273" />
+          <attvalue for="3" value="0.2" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Druid's Chant" label="Druid's Chant">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.0353729854292468" />
+          <attvalue for="2" value="0.5" />
+          <attvalue for="3" value="0.19444444444444445" />
+          <attvalue for="4" value="0.013708513708513708" />
+          <attvalue for="5" value="0.20739285308950295" />
+          <attvalue for="6" value="0.002665544332210999" />
+        </attvalues>
+      </node>
+      <node id="Grove Mother" label="Grove Mother">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.3181818181818182" />
+          <attvalue for="3" value="0.14285714285714285" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Lead the Charge" label="Lead the Charge">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.17639397674689375" />
+          <attvalue for="2" value="0.13636363636363635" />
+          <attvalue for="3" value="0.3333333333333333" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.23320172350684018" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Rooted Mantis" label="Rooted Mantis">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.10933369217895236" />
+          <attvalue for="2" value="0.36363636363636365" />
+          <attvalue for="3" value="0.08928571428571429" />
+          <attvalue for="4" value="0.021645021645021644" />
+          <attvalue for="5" value="0.2667302479750119" />
+          <attvalue for="6" value="0.0019325912183055039" />
+        </attvalues>
+      </node>
+      <node id="Shifting Keeper" label="Shifting Keeper">
+        <attvalues>
+          <attvalue for="0" value="BEAST" />
+          <attvalue for="1" value="0.10573857426227964" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0.16666666666666666" />
+          <attvalue for="4" value="0.0021645021645021645" />
+          <attvalue for="5" value="0.22755603791520995" />
+          <attvalue for="6" value="0.00036075036075036075" />
+        </attvalues>
+      </node>
+      <node id="Shroudthorn Splicer" label="Shroudthorn Splicer">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.04829711651771615" />
+          <attvalue for="2" value="0.5909090909090909" />
+          <attvalue for="3" value="0.2545454545454545" />
+          <attvalue for="4" value="0.003968253968253968" />
+          <attvalue for="5" value="0.2822847119956107" />
+          <attvalue for="6" value="0.0010101010101010099" />
+        </attvalues>
+      </node>
+      <node id="Stampeding Bartok" label="Stampeding Bartok">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Stouthide Stegadon" label="Stouthide Stegadon">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Toorgmai Guardian" label="Toorgmai Guardian">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Vine Lash" label="Vine Lash">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Soul Syphon" label="Soul Syphon">
+        <attvalues>
+          <attvalue for="1" value="0.04612500540757626" />
+          <attvalue for="2" value="0.36363636363636365" />
+          <attvalue for="3" value="0.16071428571428573" />
+          <attvalue for="4" value="0.010822510822510822" />
+          <attvalue for="5" value="0.2822847119956107" />
+          <attvalue for="6" value="0.0017393320964749536" />
+        </attvalues>
+      </node>
+      <node id="Deathtouch" label="Deathtouch">
+        <attvalues>
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Army Commander" label="Army Commander">
+        <attvalues>
+          <attvalue for="1" value="0.020443702596568983" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1555446402059888" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Camouflaged Spirit" target="Spiritleash" id="0" label="SPIRIT" weight="1" />
+      <edge source="Gloomreaper Hag" target="Camouflaged Spirit" id="1" label="DESTROY SYN" weight="1" />
+      <edge source="Gloomreaper Hag" target="Cutthroat Slime" id="2" label="DESTROY SYN" weight="1" />
+      <edge source="Gloomreaper Hag" target="Soul Syphon" id="3" label="DESTROY SYN" weight="1" />
+      <edge source="Gloomreaper Hag" target="Xithian Dreadmaw" id="4" label="DESTROY SYN" weight="1" />
+      <edge source="Gloomreaper Hag" target="Druid's Chant" id="5" label="HEALING" weight="1" />
+      <edge source="Gloomreaper Hag" target="Rooted Mantis" id="6" label="HEALING" weight="1" />
+      <edge source="Gloomreaper Hag" target="Shroudthorn Splicer" id="7" label="DESTROY SYN" weight="1" />
+      <edge source="Indomitable Fiend" target="Camouflaged Spirit" id="8" label="DESTROY SYN" weight="1" />
+      <edge source="Indomitable Fiend" target="Cutthroat Slime" id="9" label="DESTROY SYN" weight="1" />
+      <edge source="Indomitable Fiend" target="Soul Syphon" id="10" label="DESTROY SYN" weight="1" />
+      <edge source="Indomitable Fiend" target="Xithian Dreadmaw" id="11" label="DESTROY SYN" weight="1" />
+      <edge source="Indomitable Fiend" target="Shroudthorn Splicer" id="12" label="DESTROY SYN" weight="1" />
+      <edge source="Omnomnom" target="Camouflaged Spirit" id="13" label="DESTROY MIN" weight="1" />
+      <edge source="Omnomnom" target="Cutthroat Slime" id="14" label="DESTROY MIN" weight="1" />
+      <edge source="Omnomnom" target="Soul Syphon" id="15" label="DESTROY MIN" weight="1" />
+      <edge source="Omnomnom" target="Xithian Dreadmaw" id="16" label="DESTROY MIN" weight="1" />
+      <edge source="Omnomnom" target="Shroudthorn Splicer" id="17" label="DESTROY MIN" weight="1" />
+      <edge source="Raging Demon" target="Shifting Keeper" id="18" label="BEAST" weight="1" />
+      <edge source="Xithian Dreadmaw" target="Lead the Charge" id="19" label="ACTIVATION" weight="1" />
+      <edge source="Xithian Dreadmaw" target="Shifting Keeper" id="20" label="BEAST" weight="1" />
+      <edge source="Zimus" target="Camouflaged Spirit" id="21" label="DESTROY SYN" weight="1" />
+      <edge source="Zimus" target="Cutthroat Slime" id="22" label="DESTROY SYN" weight="1" />
+      <edge source="Zimus" target="Xithian Dreadmaw" id="23" label="DESTROY SYN" weight="1" />
+      <edge source="Zimus" target="Soul Syphon" id="24" label="DESTROY SYN" weight="1" />
+      <edge source="Zimus" target="Shroudthorn Splicer" id="25" label="DESTROY SYN" weight="1" />
+      <edge source="Druid's Chant" target="Camouflaged Spirit" id="26" label="DESTROY MIN" weight="1" />
+      <edge source="Druid's Chant" target="Cutthroat Slime" id="27" label="DESTROY MIN" weight="1" />
+      <edge source="Druid's Chant" target="Spiritleash" id="28" label="SPIRIT" weight="1" />
+      <edge source="Druid's Chant" target="Xithian Dreadmaw" id="29" label="DESTROY MIN" weight="1" />
+      <edge source="Druid's Chant" target="Soul Syphon" id="30" label="DESTROY MIN" weight="1" />
+      <edge source="Druid's Chant" target="Druid's Chant" id="31" label="HEALING" weight="1" />
+      <edge source="Druid's Chant" target="Rooted Mantis" id="32" label="HEALING" weight="1" />
+      <edge source="Druid's Chant" target="Shroudthorn Splicer" id="33" label="DESTROY MIN" weight="1" />
+      <edge source="Grove Mother" target="Camouflaged Spirit" id="34" label="DESTROY MIN" weight="1" />
+      <edge source="Grove Mother" target="Cutthroat Slime" id="35" label="DESTROY MIN" weight="1" />
+      <edge source="Grove Mother" target="Raging Demon" id="36" label="AGGRO" weight="1" />
+      <edge source="Grove Mother" target="Spiritleash" id="37" label="SPIRIT" weight="1" />
+      <edge source="Grove Mother" target="Xithian Dreadmaw" id="38" label="DESTROY MIN" weight="1" />
+      <edge source="Grove Mother" target="Soul Syphon" id="39" label="DESTROY MIN" weight="1" />
+      <edge source="Grove Mother" target="Shroudthorn Splicer" id="40" label="REPLACE,DESTROY MIN" weight="2" />
+      <edge source="Rooted Mantis" target="Lead the Charge" id="41" label="ACTIVATION" weight="1" />
+      <edge source="Rooted Mantis" target="Shifting Keeper" id="42" label="BEAST" weight="1" />
+      <edge source="Shifting Keeper" target="Lead the Charge" id="43" label="ACTIVATION" weight="1" />
+      <edge source="Shroudthorn Splicer" target="Camouflaged Spirit" id="44" label="DESTROY MIN" weight="1" />
+      <edge source="Shroudthorn Splicer" target="Cutthroat Slime" id="45" label="DESTROY MIN" weight="1" />
+      <edge source="Shroudthorn Splicer" target="Spiritleash" id="46" label="SPIRIT" weight="1" />
+      <edge source="Shroudthorn Splicer" target="Xithian Dreadmaw" id="47" label="DESTROY MIN" weight="1" />
+      <edge source="Shroudthorn Splicer" target="Soul Syphon" id="48" label="DESTROY MIN" weight="1" />
+      <edge source="Shroudthorn Splicer" target="Shroudthorn Splicer" id="49" label="DESTROY MIN" weight="1" />
+      <edge source="Stouthide Stegadon" target="Druid's Chant" id="50" label="HEALING" weight="1" />
+      <edge source="Stouthide Stegadon" target="Rooted Mantis" id="51" label="HEALING" weight="1" />
+      <edge source="Soul Syphon" target="Rooted Mantis" id="52" label="FORGEBORN" weight="1" />
+      <edge source="Deathtouch" target="Rooted Mantis" id="53" label="FORGEBORN" weight="1" />
+      <edge source="Army Commander" target="Rooted Mantis" id="54" label="FORGEBORN" weight="1" />
+    </edges>
+  </graph>
+</gexf>

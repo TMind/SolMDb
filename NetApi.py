@@ -8,7 +8,7 @@ from typing import List, Tuple, Dict
 class NetApi:
 
     def __init__(self, csvfile=None):
-        self.csvfile = csvfile or 'sff.csv'
+        self.csvfile = csvfile or 'csv/sff.csv'
         self.ucl = UniversalCardLibrary(self.csvfile)
         self.base_url = "https://ul51g2rg42.execute-api.us-east-1.amazonaws.com/main"
         self.params = {

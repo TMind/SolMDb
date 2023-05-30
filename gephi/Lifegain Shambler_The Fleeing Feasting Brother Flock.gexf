@@ -1,0 +1,310 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="Lifegain Shambler|The Fleeing Feasting Brother Flock">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="long" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Camouflaged Reaper" label="Camouflaged Reaper">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.019606877008960414" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16106928541459917" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Corrupt Shambler" label="Corrupt Shambler">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.021987746120807485" />
+          <attvalue for="2" value="0.42857142857142855" />
+          <attvalue for="3" value="0.18055555555555555" />
+          <attvalue for="4" value="0.006746031746031746" />
+          <attvalue for="5" value="0.1771762139560591" />
+          <attvalue for="6" value="0.0012180335097001765" />
+        </attvalues>
+      </node>
+      <node id="Ossuary Mech" label="Ossuary Mech">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.036545810646059024" />
+          <attvalue for="2" value="0.38095238095238093" />
+          <attvalue for="3" value="0.3" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.2362349518340326" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Shambling Skeleton" label="Shambling Skeleton">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.021987746120807485" />
+          <attvalue for="2" value="0.38095238095238093" />
+          <attvalue for="3" value="0.23214285714285715" />
+          <attvalue for="4" value="0.004365079365079365" />
+          <attvalue for="5" value="0.1771762139560591" />
+          <attvalue for="6" value="0.0010133219954648527" />
+        </attvalues>
+      </node>
+      <node id="Sigmund Fraud" label="Sigmund Fraud">
+        <attvalues>
+          <attvalue for="0" value="ZOMBIE" />
+          <attvalue for="1" value="0.021943116687851188" />
+          <attvalue for="2" value="0.047619047619047616" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1787869068102051" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Stout Drake" label="Stout Drake">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.019606877008960414" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16106928541459917" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Vampiric Spirit" label="Vampiric Spirit">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.038926679757906105" />
+          <attvalue for="2" value="0.38095238095238093" />
+          <attvalue for="3" value="0.26785714285714285" />
+          <attvalue for="4" value="0.02698412698412699" />
+          <attvalue for="5" value="0.25234188037549254" />
+          <attvalue for="6" value="0.007227891156462586" />
+        </attvalues>
+      </node>
+      <node id="Venerable Fiend" label="Venerable Fiend">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.019606877008960414" />
+          <attvalue for="2" value="0.19047619047619047" />
+          <attvalue for="3" value="0.25" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16106928541459917" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Vyric's Embrace" label="Vyric's Embrace">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.019606877008960414" />
+          <attvalue for="2" value="0.19047619047619047" />
+          <attvalue for="3" value="0.3333333333333333" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16106928541459917" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Xithian Dreadmaw" label="Xithian Dreadmaw">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.038926679757906105" />
+          <attvalue for="2" value="0.23809523809523808" />
+          <attvalue for="3" value="0.25" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.25234188037549254" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Glowhive Siren" label="Glowhive Siren">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.10276306998179262" />
+          <attvalue for="2" value="0.47619047619047616" />
+          <attvalue for="3" value="0.35185185185185186" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.31744057761478944" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Kindred Wartusk" label="Kindred Wartusk">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.10276306998179262" />
+          <attvalue for="2" value="0.38095238095238093" />
+          <attvalue for="3" value="0.25" />
+          <attvalue for="4" value="0.04285714285714286" />
+          <attvalue for="5" value="0.31744057761478944" />
+          <attvalue for="6" value="0.010714285714285714" />
+        </attvalues>
+      </node>
+      <node id="Pack Reveler" label="Pack Reveler">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.1527768061561421" />
+          <attvalue for="2" value="0.19047619047619047" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.23028206491771142" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Savage Oath" label="Savage Oath">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.1236207549596325" />
+          <attvalue for="2" value="0.14285714285714285" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.02380952380952381" />
+          <attvalue for="5" value="0.20892021614863457" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Shifting Scavenger" label="Shifting Scavenger">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.019606877008960414" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16106928541459917" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Spring Dryad" label="Spring Dryad">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.10276306998179262" />
+          <attvalue for="2" value="0.47619047619047616" />
+          <attvalue for="3" value="0.35185185185185186" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.31744057761478944" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Summoning Council" label="Summoning Council">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.019606877008960414" />
+          <attvalue for="2" value="0.2857142857142857" />
+          <attvalue for="3" value="0.2" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16106928541459917" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Uterra Charger" label="Uterra Charger">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.019606877008960414" />
+          <attvalue for="2" value="0.047619047619047616" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16106928541459917" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Uterradon Mauler" label="Uterradon Mauler">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.019606877008960414" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16106928541459917" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Vine Lash" label="Vine Lash">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.019606877008960414" />
+          <attvalue for="2" value="0.047619047619047616" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16106928541459917" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Soul Syphon" label="Soul Syphon">
+        <attvalues>
+          <attvalue for="1" value="0.038926679757906105" />
+          <attvalue for="2" value="0.23809523809523808" />
+          <attvalue for="3" value="0.25" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.25234188037549254" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Life Drain" label="Life Drain">
+        <attvalues>
+          <attvalue for="1" value="0.019606877008960414" />
+          <attvalue for="2" value="0.14285714285714285" />
+          <attvalue for="3" value="0.6666666666666666" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16106928541459917" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Corrupt Shambler" target="Soul Syphon" id="0" label="DESTROY SYN" weight="1" />
+      <edge source="Corrupt Shambler" target="Ossuary Mech" id="1" label="FREE DESTROY" weight="1" />
+      <edge source="Corrupt Shambler" target="Sigmund Fraud" id="2" label="ZOMBIE" weight="1" />
+      <edge source="Corrupt Shambler" target="Vampiric Spirit" id="3" label="DESTROY SYN" weight="1" />
+      <edge source="Corrupt Shambler" target="Xithian Dreadmaw" id="4" label="DESTROY SYN" weight="1" />
+      <edge source="Corrupt Shambler" target="Glowhive Siren" id="5" label="HEALING" weight="1" />
+      <edge source="Corrupt Shambler" target="Kindred Wartusk" id="6" label="HEALING" weight="1" />
+      <edge source="Corrupt Shambler" target="Spring Dryad" id="7" label="HEALING" weight="1" />
+      <edge source="Ossuary Mech" target="Soul Syphon" id="8" label="DESTROY SYN" weight="1" />
+      <edge source="Ossuary Mech" target="Ossuary Mech" id="9" label="FREE DESTROY" weight="1" />
+      <edge source="Ossuary Mech" target="Vampiric Spirit" id="10" label="DESTROY SYN" weight="1" />
+      <edge source="Ossuary Mech" target="Xithian Dreadmaw" id="11" label="DESTROY SYN" weight="1" />
+      <edge source="Shambling Skeleton" target="Ossuary Mech" id="12" label="FREE DESTROY" weight="1" />
+      <edge source="Shambling Skeleton" target="Soul Syphon" id="13" label="DESTROY SYN" weight="1" />
+      <edge source="Shambling Skeleton" target="Vampiric Spirit" id="14" label="DESTROY SYN" weight="1" />
+      <edge source="Shambling Skeleton" target="Xithian Dreadmaw" id="15" label="DESTROY SYN" weight="1" />
+      <edge source="Shambling Skeleton" target="Glowhive Siren" id="16" label="HEALING" weight="1" />
+      <edge source="Shambling Skeleton" target="Kindred Wartusk" id="17" label="HEALING" weight="1" />
+      <edge source="Shambling Skeleton" target="Spring Dryad" id="18" label="HEALING" weight="1" />
+      <edge source="Vampiric Spirit" target="Glowhive Siren" id="19" label="HEALING" weight="1" />
+      <edge source="Vampiric Spirit" target="Kindred Wartusk" id="20" label="HEALING" weight="1" />
+      <edge source="Vampiric Spirit" target="Spring Dryad" id="21" label="HEALING" weight="1" />
+      <edge source="Venerable Fiend" target="Ossuary Mech" id="22" label="FREE DESTROY" weight="1" />
+      <edge source="Venerable Fiend" target="Vampiric Spirit" id="23" label="DESTROY SYN" weight="1" />
+      <edge source="Venerable Fiend" target="Soul Syphon" id="24" label="DESTROY SYN" weight="1" />
+      <edge source="Venerable Fiend" target="Xithian Dreadmaw" id="25" label="DESTROY SYN" weight="1" />
+      <edge source="Vyric's Embrace" target="Glowhive Siren" id="26" label="HEALING" weight="1" />
+      <edge source="Vyric's Embrace" target="Kindred Wartusk" id="27" label="HEALING" weight="1" />
+      <edge source="Vyric's Embrace" target="Pack Reveler" id="28" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Vyric's Embrace" target="Spring Dryad" id="29" label="HEALING" weight="1" />
+      <edge source="Glowhive Siren" target="Glowhive Siren" id="30" label="HEALING" weight="1" />
+      <edge source="Glowhive Siren" target="Kindred Wartusk" id="31" label="HEALING" weight="1" />
+      <edge source="Glowhive Siren" target="Spring Dryad" id="32" label="HEALING" weight="1" />
+      <edge source="Kindred Wartusk" target="Savage Oath" id="33" label="WARRIOR" weight="1" />
+      <edge source="Savage Oath" target="Pack Reveler" id="34" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Spring Dryad" target="Glowhive Siren" id="35" label="HEALING" weight="1" />
+      <edge source="Spring Dryad" target="Kindred Wartusk" id="36" label="HEALING" weight="1" />
+      <edge source="Spring Dryad" target="Spring Dryad" id="37" label="HEALING" weight="1" />
+      <edge source="Summoning Council" target="Corrupt Shambler" id="38" label="MINION" weight="1" />
+      <edge source="Summoning Council" target="Shambling Skeleton" id="39" label="MINION" weight="1" />
+      <edge source="Summoning Council" target="Vampiric Spirit" id="40" label="DESTROY MIN" weight="1" />
+      <edge source="Summoning Council" target="Xithian Dreadmaw" id="41" label="DESTROY MIN" weight="1" />
+      <edge source="Summoning Council" target="Pack Reveler" id="42" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Summoning Council" target="Soul Syphon" id="43" label="DESTROY MIN" weight="1" />
+      <edge source="Uterra Charger" target="Savage Oath" id="44" label="WARRIOR" weight="1" />
+      <edge source="Vine Lash" target="Pack Reveler" id="45" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Life Drain" target="Glowhive Siren" id="46" label="HEALING" weight="1" />
+      <edge source="Life Drain" target="Kindred Wartusk" id="47" label="HEALING" weight="1" />
+      <edge source="Life Drain" target="Spring Dryad" id="48" label="HEALING" weight="1" />
+    </edges>
+  </graph>
+</gexf>

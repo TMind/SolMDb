@@ -1,0 +1,314 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="Tentacles of Faith|The Sentrys of Failure Faith">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="long" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Bonescythe Reaver" label="Bonescythe Reaver">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012869586294585917" />
+          <attvalue for="2" value="0.05" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13315719512215657" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Cercee's Call" label="Cercee's Call">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.1554122324941666" />
+          <attvalue for="2" value="0.6000000000000001" />
+          <attvalue for="3" value="0.18181818181818182" />
+          <attvalue for="4" value="0.10263157894736842" />
+          <attvalue for="5" value="0.2899776174639635" />
+          <attvalue for="6" value="0.018660287081339714" />
+        </attvalues>
+      </node>
+      <node id="Cutthroat Reaper" label="Cutthroat Reaper">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.11574446939615458" />
+          <attvalue for="2" value="0.4" />
+          <attvalue for="3" value="0.39285714285714285" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.33278776584804787" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Ghastly Renewal" label="Ghastly Renewal">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.11535931899801842" />
+          <attvalue for="2" value="0.7000000000000001" />
+          <attvalue for="3" value="0.2303370786516854" />
+          <attvalue for="4" value="0.10833333333333332" />
+          <attvalue for="5" value="0.31749663750086216" />
+          <attvalue for="6" value="0.024953183520599248" />
+        </attvalues>
+      </node>
+      <node id="Necrotic Geist" label="Necrotic Geist">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012869586294585917" />
+          <attvalue for="2" value="0.2" />
+          <attvalue for="3" value="0.3333333333333333" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13315719512215657" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Necrotic Moeba" label="Necrotic Moeba">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012869586294585917" />
+          <attvalue for="2" value="0.2" />
+          <attvalue for="3" value="0.3333333333333333" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13315719512215657" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Raging Harvester" label="Raging Harvester">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.061640145907949535" />
+          <attvalue for="2" value="0.65" />
+          <attvalue for="3" value="0.47115384615384615" />
+          <attvalue for="4" value="0.007894736842105263" />
+          <attvalue for="5" value="0.25872465042697224" />
+          <attvalue for="6" value="0.0037196356275303643" />
+        </attvalues>
+      </node>
+      <node id="Shambling Stitcher" label="Shambling Stitcher">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.08857725092853175" />
+          <attvalue for="2" value="0.6000000000000001" />
+          <attvalue for="3" value="0.3412698412698413" />
+          <attvalue for="4" value="0.08947368421052632" />
+          <attvalue for="5" value="0.3025343483940222" />
+          <attvalue for="6" value="0.03053467000835422" />
+        </attvalues>
+      </node>
+      <node id="Stout Skeleton" label="Stout Skeleton">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012869586294585917" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13315719512215657" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Varna's Pact" label="Varna's Pact">
+        <attvalues>
+          <attvalue for="0" value="MINION" />
+          <attvalue for="1" value="0.08857725092853175" />
+          <attvalue for="2" value="0.6000000000000001" />
+          <attvalue for="3" value="0.38636363636363635" />
+          <attvalue for="4" value="0.007017543859649124" />
+          <attvalue for="5" value="0.3025343483940222" />
+          <attvalue for="6" value="0.0027113237639553433" />
+        </attvalues>
+      </node>
+      <node id="Bolstering Justicar" label="Bolstering Justicar">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012869586294585917" />
+          <attvalue for="2" value="0.1" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13315719512215657" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Camouflaged Captain" label="Camouflaged Captain">
+        <attvalues>
+          <attvalue for="0" value="WARRIOR" />
+          <attvalue for="1" value="0.025687802871411168" />
+          <attvalue for="2" value="0.15000000000000002" />
+          <attvalue for="3" value="0.3333333333333333" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16237587585851865" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Charge Plated Warcharger" label="Charge Plated Warcharger">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012869586294585917" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13315719512215657" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Energy Prison" label="Energy Prison">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012869586294585917" />
+          <attvalue for="2" value="0.05" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13315719512215657" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Heavy Artillery" label="Heavy Artillery">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012869586294585917" />
+          <attvalue for="2" value="0.05" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13315719512215657" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Protective Operator" label="Protective Operator">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.05721868239830972" />
+          <attvalue for="2" value="0.7000000000000001" />
+          <attvalue for="3" value="0.3968253968253968" />
+          <attvalue for="4" value="0.08684210526315789" />
+          <attvalue for="5" value="0.25872465042697224" />
+          <attvalue for="6" value="0.03446115288220551" />
+        </attvalues>
+      </node>
+      <node id="Recycling Reinforcements" label="Recycling Reinforcements">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.01729104980422573" />
+          <attvalue for="2" value="0.15000000000000002" />
+          <attvalue for="3" value="0.3333333333333333" />
+          <attvalue for="4" value="0.039473684210526314" />
+          <attvalue for="5" value="0.15902964556443103" />
+          <attvalue for="6" value="0.013157894736842105" />
+        </attvalues>
+      </node>
+      <node id="Steadfast Techtician" label="Steadfast Techtician">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.012869586294585917" />
+          <attvalue for="2" value="0.2" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13315719512215657" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Steeleye Researcher" label="Steeleye Researcher">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.08857725092853175" />
+          <attvalue for="2" value="0.55" />
+          <attvalue for="3" value="0.3173076923076923" />
+          <attvalue for="4" value="0.08947368421052632" />
+          <attvalue for="5" value="0.3025343483940222" />
+          <attvalue for="6" value="0.02839068825910931" />
+        </attvalues>
+      </node>
+      <node id="Tech Upgrade" label="Tech Upgrade">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.05721868239830972" />
+          <attvalue for="2" value="0.30000000000000004" />
+          <attvalue for="3" value="0.4666666666666667" />
+          <attvalue for="4" value="0.005701754385964912" />
+          <attvalue for="5" value="0.25872465042697224" />
+          <attvalue for="6" value="0.002660818713450292" />
+        </attvalues>
+      </node>
+      <node id="Army Commander" label="Army Commander">
+        <attvalues>
+          <attvalue for="1" value="0.012869586294585917" />
+          <attvalue for="2" value="0.05" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.13315719512215657" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Bonescythe Reaver" target="Ghastly Renewal" id="0" label="REDEPLOY" weight="1" />
+      <edge source="Cercee's Call" target="Cercee's Call" id="1" label="SPELL" weight="1" />
+      <edge source="Cercee's Call" target="Cutthroat Reaper" id="2" label="DESTROY MIN" weight="1" />
+      <edge source="Cercee's Call" target="Shambling Stitcher" id="3" label="MINION" weight="1" />
+      <edge source="Cercee's Call" target="Varna's Pact" id="4" label="MINION" weight="1" />
+      <edge source="Cercee's Call" target="Steeleye Researcher" id="5" label="MINION" weight="1" />
+      <edge source="Ghastly Renewal" target="Cercee's Call" id="6" label="SPELL" weight="1" />
+      <edge source="Ghastly Renewal" target="Cutthroat Reaper" id="7" label="DESTROY MIN" weight="1" />
+      <edge source="Ghastly Renewal" target="Shambling Stitcher" id="8" label="MINION" weight="1" />
+      <edge source="Ghastly Renewal" target="Varna's Pact" id="9" label="MINION" weight="1" />
+      <edge source="Ghastly Renewal" target="Steeleye Researcher" id="10" label="MINION" weight="1" />
+      <edge source="Necrotic Geist" target="Cutthroat Reaper" id="11" label="DESTROY SYN,DESTROY MIN" weight="2" />
+      <edge source="Necrotic Geist" target="Shambling Stitcher" id="12" label="MINION" weight="1" />
+      <edge source="Necrotic Geist" target="Varna's Pact" id="13" label="MINION" weight="1" />
+      <edge source="Necrotic Geist" target="Steeleye Researcher" id="14" label="MINION" weight="1" />
+      <edge source="Necrotic Moeba" target="Cutthroat Reaper" id="15" label="DESTROY SYN,DESTROY MIN" weight="2" />
+      <edge source="Necrotic Moeba" target="Shambling Stitcher" id="16" label="MINION" weight="1" />
+      <edge source="Necrotic Moeba" target="Varna's Pact" id="17" label="MINION" weight="1" />
+      <edge source="Necrotic Moeba" target="Steeleye Researcher" id="18" label="MINION" weight="1" />
+      <edge source="Raging Harvester" target="Cutthroat Reaper" id="19" label="DESTROY SYN,DESTROY MIN" weight="2" />
+      <edge source="Raging Harvester" target="Ghastly Renewal" id="20" label="SCIENTIST" weight="1" />
+      <edge source="Raging Harvester" target="Raging Harvester" id="21" label="SCIENTIST" weight="1" />
+      <edge source="Raging Harvester" target="Shambling Stitcher" id="22" label="MINION" weight="1" />
+      <edge source="Raging Harvester" target="Varna's Pact" id="23" label="MINION" weight="1" />
+      <edge source="Raging Harvester" target="Protective Operator" id="24" label="SCIENTIST" weight="1" />
+      <edge source="Raging Harvester" target="Steeleye Researcher" id="25" label="MINION" weight="1" />
+      <edge source="Raging Harvester" target="Tech Upgrade" id="26" label="SCIENTIST" weight="1" />
+      <edge source="Shambling Stitcher" target="Cutthroat Reaper" id="27" label="DESTROY SYN" weight="1" />
+      <edge source="Shambling Stitcher" target="Ghastly Renewal" id="28" label="SCIENTIST,REDEPLOY" weight="2" />
+      <edge source="Shambling Stitcher" target="Raging Harvester" id="29" label="SCIENTIST" weight="1" />
+      <edge source="Shambling Stitcher" target="Protective Operator" id="30" label="SCIENTIST" weight="1" />
+      <edge source="Shambling Stitcher" target="Tech Upgrade" id="31" label="SCIENTIST" weight="1" />
+      <edge source="Varna's Pact" target="Cercee's Call" id="32" label="SPELL" weight="1" />
+      <edge source="Varna's Pact" target="Cutthroat Reaper" id="33" label="DESTROY MIN" weight="1" />
+      <edge source="Varna's Pact" target="Shambling Stitcher" id="34" label="MINION" weight="1" />
+      <edge source="Varna's Pact" target="Varna's Pact" id="35" label="MINION" weight="1" />
+      <edge source="Varna's Pact" target="Steeleye Researcher" id="36" label="MINION" weight="1" />
+      <edge source="Bolstering Justicar" target="Ghastly Renewal" id="37" label="REDEPLOY" weight="1" />
+      <edge source="Bolstering Justicar" target="Camouflaged Captain" id="38" label="WARRIOR" weight="1" />
+      <edge source="Camouflaged Captain" target="Ghastly Renewal" id="39" label="REDEPLOY" weight="1" />
+      <edge source="Energy Prison" target="Cercee's Call" id="40" label="SPELL,FREE UPGRADE" weight="2" />
+      <edge source="Heavy Artillery" target="Cercee's Call" id="41" label="SPELL" weight="1" />
+      <edge source="Protective Operator" target="Cutthroat Reaper" id="42" label="DESTROY SYN,DESTROY MIN" weight="2" />
+      <edge source="Protective Operator" target="Ghastly Renewal" id="43" label="SCIENTIST" weight="1" />
+      <edge source="Protective Operator" target="Raging Harvester" id="44" label="SCIENTIST,AGGRO" weight="2" />
+      <edge source="Protective Operator" target="Shambling Stitcher" id="45" label="MINION" weight="1" />
+      <edge source="Protective Operator" target="Varna's Pact" id="46" label="MINION" weight="1" />
+      <edge source="Protective Operator" target="Protective Operator" id="47" label="SCIENTIST" weight="1" />
+      <edge source="Protective Operator" target="Recycling Reinforcements" id="48" label="REPLACE" weight="1" />
+      <edge source="Protective Operator" target="Steeleye Researcher" id="49" label="MINION" weight="1" />
+      <edge source="Protective Operator" target="Tech Upgrade" id="50" label="SCIENTIST" weight="1" />
+      <edge source="Recycling Reinforcements" target="Ghastly Renewal" id="51" label="REDEPLOY" weight="1" />
+      <edge source="Recycling Reinforcements" target="Camouflaged Captain" id="52" label="WARRIOR" weight="1" />
+      <edge source="Steadfast Techtician" target="Ghastly Renewal" id="53" label="SCIENTIST" weight="1" />
+      <edge source="Steadfast Techtician" target="Raging Harvester" id="54" label="SCIENTIST" weight="1" />
+      <edge source="Steadfast Techtician" target="Protective Operator" id="55" label="SCIENTIST" weight="1" />
+      <edge source="Steadfast Techtician" target="Tech Upgrade" id="56" label="SCIENTIST" weight="1" />
+      <edge source="Steeleye Researcher" target="Ghastly Renewal" id="57" label="SCIENTIST" weight="1" />
+      <edge source="Steeleye Researcher" target="Raging Harvester" id="58" label="SCIENTIST" weight="1" />
+      <edge source="Steeleye Researcher" target="Protective Operator" id="59" label="SCIENTIST" weight="1" />
+      <edge source="Steeleye Researcher" target="Tech Upgrade" id="60" label="SCIENTIST" weight="1" />
+      <edge source="Tech Upgrade" target="Cercee's Call" id="61" label="SPELL,FREE UPGRADE" weight="2" />
+      <edge source="Army Commander" target="Cercee's Call" id="62" label="FREE UPGRADE" weight="1" />
+    </edges>
+  </graph>
+</gexf>

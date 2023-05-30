@@ -1,0 +1,315 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="Zombie Pain Destruction|The Squadron of the Fire">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="double" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Combat Walker" label="Combat Walker">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017594541751316233" />
+          <attvalue for="2" value="0.1" />
+          <attvalue for="3" value="1.0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.15166535751575225" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Epidemic" label="Epidemic">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017594541751316233" />
+          <attvalue for="2" value="0.35000000000000003" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.15166535751575225" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Ghoulish Reaper" label="Ghoulish Reaper">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.07103834950384012" />
+          <attvalue for="2" value="0.2" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.20159763718469764" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Gloomreaper Hag" label="Gloomreaper Hag">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028383074836389285" />
+          <attvalue for="2" value="0.4" />
+          <attvalue for="3" value="0.018518518518518517" />
+          <attvalue for="4" value="0.017631578947368422" />
+          <attvalue for="5" value="0.23132796953626192" />
+          <attvalue for="6" value="0.00032651072124756337" />
+        </attvalues>
+      </node>
+      <node id="Group Meal" label="Group Meal">
+        <attvalues>
+          <attvalue for="0" value="ZOMBIE" />
+          <attvalue for="1" value="0.164150680108297" />
+          <attvalue for="2" value="0.5" />
+          <attvalue for="3" value="0.17307692307692307" />
+          <attvalue for="4" value="0.042105263157894736" />
+          <attvalue for="5" value="0.2977262112736774" />
+          <attvalue for="6" value="0.0072874493927125505" />
+        </attvalues>
+      </node>
+      <node id="Indomitable Fiend" label="Indomitable Fiend">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028383074836389285" />
+          <attvalue for="2" value="0.4" />
+          <attvalue for="3" value="0.07142857142857142" />
+          <attvalue for="4" value="0.02289473684210526" />
+          <attvalue for="5" value="0.23132796953626192" />
+          <attvalue for="6" value="0.0016353383458646612" />
+        </attvalues>
+      </node>
+      <node id="Infernal Ritual" label="Infernal Ritual">
+        <attvalues>
+          <attvalue for="0" value="ZOMBIE" />
+          <attvalue for="1" value="0.2084044597560844" />
+          <attvalue for="2" value="0.55" />
+          <attvalue for="3" value="0.17142857142857143" />
+          <attvalue for="4" value="0.018421052631578946" />
+          <attvalue for="5" value="0.3469648819015775" />
+          <attvalue for="6" value="0.003157894736842105" />
+        </attvalues>
+      </node>
+      <node id="Scourge Hydra" label="Scourge Hydra">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028383074836389285" />
+          <attvalue for="2" value="0.4" />
+          <attvalue for="3" value="0.017857142857142856" />
+          <attvalue for="4" value="0.01631578947368421" />
+          <attvalue for="5" value="0.23132796953626192" />
+          <attvalue for="6" value="0.0002913533834586466" />
+        </attvalues>
+      </node>
+      <node id="Soulreap" label="Soulreap">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.041156365017427726" />
+          <attvalue for="2" value="0.15000000000000002" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.21309748716851323" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Spirit Reaver" label="Spirit Reaver">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017594541751316233" />
+          <attvalue for="2" value="0.1" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.15166535751575225" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Conflagrate" label="Conflagrate">
+        <attvalues>
+          <attvalue for="0" value="MAGE" />
+          <attvalue for="1" value="0.03311434214258033" />
+          <attvalue for="2" value="0.45" />
+          <attvalue for="3" value="0.014285714285714285" />
+          <attvalue for="4" value="0.04736842105263158" />
+          <attvalue for="5" value="0.18996469021792034" />
+          <attvalue for="6" value="0.0006766917293233082" />
+        </attvalues>
+      </node>
+      <node id="Everflame Aura" label="Everflame Aura">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.05578889129127721" />
+          <attvalue for="2" value="0.35000000000000003" />
+          <attvalue for="3" value="0.023809523809523808" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.2616610410394124" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Everflame Phoenix" label="Everflame Phoenix">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028383074836389285" />
+          <attvalue for="2" value="0.4" />
+          <attvalue for="3" value="0.017857142857142856" />
+          <attvalue for="4" value="0.01631578947368421" />
+          <attvalue for="5" value="0.23132796953626192" />
+          <attvalue for="6" value="0.0002913533834586466" />
+        </attvalues>
+      </node>
+      <node id="Flamebreak Invoker" label="Flamebreak Invoker">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017594541751316233" />
+          <attvalue for="2" value="0.1" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.15166535751575225" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Reckless Glider" label="Reckless Glider">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017594541751316233" />
+          <attvalue for="2" value="0.35000000000000003" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.15166535751575225" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Stampeding Mongosaur" label="Stampeding Mongosaur">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017594541751316233" />
+          <attvalue for="2" value="0.35000000000000003" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.15166535751575225" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Stout Stormling" label="Stout Stormling">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017594541751316233" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.15166535751575225" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Thundersaur" label="Thundersaur">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028383074836389285" />
+          <attvalue for="2" value="0.25" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.23132796953626192" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Thunderstomper" label="Thunderstomper">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017594541751316233" />
+          <attvalue for="2" value="0.35000000000000003" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.15166535751575225" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Undeati" label="Undeati">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028383074836389285" />
+          <attvalue for="2" value="0.35000000000000003" />
+          <attvalue for="3" value="0.047619047619047616" />
+          <attvalue for="4" value="0.018947368421052633" />
+          <attvalue for="5" value="0.23132796953626192" />
+          <attvalue for="6" value="0.0009022556390977444" />
+        </attvalues>
+      </node>
+      <node id="Soul Syphon" label="Soul Syphon">
+        <attvalues>
+          <attvalue for="1" value="0.11529212915162754" />
+          <attvalue for="2" value="0.30000000000000004" />
+          <attvalue for="3" value="0.23333333333333334" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.30866554919940936" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Combat Walker" target="Group Meal" id="0" label="ZOMBIE" weight="1" />
+      <edge source="Combat Walker" target="Infernal Ritual" id="1" label="ZOMBIE" weight="1" />
+      <edge source="Epidemic" target="Gloomreaper Hag" id="2" label="SELFDAMAGE" weight="1" />
+      <edge source="Epidemic" target="Indomitable Fiend" id="3" label="SELFDAMAGE" weight="1" />
+      <edge source="Epidemic" target="Scourge Hydra" id="4" label="SELFDAMAGE" weight="1" />
+      <edge source="Epidemic" target="Everflame Aura" id="5" label="FREE SELFDMG,SELFDAMAGE" weight="2" />
+      <edge source="Epidemic" target="Everflame Phoenix" id="6" label="SELFDAMAGE" weight="1" />
+      <edge source="Epidemic" target="Thundersaur" id="7" label="SELFDAMAGE" weight="1" />
+      <edge source="Epidemic" target="Undeati" id="8" label="FREE SELFDMG" weight="1" />
+      <edge source="Ghoulish Reaper" target="Ghoulish Reaper" id="9" label="FREE UPGRADE" weight="1" />
+      <edge source="Ghoulish Reaper" target="Group Meal" id="10" label="FREE UPGRADE" weight="1" />
+      <edge source="Gloomreaper Hag" target="Soul Syphon" id="11" label="DESTROY SYN" weight="1" />
+      <edge source="Gloomreaper Hag" target="Infernal Ritual" id="12" label="DESTROY SYN" weight="1" />
+      <edge source="Gloomreaper Hag" target="Conflagrate" id="13" label="MAGE" weight="1" />
+      <edge source="Group Meal" target="Ghoulish Reaper" id="14" label="FREE UPGRADE" weight="1" />
+      <edge source="Group Meal" target="Soul Syphon" id="15" label="DESTROY MIN" weight="1" />
+      <edge source="Group Meal" target="Group Meal" id="16" label="ZOMBIE,FREE UPGRADE" weight="2" />
+      <edge source="Group Meal" target="Infernal Ritual" id="17" label="ZOMBIE,DESTROY MIN" weight="2" />
+      <edge source="Indomitable Fiend" target="Group Meal" id="18" label="ZOMBIE" weight="1" />
+      <edge source="Indomitable Fiend" target="Soul Syphon" id="19" label="DESTROY SYN" weight="1" />
+      <edge source="Indomitable Fiend" target="Infernal Ritual" id="20" label="ZOMBIE,DESTROY SYN" weight="2" />
+      <edge source="Infernal Ritual" target="Group Meal" id="21" label="ZOMBIE" weight="1" />
+      <edge source="Infernal Ritual" target="Soul Syphon" id="22" label="DESTROY MIN" weight="1" />
+      <edge source="Infernal Ritual" target="Infernal Ritual" id="23" label="ZOMBIE,DESTROY MIN" weight="2" />
+      <edge source="Scourge Hydra" target="Infernal Ritual" id="24" label="DESTROY SYN" weight="1" />
+      <edge source="Scourge Hydra" target="Soul Syphon" id="25" label="DESTROY SYN" weight="1" />
+      <edge source="Scourge Hydra" target="Soulreap" id="26" label="BEAST" weight="1" />
+      <edge source="Spirit Reaver" target="Soulreap" id="27" label="BEAST" weight="1" />
+      <edge source="Spirit Reaver" target="Everflame Aura" id="28" label="ACTIVATION" weight="1" />
+      <edge source="Conflagrate" target="Gloomreaper Hag" id="29" label="SELFDAMAGE" weight="1" />
+      <edge source="Conflagrate" target="Indomitable Fiend" id="30" label="SELFDAMAGE" weight="1" />
+      <edge source="Conflagrate" target="Scourge Hydra" id="31" label="SELFDAMAGE" weight="1" />
+      <edge source="Conflagrate" target="Everflame Aura" id="32" label="FREE SELFDMG,SELFDAMAGE" weight="2" />
+      <edge source="Conflagrate" target="Everflame Phoenix" id="33" label="SELFDAMAGE" weight="1" />
+      <edge source="Conflagrate" target="Thundersaur" id="34" label="SELFDAMAGE" weight="1" />
+      <edge source="Conflagrate" target="Undeati" id="35" label="FREE SELFDMG" weight="1" />
+      <edge source="Everflame Phoenix" target="Infernal Ritual" id="36" label="DESTROY SYN" weight="1" />
+      <edge source="Everflame Phoenix" target="Soulreap" id="37" label="BEAST" weight="1" />
+      <edge source="Everflame Phoenix" target="Soul Syphon" id="38" label="DESTROY SYN" weight="1" />
+      <edge source="Flamebreak Invoker" target="Conflagrate" id="39" label="MAGE" weight="1" />
+      <edge source="Flamebreak Invoker" target="Everflame Aura" id="40" label="ACTIVATION" weight="1" />
+      <edge source="Reckless Glider" target="Gloomreaper Hag" id="41" label="SELFDAMAGE" weight="1" />
+      <edge source="Reckless Glider" target="Indomitable Fiend" id="42" label="SELFDAMAGE" weight="1" />
+      <edge source="Reckless Glider" target="Scourge Hydra" id="43" label="SELFDAMAGE" weight="1" />
+      <edge source="Reckless Glider" target="Everflame Aura" id="44" label="FREE SELFDMG,SELFDAMAGE" weight="2" />
+      <edge source="Reckless Glider" target="Everflame Phoenix" id="45" label="SELFDAMAGE" weight="1" />
+      <edge source="Reckless Glider" target="Thundersaur" id="46" label="SELFDAMAGE" weight="1" />
+      <edge source="Reckless Glider" target="Undeati" id="47" label="FREE SELFDMG" weight="1" />
+      <edge source="Stampeding Mongosaur" target="Gloomreaper Hag" id="48" label="SELFDAMAGE" weight="1" />
+      <edge source="Stampeding Mongosaur" target="Indomitable Fiend" id="49" label="SELFDAMAGE" weight="1" />
+      <edge source="Stampeding Mongosaur" target="Scourge Hydra" id="50" label="SELFDAMAGE" weight="1" />
+      <edge source="Stampeding Mongosaur" target="Everflame Aura" id="51" label="FREE SELFDMG,SELFDAMAGE" weight="2" />
+      <edge source="Stampeding Mongosaur" target="Everflame Phoenix" id="52" label="SELFDAMAGE" weight="1" />
+      <edge source="Stampeding Mongosaur" target="Thundersaur" id="53" label="SELFDAMAGE" weight="1" />
+      <edge source="Stampeding Mongosaur" target="Undeati" id="54" label="FREE SELFDMG" weight="1" />
+      <edge source="Thunderstomper" target="Gloomreaper Hag" id="55" label="SELFDAMAGE" weight="1" />
+      <edge source="Thunderstomper" target="Indomitable Fiend" id="56" label="SELFDAMAGE" weight="1" />
+      <edge source="Thunderstomper" target="Scourge Hydra" id="57" label="SELFDAMAGE" weight="1" />
+      <edge source="Thunderstomper" target="Everflame Aura" id="58" label="ACTIVATION,FREE SELFDMG,SELFDAMAGE" weight="3" />
+      <edge source="Thunderstomper" target="Everflame Phoenix" id="59" label="SELFDAMAGE" weight="1" />
+      <edge source="Thunderstomper" target="Thundersaur" id="60" label="SELFDAMAGE" weight="1" />
+      <edge source="Thunderstomper" target="Undeati" id="61" label="FREE SELFDMG" weight="1" />
+      <edge source="Undeati" target="Group Meal" id="62" label="ZOMBIE" weight="1" />
+      <edge source="Undeati" target="Infernal Ritual" id="63" label="ZOMBIE" weight="1" />
+    </edges>
+  </graph>
+</gexf>

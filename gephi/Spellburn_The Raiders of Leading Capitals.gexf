@@ -1,0 +1,312 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="Spellburn|The Raiders of Leading Capitals">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="long" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Bonescythe Reaver" label="Bonescythe Reaver">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.047619047619047616" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Camouflaged Demon" label="Camouflaged Demon">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Darkheart Sorcerer" label="Darkheart Sorcerer">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.10863810738474497" />
+          <attvalue for="2" value="0.38095238095238093" />
+          <attvalue for="3" value="0.16071428571428573" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.32002191286010956" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Dreadbolt" label="Dreadbolt">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.047619047619047616" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Ghastly Renewal" label="Ghastly Renewal">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.11722965706902895" />
+          <attvalue for="2" value="0.3333333333333333" />
+          <attvalue for="3" value="0.1" />
+          <attvalue for="4" value="0.055952380952380955" />
+          <attvalue for="5" value="0.23043110785374044" />
+          <attvalue for="6" value="0.005595238095238096" />
+        </attvalues>
+      </node>
+      <node id="Gloomreaper Hag" label="Gloomreaper Hag">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.09523809523809523" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Ossuary Mech" label="Ossuary Mech">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.025145072493146986" />
+          <attvalue for="2" value="0.38095238095238093" />
+          <attvalue for="3" value="0.3" />
+          <attvalue for="4" value="0.02142857142857143" />
+          <attvalue for="5" value="0.18983481415444534" />
+          <attvalue for="6" value="0.0064285714285714285" />
+        </attvalues>
+      </node>
+      <node id="Sigmund Fraud" label="Sigmund Fraud">
+        <attvalues>
+          <attvalue for="0" value="ZOMBIE" />
+          <attvalue for="1" value="0.08303159907483228" />
+          <attvalue for="2" value="0.38095238095238093" />
+          <attvalue for="3" value="0.19230769230769232" />
+          <attvalue for="4" value="0.04761904761904762" />
+          <attvalue for="5" value="0.28895803417972643" />
+          <attvalue for="6" value="0.00915750915750916" />
+        </attvalues>
+      </node>
+      <node id="Varna's Pact" label="Varna's Pact">
+        <attvalues>
+          <attvalue for="0" value="MINION" />
+          <attvalue for="1" value="0.08303159907483228" />
+          <attvalue for="2" value="0.47619047619047616" />
+          <attvalue for="3" value="0.30357142857142855" />
+          <attvalue for="4" value="0.004761904761904762" />
+          <attvalue for="5" value="0.28895803417972643" />
+          <attvalue for="6" value="0.001445578231292517" />
+        </attvalues>
+      </node>
+      <node id="Venerable Spectre" label="Venerable Spectre">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Aegis Knight" label="Aegis Knight">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.06286190665644593" />
+          <attvalue for="2" value="0.14285714285714285" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.20153533244606722" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Brightsteel Sentinel" label="Brightsteel Sentinel">
+        <attvalues>
+          <attvalue for="0" value="ROBOT" />
+          <attvalue for="1" value="0.13529201955799566" />
+          <attvalue for="2" value="0.47619047619047616" />
+          <attvalue for="3" value="0.12962962962962962" />
+          <attvalue for="4" value="0.0642857142857143" />
+          <attvalue for="5" value="0.30684017503562533" />
+          <attvalue for="6" value="0.008333333333333333" />
+        </attvalues>
+      </node>
+      <node id="Charge Plated Assassin" label="Charge Plated Assassin">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Cypien Experimentation" label="Cypien Experimentation">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.05029588683297904" />
+          <attvalue for="2" value="0.42857142857142855" />
+          <attvalue for="3" value="0.21428571428571427" />
+          <attvalue for="4" value="0.036904761904761905" />
+          <attvalue for="5" value="0.2398233466541491" />
+          <attvalue for="6" value="0.007908163265306122" />
+        </attvalues>
+      </node>
+      <node id="Electronet" label="Electronet">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.047619047619047616" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Energy Prison" label="Energy Prison">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.19047619047619047" />
+          <attvalue for="3" value="0.4166666666666667" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Energy Surge" label="Energy Surge">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.026770084242389337" />
+          <attvalue for="2" value="0.5238095238095237" />
+          <attvalue for="3" value="0.2916666666666667" />
+          <attvalue for="4" value="0.009523809523809525" />
+          <attvalue for="5" value="0.21092757124647582" />
+          <attvalue for="6" value="0.0027777777777777783" />
+        </attvalues>
+      </node>
+      <node id="Epoch Soldier" label="Epoch Soldier">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Oreian Battledroid" label="Oreian Battledroid">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.09523809523809523" />
+          <attvalue for="3" value="1.0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Warmonger Mod" label="Warmonger Mod">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.026770084242389337" />
+          <attvalue for="2" value="0.38095238095238093" />
+          <attvalue for="3" value="0.23214285714285715" />
+          <attvalue for="4" value="0.009523809523809525" />
+          <attvalue for="5" value="0.21092757124647582" />
+          <attvalue for="6" value="0.002210884353741497" />
+        </attvalues>
+      </node>
+      <node id="Soulrip" label="Soulrip">
+        <attvalues>
+          <attvalue for="1" value="0.09157706893161315" />
+          <attvalue for="2" value="0.3333333333333333" />
+          <attvalue for="3" value="0.23809523809523808" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.3079415155920646" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Army of the Damned" label="Army of the Damned">
+        <attvalues>
+          <attvalue for="1" value="0.017214264949054738" />
+          <attvalue for="2" value="0.09523809523809523" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1553193934019156" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Bonescythe Reaver" target="Ghastly Renewal" id="0" label="REDEPLOY" weight="1" />
+      <edge source="Dreadbolt" target="Darkheart Sorcerer" id="1" label="SPELL" weight="1" />
+      <edge source="Ghastly Renewal" target="Darkheart Sorcerer" id="2" label="SPELL" weight="1" />
+      <edge source="Ghastly Renewal" target="Soulrip" id="3" label="DESTROY MIN" weight="1" />
+      <edge source="Ghastly Renewal" target="Sigmund Fraud" id="4" label="ZOMBIE" weight="1" />
+      <edge source="Ghastly Renewal" target="Varna's Pact" id="5" label="MINION" weight="1" />
+      <edge source="Gloomreaper Hag" target="Soulrip" id="6" label="FREE DESTROY,DESTROY SYN" weight="2" />
+      <edge source="Gloomreaper Hag" target="Ossuary Mech" id="7" label="FREE DESTROY" weight="1" />
+      <edge source="Ossuary Mech" target="Soulrip" id="8" label="FREE DESTROY,DESTROY SYN" weight="2" />
+      <edge source="Ossuary Mech" target="Ossuary Mech" id="9" label="FREE DESTROY" weight="1" />
+      <edge source="Ossuary Mech" target="Brightsteel Sentinel" id="10" label="ROBOT" weight="1" />
+      <edge source="Ossuary Mech" target="Cypien Experimentation" id="11" label="UPGRADE" weight="1" />
+      <edge source="Ossuary Mech" target="Energy Surge" id="12" label="FREE UPGRADE" weight="1" />
+      <edge source="Ossuary Mech" target="Warmonger Mod" id="13" label="FREE UPGRADE" weight="1" />
+      <edge source="Sigmund Fraud" target="Ghastly Renewal" id="14" label="SCIENTIST,REACTIVATE" weight="2" />
+      <edge source="Sigmund Fraud" target="Cypien Experimentation" id="15" label="ACTIVATION" weight="1" />
+      <edge source="Varna's Pact" target="Darkheart Sorcerer" id="16" label="SPELL" weight="1" />
+      <edge source="Varna's Pact" target="Sigmund Fraud" id="17" label="ZOMBIE" weight="1" />
+      <edge source="Varna's Pact" target="Soulrip" id="18" label="DESTROY MIN" weight="1" />
+      <edge source="Varna's Pact" target="Varna's Pact" id="19" label="MINION" weight="1" />
+      <edge source="Aegis Knight" target="Brightsteel Sentinel" id="20" label="ROBOT" weight="1" />
+      <edge source="Brightsteel Sentinel" target="Ghastly Renewal" id="21" label="REDEPLOY" weight="1" />
+      <edge source="Brightsteel Sentinel" target="Aegis Knight" id="22" label="ARMOR" weight="1" />
+      <edge source="Brightsteel Sentinel" target="Brightsteel Sentinel" id="23" label="ROBOT" weight="1" />
+      <edge source="Cypien Experimentation" target="Darkheart Sorcerer" id="24" label="SPELL" weight="1" />
+      <edge source="Cypien Experimentation" target="Sigmund Fraud" id="25" label="AGGRO" weight="1" />
+      <edge source="Cypien Experimentation" target="Varna's Pact" id="26" label="MINION" weight="1" />
+      <edge source="Cypien Experimentation" target="Brightsteel Sentinel" id="27" label="ROBOT" weight="1" />
+      <edge source="Cypien Experimentation" target="Soulrip" id="28" label="DESTROY MIN" weight="1" />
+      <edge source="Electronet" target="Darkheart Sorcerer" id="29" label="SPELL" weight="1" />
+      <edge source="Energy Prison" target="Darkheart Sorcerer" id="30" label="SPELL" weight="1" />
+      <edge source="Energy Prison" target="Cypien Experimentation" id="31" label="UPGRADE" weight="1" />
+      <edge source="Energy Prison" target="Energy Surge" id="32" label="FREE UPGRADE" weight="1" />
+      <edge source="Energy Prison" target="Warmonger Mod" id="33" label="FREE UPGRADE" weight="1" />
+      <edge source="Energy Surge" target="Darkheart Sorcerer" id="34" label="SPELL" weight="1" />
+      <edge source="Energy Surge" target="Sigmund Fraud" id="35" label="AGGRO" weight="1" />
+      <edge source="Energy Surge" target="Varna's Pact" id="36" label="MINION" weight="1" />
+      <edge source="Energy Surge" target="Brightsteel Sentinel" id="37" label="ROBOT" weight="1" />
+      <edge source="Energy Surge" target="Cypien Experimentation" id="38" label="UPGRADE" weight="1" />
+      <edge source="Energy Surge" target="Soulrip" id="39" label="DESTROY MIN" weight="1" />
+      <edge source="Energy Surge" target="Energy Surge" id="40" label="FREE UPGRADE" weight="1" />
+      <edge source="Energy Surge" target="Warmonger Mod" id="41" label="FREE UPGRADE" weight="1" />
+      <edge source="Oreian Battledroid" target="Aegis Knight" id="42" label="ARMOR" weight="1" />
+      <edge source="Oreian Battledroid" target="Brightsteel Sentinel" id="43" label="ROBOT" weight="1" />
+      <edge source="Warmonger Mod" target="Darkheart Sorcerer" id="44" label="SPELL" weight="1" />
+      <edge source="Warmonger Mod" target="Sigmund Fraud" id="45" label="AGGRO" weight="1" />
+      <edge source="Warmonger Mod" target="Varna's Pact" id="46" label="MINION" weight="1" />
+      <edge source="Warmonger Mod" target="Brightsteel Sentinel" id="47" label="ROBOT" weight="1" />
+      <edge source="Warmonger Mod" target="Soulrip" id="48" label="DESTROY MIN" weight="1" />
+      <edge source="Army of the Damned" target="Sigmund Fraud" id="49" label="ZOMBIE" weight="1" />
+      <edge source="Army of the Damned" target="Varna's Pact" id="50" label="MINION" weight="1" />
+    </edges>
+  </graph>
+</gexf>

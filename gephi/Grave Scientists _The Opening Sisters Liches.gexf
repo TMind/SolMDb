@@ -1,0 +1,317 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="Grave Scientists |The Opening Sisters Liches">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="long" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Aetherforge Oracle" label="Aetherforge Oracle">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014891518710223785" />
+          <attvalue for="2" value="0.09523809523809523" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1496049650777012" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Arrogant Captain" label="Arrogant Captain">
+        <attvalues>
+          <attvalue for="0" value="WARRIOR" />
+          <attvalue for="1" value="0.02122047224862637" />
+          <attvalue for="2" value="0.09523809523809523" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.16456546158547133" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Bolstering Justicar" label="Bolstering Justicar">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014891518710223785" />
+          <attvalue for="2" value="0.09523809523809523" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1496049650777012" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Combat Virtuoso" label="Combat Virtuoso">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014891518710223785" />
+          <attvalue for="2" value="0.14285714285714285" />
+          <attvalue for="3" value="0.6666666666666666" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1496049650777012" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Energy Prison" label="Energy Prison">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014891518710223785" />
+          <attvalue for="2" value="0.14285714285714285" />
+          <attvalue for="3" value="0.6666666666666666" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1496049650777012" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Epoch Hawk" label="Epoch Hawk">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014891518710223785" />
+          <attvalue for="2" value="0.09523809523809523" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1496049650777012" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Nanoswarm" label="Nanoswarm">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.027518414737107783" />
+          <attvalue for="2" value="0.42857142857142855" />
+          <attvalue for="3" value="0.2571428571428571" />
+          <attvalue for="4" value="0.03571428571428572" />
+          <attvalue for="5" value="0.21308770193248214" />
+          <attvalue for="6" value="0.009183673469387756" />
+        </attvalues>
+      </node>
+      <node id="Palladium Simulacrum" label="Palladium Simulacrum">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.1414091833129439" />
+          <attvalue for="2" value="0.14285714285714285" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1828505128727127" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Taunting Prophet" label="Taunting Prophet">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014891518710223785" />
+          <attvalue for="2" value="0.047619047619047616" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1496049650777012" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Tech Upgrade" label="Tech Upgrade">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.027518414737107783" />
+          <attvalue for="2" value="0.2857142857142857" />
+          <attvalue for="3" value="0.4642857142857143" />
+          <attvalue for="4" value="0.0015873015873015873" />
+          <attvalue for="5" value="0.21308770193248214" />
+          <attvalue for="6" value="0.0007369614512471656" />
+        </attvalues>
+      </node>
+      <node id="Arrogant Geist" label="Arrogant Geist">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014891518710223785" />
+          <attvalue for="2" value="0.047619047619047616" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1496049650777012" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Blight Witch" label="Blight Witch">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.11142721327504673" />
+          <attvalue for="2" value="0.5238095238095237" />
+          <attvalue for="3" value="0.20909090909090908" />
+          <attvalue for="4" value="0.029761904761904764" />
+          <attvalue for="5" value="0.34100892754235895" />
+          <attvalue for="6" value="0.006222943722943723" />
+        </attvalues>
+      </node>
+      <node id="Commanding Slime" label="Commanding Slime">
+        <attvalues>
+          <attvalue for="0" value="ZOMBIE" />
+          <attvalue for="1" value="0.07065631271913457" />
+          <attvalue for="2" value="0.19047619047619047" />
+          <attvalue for="3" value="0.3333333333333333" />
+          <attvalue for="4" value="0.0011904761904761906" />
+          <attvalue for="5" value="0.2322280819207181" />
+          <attvalue for="6" value="0.0003968253968253968" />
+        </attvalues>
+      </node>
+      <node id="Devouring Harvester" label="Devouring Harvester">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.09316567946184959" />
+          <attvalue for="2" value="0.8095238095238095" />
+          <attvalue for="3" value="0.20098039215686275" />
+          <attvalue for="4" value="0.14603174603174604" />
+          <attvalue for="5" value="0.3356175756166634" />
+          <attvalue for="6" value="0.029349517584811705" />
+        </attvalues>
+      </node>
+      <node id="Dr. Frankenbaum" label="Dr. Frankenbaum">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014891518710223785" />
+          <attvalue for="2" value="0.3333333333333333" />
+          <attvalue for="3" value="0.38095238095238093" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1496049650777012" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Dreadbolt" label="Dreadbolt">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014891518710223785" />
+          <attvalue for="2" value="0.09523809523809523" />
+          <attvalue for="3" value="0.5" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.1496049650777012" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Necrovive" label="Necrovive">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.0575258539984043" />
+          <attvalue for="2" value="0.42857142857142855" />
+          <attvalue for="3" value="0.32857142857142857" />
+          <attvalue for="4" value="0.026190476190476195" />
+          <attvalue for="5" value="0.2910175777286726" />
+          <attvalue for="6" value="0.00860544217687075" />
+        </attvalues>
+      </node>
+      <node id="Ossuary Mech" label="Ossuary Mech">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.024461157343611224" />
+          <attvalue for="2" value="0.3333333333333333" />
+          <attvalue for="3" value="0.4" />
+          <attvalue for="4" value="0.007936507936507936" />
+          <attvalue for="5" value="0.2035185573504076" />
+          <attvalue for="6" value="0.0031746031746031746" />
+        </attvalues>
+      </node>
+      <node id="Portal Shade" label="Portal Shade">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.03621030991691748" />
+          <attvalue for="2" value="0.2857142857142857" />
+          <attvalue for="3" value="0.26666666666666666" />
+          <attvalue for="4" value="0.015873015873015872" />
+          <attvalue for="5" value="0.23978781928565507" />
+          <attvalue for="6" value="0.004232804232804232" />
+        </attvalues>
+      </node>
+      <node id="Spiritleash" label="Spiritleash">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.04590931495225668" />
+          <attvalue for="2" value="0.23809523809523808" />
+          <attvalue for="3" value="0.25" />
+          <attvalue for="4" value="0.04761904761904762" />
+          <attvalue for="5" value="0.20889608299078793" />
+          <attvalue for="6" value="0.011904761904761906" />
+        </attvalues>
+      </node>
+      <node id="Repurpose" label="Repurpose">
+        <attvalues>
+          <attvalue for="1" value="0.19072092728939838" />
+          <attvalue for="2" value="0.42857142857142855" />
+          <attvalue for="3" value="0.05555555555555555" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.32851470994252857" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Tinker" label="Tinker">
+        <attvalues>
+          <attvalue for="1" value="0.018233077615581107" />
+          <attvalue for="2" value="0.047619047619047616" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.17091373050517852" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Aetherforge Oracle" target="Repurpose" id="0" label="REDEPLOY" weight="1" />
+      <edge source="Aetherforge Oracle" target="Necrovive" id="1" label="FREE UPGRADE" weight="1" />
+      <edge source="Arrogant Captain" target="Repurpose" id="2" label="REDEPLOY" weight="1" />
+      <edge source="Bolstering Justicar" target="Arrogant Captain" id="3" label="WARRIOR" weight="1" />
+      <edge source="Bolstering Justicar" target="Repurpose" id="4" label="REDEPLOY" weight="1" />
+      <edge source="Combat Virtuoso" target="Nanoswarm" id="5" label="SCIENTIST" weight="1" />
+      <edge source="Combat Virtuoso" target="Tech Upgrade" id="6" label="SCIENTIST" weight="1" />
+      <edge source="Combat Virtuoso" target="Devouring Harvester" id="7" label="SCIENTIST" weight="1" />
+      <edge source="Energy Prison" target="Blight Witch" id="8" label="SPELL" weight="1" />
+      <edge source="Energy Prison" target="Devouring Harvester" id="9" label="SPELL" weight="1" />
+      <edge source="Energy Prison" target="Necrovive" id="10" label="FREE UPGRADE" weight="1" />
+      <edge source="Epoch Hawk" target="Repurpose" id="11" label="REACTIVATE" weight="1" />
+      <edge source="Epoch Hawk" target="Palladium Simulacrum" id="12" label="MOVEMENT" weight="1" />
+      <edge source="Nanoswarm" target="Tinker" id="13" label="REPLACE" weight="1" />
+      <edge source="Nanoswarm" target="Repurpose" id="14" label="REPLACE" weight="1" />
+      <edge source="Nanoswarm" target="Blight Witch" id="15" label="SPELL,DESTROY MIN" weight="2" />
+      <edge source="Nanoswarm" target="Devouring Harvester" id="16" label="SPELL" weight="1" />
+      <edge source="Nanoswarm" target="Necrovive" id="17" label="DESTROY MIN" weight="1" />
+      <edge source="Nanoswarm" target="Portal Shade" id="18" label="DESTROY MIN" weight="1" />
+      <edge source="Palladium Simulacrum" target="Palladium Simulacrum" id="19" label="MOVEMENT" weight="1" />
+      <edge source="Taunting Prophet" target="Repurpose" id="20" label="REDEPLOY" weight="1" />
+      <edge source="Tech Upgrade" target="Blight Witch" id="21" label="SPELL" weight="1" />
+      <edge source="Tech Upgrade" target="Devouring Harvester" id="22" label="SPELL" weight="1" />
+      <edge source="Tech Upgrade" target="Necrovive" id="23" label="FREE UPGRADE" weight="1" />
+      <edge source="Arrogant Geist" target="Spiritleash" id="24" label="SPIRIT" weight="1" />
+      <edge source="Blight Witch" target="Repurpose" id="25" label="REACTIVATE" weight="1" />
+      <edge source="Blight Witch" target="Commanding Slime" id="26" label="ZOMBIE" weight="1" />
+      <edge source="Commanding Slime" target="Repurpose" id="27" label="REDEPLOY" weight="1" />
+      <edge source="Devouring Harvester" target="Nanoswarm" id="28" label="SCIENTIST" weight="1" />
+      <edge source="Devouring Harvester" target="Tech Upgrade" id="29" label="SCIENTIST" weight="1" />
+      <edge source="Devouring Harvester" target="Blight Witch" id="30" label="FREE DESTROY,DESTROY SYN,DESTROY MIN" weight="3" />
+      <edge source="Devouring Harvester" target="Commanding Slime" id="31" label="ZOMBIE" weight="1" />
+      <edge source="Devouring Harvester" target="Devouring Harvester" id="32" label="SCIENTIST" weight="1" />
+      <edge source="Devouring Harvester" target="Necrovive" id="33" label="DESTROY SYN,DESTROY MIN" weight="2" />
+      <edge source="Devouring Harvester" target="Ossuary Mech" id="34" label="FREE DESTROY" weight="1" />
+      <edge source="Devouring Harvester" target="Portal Shade" id="35" label="DESTROY SYN,DESTROY MIN" weight="2" />
+      <edge source="Dr. Frankenbaum" target="Nanoswarm" id="36" label="SCIENTIST" weight="1" />
+      <edge source="Dr. Frankenbaum" target="Tech Upgrade" id="37" label="SCIENTIST" weight="1" />
+      <edge source="Dr. Frankenbaum" target="Blight Witch" id="38" label="DESTROY MIN" weight="1" />
+      <edge source="Dr. Frankenbaum" target="Commanding Slime" id="39" label="ZOMBIE" weight="1" />
+      <edge source="Dr. Frankenbaum" target="Devouring Harvester" id="40" label="SCIENTIST" weight="1" />
+      <edge source="Dr. Frankenbaum" target="Necrovive" id="41" label="DESTROY MIN" weight="1" />
+      <edge source="Dr. Frankenbaum" target="Portal Shade" id="42" label="DESTROY MIN" weight="1" />
+      <edge source="Dreadbolt" target="Blight Witch" id="43" label="SPELL" weight="1" />
+      <edge source="Dreadbolt" target="Devouring Harvester" id="44" label="SPELL" weight="1" />
+      <edge source="Necrovive" target="Blight Witch" id="45" label="SPELL" weight="1" />
+      <edge source="Necrovive" target="Devouring Harvester" id="46" label="SPELL" weight="1" />
+      <edge source="Ossuary Mech" target="Blight Witch" id="47" label="FREE DESTROY,DESTROY SYN" weight="2" />
+      <edge source="Ossuary Mech" target="Necrovive" id="48" label="FREE UPGRADE,DESTROY SYN" weight="2" />
+      <edge source="Ossuary Mech" target="Ossuary Mech" id="49" label="FREE DESTROY" weight="1" />
+      <edge source="Ossuary Mech" target="Portal Shade" id="50" label="DESTROY SYN" weight="1" />
+      <edge source="Ossuary Mech" target="Spiritleash" id="51" label="SPIRIT" weight="1" />
+      <edge source="Portal Shade" target="Repurpose" id="52" label="REACTIVATE" weight="1" />
+      <edge source="Portal Shade" target="Spiritleash" id="53" label="SPIRIT" weight="1" />
+      <edge source="Spiritleash" target="Blight Witch" id="54" label="SPELL" weight="1" />
+      <edge source="Spiritleash" target="Devouring Harvester" id="55" label="SPELL" weight="1" />
+    </edges>
+  </graph>
+</gexf>

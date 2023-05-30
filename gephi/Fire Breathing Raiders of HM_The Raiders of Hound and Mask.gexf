@@ -1,0 +1,332 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2023-05-30">
+    <creator>NetworkX 3.1</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="Fire Breathing Raiders of HM|The Raiders of Hound and Mask">
+    <attributes mode="static" class="node">
+      <attribute id="0" title="max_ranges" type="string" />
+      <attribute id="1" title="PageRank" type="double" />
+      <attribute id="2" title="degree" type="double" />
+      <attribute id="3" title="cluster_coeff" type="long" />
+      <attribute id="4" title="between" type="double" />
+      <attribute id="5" title="katz" type="double" />
+      <attribute id="6" title="total" type="double" />
+    </attributes>
+    <nodes>
+      <node id="Abetting Warstoker" label="Abetting Warstoker">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014858440835932478" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14594646196952352" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Assailing Lasher" label="Assailing Lasher">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014858440835932478" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14594646196952352" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Conflagrate" label="Conflagrate">
+        <attvalues>
+          <attvalue for="0" value="MAGE" />
+          <attvalue for="1" value="0.11788606607045705" />
+          <attvalue for="2" value="0.5" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.16233766233766234" />
+          <attvalue for="5" value="0.2173130386463654" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Everflame Phoenix" label="Everflame Phoenix">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028036455912052567" />
+          <attvalue for="2" value="0.2272727272727273" />
+          <attvalue for="3" value="0.1" />
+          <attvalue for="4" value="0.016414141414141412" />
+          <attvalue for="5" value="0.18227239979455237" />
+          <attvalue for="6" value="0.0016414141414141414" />
+        </attvalues>
+      </node>
+      <node id="Flamebreak Invoker" label="Flamebreak Invoker">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014858440835932478" />
+          <attvalue for="2" value="0.045454545454545456" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14594646196952352" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Pyre Song" label="Pyre Song">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014858440835932478" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14594646196952352" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Raging Adept" label="Raging Adept">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.09702633512728887" />
+          <attvalue for="2" value="0.36363636363636365" />
+          <attvalue for="3" value="0.018518518518518517" />
+          <attvalue for="4" value="0.06277056277056277" />
+          <attvalue for="5" value="0.28385983806640674" />
+          <attvalue for="6" value="0.0011624178290844957" />
+        </attvalues>
+      </node>
+      <node id="Thundersaur" label="Thundersaur">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028036455912052567" />
+          <attvalue for="2" value="0.09090909090909091" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.18227239979455237" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Turnabout" label="Turnabout">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014858440835932478" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14594646196952352" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Undeati" label="Undeati">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028036455912052567" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0.16666666666666666" />
+          <attvalue for="4" value="0.007756132756132755" />
+          <attvalue for="5" value="0.18227239979455237" />
+          <attvalue for="6" value="0.0012926887926887924" />
+        </attvalues>
+      </node>
+      <node id="Bonescythe Reaver" label="Bonescythe Reaver">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014858440835932478" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14594646196952352" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Combat Apparition" label="Combat Apparition">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.04940025084014954" />
+          <attvalue for="2" value="0.2727272727272727" />
+          <attvalue for="3" value="0.2" />
+          <attvalue for="4" value="0.032467532467532464" />
+          <attvalue for="5" value="0.25512168313273137" />
+          <attvalue for="6" value="0.006493506493506493" />
+        </attvalues>
+      </node>
+      <node id="Dreadbolt" label="Dreadbolt">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014858440835932478" />
+          <attvalue for="2" value="0.18181818181818182" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14594646196952352" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Hibernating Summoner" label="Hibernating Summoner">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.05594238798161068" />
+          <attvalue for="2" value="0.5454545454545454" />
+          <attvalue for="3" value="0.0873015873015873" />
+          <attvalue for="4" value="0.12932900432900432" />
+          <attvalue for="5" value="0.28385983806640674" />
+          <attvalue for="6" value="0.011290627362055931" />
+        </attvalues>
+      </node>
+      <node id="Indomitable Fiend" label="Indomitable Fiend">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.028036455912052567" />
+          <attvalue for="2" value="0.2727272727272727" />
+          <attvalue for="3" value="0.13333333333333333" />
+          <attvalue for="4" value="0.019660894660894657" />
+          <attvalue for="5" value="0.18227239979455237" />
+          <attvalue for="6" value="0.002621452621452621" />
+        </attvalues>
+      </node>
+      <node id="Infernal Ritual" label="Infernal Ritual">
+        <attvalues>
+          <attvalue for="0" value="ZOMBIE" />
+          <attvalue for="1" value="0.1254927059859293" />
+          <attvalue for="2" value="0.6818181818181819" />
+          <attvalue for="3" value="0.1513157894736842" />
+          <attvalue for="4" value="0.08982683982683982" />
+          <attvalue for="5" value="0.29740160655042425" />
+          <attvalue for="6" value="0.013592219184324447" />
+        </attvalues>
+      </node>
+      <node id="Necrovive" label="Necrovive">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.04940025084014954" />
+          <attvalue for="2" value="0.4090909090909091" />
+          <attvalue for="3" value="0.14285714285714285" />
+          <attvalue for="4" value="0.03354978354978355" />
+          <attvalue for="5" value="0.25512168313273137" />
+          <attvalue for="6" value="0.00479282622139765" />
+        </attvalues>
+      </node>
+      <node id="Sigmund Fraud" label="Sigmund Fraud">
+        <attvalues>
+          <attvalue for="0" value="ZOMBIE" />
+          <attvalue for="1" value="0.04916211933143494" />
+          <attvalue for="2" value="0.2272727272727273" />
+          <attvalue for="3" value="0.4444444444444444" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.240527036935779" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Spiritleash" label="Spiritleash">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.05684936954247785" />
+          <attvalue for="2" value="0.2272727272727273" />
+          <attvalue for="3" value="0.05" />
+          <attvalue for="4" value="0.025974025974025976" />
+          <attvalue for="5" value="0.17145861401763265" />
+          <attvalue for="6" value="0.001298701298701299" />
+        </attvalues>
+      </node>
+      <node id="Vampiric Slime" label="Vampiric Slime">
+        <attvalues>
+          <attvalue for="0" value="" />
+          <attvalue for="1" value="0.014858440835932478" />
+          <attvalue for="2" value="0.0" />
+          <attvalue for="3" value="0" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14594646196952352" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Gathering Storm" label="Gathering Storm">
+        <attvalues>
+          <attvalue for="1" value="0.05594238798161068" />
+          <attvalue for="2" value="0.3181818181818182" />
+          <attvalue for="3" value="0.023809523809523808" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.28385983806640674" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Stim bolt" label="Stim bolt">
+        <attvalues>
+          <attvalue for="1" value="0.09702633512728887" />
+          <attvalue for="2" value="0.3181818181818182" />
+          <attvalue for="3" value="0.023809523809523808" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.28385983806640674" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+      <node id="Summon the Swarm" label="Summon the Swarm">
+        <attvalues>
+          <attvalue for="1" value="0.014858440835932478" />
+          <attvalue for="2" value="0.13636363636363635" />
+          <attvalue for="3" value="0.3333333333333333" />
+          <attvalue for="4" value="0.0" />
+          <attvalue for="5" value="0.14594646196952352" />
+          <attvalue for="6" value="0.0" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="Assailing Lasher" target="Everflame Phoenix" id="0" label="SELFDAMAGE" weight="1" />
+      <edge source="Assailing Lasher" target="Thundersaur" id="1" label="SELFDAMAGE" weight="1" />
+      <edge source="Assailing Lasher" target="Undeati" id="2" label="FREE SELFDMG" weight="1" />
+      <edge source="Assailing Lasher" target="Indomitable Fiend" id="3" label="SELFDAMAGE" weight="1" />
+      <edge source="Conflagrate" target="Gathering Storm" id="4" label="SPELL" weight="1" />
+      <edge source="Conflagrate" target="Stim bolt" id="5" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Conflagrate" target="Everflame Phoenix" id="6" label="SELFDAMAGE" weight="1" />
+      <edge source="Conflagrate" target="Raging Adept" id="7" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Conflagrate" target="Thundersaur" id="8" label="SELFDAMAGE" weight="1" />
+      <edge source="Conflagrate" target="Undeati" id="9" label="FREE SELFDMG" weight="1" />
+      <edge source="Conflagrate" target="Hibernating Summoner" id="10" label="SPELL" weight="1" />
+      <edge source="Conflagrate" target="Indomitable Fiend" id="11" label="SELFDAMAGE" weight="1" />
+      <edge source="Everflame Phoenix" target="Combat Apparition" id="12" label="DESTROY SYN" weight="1" />
+      <edge source="Everflame Phoenix" target="Infernal Ritual" id="13" label="DESTROY SYN" weight="1" />
+      <edge source="Everflame Phoenix" target="Necrovive" id="14" label="DESTROY SYN" weight="1" />
+      <edge source="Flamebreak Invoker" target="Conflagrate" id="15" label="MAGE" weight="1" />
+      <edge source="Pyre Song" target="Gathering Storm" id="16" label="SPELL" weight="1" />
+      <edge source="Pyre Song" target="Stim bolt" id="17" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Pyre Song" target="Raging Adept" id="18" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Pyre Song" target="Hibernating Summoner" id="19" label="SPELL" weight="1" />
+      <edge source="Raging Adept" target="Conflagrate" id="20" label="MAGE" weight="1" />
+      <edge source="Turnabout" target="Raging Adept" id="21" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Turnabout" target="Gathering Storm" id="22" label="SPELL" weight="1" />
+      <edge source="Turnabout" target="Stim bolt" id="23" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Turnabout" target="Hibernating Summoner" id="24" label="SPELL" weight="1" />
+      <edge source="Undeati" target="Infernal Ritual" id="25" label="ZOMBIE" weight="1" />
+      <edge source="Undeati" target="Sigmund Fraud" id="26" label="ZOMBIE" weight="1" />
+      <edge source="Combat Apparition" target="Spiritleash" id="27" label="SPIRIT" weight="1" />
+      <edge source="Dreadbolt" target="Raging Adept" id="28" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Dreadbolt" target="Gathering Storm" id="29" label="SPELL" weight="1" />
+      <edge source="Dreadbolt" target="Stim bolt" id="30" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Dreadbolt" target="Hibernating Summoner" id="31" label="SPELL" weight="1" />
+      <edge source="Hibernating Summoner" target="Conflagrate" id="32" label="MAGE" weight="1" />
+      <edge source="Hibernating Summoner" target="Combat Apparition" id="33" label="DESTROY MIN" weight="1" />
+      <edge source="Hibernating Summoner" target="Infernal Ritual" id="34" label="ZOMBIE,DESTROY MIN" weight="2" />
+      <edge source="Hibernating Summoner" target="Necrovive" id="35" label="DESTROY MIN" weight="1" />
+      <edge source="Hibernating Summoner" target="Sigmund Fraud" id="36" label="ZOMBIE" weight="1" />
+      <edge source="Indomitable Fiend" target="Combat Apparition" id="37" label="DESTROY SYN" weight="1" />
+      <edge source="Indomitable Fiend" target="Infernal Ritual" id="38" label="ZOMBIE,DESTROY SYN" weight="2" />
+      <edge source="Indomitable Fiend" target="Necrovive" id="39" label="DESTROY SYN" weight="1" />
+      <edge source="Indomitable Fiend" target="Sigmund Fraud" id="40" label="ZOMBIE" weight="1" />
+      <edge source="Infernal Ritual" target="Raging Adept" id="41" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Infernal Ritual" target="Combat Apparition" id="42" label="DESTROY MIN" weight="1" />
+      <edge source="Infernal Ritual" target="Hibernating Summoner" id="43" label="SPELL" weight="1" />
+      <edge source="Infernal Ritual" target="Gathering Storm" id="44" label="SPELL" weight="1" />
+      <edge source="Infernal Ritual" target="Stim bolt" id="45" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Infernal Ritual" target="Infernal Ritual" id="46" label="ZOMBIE,DESTROY MIN" weight="2" />
+      <edge source="Infernal Ritual" target="Necrovive" id="47" label="DESTROY MIN" weight="1" />
+      <edge source="Infernal Ritual" target="Sigmund Fraud" id="48" label="ZOMBIE" weight="1" />
+      <edge source="Necrovive" target="Raging Adept" id="49" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Necrovive" target="Hibernating Summoner" id="50" label="SPELL" weight="1" />
+      <edge source="Necrovive" target="Gathering Storm" id="51" label="SPELL" weight="1" />
+      <edge source="Necrovive" target="Stim bolt" id="52" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Sigmund Fraud" target="Infernal Ritual" id="53" label="ZOMBIE" weight="1" />
+      <edge source="Spiritleash" target="Raging Adept" id="54" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Spiritleash" target="Hibernating Summoner" id="55" label="SPELL" weight="1" />
+      <edge source="Spiritleash" target="Gathering Storm" id="56" label="SPELL" weight="1" />
+      <edge source="Spiritleash" target="Stim bolt" id="57" label="SPELL,FREE SPELL" weight="2" />
+      <edge source="Summon the Swarm" target="Combat Apparition" id="58" label="DESTROY MIN" weight="1" />
+      <edge source="Summon the Swarm" target="Infernal Ritual" id="59" label="DESTROY MIN" weight="1" />
+      <edge source="Summon the Swarm" target="Necrovive" id="60" label="DESTROY MIN" weight="1" />
+    </edges>
+  </graph>
+</gexf>

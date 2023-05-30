@@ -25,58 +25,51 @@ from collections import defaultdict
 
 #     return G
 
+@staticmethod
+def handle_synergy_and_edges(G, source, target, source_syn, target_syn):
+    syn_matches = InterfaceCollection.match_synergies(source_syn, target_syn)
+    if syn_matches:
+        label = ",".join(synergy for synergy, count in syn_matches.items() if count > 0)
+        weight = sum(syn_matches.values())
+        G.add_edge(source, target, label=label, weight=weight)
+
+
 def create_deck_graph(deck, eval_func, mode=None):
     G = nx.DiGraph(name = deck.name, mod = 0, value = 0, cluster_coeff = 0, density = 0, avglbl = 0, community_labels = {})
     #print(f"Card Synergies between decks: {deck.name}")        
     
     G.add_nodes_from(deck.cards)
+
+    # Create a dictionary of whether any interface in the card has '*' or '+' in its range
+    card_ranges = {}
+    for card_name, card in deck.cards.items():
+        max_ranges = card.ICollection.get_max_ranges()
+        card_ranges[card_name] = ','.join(max_ranges)  # Convert list to a string
+
+    # Add the card range flags as node attributes
+    nx.set_node_attributes(G, card_ranges, "max_ranges")
+
     
     for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
         for j, (card_name_2, card_2) in enumerate(deck.cards.items()):                
-
-            if mode and card_1.faction == card_2.faction:
-                continue
-
             if card_name_1 == card_name_2:
 
-                synCC_matches = InterfaceCollection.match_synergies(card_1.ICollection, card_2.ICollection)                                       
-
                 for ability_name, ability in deck.forgeborn.abilities.items():
-                    synCA_matches = InterfaceCollection.match_synergies(ability.ICollection,  card_1.ICollection)
-                    synAC_matches = InterfaceCollection.match_synergies(card_1.ICollection , ability.ICollection)
-                    
-                    if len(synCA_matches) > 0:                    
-                        for synergy, count in synCA_matches.items(): 
-                            if count > 0:
-                                G.add_edge(card_name_1, ability.name , label=synergy, weight = eval_func(synergy,count))
-                    
-                    if len(synAC_matches) > 0:                    
-                        for synergy, count in synAC_matches.items(): 
-                            if count > 0:
-                                G.add_edge(ability.name , card_name_1, label=synergy, weight = eval_func(synergy,count))
-
-                if len(synCC_matches) > 0:                    
-                    for synergy, count in synCC_matches.items(): 
-                        if count > 0:
-                            G.add_edge(card_name_1, card_name_1, label=synergy, weight = eval_func(synergy,count))                                                                                               
-                
+                    handle_synergy_and_edges(G, card_name_1, ability_name, card_1.ICollection, ability.ICollection)
+                    handle_synergy_and_edges(G, ability_name, card_name_2, ability.ICollection, card_1.ICollection)
+        
+                if not mode:
+                    handle_synergy_and_edges(G, card_name_1, card_name_1, card_1.ICollection, card_1.ICollection)
+                                                                                                                   
+            if mode and card_1.faction == card_2.faction:
+                continue
+                   
             if i < j:
                 # compare only cards whose indices are greater        
                 # Check if the cards have any synergies                
-
-                c12_matches = InterfaceCollection.match_synergies(card_1.ICollection, card_2.ICollection)
-                c21_matches = InterfaceCollection.match_synergies(card_2.ICollection, card_1.ICollection)
-
-                if len(c12_matches) > 0 :                        
-                    for synergy, count in c12_matches.items():
-                        if count > 0:
-                            G.add_edge(card_name_1, card_name_2, label=synergy, weight = eval_func(synergy,count)) 
-
-                if len(c21_matches) > 0 :                        
-                    for synergy, count in c21_matches.items():
-                        if count > 0:
-                            G.add_edge(card_name_2, card_name_1, label=synergy, weight = eval_func(synergy,count))
-
+                handle_synergy_and_edges(G, card_name_1, card_name_2, card_1.ICollection, card_2.ICollection)
+                handle_synergy_and_edges(G, card_name_2, card_name_1, card_2.ICollection, card_1.ICollection)
+            
     return G
 
 

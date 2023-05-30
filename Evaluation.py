@@ -1,6 +1,7 @@
 from collections import defaultdict
 from Interface import InterfaceCollection
 from Synergy import SynergyTemplate
+from itertools import chain
 import networkx as nx
 import infomap
 import csv
@@ -47,7 +48,7 @@ def evaluate_graph(G):
     node_to_int = {node: i for i, node in enumerate(G.nodes)}
 
     # Initialize Infomap
-    infomap_wrapper = infomap.Infomap("--two-level")
+    infomap_wrapper = infomap.Infomap("--two-level --silent")
 
     # Add nodes and edges to Infomap
     for node in node_to_int.values():
@@ -62,20 +63,24 @@ def evaluate_graph(G):
         # create a dictionary to store labels in each community
     community_labels = defaultdict(list)
 
-    # Iterate over the edges in the graph
+   # Iterate over the edges in the graph
     for edge in G.edges(data=True):
-        # Get the label of the edge
-        label = edge[2]['label']
+        # Get the label(s) of the edge
+        labels = edge[2]['label'].split(',')
         # Get the weight of the edge
-        weight = edge[2]['weight']
+        total_weight = edge[2]['weight']
+         # Calculate weight for each label
+        weight_per_label = total_weight / len(labels)
         # Get the nodes of the edge
         nodeA, nodeB = edge[0], edge[1]
         # Get the community of the nodes
         communityA = infomap_wrapper.get_modules()[node_to_int[nodeA]]
         communityB = infomap_wrapper.get_modules()[node_to_int[nodeB]]
-        # If the nodes belong to the same community, add the label and the weight to the corresponding community
+        # If the nodes belong to the same community, add the label(s) and the weight to the corresponding community
         if communityA == communityB:
-            community_labels[communityA].append((label, weight))
+            for label in labels:
+                community_labels[communityA].append((label.strip(), weight_per_label))
+
 
     # Calculate the total number of community labels and the average number of labels per community
     total_community_labels = sum(len(labels) for labels in community_labels.values())
@@ -127,7 +132,7 @@ def export_csv(csvname, graphs):
     all_labels = list(SynergyTemplate().synergies.keys())
 
     # Define the fieldnames for the CSV
-    fieldnames = ["deckname", "value", "avglbl"] + all_labels
+    fieldnames = ["deckname", "value", "avglbl", "range1", "range2", "range3"] + all_labels
 
     with open(f"csv/{csvname}.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
@@ -142,11 +147,35 @@ def export_csv(csvname, graphs):
                 for label, weight in labels_and_weights:
                     label_weights[label] += weight
             
-            # Create a dictionary to hold the row data
+         
+           # Gather max_ranges data
+            max_node_ranges = {}
+            for node, node_data in EGraph.nodes(data=True):
+                if "max_ranges" in node_data:
+                    max_node_ranges[node] = node_data["max_ranges"].split(',')
+            # Flatten the lists and exclude empty strings
+            max_graph_ranges = [syn for syn_list in max_node_ranges.values() for syn in syn_list if syn]
+
+            # Ensure the list has at least 3 elements
+            #max_graph_ranges += [''] * (3 - len(max_graph_ranges))
+
+            range1 = max_graph_ranges[0] if len(max_graph_ranges) > 0 else ''
+            range2 = max_graph_ranges[1] if len(max_graph_ranges) > 1 else ''
+            range3 = ', '.join(max_graph_ranges[2:]) if len(max_graph_ranges) > 2 else ''
+
+
+
+            # Assign values to range1, range2, and range3
+#            range1, range2, range3 = max_graph_ranges[:3]
+            # Now you can add these to your dictionary:
+
             row = {
                 "deckname": EGraph.graph['name'],
                 "value": f"{EGraph.graph['value']:.4f}",            
                 "avglbl": f"{EGraph.graph['avglbl']:.4f}",
+                "range1": range1,
+                "range2": range2,
+                "range3": range3,
             }
 
             # Add label weights to the row

@@ -73,7 +73,20 @@ class InterfaceCollection:
                         del ICollection.interfaces[synergy][name]   
 
         return ICollection
-                    
+
+    def get_max_ranges(self):
+        max_ranges = []
+        for synergy, interfaces in self.interfaces.items():
+            for key, interface in interfaces.items():
+                for range in interface.ranges:
+                    if '*' in range or '+' in range:
+                        max_ranges.append(synergy)  
+                        break  # Once a synergy with '*' or '+' is found, no need to check other ranges for this synergy.
+        return max_ranges
+
+
+
+
     def get_interfaces_by_type(self, interface_type, synergy=None):
         result = {}
         if synergy is None:

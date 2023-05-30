@@ -38,6 +38,7 @@ Synerginary = {
             "REACTIVATE"  :  [ 0.5,    ["Reanimate Activator"      ],[ "Activate"               ]],
             "STEALTH"     :  [ 1.0,    ["Defender Giver"           ],[ "Stealth","Stealth Giver"]],
             "AGGRO"       :  [ 1.0,    ["Aggressive"               ],[ "Replace Setup"          ]],
+            "FORGEBORN"   :  [ 2.0,    ["Forgeborn Synergy"        ],[ "Forgeborn Ability"      ]],
 
 
             # General Output              

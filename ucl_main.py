@@ -1,4 +1,3 @@
-from pyexpat import model
 from stat import FILE_ATTRIBUTE_REPARSE_POINT
 import csv
 import Evaluation as ev
@@ -48,27 +47,30 @@ EvaluatedGraphs = {}
 if (1):        
     DeckCollection = DeckLibrary(decks)    
     
+    half_deck = 'The Fortelling Aggravating Ticklers'
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
         half_deck = 'The Raiders of Hound and Mask'
+        deck_name = fusion.name        
         #deck_name = "The Mixing Figment Collectors|The People of Bearing"
         #if half_deck in fusion.name :
         if deck_name == fusion.name :
-            mode = None 
+            mode = 0
+            print(f"\nFusion: {fusion.name}\n")
             DeckGraph = Graph.create_deck_graph(fusion, ev.calculate_weight,mode=mode)        
             ev.evaluate_graph(DeckGraph)
-            EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph  
-            print(f"\nFusion: {fusion.name}\n")
+            EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph              
             Graph.print_graph(DeckGraph)                  
-            #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
+            Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))     
+            print(f"\n========================================================\n")
             #Graph.edge_statistics(DeckGraph)   
             print(f"Provides: {fusion.provides}")
             print(f"Seeks: {fusion.seeks}")
 
     ev.find_best_pairs(EvaluatedGraphs)
 
-if (0):
-    ev.export_csv('master_metrics', EvaluatedGraphs)
+if (1):
+    ev.export_csv('fusion_metrics', EvaluatedGraphs)
    
 
 

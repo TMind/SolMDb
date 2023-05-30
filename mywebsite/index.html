@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My First Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1em;
+        }
+        
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    Hello world! <br>
+    
+    <h2>Deck Fetcher</h2>
+
+    <label for="username">Username:</label><br>
+    <input type="text" id="username" name="username"><br>
+
+    <button onclick="getDecks()">Get Decks</button>
+
+    <p id="response"></p>
+
+    <script>
+    function getDecks() {
+    let username = document.getElementById('username').value;
+    fetch('http://localhost:5000/get_decks?username=' + username)
+    .then(response => response.json())
+    .then(data => {
+        // display the data in the browser console (you can modify this to display the data in your webpage)
+        console.log(data);
+        document.getElementById("response").innerHTML = JSON.stringify(data);
+    });
+    }
+    </script>
+  </body>  
+</html>

@@ -15,9 +15,9 @@ class Entity:
         self.spliced = spliced
         self.solbind = solbind        
         self.abilities = abilities        
+        self.ICollection = Collection
         self.provides = {}
         self.seeks = {}
-        self.ICollection = Collection
   
     def __str__(self):
         #trait_str = ", ".join([f"{trait}" for trait in self.sources.items()])
@@ -115,24 +115,22 @@ class Card():
     def __init__(self, card, modifier=None, synergy_template=None):  
         self.entities = [card]             
         self.faction  = card.faction
-        self.provides = card.provides
-        self.seeks = card.seeks
         if modifier:
-            self.title = modifier.name + ' ' + card.name
+            self.name = modifier.name + ' ' + card.name
             if isinstance(modifier, Entity):
                 self.entities.append(modifier)
-                self.provides = dict(Counter(self.provides) + Counter(modifier.provides))
-                self.seeks    = dict(Counter(self.seeks)    + Counter(modifier.seeks))
         else:
-            self.title = card.name        
+            self.name = card.name
+        self.provides = card.provides
+        self.seeks = card.seeks
         self.ICollection = InterfaceCollection.from_card(self,synergy_template)
 
     def __str__(self):
-        return self.title
+        return self.name
 
     def to_json(self):
         return {
-            "title": self.title
+            "title": self.name
         }
 
 class UniversalCardLibrary:
@@ -251,39 +249,40 @@ class UniversalCardLibrary:
                 continue
 
             try: 
-                cards_data = deck_data['cards']
-
-                cards_title = []
+                cards_data = deck_data['cards']               
+                
+                cards_name = []
                 cards_additional_data = {}
 
-                # Handle the case when cards_data is a dictionary
-                if isinstance(cards_data, dict):
+                 # Handle the case when cards_data is a dictionary
+                if isinstance(cards_data, dict):                    
+                    #cards_title = [str(card['title']) if 'title' in card else str(card['name']) for card in cards_data.values() ]    
+                    
                     for card in cards_data.values():
-                        card_title = str(card.get('title')) if 'title' in card else str(card.get('name'))
-                        cards_title.append(card_title)
+                        card_name = str(card.get('name')) if 'name' in card else str(card.get('name'))
+                        cards_name.append(card_name)
 
                         # Extract additional data from the card dictionary
                         default_value = 1
+                        cards_additional_data['betrayer'] = card.get('betrayer')
                         provides = card.get('provides')
-                        seeks = card.get('seeks')
+                        seeks   = card.get('seeks')
                         list_provides = provides.split(', ') if provides else {}
-                        list_seeks = seeks.split(', ') if seeks else {}
-                        
-                        # Add the additional data to the cards_additional_data dictionary
-                        cards_additional_data.setdefault(card_title, {})['betrayer'] = card.get('betrayer')
-                        cards_additional_data.setdefault(card_title, {})['provides'] = {key: default_value for key in list_provides}
-                        cards_additional_data.setdefault(card_title, {})['seeks'] = {key: default_value for key in list_seeks}
+                        list_seeks    = seeks.split(', ') if seeks else {}
+                        cards_additional_data.setdefault(card_name, {})['provides'] = {key: default_value for key in list_provides}
+                        cards_additional_data.setdefault(card_name, {})['seeks']    = {key: default_value for key in list_seeks}   
+
+                        if cards_additional_data['betrayer'] == True:
+                            print(f"Betrayer found: {card_name}")
 
                 else:
-                    cards_title = cards_data
-
-                # Create the cards dictionary with additional data
-                cards = {card_title: self.create_card_from_title(card_title, cards_additional_data.get(card_title, {})) for card_title in cards_title}
+                    cards_name = cards_data                
+                cards = {card_name: self.create_card_from_title(card_name,cards_additional_data.get(card_name, {})) for card_name in cards_name}
 
                 
             except Exception as e:
-                print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
-                print(f"Exception: {e}")
+                #print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
+                #print(f"Exception: {e}")
                 incomplete_data.append(deck_data)
                 continue
 

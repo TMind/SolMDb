@@ -47,15 +47,14 @@ EvaluatedGraphs = {}
 if (1):        
     DeckCollection = DeckLibrary(decks)    
     
-    half_deck = 'The Sorcerers of the Oratek Eruptor'
+    half_deck = 'The Mixing Figment Collectors'
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
         #deck_name = "The Mixing Figment Collectors|The People of Bearing"
         if half_deck in fusion.name :
-        #if deck_name == fusion.name :
-            mode = 0
+        #if deck_name == fusion.name :        
             print(f"\nFusion: {fusion.name}\n")
-            DeckGraph = Graph.create_deck_graph(fusion, ev.calculate_weight,mode=mode)        
+            DeckGraph = Graph.create_deck_graph(fusion)        
             ev.evaluate_graph(DeckGraph)
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph              
             Graph.print_graph(DeckGraph)                  

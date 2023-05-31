@@ -26,15 +26,16 @@ from collections import defaultdict
 #     return G
 
 @staticmethod
-def handle_synergy_and_edges(G, source, target, source_syn, target_syn):
-    syn_matches = InterfaceCollection.match_synergies(source_syn, target_syn)
+def handle_synergy_and_edges(G, source_entity, target_entity,):
+    syn_matches = InterfaceCollection.match_synergies(source_entity.ICollection, target_entity.ICollection)
     if syn_matches:
         label = ",".join(synergy for synergy, count in syn_matches.items() if count > 0)
         weight = sum(syn_matches.values())
-        G.add_edge(source, target, label=label, weight=weight)
+        type = source_entity.faction == target_entity.faction
+        G.add_edge(source_entity.name, target_entity.name, label=label, weight=weight, local=type)
 
 
-def create_deck_graph(deck, eval_func, mode=None):
+def create_deck_graph(deck):
     G = nx.DiGraph(name = deck.name, mod = 0, value = 0, cluster_coeff = 0, density = 0, avglbl = 0, community_labels = {})
     #print(f"Card Synergies between decks: {deck.name}")        
     
@@ -55,20 +56,17 @@ def create_deck_graph(deck, eval_func, mode=None):
             if card_name_1 == card_name_2:
 
                 for ability_name, ability in deck.forgeborn.abilities.items():
-                    handle_synergy_and_edges(G, card_name_1, ability_name, card_1.ICollection, ability.ICollection)
-                    handle_synergy_and_edges(G, ability_name, card_name_2, ability.ICollection, card_1.ICollection)
+                    handle_synergy_and_edges(G, card_1, ability)
+                    handle_synergy_and_edges(G, ability, card_2)
         
                 if not mode:
-                    handle_synergy_and_edges(G, card_name_1, card_name_1, card_1.ICollection, card_1.ICollection)
-                                                                                                                   
-            if mode and card_1.faction == card_2.faction:
-                continue
-                   
+                    handle_synergy_and_edges(G, card_1, card_1)
+                                                                                                                                                  
             if i < j:
                 # compare only cards whose indices are greater        
                 # Check if the cards have any synergies                
-                handle_synergy_and_edges(G, card_name_1, card_name_2, card_1.ICollection, card_2.ICollection)
-                handle_synergy_and_edges(G, card_name_2, card_name_1, card_2.ICollection, card_1.ICollection)
+                handle_synergy_and_edges(G, card_1, card_2)
+                handle_synergy_and_edges(G, card_2, card_1)
             
     return G
 

@@ -53,7 +53,7 @@ if (1):
         #deck_name = "The Mixing Figment Collectors|The People of Bearing"
         if half_deck in fusion.name :
         #if deck_name == fusion.name :
-            mode = 1
+            mode = 0
             print(f"\nFusion: {fusion.name}\n")
             DeckGraph = Graph.create_deck_graph(fusion, ev.calculate_weight,mode=mode)        
             ev.evaluate_graph(DeckGraph)
@@ -61,14 +61,16 @@ if (1):
             Graph.print_graph(DeckGraph)                  
             #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))                 
             #Graph.edge_statistics(DeckGraph)   
+            yesorno = all(key in fusion.provides.items() for key in fusion.seeks.items())
             print(f"Provides: {fusion.provides}")
-            print(f"Seeks: {fusion.seeks}")
+            print(f"{yesorno} Seeks: {fusion.seeks}")            
+            
             print(f"\n========================================================\n")
 
     ev.find_best_pairs(EvaluatedGraphs)
 
-if (0):
-    ev.export_csv('fusion_metrics', EvaluatedGraphs)
+if (1):
+    ev.export_csv(half_deck, EvaluatedGraphs)
    
 
 

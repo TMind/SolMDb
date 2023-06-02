@@ -67,6 +67,7 @@ class Deck:
             "name": self.name,
             "faction": self.faction,
             "forgeborn": self.forgeborn.to_json(),
+            #"cards": [card.to_json() for card in self.cards.values()]
             "cards": [str(card) for card in self.cards.values()]
         }    
     
@@ -128,13 +129,16 @@ class Card():
             self.title = card.name        
         self.name = self.title
         self.ICollection = InterfaceCollection.from_card(self,synergy_template)
+        self.name = self.title
 
     def __str__(self):
         return self.title
 
     def to_json(self):
         return {
-            "title": self.title
+            "name": self.name,
+            "provides": self.provides,
+            "seeks": self.seeks            
         }
 
 class UniversalCardLibrary:

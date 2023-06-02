@@ -47,7 +47,7 @@ EvaluatedGraphs = {}
 if (1):        
     DeckCollection = DeckLibrary(decks)    
     
-    half_deck = 'The Mixing Figment Collectors'
+    half_deck = 'The Opening Sisters Liches'
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
         #deck_name = "The Mixing Figment Collectors|The People of Bearing"
@@ -69,7 +69,8 @@ if (1):
     ev.find_best_pairs(EvaluatedGraphs)
 
 if (1):
-    ev.export_csv(half_deck, EvaluatedGraphs)
+    ev.export_csv(half_deck + '_excl', EvaluatedGraphs, True)
+    ev.export_csv(half_deck, EvaluatedGraphs, False)
    
 
 

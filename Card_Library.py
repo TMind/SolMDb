@@ -126,6 +126,7 @@ class Card():
                 self.seeks    = dict(Counter(self.seeks)    + Counter(modifier.seeks))
         else:
             self.title = card.name        
+        self.name = self.title
         self.ICollection = InterfaceCollection.from_card(self,synergy_template)
 
     def __str__(self):

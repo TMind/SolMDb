@@ -65,6 +65,8 @@ def evaluate_graph(G):
 
    # Iterate over the edges in the graph
     for edge in G.edges(data=True):
+        # Get locality of edge
+        local = edge[2]['local']
         # Get the label(s) of the edge
         labels = edge[2]['label'].split(',')
         # Get the weight of the edge
@@ -79,20 +81,24 @@ def evaluate_graph(G):
         # If the nodes belong to the same community, add the label(s) and the weight to the corresponding community
         if communityA == communityB:
             for label in labels:
-                community_labels[communityA].append((label.strip(), weight_per_label))
+                community_labels[communityA].append((label.strip(), weight_per_label, local))
 
 
     # Calculate the total number of community labels and the average number of labels per community
     total_community_labels = sum(len(labels) for labels in community_labels.values())
 
-    for community, labels in community_labels.items():
+    for community, labels, in community_labels.items():
         print("Community: ", community)
         # Create a dictionary to accumulate the weights for each label
         label_weights = defaultdict(float)
 
+        #local = False
         # Sum up the weights for each label
-        for label, weight in labels:
+        for label, weight, llocal in labels:
+        #    local = local or llocal
             label_weights[label] += weight
+
+        #if local: continue
 
         # Print the weights for each label
         for label, weight in label_weights.items():
@@ -127,7 +133,7 @@ def calculate_weight(synergy, count):
     return count * syn.weight
 
 
-def export_csv(csvname, graphs):
+def export_csv(csvname, graphs, local_mode=False):
     # Get all labels from the SynergyTemplate
     all_labels = list(SynergyTemplate().synergies.keys())
 
@@ -143,8 +149,9 @@ def export_csv(csvname, graphs):
             # Create a dictionary mapping labels to weights
             community_labels = EGraph.graph['community_labels']
             label_weights = defaultdict(float)
-            for labels_and_weights in community_labels.values():
-                for label, weight in labels_and_weights:
+            for label_info in community_labels.values():
+                for label, weight, local in label_info:
+                    if local and local_mode: continue
                     label_weights[label] += weight
             
          

@@ -57,10 +57,9 @@ def create_deck_graph(deck):
 
                 for ability_name, ability in deck.forgeborn.abilities.items():
                     handle_synergy_and_edges(G, card_1, ability)
-                    handle_synergy_and_edges(G, ability, card_2)
-        
-                if not mode:
-                    handle_synergy_and_edges(G, card_1, card_1)
+                    handle_synergy_and_edges(G, ability, card_2)            
+                
+                handle_synergy_and_edges(G, card_1, card_1)
                                                                                                                                                   
             if i < j:
                 # compare only cards whose indices are greater        

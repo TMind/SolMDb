@@ -51,6 +51,20 @@ class Deck:
             if card.seeks :
                 self.seeks    = dict(Counter(self.seeks) + Counter(card.seeks))
 
+    def get_rarities(self):
+        card_counter, forge_counter = 0, 0
+
+        for card in self.cards.values():
+            rarities = card.get_rarities()
+            card_rarity, *forge_rarity = rarities
+
+            card_counter += card_rarity == 'Rare'
+            forge_counter += forge_rarity == ['Rare'] if forge_rarity else 0
+
+        return [card_counter, forge_counter]
+
+
+
     def __add__(self, other):      
         name = self.name + '|' + other.name
         if self.faction == other.faction : 
@@ -129,6 +143,9 @@ class Card():
             self.title = card.name        
         self.ICollection = InterfaceCollection.from_card(self,synergy_template)
         self.name = self.title
+
+    def get_rarities(self):
+        return [item.rarity for item in self.entities]
 
     def __str__(self):
         return self.title

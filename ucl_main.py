@@ -47,7 +47,7 @@ EvaluatedGraphs = {}
 if (1):        
     DeckCollection = DeckLibrary(decks)    
     
-    half_deck = 'The Mixing Figment Collectors'
+    half_deck = 'The Professing Watchdogs'
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
         #deck_name = "The Mixing Figment Collectors|The People of Bearing"
@@ -63,6 +63,7 @@ if (1):
             yesorno = all(key in fusion.provides.items() for key in fusion.seeks.items())
             print(f"Provides: {fusion.provides}")
             print(f"{yesorno} Seeks: {fusion.seeks}")            
+            print(f"Rarities: {fusion.get_rarities()}")
             
             print(f"\n========================================================\n")
 

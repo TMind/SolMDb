@@ -26,7 +26,7 @@ from collections import defaultdict
 #     return G
 
 @staticmethod
-def handle_synergy_and_edges(G, source_entity, target_entity,):
+def handle_synergy_and_edges(G, source_entity, target_entity):
     syn_matches = InterfaceCollection.match_synergies(source_entity.ICollection, target_entity.ICollection)
     if syn_matches:
         label = ",".join(synergy for synergy, count in syn_matches.items() if count > 0)
@@ -116,13 +116,14 @@ def normalize_dict_values(d):
 
 def print_graph(G):
     # Print header
-    print(f"{'Node A':<30} {'Node B':<30} {'Weight':<5} {'Label':<15}")
+    print(f"{'Node A':<30} {'Node B':<30} {'Weight':<5} {'Label':<30}")
 
     # Iterate through edges and print in a tabular format
     for nodeA, nodeB, data in G.edges(data=True):
         weight = data.get('weight', 'N/A')
         label = data.get('label', 'N/A')
-        print(f"{nodeA:<30} {nodeB:<30} {str(weight):<5} {str(label):<15}")
+        local = data.get('local', 'N/A')
+        print(f"{nodeA:<30} {nodeB:<30} {str(weight):<5} {str(label):<30} {str(local):<5}")
 
 
 def write_gephi_file(graph, filename):

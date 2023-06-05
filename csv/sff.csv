@@ -372,7 +372,7 @@ If you have a Beast in play, deal 5 damage to a player. You gain 5H.",,,"Deal 7 
 
 If you have a Beast in play, deal 7 damage to a player. You gain 7H.",0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,
 Spectre,Nekrium,Common Common,Creature,Spirit Warrior,TRUE,,3,3,<b>Stealth</b>,5,5,<b>Stealth</b>,5,7,<b>Stealth</b>,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,
-Spirit,Nekrium,Common Common,Creature,Spirit,TRUE,,6,3,"<b>Deploy:</b> If this is played in a lane with an opposing creature, destroy this.",9,4,"<b>Deploy:</b> If this is played in a lane with an opposing creature, destroy this.",12,9,"<b>Deploy:</b> If this is played in a lane with an opposing creature, destroy this.",0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,
+Spirit,Nekrium,Common Common,Creature,Spirit,TRUE,,6,3,"<b>Deploy:</b> If this is played in a lane with an opposing creature, destroy this.",9,4,"<b>Deploy:</b> If this is played in a lane with an opposing creature, destroy this.",12,9,"<b>Deploy:</b> If this is played in a lane with an opposing creature, destroy this.",0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,
 Spirit Reaver,Nekrium,Rare,Creature,Warrior Beast,FALSE,,3,5,<b>Activate:</b> Choose a creature type. Give each creature of that type -1H.,5,8,<b>Activate:</b> Choose a creature type. Give each creature of that type -2H.,7,11,<b>Activate:</b> Choose a creature type. Give each creature of that type -3H.,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,
 Spiritleash,Nekrium,Common,Spell,Noncreature,FALSE,,,,"Give a creature -4A,-4H.
 
@@ -633,7 +633,7 @@ You gain 3H.",,,"Give a creature +5A,+5H.
 
 You gain 5H.",,,"Give a creature +10A,+10H.
 
-You gain 10H. If you have more than 30H, you may play an Oakfather <b>Minion</b>.",0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,,
+You gain 10H. If you have more than 30H, you may play an Oakfather <b>Minion</b>.",0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,,
 Echo Alpha,Uterra,Solbind,Creature,,FALSE,,,,,5,9,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,,
 Echo Pup,Uterra,Solbind,Creature,,FALSE,,2,3,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,,
 Echo Wolves,Uterra,Solbind,Creature,Beast Spirit,FALSE,"echo-alpha,echo-pup",2,3,<b>Deploy:</b> You may play Echo Pup.,5,9,<b>Deploy:</b> You may play Echo Alpha.,9,12,<b>Deploy:</b> You may play Echo Alpha. You may <b>Reanimate</b> any number of Echo Wolves.,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,,

@@ -61,12 +61,12 @@ def evaluate_graph(G):
     # Run Infomap
     infomap_wrapper.run()
         # create a dictionary to store labels in each community
-    community_labels = defaultdict(list)
+    community_labelinfos = defaultdict(list)
 
    # Iterate over the edges in the graph
     for edge in G.edges(data=True):
         # Get locality of edge
-        local = edge[2]['local']
+        local_faction = edge[2]['local']
         # Get the label(s) of the edge
         labels = edge[2]['label'].split(',')
         # Get the weight of the edge
@@ -79,33 +79,36 @@ def evaluate_graph(G):
         communityA = infomap_wrapper.get_modules()[node_to_int[nodeA]]
         communityB = infomap_wrapper.get_modules()[node_to_int[nodeB]]
         # If the nodes belong to the same community, add the label(s) and the weight to the corresponding community
-        if communityA == communityB:
-            for label in labels:
-                community_labels[communityA].append((label.strip(), weight_per_label, local))
+        local_comm = False
+        if communityA == communityB: local_comm = True 
+        
+        for label in labels:
+            community_labelinfos[communityA].append((label.strip(), weight_per_label, local_faction, local_comm))
 
 
     # Calculate the total number of community labels and the average number of labels per community
-    total_community_labels = sum(len(labels) for labels in community_labels.values())
+    total_nr_community_labels = sum(len(labelinfos) for labelinfos in community_labelinfos.values())
 
-    for community, labels, in community_labels.items():
+    for community, labels_infos, in community_labelinfos.items():
         print("Community: ", community)
         # Create a dictionary to accumulate the weights for each label
-        label_weights = defaultdict(float)
-
-        #local = False
+        label_infos = defaultdict(float)
         # Sum up the weights for each label
-        for label, weight, llocal in labels:
-        #    local = local or llocal
-            label_weights[label] += weight
+        for label, weight, loc_faction, loc_comm in labels_infos:
+            if label not in label_infos:
+                label_infos[label] = {'weight': 0, 'count' : 0, 'loc_faction': 0, 'loc_comm': 0}
 
-        #if local: continue
+            label_infos[label]['count']       += 1
+            label_infos[label]['weight']      += weight
+            label_infos[label]['loc_faction'] += 1 if loc_faction else 0
+            label_infos[label]['loc_comm']    += 1 if loc_comm else 0
 
         # Print the weights for each label
-        for label, weight in label_weights.items():
-            print(f"Label: {label}, Weight: {weight}")
+        for label, label_info in label_infos.items():
+            print(f"Label: {label}, Weight: {label_info['weight']}, LocComm: {label_info['loc_comm']}, LocFact: {label_info['loc_faction']}")
 
-    avg_lbl_com = total_community_labels / len(community_labels) if community_labels else 0
-    print(f"Avg Labels: {total_community_labels} / {len(community_labels)} = {avg_lbl_com}")
+    avg_lbl_com = total_nr_community_labels / len(community_labelinfos) if community_labelinfos else 0
+    print(f"Avg Labels: {total_nr_community_labels} / {len(community_labelinfos)} = {avg_lbl_com}")
 
 
     # G.graph('community_labels') = community_labels
@@ -116,8 +119,8 @@ def evaluate_graph(G):
 
     G.graph['cluster_coeff'] = clustering_coefficients
     G.graph['density'] = density
-    G.graph['avglbl'] = total_community_labels
-    G.graph['community_labels'] = community_labels
+    G.graph['avglbl'] = total_nr_community_labels
+    G.graph['community_labels'] = community_labelinfos
 
     for name, metric in Metric.items():
         nx.set_node_attributes(G, metric, name)
@@ -150,8 +153,8 @@ def export_csv(csvname, graphs, local_mode=False):
             community_labels = EGraph.graph['community_labels']
             label_weights = defaultdict(float)
             for label_info in community_labels.values():
-                for label, weight, local in label_info:
-                    if local and local_mode: continue
+                for label, weight, loc_comm, loc_faction in label_info:
+                    if loc_comm and local_mode: continue
                     label_weights[label] += weight
             
          
@@ -169,8 +172,6 @@ def export_csv(csvname, graphs, local_mode=False):
             range1 = max_graph_ranges[0] if len(max_graph_ranges) > 0 else ''
             range2 = max_graph_ranges[1] if len(max_graph_ranges) > 1 else ''
             range3 = ', '.join(max_graph_ranges[2:]) if len(max_graph_ranges) > 2 else ''
-
-
 
             # Assign values to range1, range2, and range3
 #            range1, range2, range3 = max_graph_ranges[:3]

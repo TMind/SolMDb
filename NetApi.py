@@ -14,7 +14,8 @@ class NetApi:
         self.params = {
             "inclCards": "true",
             "inclDecks": "true",
-            "username": "TMind",
+            "inclCategories": "true",
+            "username": "TMind", 
         }        
 
     def make_request(self, id="", type="deck", username="TMind"):

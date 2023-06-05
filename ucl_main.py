@@ -70,7 +70,8 @@ if (1):
     ev.find_best_pairs(EvaluatedGraphs)
 
 if (1):
-    ev.export_csv(half_deck, EvaluatedGraphs)
+    ev.export_csv(half_deck + '_excl', EvaluatedGraphs, True)
+    ev.export_csv(half_deck, EvaluatedGraphs, False)
    
 
 

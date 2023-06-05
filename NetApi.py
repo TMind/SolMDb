@@ -23,8 +23,12 @@ class NetApi:
 
         self.params.update({"username" : username})
         
-        response = requests.get(endpoint, params=self.params)
+        response = requests.get(endpoint, params=self.params)        
         data = json.loads(response.content)
+
+        if 'error' in data:
+            print(f"Error in response: {data['error']}")
+            return []
 
         with open('data/online_request.json', 'w') as f:
             json.dump(data, f)

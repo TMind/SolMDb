@@ -14,14 +14,39 @@ from NetApi import NetApi
 #synergy_template = SynergyTemplate()
 #synergy_template.set_synergy_rows(rows)
 
+fuse_ids = [
+                "Fused_dqokp8lfim2phb" ,
+                "Fused_j728lhp7bfn3",
+                "Fused_3clxc8li57p672" ,
+                "Fused_50ttb8lhr0bez6" ,
+                "Fused_gdtqzr8liexxxfn" ,
+                "Fused_1o56eez9lhxfp8ad" ,
+                "Fused_3rmme9p8lhuffjk1" ,
+                "Fused_49hs8208lif126jb" ,
+                "Fused_49hs8208lif0uaey" ,
+# ------------------------------------------
+                "Fused_49hs8208lif0ny9b" ,
+                "Fused_r695av8lhdvo0qv" ,
+                "Fused_1nuxiwe8lg8d9t7v" ,
+                "Fused_qru608lifpopix" ,
+                "Fused_51xv8lia8iime" ,
+                "Fused_49hs8208lif1hcbl" ,
+                "Fused_3pnz7o8lgc8dl69" ,
+                "Fused_49hs8208lif1cqad" ,
+                "Fused_49hs8208lif13z45" 
+]
+
+
 decks = []
 
-if (0) :
+if (1) :
     myApi = NetApi()
         
     #decks = myApi.request_decks()
     decks = myApi.request_decks(type='fuseddeck', filename='fusions')
-    #decks = myApi.request_decks(id='Fused_d7w2v8li1eyb45',filename='heartseeker')
+    
+    #decks = myApi.request_decks(type='fuseddeck', id='Fused_heetw8lieyqwuq')
+    #for id in fuse_ids:  decks.extend(myApi.request_decks(type='fuseddeck', id=id))
     #decks = myApi.request_decks(id='d5zenofhekurl3sn7iotspbdqn3qrx' )
 
 else:
@@ -51,8 +76,8 @@ if (1):
     for fusion in DeckCollection.fusions:
         deck_name = fusion.name
         #deck_name = "The Mixing Figment Collectors|The People of Bearing"
-        if half_deck in fusion.name :
-        #if deck_name == fusion.name :        
+        #if half_deck in fusion.name :
+        if deck_name == fusion.name :        
             print(f"\nFusion: {fusion.name}\n")
             DeckGraph = Graph.create_deck_graph(fusion)        
             ev.evaluate_graph(DeckGraph)
@@ -60,7 +85,7 @@ if (1):
             Graph.print_graph(DeckGraph)                  
             #Graph.write_gephi_file(DeckGraph,deck_name.replace('|','_'))                 
             #Graph.edge_statistics(DeckGraph)   
-            yesorno = all(key in fusion.provides.items() for key in fusion.seeks.items())
+            yesorno = all(key in fusion.provides for key in fusion.seeks)
             print(f"Provides: {fusion.provides}")
             print(f"{yesorno} Seeks: {fusion.seeks}")            
             print(f"Rarities: {fusion.get_rarities()}")
@@ -69,7 +94,7 @@ if (1):
 
     ev.find_best_pairs(EvaluatedGraphs)
 
-if (1):
+if (0):
     ev.export_csv(half_deck + '_excl', EvaluatedGraphs, True)
     ev.export_csv(half_deck, EvaluatedGraphs, False)
    

@@ -16,7 +16,8 @@ class Entity:
         self.spliced = spliced
         self.solbind = solbind        
         self.abilities = abilities        
-        self.provides = {}
+        self.provides = {sub_type: 1 for subtype in card_subtype.split(',') for sub_type in subtype.split(' ')}
+        self.provides.update({card_type : 1})
         self.seeks = {}
         self.ICollection = Collection
   
@@ -42,6 +43,11 @@ class Deck:
         int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn, synergy_template)
         self.ICollection = int_col_deck.update(int_col_fb)
         self.populate()
+
+
+    @classmethod
+    def empty(cls):
+        return cls("", None, "", {})
 
     def populate(self):
 
@@ -93,14 +99,17 @@ class Deck:
 class Fusion:
     def __init__(self, name, decks):
         self.name = name
+        self.fusion = self.decks_to_fusion(decks)
         self.decks = decks
 
-    def getDeck(self):        
-        fusion = copy.deepcopy(self.decks[0])  # Creates a new copy of the first deck in self.decks
-        fusion.name = self.name
-        for deck in self.decks[1:]:            
-            fusion += deck  # You should ensure the += operator is correctly overloaded in the Deck class
+    def decks_to_fusion(self, decks):
+        fusion = decks[0]
+        for deck in decks[1:]:
+            fusion += deck
         return fusion
+
+    def getDeck(self):               
+        return self.fusion
 
     def to_json(self):
         return {
@@ -293,7 +302,7 @@ class UniversalCardLibrary:
                         list_seeks = seeks.split(', ') if seeks else {}
                         
                         # Add the additional data to the cards_additional_data dictionary
-                        cards_additional_data.setdefault(card_title, {})['betrayer'] = card.get('betrayer')
+                        #cards_additional_data.setdefault(card_title, {})['betrayer'] = card.get('betrayer')
                         cards_additional_data.setdefault(card_title, {})['provides'] = {key: default_value for key in list_provides}
                         cards_additional_data.setdefault(card_title, {})['seeks'] = {key: default_value for key in list_seeks}
 
@@ -353,7 +362,13 @@ class UniversalCardLibrary:
             card_entity = self.search_entity(card_title)
             if modifier_entity and card_entity:
                 for key, value in card_data_additional.items():
-                    setattr(card_entity, key, value)
+                    existing_value = getattr(card_entity, key)  # Get existing value or use an empty dictionary
+                    if isinstance(existing_value, dict):
+                        merged_value = {**existing_value, **value}  # Merge the dictionaries
+                        setattr(card_entity, key, merged_value)
+                    elif value:
+                        setattr(card_entity, key, value)  # Set the new value directly
+
                 return Card(card_entity, modifier_entity, self.synergy_template)
 
         # If no entities found, create a card with just the card title

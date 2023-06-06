@@ -1,5 +1,105 @@
 [
     {
+        "name": "Impulse's Shadowflame Squad",
+        "faction": "Tempys",
+        "forgeborn": {
+            "title": "Korok",
+            "faction": "Tempys",
+            "abilities": [
+                "Demolish",
+                "Flame Strike",
+                "Lightning Speed"
+            ]
+        },
+        "cards": [
+            "Chant of Umbruk",
+            "Combat Glider",
+            "Conflagrate",
+            "Lightning Spark",
+            "Piercing Giant",
+            "Primordial Slam",
+            "Pyre Song",
+            "Rimehorn Charger",
+            "Stampeding Icecrusher",
+            "Uranti Elementalist"
+        ]
+    },
+    {
+        "name": "The Mutant Constructing Gang",
+        "faction": "Alloyin",
+        "forgeborn": {
+            "title": "Steel Rosetta",
+            "faction": "Alloyin",
+            "abilities": [
+                "Tinker",
+                "Repurpose",
+                "Enhance"
+            ]
+        },
+        "cards": [
+            "Aegis Wings",
+            "Aetherforge Oracle",
+            "Brightsteel Sentinel",
+            "Digitize",
+            "Drix",
+            "Epoch Hawk",
+            "Heavy Artillery",
+            "Palladium Simulacrum",
+            "Shieldbearing Allomancer",
+            "Steeleye Researcher"
+        ]
+    },
+    {
+        "name": "The Wiry Antique Governors",
+        "faction": "Nekrium",
+        "forgeborn": {
+            "title": "Nix Nekyia",
+            "faction": "Nekrium",
+            "abilities": [
+                "Soulrip",
+                "Army of the Damned",
+                "Dark Summoning"
+            ]
+        },
+        "cards": [
+            "Combat Demon",
+            "Ghoulish Geist",
+            "Grave Pact",
+            "Indomitable Fiend",
+            "Infernal Ritual",
+            "Portal Shade",
+            "Scourge Hydra",
+            "Sigmund Fraud",
+            "Tormenting Skeleton",
+            "Xithian Dreadmaw"
+        ]
+    },
+    {
+        "name": "The Scavenger Rabid Daggers",
+        "faction": "Uterra",
+        "forgeborn": {
+            "title": "Oros",
+            "faction": "Uterra",
+            "abilities": [
+                "Darkforge Drain",
+                "Shapeshift",
+                "Growth Aura"
+            ]
+        },
+        "cards": [
+            "Arrogant Mantis",
+            "Botanimate",
+            "Ferocious Roar",
+            "Magnivorous Raptor",
+            "Rooted Matriarch",
+            "Spring Dryad",
+            "Stout Ranger",
+            "Stouthide Stegadon",
+            "Toxic Spores",
+            "Uterra Charger"
+        ]
+    },
+    {
         "name": "The People of Bearing",
         "faction": "Alloyin",
         "forgeborn": {

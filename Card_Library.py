@@ -314,8 +314,8 @@ class UniversalCardLibrary:
 
                 
             except Exception as e:
-                print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
-                print(f"Exception: {e}")
+                #print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
+                #print(f"Exception: {e}")
                 incomplete_data.append(deck_data)
                 continue
 

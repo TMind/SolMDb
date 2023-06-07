@@ -23,7 +23,7 @@ class NetApi:
         endpoint = f"{self.base_url}/{type}/{id}"
 
         self.params.update({"username" : username})
-        
+        print(f"Requesting Data from Website: {','.join([username,type,id])}")
         response = requests.get(endpoint, params=self.params)        
         data = json.loads(response.content)
 
@@ -34,6 +34,7 @@ class NetApi:
         with open('data/online_request.json', 'w') as f:
             json.dump(data, f)
 
+        print("Loading Data...")
         decks_data = self.ucl.load_data('data/online_request.json')
         return decks_data
 
@@ -48,6 +49,7 @@ class NetApi:
             for incomplete_fusiondata in incomplete_fusionsdata:
                 fusion_decks = []                
                 for incomplete_deckdata in incomplete_fusiondata['myDecks']:
+                    print(f"Requesting further data: {incomplete_deckdata['id']}")
                     deckdata = self.make_request(id=incomplete_deckdata['id'])    
                     deck_loaded, incomplete_deckdata_loaded = self.ucl.load_decks_from_data(deckdata)                                        
                     fusion_decks.extend(deck_loaded)

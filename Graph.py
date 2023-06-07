@@ -123,7 +123,7 @@ def print_graph(G):
         weight = data.get('weight', 'N/A')
         label = data.get('label', 'N/A')
         local = data.get('local', 'N/A')
-        print(f"{nodeA:<30} {nodeB:<30} {str(weight):<5} {str(label):<30} {str(local):<5}")
+        print(f"{nodeA:<30} {nodeB:<30} {str(weight):<5} {str(label):<30}") # {str(local):<5}")
 
 
 def write_gephi_file(graph, filename):

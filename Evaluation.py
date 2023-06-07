@@ -105,7 +105,8 @@ def evaluate_graph(G):
 
         # Print the weights for each label
         for label, label_info in label_infos.items():
-            print(f"Label: {label}, Weight: {label_info['weight']}, LocComm: {label_info['loc_comm']}, LocFact: {label_info['loc_faction']}")
+            print(f"Label: {label}, Weight: {label_info['weight']}")
+                  #, LocComm: {label_info['loc_comm']}, LocFact: {label_info['loc_faction']}")
 
     avg_lbl_com = total_nr_community_labels / len(community_labelinfos) if community_labelinfos else 0
     print(f"Avg Labels: {total_nr_community_labels} / {len(community_labelinfos)} = {avg_lbl_com}")

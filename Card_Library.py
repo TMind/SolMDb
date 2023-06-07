@@ -64,7 +64,7 @@ class Deck:
             rarities = card.get_rarities()
             card_rarity, *forge_rarity = rarities
 
-            card_counter += card_rarity == 'Rare'
+            card_counter += card_rarity.split(',')[0] == 'Rare'
             forge_counter += forge_rarity == ['Rare'] if forge_rarity else 0
 
         return [card_counter, forge_counter]

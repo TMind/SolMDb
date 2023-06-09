@@ -89,30 +89,6 @@ def evaluate_graph(G):
     # Calculate the total number of community labels and the average number of labels per community
     total_nr_community_labels = sum(len(labelinfos) for labelinfos in community_labelinfos.values())
 
-    for community, labels_infos, in community_labelinfos.items():
-        print("Community: ", community)
-        # Create a dictionary to accumulate the weights for each label
-        label_infos = defaultdict(float)
-        # Sum up the weights for each label
-        for label, weight, loc_faction, loc_comm in labels_infos:
-            if label not in label_infos:
-                label_infos[label] = {'weight': 0, 'count' : 0, 'loc_faction': 0, 'loc_comm': 0}
-
-            label_infos[label]['count']       += 1
-            label_infos[label]['weight']      += weight
-            label_infos[label]['loc_faction'] += 1 if loc_faction else 0
-            label_infos[label]['loc_comm']    += 1 if loc_comm else 0
-
-        # Print the weights for each label
-        for label, label_info in label_infos.items():
-            print(f"Label: {label}, Weight: {label_info['weight']}")
-                  #, LocComm: {label_info['loc_comm']}, LocFact: {label_info['loc_faction']}")
-
-    avg_lbl_com = total_nr_community_labels / len(community_labelinfos) if community_labelinfos else 0
-    print(f"Avg Labels: {total_nr_community_labels} / {len(community_labelinfos)} = {avg_lbl_com}")
-
-
-    # G.graph('community_labels') = community_labels
     #partition = nx.community.greedy_modularity_communities(G)
     #mod = nx.community.modularity(G, partition)
     clustering_coefficients = nx.average_clustering(G)

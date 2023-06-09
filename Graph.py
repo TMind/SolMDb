@@ -2,6 +2,7 @@ from Interface import InterfaceCollection
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import defaultdict
+import os
 
 # def create_synergy_graph(decks, min_level=1):
 #     G = nx.Graph()
@@ -114,16 +115,59 @@ def normalize_dict_values(d):
         interval = max_value - min_value
         return {k: (v - min_value) / interval for k, v in d.items()}
 
-def print_graph(G):
-    # Print header
-    print(f"{'Node A':<30} {'Node B':<30} {'Weight':<5} {'Label':<30}")
+def print_graph(G, output_file=None):
+    """
+    Print or write the graph information in a tabular format.
 
-    # Iterate through edges and print in a tabular format
+    Args:
+        G (networkx.Graph): The graph object to print or write.
+        output_file (str, optional): The file path to write the output. If not provided, the output is printed to stdout.
+
+    Returns:
+        None
+    """
+    first_time = not output_file or not os.path.isfile(output_file)
+    text = f"\nFusion: {G.graph['name']}\n"
+    text += f"{'Node A':<30} {'Node B':<30} {'Weight':<5} {'Label':<30}\n"
     for nodeA, nodeB, data in G.edges(data=True):
         weight = data.get('weight', 'N/A')
         label = data.get('label', 'N/A')
         local = data.get('local', 'N/A')
-        print(f"{nodeA:<30} {nodeB:<30} {str(weight):<5} {str(label):<30}") # {str(local):<5}")
+        text += f"{nodeA:<30} {nodeB:<30} {str(weight):<5} {str(label):<30}\n"
+    text += f"\n========================================================\n"
+
+    # Updated code using enhanced text strings
+    community_labelinfos = G.graph['community_labels']
+    total_nr_community_labels = 0  # Assuming this variable is defined somewhere in the code
+
+    for community, labels_infos in community_labelinfos.items():
+        text += f"Community: {community}\n"
+        label_infos = defaultdict(float)
+        for label, weight, loc_faction, loc_comm in labels_infos:
+            if label not in label_infos:
+                label_infos[label] = {'weight': 0, 'count': 0, 'loc_faction': 0, 'loc_comm': 0}
+            label_infos[label]['count'] += 1
+            label_infos[label]['weight'] += weight
+            label_infos[label]['loc_faction'] += 1 if loc_faction else 0
+            label_infos[label]['loc_comm'] += 1 if loc_comm else 0
+        
+        for label, label_info in label_infos.items():
+            text += f"Label: {label:<30}, Weight: {label_info['weight']}\n"
+            total_nr_community_labels += label_info['weight']
+
+                  #, LocComm: {label_info['loc_comm']}, LocFact: {label_info['loc_faction']}")
+
+    avg_lbl_com = total_nr_community_labels / len(community_labelinfos) if community_labelinfos else 0
+    text += f"Avg Labels: {total_nr_community_labels} / {len(community_labelinfos)} = {avg_lbl_com}\n"
+
+    if output_file:
+        mode = 'w' if first_time else 'a'
+        with open(output_file, mode) as file:
+            file.write(text)
+    else:
+        print(text)
+
+
 
 
 def write_gephi_file(graph, filename):

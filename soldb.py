@@ -6,26 +6,39 @@ from NetApi import NetApi
 import Evaluation as ev
 import Graph
 
+class EmptyStringDefault(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if not values:
+            values = 'fusions'  # define your default_value here
+        setattr(namespace, self.dest, values)
+
+
+
 def main(args, decks):
     EvaluatedGraphs = {}    
     DeckCollection = DeckLibrary(decks)
 
-    for fusion in DeckCollection.fusions:
-        print(f"\nFusion: {fusion.name}\n")
+    filename = None
+    if args.eval and args.eval is not True:
+        filename = args.eval
+
+    for fusion in DeckCollection.fusions:        
         DeckGraph = Graph.create_deck_graph(fusion)
-        ev.evaluate_graph(DeckGraph)
-        EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph
         if args.eval:
-            Graph.print_graph(DeckGraph)
+            ev.evaluate_graph(DeckGraph)
+            EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph        
+            Graph.print_graph(DeckGraph,filename)
+            
         if args.graph :
             Graph.write_gephi_file(DeckGraph, fusion.name.replace('|', '_'))
-        print(f"\n========================================================\n")
+
+    if filename: 
+        print(f"Exporting evaluated fusions to csv: {filename}.csv")
+        ev.export_csv(filename + '_excl', EvaluatedGraphs, True)
+        ev.export_csv(filename, EvaluatedGraphs, False)
+
     if args.select_pairs:
         ev.find_best_pairs(EvaluatedGraphs)
-
-    if args.export_csv:        
-        ev.export_csv(args.export_csv + '_excl', EvaluatedGraphs, True)
-        ev.export_csv(args.export_csv, EvaluatedGraphs, False)
 
 
 if __name__ == "__main__":
@@ -33,25 +46,33 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script description")
 
     # Add command-line arguments
-    parser.add_argument("--username", default="", help="Account name or blank for offline use")
-    parser.add_argument("--id", default="", help="Specific Deck ID from solforgefusion website")
+    # Arguments for online use 
+    parser.add_argument("--username", default="", help="Online account name or omit for offline use")
     parser.add_argument("--type", default="deck", choices=["deck", "fuseddeck"], help="Decktype for user collection , default=deck")
-    parser.add_argument("--filename", help="Filename for deck data for offline use")    
-    parser.add_argument("--select_pairs", action="store_true", help="Select top pairs")
-    parser.add_argument("--export_csv", default="",  help="Export CSV filename")
-    parser.add_argument("--base", default="data/deck_base.json",  help="Offline Deck Database, defaut=data/deck_base.json")
-    parser.add_argument("--graph", action="store_true",  help="Create Graph '.gefx'")
-    parser.add_argument("--eval",  action="store_true",  help="Evaluate possible fusions")
+    parser.add_argument("--id", default="", help="Specific Deck ID from solforgefusion website")
+    
+    # Arguments for general use 
+    # If both username and file is given, export deckbase to file.json 
+    # If only file is given import deckbase from file.json 
+    parser.add_argument("--filename",  default="deck_base",  help="Offline Deck Database Name, defaut=data/deck_base.json")
+    
+    #parser.add_argument("--filename", help="Filename for deck data for offline use")    
 
+    # Arguments for Evaluation
+    
+    parser.add_argument("--eval", nargs='?', const=True, action="store",  help="Evaluate possible fusions. Optional filename for .csv export")    
+    parser.add_argument("--graph", action="store_true",  help="Create Graph '.gefx'")
+    parser.add_argument("--select_pairs", action="store_true", help="Select top pairs")
+    
     # Parse the command-line arguments
     args = parser.parse_args()
 
     # Use the command-line arguments in the function
     decks = []
-    if args.base and not args.username:
+    if not args.username:
         # Read entities from CSV and create universal card library
         myUCL = UniversalCardLibrary('csv/sff.csv')#, synergy_template)
-        decks, incompletes = myUCL.load_decks_from_file(args.base)
+        decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
 
     else:
         myApi = NetApi()
@@ -63,3 +84,6 @@ if __name__ == "__main__":
         )
 
     main(args, decks)
+
+
+

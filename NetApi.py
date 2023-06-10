@@ -68,7 +68,9 @@ class NetApi:
 
         if filename:
             deck_data = [deck.to_json() for deck in decks]
-            with open(f"data/{filename}.json", "w") as f:
+            filepath = f"data/{filename}.json"
+            with open(filepath, "w") as f:
                 json.dump(deck_data, f)
+                print(f"Dumped deck data to: {filepath}")
 
         return decks

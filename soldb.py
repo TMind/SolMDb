@@ -18,27 +18,28 @@ def main(args, decks):
     EvaluatedGraphs = {}    
     DeckCollection = DeckLibrary(decks)
 
-    filename = None
-    if args.eval and args.eval is not True:
-        filename = args.eval
+    if args.eval:
 
-    for fusion in DeckCollection.fusions:        
-        DeckGraph = Graph.create_deck_graph(fusion)
-        if args.eval:
+        filename = None
+        if args.eval is not True:
+            filename = args.eval
+
+        for fusion in DeckCollection.fusions:        
+            DeckGraph = Graph.create_deck_graph(fusion)
             ev.evaluate_graph(DeckGraph)
             EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph        
             Graph.print_graph(DeckGraph,filename)
             
-        if args.graph :
-            Graph.write_gephi_file(DeckGraph, fusion.name.replace('|', '_'))
+            if args.graph:
+                Graph.write_gephi_file(DeckGraph, fusion.name.replace('|', '_'))
 
-    if filename: 
-        print(f"Exporting evaluated fusions to csv: {filename}.csv")
-        ev.export_csv(filename + '_excl', EvaluatedGraphs, True)
-        ev.export_csv(filename, EvaluatedGraphs, False)
+        if filename: 
+            print(f"Exporting evaluated fusions to csv: {filename}.csv")
+            ev.export_csv(filename + '_excl', EvaluatedGraphs, True)
+            ev.export_csv(filename, EvaluatedGraphs, False)
 
-    if args.select_pairs:
-        ev.find_best_pairs(EvaluatedGraphs)
+        if args.select_pairs:
+            ev.find_best_pairs(EvaluatedGraphs)
 
 
 if __name__ == "__main__":

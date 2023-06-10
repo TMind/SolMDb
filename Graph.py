@@ -71,50 +71,6 @@ def create_deck_graph(deck):
     return G
 
 
-
-def edge_statistics(G):
-    # Edge Statistics
-    edge_statistics = defaultdict(lambda: defaultdict(int))
-    edge_nodes = defaultdict(set)
-    edge_details = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-
-    for node in G.nodes:
-        # Get incoming edges
-        for edge in G.in_edges(node, data=True):
-            label = edge[2]['label']
-            edge_statistics[label]['incoming'] += 1
-            edge_nodes[label].add(edge[1]) # Add the destination node
-            edge_details[label][node]['incoming'].append(edge[0]) # Add the source node of the incoming edge
-
-        # Get outgoing edges
-        for edge in G.out_edges(node, data=True):
-            label = edge[2]['label']
-            edge_statistics[label]['outgoing'] += 1
-            edge_nodes[label].add(edge[0]) # Add the source node
-            edge_details[label][node]['outgoing'].append(edge[1]) # Add the destination node of the outgoing edge
-
-    for label, data in edge_statistics.items():
-        average_incoming = data['incoming'] / len(edge_nodes[label]) if edge_nodes[label] else 0
-        average_outgoing = data['outgoing'] / len(edge_nodes[label]) if edge_nodes[label] else 0
-        print(f"Label: {label}")
-        print(f"\tAverage incoming edges per node: {average_incoming}")
-        print(f"\tAverage outgoing edges per node: {average_outgoing}")
-
-        for node, edge_info in edge_details[label].items():
-            print(f"\tNode: {node}")
-            print(f"\t\tIncoming edges from nodes: {edge_info['incoming']}")
-            print(f"\t\tOutgoing edges to nodes: {edge_info['outgoing']}")
-    return edge_statistics
-
-def normalize_dict_values(d):
-    max_value = max(d.values())
-    min_value = min(d.values())
-    if max_value == min_value:  # if all values are the same
-        return {k: 0 for k in d}  # or whatever value you think is appropriate
-    else:
-        interval = max_value - min_value
-        return {k: (v - min_value) / interval for k, v in d.items()}
-
 def print_graph(G, output_file=None):
     """
     Print or write the graph information in a tabular format.
@@ -127,14 +83,15 @@ def print_graph(G, output_file=None):
         None
     """
     first_time = not output_file or not os.path.isfile(output_file)
-    text = f"\nFusion: {G.graph['name']}\n"
+    text = f"\n===============================================================\n"
+    text += f"\nFusion: {G.graph['name']}\n"
     text += f"{'Node A':<30} {'Node B':<30} {'Weight':<5} {'Label':<30}\n"
     for nodeA, nodeB, data in G.edges(data=True):
         weight = data.get('weight', 'N/A')
         label = data.get('label', 'N/A')
         local = data.get('local', 'N/A')
         text += f"{nodeA:<30} {nodeB:<30} {str(weight):<5} {str(label):<30}\n"
-    text += f"\n========================================================\n"
+    text += f"\n-------------------------------------------------------------\n"
 
     # Updated code using enhanced text strings
     community_labelinfos = G.graph['community_labels']
@@ -158,7 +115,8 @@ def print_graph(G, output_file=None):
                   #, LocComm: {label_info['loc_comm']}, LocFact: {label_info['loc_faction']}")
 
     avg_lbl_com = total_nr_community_labels / len(community_labelinfos) if community_labelinfos else 0
-    text += f"Avg Labels: {total_nr_community_labels} / {len(community_labelinfos)} = {avg_lbl_com}\n"
+    text += f"\nAvg Labels: {total_nr_community_labels} / {len(community_labelinfos)} = {avg_lbl_com}\n"
+    
 
     if output_file:
         mode = 'w' if first_time else 'a'

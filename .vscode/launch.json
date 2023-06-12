@@ -14,9 +14,10 @@
             "name": "Python: UCL",
             "type": "python",
             "request": "launch",
-            "program": "ucl_main.py",
+            "program": "SolDB.py",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
+            "args": ["--eval"]
         },
     ]
 }

@@ -1,6 +1,5 @@
 from Interface import InterfaceCollection
 import networkx as nx
-import matplotlib.pyplot as plt
 from collections import defaultdict
 import os
 
@@ -125,8 +124,17 @@ def print_graph(G, output_file=None):
     else:
         print(text)
 
+ 
+def load_gexf_file(filename):
+    pathname = './gephi/' + filename + '.gexf'
+    if not os.path.isfile(pathname):
+        raise FileNotFoundError(f"File '{pathname}' not found.")
+    
+    # Load the graph from the GEXF file
+    G = nx.read_gexf(pathname)
+    
+    return G
 
 
-
-def write_gephi_file(graph, filename):
+def write_gexf_file(graph, filename):
     nx.write_gexf(graph, './gephi/' + filename + '.gexf')

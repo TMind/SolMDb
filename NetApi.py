@@ -27,6 +27,28 @@ class NetApi:
         response = requests.get(endpoint, params=self.params)        
         data = json.loads(response.content)
 
+        #insert pagination code
+
+        if "LastEvaluatedKey" in data:
+            paginatationRequired = True
+        else:
+            paginatationRequired = False
+
+        while paginatationRequired == True:
+            self.params["exclusiveStartKey"] = json.dumps(data['LastEvaluatedKey'])
+            page_response = requests.get(endpoint, params=self.params)
+            page_data = json.loads(page_response.content)
+            if 'error' in page_data:
+                print(f"Error in response: {page_data['error']}")
+                return []
+            data["Items"].extend(page_data["Items"])
+            if "LastEvaluatedKey" in page_data:
+                data["LastEvaluatedKey"] = page_data["LastEvaluatedKey"]
+            else:
+                paginatationRequired = False
+                
+        #end pagination code
+
         if 'error' in data:
             print(f"Error in response: {data['error']}")
             return []

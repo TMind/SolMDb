@@ -2,10 +2,10 @@ import copy
 from Synergy import SynergyTemplate
 
 class InterfaceCollection:
-    def __init__(self, name, synergy_template=None, interfaces=None ):        
+    def __init__(self, name, interfaces=None ):        
         self.name = name
         self.interfaces = {}
-        self.synergy_template = synergy_template or SynergyTemplate()
+        self.synergy_template = SynergyTemplate()
 
         if self.synergy_template is not None:
             for syn in self.synergy_template.synergies:
@@ -23,27 +23,26 @@ class InterfaceCollection:
                         self.interfaces[syn.name][interface.tag] = interface
              
     @classmethod
-    def from_entities(cls, name, entities, synergy_template=None):        
-        ICollection = InterfaceCollection(name, synergy_template)        
+    def from_entities(cls, name, entities):        
+        ICollection = InterfaceCollection(name)        
 
-        for entity in entities:   
+        for entity in entities.values():   
             ICollection.update(entity.ICollection)            
 
         return ICollection
 
     @classmethod
-    def from_card(cls, card, synergy_template=None):        
-        return cls.from_entities(card.title, card.entities, synergy_template=synergy_template)
+    def from_card(cls, card):        
+        return cls.from_entities(card.title, card.entities)
 
     @classmethod
-    def from_deck(cls, deck, synergy_template=None):       
+    def from_deck(cls, deck):       
         entities = [ entity for card in deck.cards.values() for entity in card.entities ]
-        return cls.from_entities(deck.name, entities, synergy_template=synergy_template)
+        return cls.from_entities(deck.name, entities)
 
     @classmethod
-    def from_forgeborn(cls, forgeborn, synergy_template=None):
-        entities = [ability for ability in forgeborn.abilities.values()]
-        return cls.from_entities(forgeborn.name, entities, synergy_template=synergy_template)
+    def from_forgeborn(cls, forgeborn):    
+        return cls.from_entities(forgeborn.name, forgeborn.abilities)
 
 
     def update(self, other):
@@ -139,15 +138,7 @@ class InterfaceCollection:
                 if '*' in input_ranges:
                     factor *= 1
                 if '+' in input_ranges:
-                    factor *= 1
-                #print(f"Members Collection 1: {collection1.get_members('IN')} ")           
-                #print(f"Members Collection 2: {collection2.get_members('OUT')} ")                     
-                #print(f"Matched Interfaces for Synergy: {synergy}")            
-                #for input_interface in input_interfaces:
-                    #print(f"Input Interface: {input_interface.name}")
-                
-                #for output_interface in output_interfaces:
-                    #print(f"Output Interface: {output_interface.name}")                               
+                    factor *= 1                                            
                 matched_synergies[synergy] = factor
 
         return matched_synergies
@@ -155,14 +146,14 @@ class InterfaceCollection:
 
 class Interface:
 
-    def __init__(self, element_name , synergy_template=None, key=None, value=None, range=None):
+    def __init__(self, element_name ,key=None, value=None, range=None):
         self.name = element_name
         self.tag = key 
         self.value = value
         self.types = set()
         self.ranges = set(range) if range is not None else set()
         self.synergies = []
-        self.synergy_template = synergy_template or SynergyTemplate()
+        self.synergy_template = SynergyTemplate()
         if key:  
             self.synergies = self.synergy_template.get_synergies_by_tag(key)                        
             if key in self.synergy_template.get_output_tags():

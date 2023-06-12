@@ -1,20 +1,18 @@
-import Evaluation as ev
-from Synergy import SynergyTemplate
-import Card_Library
+from Card_Library import Deck, Fusion
 class DeckLibrary:
-    def __init__(self, decks, synergy_template=None):
+    def __init__(self, decks, synergy_template):
         self.decks = []
         self.fusions = []
+        self.synergy_template = synergy_template
 
         for obj in decks:
-            if isinstance(obj, Card_Library.Deck):
+            if isinstance(obj, Deck):
                 self.decks.append(obj)
-            if isinstance(obj, Card_Library.Fusion):
+            if isinstance(obj, Fusion):
                 FusionDeck = obj.getDeck()                
                 self.fusions.append(FusionDeck)
         
-        self.fusions.extend(self.get_fusions())
-        self.synergy_template = synergy_template or SynergyTemplate()                
+        self.fusions.extend(self.get_fusions())              
 
     def get_fusions(self):
         fusions = []
@@ -26,4 +24,16 @@ class DeckLibrary:
                         fusions.append(fusion)
         return fusions
 
-    
+    @classmethod
+    def from_json(cls, data):
+        decks = [Deck.from_json(deck_data) for deck_data in data['decks']]
+        fusions = [Fusion.from_json(fusion_data) for fusion_data in data['fusions']]
+        return cls(decks, fusions)
+
+    def to_json(self):
+        return {
+            'decks': [deck.to_json() for deck in self.decks],
+            'fusions': [fusion.to_json() for fusion in self.fusions]         
+        }
+
+

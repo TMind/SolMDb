@@ -1,7 +1,5 @@
 # Fixed Version
-import csv, json, copy
-from http.client import NETWORK_AUTHENTICATION_REQUIRED
-from Synergy import SynergyTemplate
+import csv, json
 from Interface import Interface, InterfaceCollection
 from typing import List, Tuple, Dict
 from collections import Counter
@@ -25,22 +23,41 @@ class Entity:
         #trait_str = ", ".join([f"{trait}" for trait in self.sources.items()])
         #synergy_str = ", ".join([str(synergy) for synergy in self.targets.values()])
         return f"{self.name}"
-    
+
+    @classmethod
+    def from_json(cls, data, collection):
+        name = data["name"]
+        faction = data["faction"]
+        rarity = data["rarity"]
+        card_type = data["card_type"]
+        card_subtype = data["card_subtype"]
+        spliced = data["spliced"]
+        solbind = data["solbind"]
+        abilities = data["abilities"]
+        return cls(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, collection)
+
     def to_json(self):
         return {
-            "title": self.name
+            "name": self.name,
+            "faction": self.faction,
+            "rarity": self.rarity,
+            "card_type": self.card_type,
+            "card_subtype": self.card_subtype,
+            "spliced": self.spliced,
+            "solbind": self.solbind,
+            "abilities": self.abilities
         }
 
 class Deck:
-    def __init__(self, name, forgeborn, faction, cards, synergy_template=None):
-        self.name = name
+    def __init__(self, name, forgeborn, faction, cards):
+        self.name = name        
         self.forgeborn = forgeborn
         self.faction = faction
         self.cards = cards
         self.seeks = {}
         self.provides = {}                
-        int_col_deck = InterfaceCollection.from_deck(self,synergy_template)
-        int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn, synergy_template)
+        int_col_deck = InterfaceCollection.from_deck(self)
+        int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn)
         self.ICollection = int_col_deck.update(int_col_fb)
         self.populate()
 
@@ -87,10 +104,24 @@ class Deck:
             "name": self.name,
             "faction": self.faction,
             "forgeborn": self.forgeborn.to_json(),
-            #"cards": [card.to_json() for card in self.cards.values()]
             "cards": [str(card) for card in self.cards.values()]
         }    
     
+    @classmethod
+    def from_json(cls, data):
+        name = data['name']
+        forgeborn = Forgeborn.from_json(data['forgeborn'])
+        faction = data['faction']
+        cards = {}
+
+        for card_data in data['cards']:                    
+            card = UniversalCardLibrary.create_card_from_title(card_data['name'])            
+            # Add the card to the cards dictionary
+            cards[card.name] = card
+
+        return cls(name, forgeborn, faction, cards)
+
+
     def __str__(self):     
         card_titles = [card.title for card in self.cards.values()]
         return f"Deck Name: {self.name}\nFaction: {self.faction}\nForgeborn: {self.forgeborn}\nCards:\n{', '.join(card_titles)}\n"   
@@ -110,6 +141,12 @@ class Fusion:
 
     def getDeck(self):               
         return self.fusion
+    
+    @classmethod
+    def from_json(cls, data):
+        name = data['name']
+        decks = [Deck.from_json(deck_data) for deck_data in data['decks']]
+        return cls(name, decks)
 
     def to_json(self):
         return {
@@ -119,15 +156,22 @@ class Fusion:
 
 
 class Forgeborn:
-    def __init__(self, name, faction, abilities, synergy_template=None):
+    def __init__(self, name, faction, abilities):
         self.name = name
         self.faction = faction
         self.abilities = abilities        
-        self.ICollection = InterfaceCollection.from_forgeborn(self, synergy_template)
+        self.ICollection = InterfaceCollection.from_forgeborn(self)
 
     def __str__(self):
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
         return f"Forgeborn Name: {self.name}\nFaction: {self.faction}\nAbilities:\n{abilities_str}\n"
+
+    @classmethod
+    def from_json(cls, data):
+        name = data["title"]
+        faction = data["faction"]
+        abilities = data["abilities"]
+        return cls(name, faction, abilities)
 
     def to_json(self):
         return {
@@ -137,7 +181,7 @@ class Forgeborn:
         }
 
 class Card():
-    def __init__(self, card, modifier=None, synergy_template=None):  
+    def __init__(self, card, modifier=None): 
         self.entities = [card]             
         self.faction  = card.faction
         self.provides = card.provides
@@ -151,8 +195,7 @@ class Card():
         else:
             self.title = card.name        
         self.name = self.title
-        self.ICollection = InterfaceCollection.from_card(self,synergy_template)
-        self.name = self.title
+        self.ICollection = InterfaceCollection.from_card(self)        
 
     def get_rarities(self):
         return [item.rarity for item in self.entities]
@@ -171,8 +214,7 @@ class UniversalCardLibrary:
 
     entities = []
 
-    def __init__(self, csv_path, synergy_template=None):
-        self.synergy_template = synergy_template or SynergyTemplate()
+    def __init__(self, csv_path):        
         self.entities = self._read_entities_from_csv(csv_path)
 
     def _read_entities_from_csv(self, csv_path):   
@@ -199,7 +241,7 @@ class UniversalCardLibrary:
                             'health': health
                         }
                                                  
-                Collection = InterfaceCollection(name, self.synergy_template)
+                Collection = InterfaceCollection(name)
                 
                 read_synergies = False
                 for key, value in row.items():
@@ -225,7 +267,7 @@ class UniversalCardLibrary:
                                     
                             if int(value) > 0:                                                                    
                                 
-                                    ISyn = Interface(name, self.synergy_template, key=key, value=value, range=range)                                    
+                                    ISyn = Interface(name, key=key, value=value, range=range)                                    
                                     Collection.add(ISyn)
                                 
                                     
@@ -276,8 +318,8 @@ class UniversalCardLibrary:
                 forgeborn_name = forgeborn_data['title'] if 'title' in forgeborn_data else forgeborn_data['name']
                 forgeborn = Forgeborn(forgeborn_name, deck_data['faction'],abilities)
             except Exception as e:
-                #print(f"Exception: {e}")
-                #print(f"Could not load Forgeborn data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
+                print(f"Exception: {e}")
+                print(f"Could not load Forgeborn data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
                 
                 incomplete_data.append(deck_data)
                 continue
@@ -314,8 +356,8 @@ class UniversalCardLibrary:
 
                 
             except Exception as e:
-                #print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
-                #print(f"Exception: {e}")
+                print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
+                print(f"Exception: {e}")
                 incomplete_data.append(deck_data)
                 continue
 
@@ -369,7 +411,7 @@ class UniversalCardLibrary:
                     elif value:
                         setattr(card_entity, key, value)  # Set the new value directly
 
-                return Card(card_entity, modifier_entity, self.synergy_template)
+                return Card(card_entity, modifier_entity)
 
         # If no entities found, create a card with just the card title
         return Card(Entity(name=card_title, card_type='Unknown'))

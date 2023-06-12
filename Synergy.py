@@ -1,68 +1,18 @@
-
-Synerginary = {
-    #        <NAME>          <WEIGHT>  <TRIGGER>                       <output>
-            "BEAST"       :  [ 1.0,    ["Beast Synergy"            ],[ "Beast"                  ]],     
-            "DINOSAUR"    :  [ 1.0,    ["Dinosaur Synergy"         ],[ "Dinosaur"               ]],
-            "MAGE"        :  [ 1.0,    ["Mage Synergy"             ],[ "Mage"                   ]],
-            "ROBOT"       :  [ 1.0,    ["Robot Synergy"            ],[ "Robot"                  ]],
-            "SCIENTIST"   :  [ 1.0,    ["Scientist Synergy"        ],[ "Scientist"              ]],
-            "SPIRIT"      :  [ 1.0,    ["Spirit Synergy"           ],[ "Spirit"                 ]],
-            "WARRIOR"     :  [ 1.0,    ["Warrior Synergy"          ],[ "Warrior"                ]],
-            "ZOMBIE"      :  [ 1.0,    ["Zombie Synergy"           ],[ "Zombie"                 ]],                
-            "MINION"      :  [ 1.0,    ["Minion Synergy"           ],[ "Minion"                 ]],
-            "DRAGON"      :  [ 1.0,    ["Dragon Synergy"           ],[ "Dragon"                 ]],
-            "ELEMENTAL"   :  [ 1.0,    ["Elemental Synergy"        ],[ "Elemental"              ]],                
-            "PLANT"       :  [ 1.0,    ["Plant Synergy"            ],[ "Plant"                  ]],
-            "SPELL"       :  [ 1.0,    ["Spell Synergy"            ],[ "Spell"                  ]],
-            "HEALING"     :  [ 1.0,    ["Healing Synergy"          ],[ "Healing Source"         ]],
-            "MOVEMENT"    :  [ 1.0,    ["Movement Benefit"         ],[ "Movement"               ]],
-            "ARMOR"       :  [ 0.5,    ["Armor Synergy"            ],[ "Armor","Armor Giver "   ]],
-            "ACTIVATION"  :  [ 1.0,    ["Ready"                    ],[ "Activate"               ]],
-            "FREE"        :  [ 2.0,    ["Free"                     ],[ "Free"                   ]],
-            "FREE HEALING":  [ 2.0,    ["Free Healing"             ],[ "Healing Source"         ]],
-            "FREE DESTROY":  [ 2.0,    ["Free SelfDestruction"     ],[ "Destruction Synergy","Minion"]],                               
-            "FREE UPGRADE":  [ 2.0,    ["Free Upgrade"             ],[ "Upgrade"                ]],                               
-            "FREE SELFDMG":  [ 2.0,    ["Free Self Damage"         ],[ "Self Damage Activator"  ]],
-            "FREE SPELL"  :  [ 2.0,    ["Free Spell"               ],[ "Spell"                  ]],                                               
-            "FREE REPLACE":  [ 2.0,    ["Free Replacement"         ],[ "Replace Setup","Minion" ]],                                               
-            "FREE MAGE"   :  [ 2.0,    ["Free Mage"                ],[ "Mage"                   ]], 
-            "UPGRADE"     :  [ 1.0,    ["Upgrade Synergy"          ],[ "Upgrade"                ]],
-            "REPLACE"     :  [ 1.0,    ["Replace Profit"           ],[ "Replace Setup"          ]],            
-            "SELFDAMAGE"  :  [ 0.5,    ["Self Damage Payoff"       ],[ "Self Damage Activator"  ]],                    
-            "DESTROY SYN" :  [ 1.0,    ["SelfDestruction Activator"],[ "Destruction Synergy"    ]],                        
-            "DESTROY MIN" :  [ 0.5,    ["SelfDestruction Activator"],[ "Minion"                 ]],
-            "DEPLOY"      :  [ 1.0,    ["Reanimate Activator"      ],[ "Deploy"                 ]],
-            "READY"       :  [ 0.5,    ["Reanimate Activator"      ],[ "Activate"               ]],
-            #"STEALTH"     :  [ 1.0,    ["Defender Giver"           ],[ "Stealth","Stealth Giver"]],
-            #"AGGRO"       :  [ 1.0,    ["Aggressive"               ],[ "Replace Setup"          ]],
-            "FORGEBORN"   :  [ 2.0,    ["Forgeborn Synergy"        ],[ "Forgeborn Ability"      ]],
-
-
-            # General Output              
-            #"DESTROY OPP" :  [ 1.0,    ["Destroy Enemy Creature"   ],[ "Removal"                ]],
-            #"FACEBURN"    :  [ 1.0,    ["Deal Damage Opponent"     ],[ "Face Burn"              ]],
-            #"LIFE GAIN"   :  [ 1.0,    ["Gain Life"                ],[ "Healing Source"         ]],
-            #"DISRUPTION"  :  [ 0.5,    ["Lane Control"             ],[ "Disruption"             ]],
-            #"SILENCE"     :  [ 0.5,    ["Creature Control"         ],[ "Silence"                ]],
-
-            #STRONG ATTACK / DEFENSE 
-            #"AGGRESSIVEATTACK" :  [ 0.5,  ["Stat Buff", "Attack Buff"],["gressive","Aggressive Giver"     ]],    
-            #"STEALTHATTACK"    :  [ 0.5,  ["Stealth","Stealth Giver"           ],["Stat Buff", "Attack Buff"]],    
-            #"BREAKTHROUGH"     :  [ 0.5,  ["Breakthrough","Breakthrough Giver" ],["Stat Buff", "Attack Buff"]],
-            
-}
-
+import csv
 
 class SynergyTemplate:
 
-    global Synerginary
-   
-    def __init__(self):
-        self.synergies = {}
+    _instance = None
 
-        for name, synergy_data in Synerginary.items():
-            weight, input_tags, output_tags = synergy_data
-            self.add_synergy(name, weight, input_tags, output_tags)        
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+            cls._instance.load_synergy_template()
+        return cls._instance
+
+    def load_synergy_template(self):
+        self.synergies = {}
+        self.from_csv('csv/synergies.csv')
 
     def add_synergy(self, name, weight, input_tags, output_tags):
         synergy = Synergy(name, weight, input_tags, output_tags)
@@ -116,6 +66,33 @@ class SynergyTemplate:
             output += f"{synergy}\n"
         return output
     
+    def to_csv(self, filename):
+        fieldnames = ["name", "weight", "input_tags", "output_tags"]
+        rows = []
+        for synergy in self.synergies.values():
+            rows.append({
+                "name": synergy.name,
+                "weight": synergy.weight,
+                "input_tags": ", ".join(synergy.input_tags),
+                "output_tags": ", ".join(synergy.output_tags)
+            })
+
+        with open(filename, "w", newline="") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+    def from_csv(self, filename):
+        
+        with open(filename, "r") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                name = row["name"]
+                weight = float(row["weight"])
+                input_tags = [tag.strip() for tag in row["input_tags"].split(",")]
+                output_tags = [tag.strip() for tag in row["output_tags"].split(",")]
+                self.add_synergy(name, weight, input_tags, output_tags)
+   
 class Synergy:
     def __init__(self, name, weight, input_tags, output_tags):
         self.name = name

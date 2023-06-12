@@ -1,22 +1,21 @@
-import argparse
-from collections import defaultdict
 from DeckLibrary import DeckLibrary
 from Card_Library import UniversalCardLibrary
 from NetApi import NetApi
 import Evaluation as ev
 import Graph
-
-class EmptyStringDefault(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        if not values:
-            values = 'fusions'  # define your default_value here
-        setattr(namespace, self.dest, values)
-
-
+import argparse
+import json
 
 def main(args, decks):
+
+    # Load DeckCollection from JSON file
+    print(f"Loading DeckCollection from JSON file: data/deck_collection.json")
+    with open("data/deck_collection.json", "r") as file:
+        deck_collection_data = json.load(file)
+    DeckCollection = DeckLibrary.from_json(deck_collection_data)
+
     EvaluatedGraphs = {}    
-    DeckCollection = DeckLibrary(decks)
+    #DeckCollection = DeckLibrary(decks)
 
     if args.eval:
 
@@ -31,8 +30,14 @@ def main(args, decks):
             Graph.print_graph(DeckGraph,filename)
             
             if args.graph:
-                Graph.write_gephi_file(DeckGraph, fusion.name.replace('|', '_'))
+                Graph.write_gexf_file(DeckGraph, fusion.name.replace('|', '_'))
 
+        # Export DeckCollection to JSON
+        print(f"Exporting DeckCollection to JSON file: deck_collection.json")
+        with open("data/deck_collection.json", "w") as file:
+            json.dump(DeckCollection.to_json(), file)
+
+        
         if filename: 
             print(f"Exporting evaluated fusions to csv: {filename}.csv")
             ev.export_csv(filename + '_excl', EvaluatedGraphs, True)
@@ -40,6 +45,8 @@ def main(args, decks):
 
         if args.select_pairs:
             ev.find_best_pairs(EvaluatedGraphs)
+
+    #TODO: Store DeckLibrary and EvaluatedGraphs 
 
 
 if __name__ == "__main__":

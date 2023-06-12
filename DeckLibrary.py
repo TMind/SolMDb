@@ -1,9 +1,8 @@
 from Card_Library import Deck, Fusion
 class DeckLibrary:
-    def __init__(self, decks, synergy_template):
+    def __init__(self, decks):
         self.decks = []
         self.fusions = []
-        self.synergy_template = synergy_template
 
         for obj in decks:
             if isinstance(obj, Deck):
@@ -23,6 +22,11 @@ class DeckLibrary:
                     if fusion is not None:
                         fusions.append(fusion)
         return fusions
+
+    def update(decks):
+
+        print(f"Update DeckLibrary...")
+
 
     @classmethod
     def from_json(cls, data):

@@ -5,17 +5,34 @@ import Evaluation as ev
 import Graph
 import argparse
 import json
+import os
+import pickle
+
+def load_deck_library(deck_library_pickle_file):
+    
+    # Create a new DeckLibrary
+    deck_library = None
+
+    if os.path.exists(deck_library_pickle_file):
+        # Load the DeckLibrary from the pickle file
+        with open(deck_library_pickle_file, "rb") as file:
+            deck_library = pickle.load(file)
+        print("DeckLibrary loaded from pickle file.")
+        
+    return deck_library
+
+
 
 def main(args, decks):
 
-    # Load DeckCollection from JSON file
-    print(f"Loading DeckCollection from JSON file: data/deck_collection.json")
-    with open("data/deck_collection.json", "r") as file:
-        deck_collection_data = json.load(file)
-    DeckCollection = DeckLibrary.from_json(deck_collection_data)
-
+    # Load DeckCollection from pickle file
+    deck_library_pickle_file = "data/deck_library.pkl"
+    DeckCollection = load_deck_library(deck_library_pickle_file)
     EvaluatedGraphs = {}    
-    #DeckCollection = DeckLibrary(decks)
+    if DeckCollection == None:
+        DeckCollection = DeckLibrary(decks)
+    else:
+        DeckCollection.update(decks)
 
     if args.eval:
 
@@ -31,12 +48,6 @@ def main(args, decks):
             
             if args.graph:
                 Graph.write_gexf_file(DeckGraph, fusion.name.replace('|', '_'))
-
-        # Export DeckCollection to JSON
-        print(f"Exporting DeckCollection to JSON file: deck_collection.json")
-        with open("data/deck_collection.json", "w") as file:
-            json.dump(DeckCollection.to_json(), file)
-
         
         if filename: 
             print(f"Exporting evaluated fusions to csv: {filename}.csv")
@@ -46,7 +57,12 @@ def main(args, decks):
         if args.select_pairs:
             ev.find_best_pairs(EvaluatedGraphs)
 
-    #TODO: Store DeckLibrary and EvaluatedGraphs 
+        # Save the DeckLibrary to the pickle file
+        with open(deck_library_pickle_file, "wb") as file:
+            pickle.dump(DeckCollection, file)
+        print("DeckLibrary saved to pickle file {deck_library_pickle_file}.")
+
+    #TODO: Store EvaluatedGraphs 
 
 
 if __name__ == "__main__":

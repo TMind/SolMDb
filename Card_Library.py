@@ -24,30 +24,6 @@ class Entity:
         #synergy_str = ", ".join([str(synergy) for synergy in self.targets.values()])
         return f"{self.name}"
 
-    @classmethod
-    def from_json(cls, data, collection):
-        name = data["name"]
-        faction = data["faction"]
-        rarity = data["rarity"]
-        card_type = data["card_type"]
-        card_subtype = data["card_subtype"]
-        spliced = data["spliced"]
-        solbind = data["solbind"]
-        abilities = data["abilities"]
-        return cls(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, collection)
-
-    def to_json(self):
-        return {
-            "name": self.name,
-            "faction": self.faction,
-            "rarity": self.rarity,
-            "card_type": self.card_type,
-            "card_subtype": self.card_subtype,
-            "spliced": self.spliced,
-            "solbind": self.solbind,
-            "abilities": self.abilities
-        }
-
 class Deck:
     def __init__(self, name, forgeborn, faction, cards):
         self.name = name        
@@ -107,21 +83,6 @@ class Deck:
             "cards": [str(card) for card in self.cards.values()]
         }    
     
-    @classmethod
-    def from_json(cls, data):
-        name = data['name']
-        forgeborn = Forgeborn.from_json(data['forgeborn'])
-        faction = data['faction']
-        cards = {}
-
-        for card_data in data['cards']:                    
-            card = UniversalCardLibrary.create_card_from_title(card_data['name'])            
-            # Add the card to the cards dictionary
-            cards[card.name] = card
-
-        return cls(name, forgeborn, faction, cards)
-
-
     def __str__(self):     
         card_titles = [card.title for card in self.cards.values()]
         return f"Deck Name: {self.name}\nFaction: {self.faction}\nForgeborn: {self.forgeborn}\nCards:\n{', '.join(card_titles)}\n"   
@@ -166,12 +127,6 @@ class Forgeborn:
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
         return f"Forgeborn Name: {self.name}\nFaction: {self.faction}\nAbilities:\n{abilities_str}\n"
 
-    @classmethod
-    def from_json(cls, data):
-        name = data["title"]
-        faction = data["faction"]
-        abilities = data["abilities"]
-        return cls(name, faction, abilities)
 
     def to_json(self):
         return {

@@ -26,8 +26,11 @@ class InterfaceCollection:
     def from_entities(cls, name, entities):        
         ICollection = InterfaceCollection(name)        
 
-        for entity in entities.values():   
-            ICollection.update(entity.ICollection)            
+        for entity in entities:
+            if type(entity).__name__ == 'Entity':
+                ICollection.update(entity.ICollection)            
+            else:
+                raise ValueError("Not an Entity: {entity}")
 
         return ICollection
 
@@ -42,7 +45,7 @@ class InterfaceCollection:
 
     @classmethod
     def from_forgeborn(cls, forgeborn):    
-        return cls.from_entities(forgeborn.name, forgeborn.abilities)
+        return cls.from_entities(forgeborn.name, forgeborn.abilities.values())
 
 
     def update(self, other):

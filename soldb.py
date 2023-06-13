@@ -5,18 +5,57 @@ import Evaluation as ev
 import Graph
 import argparse
 import json
+import os
+import pickle
 
-def main(args, decks):
+def load_deck_library(deck_library_pickle_file):
+
+    deck_library = None 
+    if os.path.exists(deck_library_pickle_file):
+        # Load the DeckLibrary from the pickle file
+        with open(deck_library_pickle_file, "rb") as file:
+            deck_library = pickle.load(file)
+        print("DeckLibrary loaded from pickle file.")
+    
+    return deck_library
+
+
+def save_deck_library(deck_library_pickle_file, deck_library):
+
+    # Save the DeckLibrary to the pickle file
+    with open(deck_library_pickle_file, "wb") as file:
+        pickle.dump(deck_library, file)
+    print("DeckLibrary saved to pickle file.")
+
+
+def main(args):
+
+    myUCL = UniversalCardLibrary('csv/sff.csv')
 
     # Load DeckCollection from JSON file
-    print(f"Loading DeckCollection from JSON file: data/deck_collection.json")
-    with open("data/deck_collection.json", "r") as file:
-        deck_collection_data = json.load(file)
-    DeckCollection = DeckLibrary.from_json(deck_collection_data)
+    print(f"Loading DeckCollection from pickle: data/deck_library.pkl")
+    DeckCollection = load_deck_library("data/deck_library.pkl")
+    
+    if DeckCollection == None:    
+
+        decks = []
+        if not args.username:
+            # Read entities from CSV and create universal card library        
+            decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
+
+        else:
+            myApi = NetApi()
+            decks = myApi.request_decks(
+                id=args.id,
+                type=args.type,
+                username=args.username,
+                filename=args.filename
+            )        
+        DeckCollection = DeckLibrary(decks)
+        save_deck_library("data/deck_library.pkl", DeckCollection)
 
     EvaluatedGraphs = {}    
-    #DeckCollection = DeckLibrary(decks)
-
+    
     if args.eval:
 
         filename = None
@@ -46,7 +85,7 @@ def main(args, decks):
         if args.select_pairs:
             ev.find_best_pairs(EvaluatedGraphs)
 
-    #TODO: Store DeckLibrary and EvaluatedGraphs 
+    #TODO: EvaluatedGraphs 
 
 
 if __name__ == "__main__":
@@ -75,23 +114,7 @@ if __name__ == "__main__":
     # Parse the command-line arguments
     args = parser.parse_args()
 
-    # Use the command-line arguments in the function
-    decks = []
-    if not args.username:
-        # Read entities from CSV and create universal card library
-        myUCL = UniversalCardLibrary('csv/sff.csv')#, synergy_template)
-        decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
-
-    else:
-        myApi = NetApi()
-        decks = myApi.request_decks(
-            id=args.id,
-            type=args.type,
-            username=args.username,
-            filename=args.filename
-        )
-
-    main(args, decks)
+    main(args)
 
 
 

@@ -128,12 +128,6 @@ class Forgeborn:
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
         return f"Forgeborn Name: {self.name}\nFaction: {self.faction}\nAbilities:\n{abilities_str}\n"
 
-    @classmethod
-    def from_json(cls, data):
-        name = data["title"]
-        faction = data["faction"]
-        abilities = data["abilities"]
-        return cls(name, faction, abilities)
 
     def to_json(self):
         return {

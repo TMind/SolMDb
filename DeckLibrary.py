@@ -2,7 +2,7 @@ from Card_Library import Deck, Fusion
 class DeckLibrary:
     def __init__(self, decks):
         self.decks = []
-        self.fusions = []
+        self.fusions = []        
 
         for obj in decks:
             if isinstance(obj, Deck):

@@ -8,46 +8,73 @@ import json
 import os
 import pickle
 
-def load_deck_library(deck_library_pickle_file):
+def load_object_from_pickle(pickle_file):
+    obj = None
+    if os.path.exists(pickle_file):
+        # Load the object from the pickle file
+        with open(pickle_file, "rb") as file:
+            obj = pickle.load(file)
+        print(f"Object loaded from pickle file: {pickle_file}")
+    return obj
+
+def save_object_to_pickle(pickle_file, obj):
+    # Save the object to the pickle file
+    with open(pickle_file, "wb") as file:
+        pickle.dump(obj, file)
+    print(f"Object saved to pickle file: {pickle_file}")
+
+
+def main(args):
+
+    myUCL = UniversalCardLibrary('csv/sff.csv')
+
+    # Load DeckCollection from JSON file
+    print(f"Loading DeckCollection from pickle: data/deck_library.pkl")
+    DeckCollection = load_object_from_pickle("data/deck_library.pkl")
     
-    # Create a new DeckLibrary
-    deck_library = None
+    if DeckCollection == None:    
 
-    if os.path.exists(deck_library_pickle_file):
-        # Load the DeckLibrary from the pickle file
-        with open(deck_library_pickle_file, "rb") as file:
-            deck_library = pickle.load(file)
-        print("DeckLibrary loaded from pickle file.")
-        
-    return deck_library
+        decks = []
+        if not args.username:
+            # Rad entities from CSV and create universal card library        
+            decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
 
+        else:
+            myApi = NetApi()
+            decks = myApi.request_decks(
+                id=args.id,
+                type=args.type,
+                username=args.username,
+                filename=args.filename
+            )  
 
-
-def main(args, decks):
-
-    # Load DeckCollection from pickle file
-    deck_library_pickle_file = "data/deck_library.pkl"
-    DeckCollection = load_deck_library(deck_library_pickle_file)
-    EvaluatedGraphs = {}    
-    if DeckCollection == None:
         DeckCollection = DeckLibrary(decks)
-    else:
-        DeckCollection.update(decks)
-
+        save_object_to_pickle("data/deck_library.pkl", DeckCollection)
+    
     if args.eval:
 
         filename = None
         if args.eval is not True:
             filename = args.eval
 
-        for fusion in DeckCollection.fusions:        
-            DeckGraph = Graph.create_deck_graph(fusion)
-            ev.evaluate_graph(DeckGraph)
-            EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph        
-            Graph.print_graph(DeckGraph,filename)
-            
+        EvaluatedGraphs = load_object_from_pickle("data/eval_graphs.pkl")
+
+        if EvaluatedGraphs == None:
+            EvaluatedGraphs = {}
+
+            for fusion in DeckCollection.fusions:        
+                DeckGraph = Graph.create_deck_graph(fusion)
+                ev.evaluate_graph(DeckGraph)
+                EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph      
+
+            save_object_to_pickle("data/eval_graphs.pkl", EvaluatedGraphs)  
+                                
+        for EGraph in EvaluatedGraphs.values():    
+            Graph.print_graph(EGraph,filename)
+                
             if args.graph:
                 Graph.write_gexf_file(DeckGraph, fusion.name.replace('|', '_'))
+
         
         if filename: 
             print(f"Exporting evaluated fusions to csv: {filename}.csv")
@@ -56,13 +83,6 @@ def main(args, decks):
 
         if args.select_pairs:
             ev.find_best_pairs(EvaluatedGraphs)
-
-        # Save the DeckLibrary to the pickle file
-        with open(deck_library_pickle_file, "wb") as file:
-            pickle.dump(DeckCollection, file)
-        print("DeckLibrary saved to pickle file {deck_library_pickle_file}.")
-
-    #TODO: Store EvaluatedGraphs 
 
 
 if __name__ == "__main__":
@@ -91,23 +111,7 @@ if __name__ == "__main__":
     # Parse the command-line arguments
     args = parser.parse_args()
 
-    # Use the command-line arguments in the function
-    decks = []
-    if not args.username:
-        # Read entities from CSV and create universal card library
-        myUCL = UniversalCardLibrary('csv/sff.csv')#, synergy_template)
-        decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
-
-    else:
-        myApi = NetApi()
-        decks = myApi.request_decks(
-            id=args.id,
-            type=args.type,
-            username=args.username,
-            filename=args.filename
-        )
-
-    main(args, decks)
+    main(args)
 
 
 

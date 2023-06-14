@@ -7,16 +7,17 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal",
+            "console": "integratedTerminal",            
             "justMyCode": true
         },
         {
             "name": "Python: UCL",
             "type": "python",
             "request": "launch",
-            "program": "ucl_main.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
+            "program": "${workspaceFolder}/SolDB.py",
+            "console": "integratedTerminal",            
+            "justMyCode": true,
+            "args": ["--eval","otuput"],
         },
     ]
 }

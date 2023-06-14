@@ -26,11 +26,22 @@ def save_object_to_pickle(pickle_file, obj):
 
 def main(args):
 
+    deck_library_name = "deck_library"
+    eval_graphs_name  = "eval_graphs"
+
+    if args.filename:
+        deck_library_name = f"{args.filename}_library"
+        eval_graphs_name  = f"{args.filename}_graphs"
+
+    if args.username:
+        deck_library_name += f"_{args.username}"
+        eval_graphs_name  += f"_{args.username}"
+
     myUCL = UniversalCardLibrary('csv/sff.csv')
 
     # Load DeckCollection from JSON file
-    print(f"Loading DeckCollection from pickle: data/deck_library.pkl")
-    DeckCollection = load_object_from_pickle("data/deck_library.pkl")
+    print(f"Loading DeckCollection from pickle: data/{deck_library_name}.pkl")
+    DeckCollection = load_object_from_pickle(f"data/{deck_library_name}.pkl")
     
     if DeckCollection == None:    
 
@@ -49,15 +60,15 @@ def main(args):
             )  
 
         DeckCollection = DeckLibrary(decks)
-        save_object_to_pickle("data/deck_library.pkl", DeckCollection)
+        save_object_to_pickle(f"data/{deck_library_name}.pkl", DeckCollection)
     
     if args.eval:
 
-        filename = None
+        eval_filename = None
         if args.eval is not True:
-            filename = args.eval
+            eval_filename = args.eval
 
-        EvaluatedGraphs = load_object_from_pickle("data/eval_graphs.pkl")
+        EvaluatedGraphs = load_object_from_pickle(f"data/{eval_graphs_name}.pkl")
 
         if EvaluatedGraphs == None:
             EvaluatedGraphs = {}
@@ -67,19 +78,19 @@ def main(args):
                 ev.evaluate_graph(DeckGraph)
                 EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph      
 
-            save_object_to_pickle("data/eval_graphs.pkl", EvaluatedGraphs)  
+            save_object_to_pickle(f"data/{eval_graphs_name}.pkl", EvaluatedGraphs)  
                                 
         for EGraph in EvaluatedGraphs.values():    
-            Graph.print_graph(EGraph,filename)
+            Graph.print_graph(EGraph,eval_filename)
                 
             if args.graph:
-                Graph.write_gexf_file(DeckGraph, fusion.name.replace('|', '_'))
+                Graph.write_gexf_file(EGraph, EGraph.graph['name'].replace('|', '_'))
 
         
-        if filename: 
-            print(f"Exporting evaluated fusions to csv: {filename}.csv")
-            ev.export_csv(filename + '_excl', EvaluatedGraphs, True)
-            ev.export_csv(filename, EvaluatedGraphs, False)
+        if eval_filename: 
+            print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")
+            ev.export_csv(eval_filename + '_excl', EvaluatedGraphs, True)
+            ev.export_csv(eval_filename, EvaluatedGraphs, False)
 
         if args.select_pairs:
             ev.find_best_pairs(EvaluatedGraphs)

@@ -118,13 +118,17 @@ def export_csv(csvname, graphs, local_mode=False):
     all_labels = list(SynergyTemplate().synergies.keys())
 
     # Define the fieldnames for the CSV
-    fieldnames = ["deckname", "value", "avglbl", "range1", "range2", "range3"] + all_labels
+    fieldnames = ["deckname1", "deckname2", "numlbl", "seeks1", "seeks2", "seeks3", "seeks4"] + all_labels
 
     with open(f"csv/{csvname}.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
         writer.writeheader()
 
         for i, (key, EGraph) in enumerate(graphs.items()):         
+
+            #Determine decknames
+            deck_names = EGraph.graph['name'].split('|')
+            deckname1, deckname2 = deck_names[0], deck_names[1]   
 
             # Create a dictionary mapping labels to weights
             community_labels = EGraph.graph['community_labels']
@@ -148,19 +152,21 @@ def export_csv(csvname, graphs, local_mode=False):
 
             range1 = max_graph_ranges[0] if len(max_graph_ranges) > 0 else ''
             range2 = max_graph_ranges[1] if len(max_graph_ranges) > 1 else ''
-            range3 = ', '.join(max_graph_ranges[2:]) if len(max_graph_ranges) > 2 else ''
+            range3 = max_graph_ranges[2] if len(max_graph_ranges) > 2 else ''
+            range4 = ', '.join(max_graph_ranges[3:]) if len(max_graph_ranges) > 3 else ''
 
             # Assign values to range1, range2, and range3
 #            range1, range2, range3 = max_graph_ranges[:3]
             # Now you can add these to your dictionary:
 
             row = {
-                "deckname": EGraph.graph['name'],
-                "value": f"{EGraph.graph['value']:.4f}",            
-                "avglbl": f"{EGraph.graph['avglbl']:.4f}",
-                "range1": range1,
-                "range2": range2,
-                "range3": range3,
+                "deckname1": deckname1,
+                "deckname2": deckname2,
+                "numlbl": f"{EGraph.graph['avglbl']:.4f}",
+                "seeks1": range1,
+                "seeks2": range2,
+                "seeks3": range3,
+                "seeks4": range4,
             }
 
             # Add label weights to the row

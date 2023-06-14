@@ -23,6 +23,11 @@ class DeckLibrary:
                         fusions.append(fusion)
         return fusions
 
+    def update(decks):
+
+        print(f"Update DeckLibrary...")
+
+
     @classmethod
     def from_json(cls, data):
         decks = [Deck.from_json(deck_data) for deck_data in data['decks']]

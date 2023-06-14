@@ -14,10 +14,10 @@
             "name": "Python: UCL",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/SolDB.py",
-            "console": "integratedTerminal",            
+            "program": "SolDB.py",
+            "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--eval","otuput"],
+            "args": ["--eval"]
         },
     ]
 }

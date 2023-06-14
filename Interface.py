@@ -30,7 +30,7 @@ class InterfaceCollection:
             if type(entity).__name__ == 'Entity':
                 ICollection.update(entity.ICollection)            
             else:
-                raise ValueError("Not an Entity: {entity}")
+                raise ValueError(f"Not an Entity: {entity}")
 
         return ICollection
 

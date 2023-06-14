@@ -31,12 +31,14 @@ class Deck:
         self.forgeborn = forgeborn
         self.faction = faction
         self.cards = cards
+        self.composition = self.get_composition()
         self.seeks = {}
         self.provides = {}                
         int_col_deck = InterfaceCollection.from_deck(self)
         int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn)
         self.ICollection = int_col_deck.update(int_col_fb)
         self.populate()
+        
 
 
     @classmethod
@@ -63,8 +65,18 @@ class Deck:
 
         return [card_counter, forge_counter]
 
+    def get_composition(self):        
+        composition = {}        
+        for card in self.cards.values():            
+            for synergy, interfaces in card.ICollection.get_interfaces_by_type('O').items():
+            #for subtype in card.card_subtype.split(' '):
+                composition[synergy] = composition.get(synergy, 0) + len(interfaces)
+                subtype = subtype.strip()
+                composition[subtype] = composition.get(subtype, 0) + 1
+                composition[card.card_type] = composition.get(card.card_type, 0) + 1
+        return composition
 
-
+        
     def __add__(self, other):      
         name = self.name + '|' + other.name
         if self.faction == other.faction : 
@@ -92,17 +104,17 @@ class Deck:
 class Fusion:
     def __init__(self, name, decks):
         self.name = name
-        self.fusion = self.decks_to_fusion(decks)
+        self.fused = self.decks_to_fusion(decks)
         self.decks = decks
 
     def decks_to_fusion(self, decks):
-        fusion = decks[0]
+        fused = decks[0]
         for deck in decks[1:]:
-            fusion += deck
-        return fusion
+            fused += deck
+        return fused
 
     def getDeck(self):               
-        return self.fusion
+        return self.fused
     
     @classmethod
     def from_json(cls, data):
@@ -150,6 +162,8 @@ class Card():
                 self.seeks    = dict(Counter(self.seeks)    + Counter(modifier.seeks))
         else:
             self.title = card.name        
+        self.card_type = card.card_type
+        self.card_subtype = card.card_subtype
         self.name = self.title
         self.ICollection = InterfaceCollection.from_card(self)        
 

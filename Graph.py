@@ -35,15 +35,15 @@ def handle_synergy_and_edges(G, source_entity, target_entity):
         G.add_edge(source_entity.name, target_entity.name, label=label, weight=weight, local=type)
 
 
-def create_deck_graph(deck):
-    G = nx.DiGraph(name = deck.name, mod = 0, value = 0, cluster_coeff = 0, density = 0, avglbl = 0, community_labels = {})
-    #print(f"Card Synergies between decks: {deck.name}")        
-    
-    G.add_nodes_from(deck.cards)
+def create_deck_graph(fusion):    
+    compositions = {deck.name : deck.composition for deck in fusion.decks}
+    G = nx.DiGraph(name = fusion.name, mod = 0, between = 0, avglbl = 0, community_labels = {}, compositions = compositions)
+        
+    G.add_nodes_from(fusion.fused.cards)
 
     # Create a dictionary of whether any interface in the card has '*' or '+' in its range
     card_ranges = {}
-    for card_name, card in deck.cards.items():
+    for card_name, card in fusion.fused.cards.items():
         max_ranges = card.ICollection.get_max_ranges()
         card_ranges[card_name] = ','.join(max_ranges)  # Convert list to a string
 
@@ -51,11 +51,11 @@ def create_deck_graph(deck):
     nx.set_node_attributes(G, card_ranges, "max_ranges")
 
     
-    for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
-        for j, (card_name_2, card_2) in enumerate(deck.cards.items()):                
+    for i, (card_name_1, card_1) in enumerate(fusion.fused.cards.items()):
+        for j, (card_name_2, card_2) in enumerate(fusion.fused.cards.items()):                
             if card_name_1 == card_name_2:
 
-                for ability_name, ability in deck.forgeborn.abilities.items():
+                for ability_name, ability in fusion.fused.forgeborn.abilities.items():
                     handle_synergy_and_edges(G, card_1, ability)
                     handle_synergy_and_edges(G, ability, card_2)
                         

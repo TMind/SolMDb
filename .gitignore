@@ -1,5 +1,7 @@
 __pycache__/
 gephi/
+data/
 online_request.json
 .vscode/launch.json
 .vscode/tasks.json
+*.pkl

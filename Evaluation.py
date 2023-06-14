@@ -105,7 +105,7 @@ def evaluate_graph(G):
     for node_name in G.nodes:
         combined_metric = Metric['between'][node_name] * Metric['cluster_coeff'][node_name]
         G.nodes[node_name]['total'] = combined_metric
-        G.graph['value'] += combined_metric
+        #G.graph['value'] += combined_metric
 
 def calculate_weight(synergy, count):
 
@@ -115,10 +115,18 @@ def calculate_weight(synergy, count):
 
 def export_csv(csvname, graphs, local_mode=False):
     # Get all labels from the SynergyTemplate
-    all_labels = list(SynergyTemplate().synergies.keys())
+    synergy_template = SynergyTemplate()
+    all_labels = list(synergy_template.synergies.keys())
 
+    
     # Define the fieldnames for the CSV
-    fieldnames = ["deckname1", "deckname2", "numlbl", "seeks1", "seeks2", "seeks3", "seeks4"] + all_labels
+    fieldnames = ["deckname1", "deckname2", "numlbl", "seeks1", "seeks2", "seeks3", "seeks4"]
+    # Add columns for each label before and after
+    for label in all_labels:
+        fieldnames.append(f"{label}_1")
+        fieldnames.append(f"{label}")
+        fieldnames.append(f"{label}_2")
+
 
     with open(f"csv/{csvname}.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
@@ -126,8 +134,11 @@ def export_csv(csvname, graphs, local_mode=False):
 
         for i, (key, EGraph) in enumerate(graphs.items()):         
 
+            #Composition of Fusion 
+            compositions = EGraph.graph['compositions']
+
             #Determine decknames
-            deck_names = EGraph.graph['name'].split('|')
+            deck_names = EGraph.graph['name'].split('_')
             deckname1, deckname2 = deck_names[0], deck_names[1]   
 
             # Create a dictionary mapping labels to weights
@@ -171,6 +182,17 @@ def export_csv(csvname, graphs, local_mode=False):
 
             # Add label weights to the row
             for label in all_labels:
+
+                output_tags = synergy_template.get_output_tags_by_synergy(label)
+                deck1_count = 0
+                deck2_count = 0
+
+                for tag in output_tags:
+                    deck1_count += compositions[deckname1].setdefault(tag,0) 
+                    deck2_count += compositions[deckname2].setdefault(tag,0)
+                
+                row[f"{label}_1"] = deck1_count
+                row[f"{label}_2"] = deck2_count
                 row[label] = label_weights.get(label, 0)  # use 0 if the label does not exist in this graph
 
             writer.writerow(row)

@@ -68,9 +68,9 @@ class Deck:
     def get_composition(self):        
         composition = {}        
         for card in self.cards.values():            
-            for synergy, interfaces in card.ICollection.get_interfaces_by_type('O').items():
-            #for subtype in card.card_subtype.split(' '):
-                composition[synergy] = composition.get(synergy, 0) + len(interfaces)
+            #for synergy, interfaces in card.ICollection.get_interfaces_by_type('O').items():
+            for subtype in card.card_subtype.split(' '):
+                #composition[synergy] = composition.get(synergy, 0) + len(interfaces)
                 subtype = subtype.strip()
                 composition[subtype] = composition.get(subtype, 0) + 1
                 composition[card.card_type] = composition.get(card.card_type, 0) + 1

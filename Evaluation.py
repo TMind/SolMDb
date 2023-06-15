@@ -123,9 +123,9 @@ def export_csv(csvname, graphs, local_mode=False):
     fieldnames = ["deckname1", "deckname2", "numlbl", "seeks1", "seeks2", "seeks3", "seeks4"]
     # Add columns for each label before and after
     for label in all_labels:
-        fieldnames.append(f"{label}_1")
+        #fieldnames.append(f"{label}_1")
         fieldnames.append(f"{label}")
-        fieldnames.append(f"{label}_2")
+        #fieldnames.append(f"{label}_2")
 
 
     with open(f"csv/{csvname}.csv", "w", newline="") as csvfile:
@@ -191,8 +191,8 @@ def export_csv(csvname, graphs, local_mode=False):
                     deck1_count += compositions[deckname1].setdefault(tag,0) 
                     deck2_count += compositions[deckname2].setdefault(tag,0)
                 
-                row[f"{label}_1"] = deck1_count
-                row[f"{label}_2"] = deck2_count
+                #row[f"{label}_1"] = deck1_count
+                #row[f"{label}_2"] = deck2_count
                 row[label] = label_weights.get(label, 0)  # use 0 if the label does not exist in this graph
 
             writer.writerow(row)

@@ -5,3 +5,4 @@ online_request.json
 .vscode/launch.json
 .vscode/tasks.json
 *.pkl
+.DS_Store

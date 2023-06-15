@@ -65,16 +65,17 @@ class InterfaceCollection:
 
 
     def restrict_range(self, range):
-
-        ICollection = copy.deepcopy(self)
+        ICollection = InterfaceCollection(self.name)  # Create a new instance of the same class
 
         for synergy, interfaces in self.interfaces.items():
-                for name, interface in interfaces.items() :
-                    if range in interface.ranges: 
-                        #print(f"Collection restricted: {synergy} -> {name}")
-                        del ICollection.interfaces[synergy][name]   
+            ICollection.interfaces[synergy] = {}
+            for name, interface in interfaces.items():
+                if range not in interface.ranges:
+                    ICollection.interfaces[synergy][name] = interface
 
         return ICollection
+
+
 
     def get_max_ranges(self):
         max_ranges = []

@@ -4,7 +4,6 @@ from NetApi import NetApi
 import Evaluation as ev
 import Graph
 import argparse
-import json
 import os
 import pickle
 
@@ -42,25 +41,27 @@ def main(args):
     # Load DeckCollection from JSON file
     print(f"Loading DeckCollection from pickle: data/{deck_library_name}.pkl")
     DeckCollection = load_object_from_pickle(f"data/{deck_library_name}.pkl")
-    
-    if DeckCollection == None:    
 
-        decks = []
+    # Grab decks from web 
+    myApi = NetApi()
+    net_decks = myApi.request_decks(
+        id=args.id,
+        type=args.type,
+        username=args.username,
+        filename=args.filename
+    )      
+
+    if DeckCollection == None:            
+        
+        local_decks = []
         if not args.username:
+            # Old Style
             # Rad entities from CSV and create universal card library        
-            decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
-
-        else:
-            myApi = NetApi()
-            decks = myApi.request_decks(
-                id=args.id,
-                type=args.type,
-                username=args.username,
-                filename=args.filename
-            )  
-
-        DeckCollection = DeckLibrary(decks)
-        save_object_to_pickle(f"data/{deck_library_name}.pkl", DeckCollection)
+            local_decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")        
+        DeckCollection = DeckLibrary(local_decks)
+    
+    DeckCollection.update(net_decks)    
+    save_object_to_pickle(f"data/{deck_library_name}.pkl", DeckCollection)    
     
     if args.eval:
 
@@ -73,10 +74,10 @@ def main(args):
         if EvaluatedGraphs == None:
             EvaluatedGraphs = {}
 
-            for fusion in DeckCollection.fusions:        
+            for name, fusion in DeckCollection.fusions.items():        
                 DeckGraph = Graph.create_deck_graph(fusion)
                 ev.evaluate_graph(DeckGraph)
-                EvaluatedGraphs[DeckGraph.graph['name']] = DeckGraph      
+                EvaluatedGraphs[name] = DeckGraph      
 
             save_object_to_pickle(f"data/{eval_graphs_name}.pkl", EvaluatedGraphs)  
                                 

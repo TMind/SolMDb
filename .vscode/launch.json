@@ -17,7 +17,7 @@
             "program": "SolDB.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--username","DayDreamTomb","--eval", "ddtomb", "--graph"]
+            "args": ["--username","TMind", "--eval", "tmind"]
         },
     ]
 }

@@ -1,34 +1,34 @@
 from Card_Library import Deck, Fusion
 class DeckLibrary:
-    def __init__(self, decks):
-        self.decks = []          # Deck
-        self.fusions = []        # Fusion
+    def __init__(self, decks_or_fusions):
+        self.decks = {}          # Deck        
+        self.fusions = {}
 
-        for obj in decks:
+        for obj in decks_or_fusions:
             if isinstance(obj, Deck):
-                self.decks.append(obj)
-            if isinstance(obj, Fusion):
-                FusionDeck = obj.getDeck()                
-                self.fusions.append(FusionDeck)
+                self.decks[obj.name] = obj
+            if isinstance(obj, Fusion):                
+                self.fusions[obj.name] = obj
         
-        self.fusions.extend(self.get_fusions())              
+        self.make_fusions()
 
-    def get_fusions(self):
-        fusions = []
-        for deck1 in self.decks:
-            for deck2 in self.decks:
-                if deck1 is not deck2:                    
-                    #fusion = deck1 + deck2                                                       
-                    fusion = Fusion(f"{deck1.name}_{deck2.name}", [deck1, deck2])
-                    if fusion.fused is not None:
-                        fusions.append(fusion)
-        return fusions
+    def make_fusions(self):
+        for deck1 in self.decks.values():
+            for deck2 in self.decks.values():
+                if deck1 is not deck2:
+                    fusion_name = f"{deck1.name}_{deck2.name}"
+                    if fusion_name not in self.fusions:
+                        fusion = Fusion(fusion_name, [deck1, deck2])
+                        if fusion.fused is not None:
+                            self.fusions[fusion_name] = fusion
 
-    def update(decks):
-
-        print(f"Update DeckLibrary...")
-
-
+    def update(self, new_decks):
+        print(f"Updating DeckLibrary...")        
+        for deck in new_decks:
+            if deck.name not in self.decks:
+                self.decks[deck.name] = deck
+        self.make_fusions()
+        
     @classmethod
     def from_json(cls, data):
         decks = [Deck.from_json(deck_data) for deck_data in data['decks']]

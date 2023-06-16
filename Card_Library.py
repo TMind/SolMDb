@@ -96,6 +96,11 @@ class Deck:
             "cards": [str(card) for card in self.cards.values()]
         }    
     
+    def __eq__(self, other):
+        if isinstance(other, Deck):
+            return self.name == other.name
+        return False
+    
     def __str__(self):     
         card_titles = [card.title for card in self.cards.values()]
         return f"Deck Name: {self.name}\nFaction: {self.faction}\nForgeborn: {self.forgeborn}\nCards:\n{', '.join(card_titles)}\n"   

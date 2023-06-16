@@ -17,7 +17,7 @@
             "program": "SolDB.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["--username","TMind"]
+            "args": ["--username","TMind", "--eval", "tmind"]
         },
     ]
 }

@@ -37,7 +37,7 @@ def main(args):
     )
 
     local_decks = []
-    if not args.username:
+    if not args.username and not args.id:
         local_decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
 
     DeckCollection = cache_manager.load_or_create(f"cache/{deck_library_name}.pkl", lambda: DeckLibrary(local_decks))
@@ -54,7 +54,7 @@ def main(args):
 
         new_graphs = False
 
-        for name, fusion in DeckCollection.fusions.items():
+        for name, fusion in DeckCollection.library['Fusion'].items():
             if name not in egraphs:
                 DeckGraph = Graph.create_deck_graph(fusion)
                 ev.evaluate_graph(DeckGraph)

@@ -13,6 +13,7 @@ class DeckLibrary:
         self.make_fusions()
 
     def make_fusions(self):
+        print("Fusing decks...")
         for deck1 in self.decks.values():
             for deck2 in self.decks.values():
                 if deck1 is not deck2:
@@ -20,12 +21,14 @@ class DeckLibrary:
                     if fusion_name not in self.fusions:
                         fusion = Fusion(fusion_name, [deck1, deck2])
                         if fusion.fused is not None:
+                            print(f"+ {fusion_name}")
                             self.fusions[fusion_name] = fusion
 
     def update(self, new_decks):
         print(f"Updating DeckLibrary...")        
         for deck in new_decks:
             if deck.name not in self.decks:
+                print(f"+ {deck.name}")
                 self.decks[deck.name] = deck
         self.make_fusions()
         

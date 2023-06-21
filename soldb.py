@@ -4,97 +4,80 @@ from NetApi import NetApi
 import Evaluation as ev
 import Graph
 import argparse
-import os
-import pickle
-
-def load_object_from_pickle(pickle_file):
-    obj = None
-    if os.path.exists(pickle_file):
-        # Load the object from the pickle file
-        with open(pickle_file, "rb") as file:
-            obj = pickle.load(file)
-        print(f"Object loaded from pickle file: {pickle_file}")
-    return obj
-
-def save_object_to_pickle(pickle_file, obj):
-    # Save the object to the pickle file
-    with open(pickle_file, "wb") as file:
-        pickle.dump(obj, file)
-    print(f"Object saved to pickle file: {pickle_file}")
-
+from CacheManager import CacheManager
 
 def main(args):
-
     deck_library_name = "deck_library"
-    eval_graphs_name  = "eval_graphs"
+    eval_graphs_name = "eval_graphs"
 
     if args.filename:
         deck_library_name = f"{args.filename}_library"
-        eval_graphs_name  = f"{args.filename}_graphs"
+        eval_graphs_name = f"{args.filename}_graphs"
 
     if args.username:
         deck_library_name += f"_{args.username}"
-        eval_graphs_name  += f"_{args.username}"
+        eval_graphs_name += f"_{args.username}"
 
-    myUCL = UniversalCardLibrary('csv/sff.csv')
+    file_mappings = {
+        'cache/ucl.pkl': 'csv/sff.csv',
+        f"cache/{deck_library_name}.pkl": 'cache/ucl.pkl',
+        f"cache/{eval_graphs_name}.pkl": f"cache/{deck_library_name}.pkl",
+    }
 
-    # Load DeckCollection from JSON file
-    print(f"Loading DeckCollection from pickle: data/{deck_library_name}.pkl")
-    DeckCollection = load_object_from_pickle(f"data/{deck_library_name}.pkl")
+    cache_manager = CacheManager(file_mappings)
 
-    # Grab decks from web 
+    myUCL = cache_manager.load_or_create('cache/ucl.pkl', lambda: UniversalCardLibrary(file_mappings['cache/ucl.pkl']))
+
     myApi = NetApi()
     net_decks = myApi.request_decks(
         id=args.id,
         type=args.type,
         username=args.username,
         filename=args.filename
-    )      
+    )
 
-    if DeckCollection == None:            
-        
-        local_decks = []
-        if not args.username:
-            # Old Style
-            # Rad entities from CSV and create universal card library        
-            local_decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")        
-        DeckCollection = DeckLibrary(local_decks)
-    
-    DeckCollection.update(net_decks)    
-    save_object_to_pickle(f"data/{deck_library_name}.pkl", DeckCollection)    
-    
+    local_decks = []
+    if not args.username and not args.id:
+        local_decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
+
+    DeckCollection = cache_manager.load_or_create(f"cache/{deck_library_name}.pkl", lambda: DeckLibrary(local_decks))
+
+    DeckCollection.update(net_decks)
+    cache_manager.save_object_to_cache(f"cache/{deck_library_name}.pkl", DeckCollection)
+
     if args.eval:
-
         eval_filename = None
         if args.eval is not True:
             eval_filename = args.eval
 
-        EvaluatedGraphs = load_object_from_pickle(f"data/{eval_graphs_name}.pkl")
+        egraphs = cache_manager.load_object_from_cache(f"cache/{eval_graphs_name}.pkl") or {}
 
-        if EvaluatedGraphs == None:
-            EvaluatedGraphs = {}
+        new_graphs = False
 
-            for name, fusion in DeckCollection.fusions.items():        
+        for name, fusion in DeckCollection.library['Fusion'].items():
+            if name not in egraphs:
                 DeckGraph = Graph.create_deck_graph(fusion)
                 ev.evaluate_graph(DeckGraph)
-                EvaluatedGraphs[name] = DeckGraph      
+                egraphs[name] = DeckGraph
+                new_graphs = True
 
-            save_object_to_pickle(f"data/{eval_graphs_name}.pkl", EvaluatedGraphs)  
-                                
-        for EGraph in EvaluatedGraphs.values():    
-            Graph.print_graph(EGraph,eval_filename)
-                
+        if new_graphs:
+            cache_manager.save_object_to_cache(f"cache/{eval_graphs_name}.pkl", egraphs)
+
+        for name, EGraph in egraphs.items():
+            Graph.print_graph(EGraph, eval_filename)
+
             if args.graph:
-                Graph.write_gexf_file(EGraph, EGraph.graph['name'].replace('|', '_'))
+                Graph.write_gexf_file(EGraph, name.replace('|', '_'))
 
-        
-        if eval_filename: 
+        if eval_filename:
             print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")
-            ev.export_csv(eval_filename + '_excl', EvaluatedGraphs, True)
-            ev.export_csv(eval_filename, EvaluatedGraphs, False)
+            ev.export_csv(eval_filename + '_excl', egraphs, True)
+            ev.export_csv(eval_filename, egraphs, False)
 
         if args.select_pairs:
-            ev.find_best_pairs(EvaluatedGraphs)
+            ev.find_best_pairs(egraphs)
+
 
 
 if __name__ == "__main__":

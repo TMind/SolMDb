@@ -138,7 +138,7 @@ def export_csv(csvname, graphs, local_mode=False):
             compositions = EGraph.graph['compositions']
 
             #Determine decknames
-            deck_names = EGraph.graph['name'].split('_')
+            deck_names = EGraph.graph['decknames']
             deckname1, deckname2 = deck_names[0], deck_names[1]   
 
             # Create a dictionary mapping labels to weights

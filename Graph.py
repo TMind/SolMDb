@@ -37,7 +37,7 @@ def handle_synergy_and_edges(G, source_entity, target_entity):
 
 def create_deck_graph(fusion):    
     compositions = {deck.name : deck.composition for deck in fusion.decks}
-    G = nx.DiGraph(name = fusion.name, mod = 0, between = 0, avglbl = 0, community_labels = {}, compositions = compositions)
+    G = nx.DiGraph(name = fusion.name, decknames = [deck.name for deck in fusion.decks] , mod = 0, between = 0, avglbl = 0, community_labels = {}, compositions = compositions)
         
     G.add_nodes_from(fusion.fused.cards)
 

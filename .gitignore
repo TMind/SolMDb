@@ -1,8 +1,10 @@
 __pycache__/
-gephi/
-data/
-online_request.json
+gephi/*
+data/*
+cache/*
+csv/*
+!csv/sff.csv
+!csv/synergies.csv
 .vscode/launch.json
 .vscode/tasks.json
-*.pkl
 .DS_Store

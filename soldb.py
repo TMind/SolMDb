@@ -1,5 +1,5 @@
 from DeckLibrary import DeckLibrary
-from Card_Library import UniversalCardLibrary
+from Card_Library import Deck, UniversalCardLibrary
 from NetApi import NetApi
 import Evaluation as ev
 import Graph
@@ -10,13 +10,13 @@ def main(args):
     deck_library_name = "deck_library"
     eval_graphs_name = "eval_graphs"
 
-    if args.filename:
-        deck_library_name = f"{args.filename}_library"
-        eval_graphs_name = f"{args.filename}_graphs"
-
     if args.username:
         deck_library_name += f"_{args.username}"
         eval_graphs_name += f"_{args.username}"
+
+    if args.filename:
+        deck_library_name = f"{args.filename}_library"
+        eval_graphs_name = f"{args.filename}_graphs"
 
     file_mappings = {
         'cache/ucl.pkl': 'csv/sff.csv',
@@ -53,7 +53,7 @@ def main(args):
         egraphs = cache_manager.load_object_from_cache(f"cache/{eval_graphs_name}.pkl") or {}
 
         new_graphs = False
-
+        
         for name, fusion in DeckCollection.library['Fusion'].items():
             if name not in egraphs:
                 DeckGraph = Graph.create_deck_graph(fusion)
@@ -64,7 +64,16 @@ def main(args):
         if new_graphs:
             cache_manager.save_object_to_cache(f"cache/{eval_graphs_name}.pkl", egraphs)
 
-        for name, EGraph in egraphs.items():
+        if args.filter:
+            filter_names = args.filter.split(",")
+            eligible_graphs = {}
+            for name, graph in egraphs.items():
+                if Graph.is_eligible(graph,filter_names):
+                    eligible_graphs[name] = graph
+
+            egraphs = eligible_graphs
+
+        for name, EGraph in egraphs.items():            
             Graph.print_graph(EGraph, eval_filename)
 
             if args.graph:
@@ -93,7 +102,7 @@ if __name__ == "__main__":
     # Arguments for general use 
     # If both username and file is given, export deckbase to file.json 
     # If only file is given import deckbase from file.json 
-    parser.add_argument("--filename",  default="deck_base",  help="Offline Deck Database Name, defaut=data/deck_base.json")
+    parser.add_argument("--filename",  default=None,  help="Offline Deck Database Name")
     
     #parser.add_argument("--filename", help="Filename for deck data for offline use")    
 
@@ -101,6 +110,7 @@ if __name__ == "__main__":
     
     parser.add_argument("--eval", nargs='?', const=True, action="store",  help="Evaluate possible fusions. Optional filename for .csv export")    
     parser.add_argument("--graph", action="store_true",  help="Create Graph '.gefx'")
+    parser.add_argument("--filter", default=None, help="Filter by card names")
     parser.add_argument("--select_pairs", action="store_true", help="Select top pairs")
     
     # Parse the command-line arguments

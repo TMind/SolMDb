@@ -29,7 +29,6 @@ class DeckLibrary:
 
         self.make_fusions()
 
-
     def to_json(self):
         return {
             'decks': [deck.to_json() for deck in self.library['Deck'].values()],

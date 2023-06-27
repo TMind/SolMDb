@@ -120,7 +120,7 @@ def export_csv(csvname, graphs, local_mode=False):
 
     
     # Define the fieldnames for the CSV
-    fieldnames = ["deckname1", "deckname2", "numlbl", "seeks1", "seeks2", "seeks3", "seeks4"]
+    fieldnames = ["deckname1", "deckname2","forgeborn", "factions", "numlbl", "seeks1", "seeks2", "seeks3", "seeks4", "Creatures", "Spells"]
     # Add columns for each label before and after
     for label in all_labels:
         #fieldnames.append(f"{label}_1")
@@ -134,12 +134,20 @@ def export_csv(csvname, graphs, local_mode=False):
 
         for i, (key, EGraph) in enumerate(graphs.items()):         
 
+            #Fusion
+            fusion = EGraph.graph['fusion']
+
             #Composition of Fusion 
-            compositions = EGraph.graph['compositions']
+            compositions = {deck.name : deck.composition for deck in fusion.decks }
 
             #Determine decknames
-            deck_names = EGraph.graph['decknames']
+            forgeborn_name = fusion.decks[0].forgeborn.name
+            deck_names = [deck.name for deck in fusion.decks]
+            deck_factions = fusion.fused.faction
             deckname1, deckname2 = deck_names[0], deck_names[1]   
+
+            num_creatures = sum([ composition['Creature'] for composition in compositions.values() ])
+            num_spells    = sum([ composition['Spell']    for composition in compositions.values() ])
 
             # Create a dictionary mapping labels to weights
             community_labels = EGraph.graph['community_labels']
@@ -173,11 +181,15 @@ def export_csv(csvname, graphs, local_mode=False):
             row = {
                 "deckname1": deckname1,
                 "deckname2": deckname2,
+                "forgeborn": forgeborn_name,
+                "factions":  deck_factions,
                 "numlbl": f"{EGraph.graph['avglbl']:.4f}",
                 "seeks1": range1,
                 "seeks2": range2,
                 "seeks3": range3,
                 "seeks4": range4,
+                "Creatures": num_creatures,
+                "Spells": num_spells
             }
 
             # Add label weights to the row

@@ -73,7 +73,8 @@ class Deck:
                 #composition[synergy] = composition.get(synergy, 0) + len(interfaces)
                 subtype = subtype.strip()
                 composition[subtype] = composition.get(subtype, 0) + 1
-                composition[card.card_type] = composition.get(card.card_type, 0) + 1
+            for cardtype in card.card_type.split(' '):
+                composition[cardtype] = composition.get(cardtype, 0) + 1
         return composition
 
         
@@ -121,12 +122,6 @@ class Fusion:
     def getDeck(self):               
         return self.fused
     
-    @classmethod
-    def from_json(cls, data):
-        name = data['name']
-        decks = [Deck.from_json(deck_data) for deck_data in data['decks']]
-        return cls(name, decks)
-
     def to_json(self):
         return {
             "name": self.name,                        
@@ -191,6 +186,25 @@ class UniversalCardLibrary:
 
     def __init__(self, csv_path):        
         self.entities = self._read_entities_from_csv(csv_path)
+
+    def _read_forgeborn_from_csv(self, csv_path):
+        with open(csv_path, 'r') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=',')
+            for row in reader:
+                id   = row['id']
+                title =  row['Forgeborn']  
+                card_type = 'Ability'                             
+                abilities = {}
+                for level in range(3):                    
+                    level += 1
+                    name = int(row[f"{level}name"]) if row.get(f"{level}name") else 0
+                    text = int(row[f"{level}text"]) if row.get(f"{level}text") else 0
+                    abilities[level] = {
+                        'name': row[name],
+                        'text': row[text]                                                        
+                    }
+                    Collection = InterfaceCollection(name)
+                    #TODO: to continue ...
 
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:

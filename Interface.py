@@ -109,13 +109,11 @@ class InterfaceCollection:
         return members
 
 
-    def __str__(self):
-        output_str = f"output: {self.output}\n" if isinstance(self.output, dict) else ""
-        input_str = f"input: {self.input}\n" if isinstance(self.input, dict) else ""
+    def __str__(self):        
         synergies_str = "Synergies:\n"
-        for synergy in self.synergies.values():                        
+        for synergy in self.interfaces.values():                        
             synergies_str += f"{str(synergy)}\n"
-        return synergies_str # + output_str + input_str
+        return synergies_str 
 
     @staticmethod
     def match_synergies(collection1, collection2):

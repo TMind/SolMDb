@@ -26,9 +26,10 @@ class CacheManager:
             pickle.dump(obj, file)
 
     def is_cache_invalid(self, file_path):
-        csv_mod_time = os.path.getmtime(self.file_mappings[file_path])
+        csv_mod_times = [os.path.getmtime(path) for path in self.file_mappings[file_path]]
         pickle_mod_time = os.path.getmtime(file_path)
-        return csv_mod_time > pickle_mod_time
+        return any(csv_mod_time > pickle_mod_time for csv_mod_time in csv_mod_times)
+
 
     def clear_dependencies(self, file_path):
         dependent_files = [file_path]

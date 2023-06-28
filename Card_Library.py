@@ -121,18 +121,13 @@ class Fusion:
 
     def getDeck(self):               
         return self.fused
-    
-    def to_json(self):
-        return {
-            "name": self.name,                        
-            "decks": [deck.to_json() for deck in self.decks]            
-        }
 
 
 class Forgeborn:
-    def __init__(self, name, faction, abilities):
+    def __init__(self, id, name, abilities):
+        self.id = id 
         self.name = name
-        self.faction = faction
+        #self.faction = faction
         self.abilities = abilities        
         self.ICollection = InterfaceCollection.from_forgeborn(self)
 
@@ -140,13 +135,6 @@ class Forgeborn:
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
         return f"Forgeborn Name: {self.name}\nFaction: {self.faction}\nAbilities:\n{abilities_str}\n"
 
-
-    def to_json(self):
-        return {
-            "title": self.name,
-            "faction": self.faction,
-            "abilities": list(self.abilities.keys())
-        }
 
 class Card():
     def __init__(self, card, modifier=None): 
@@ -184,27 +172,27 @@ class UniversalCardLibrary:
 
     entities = []
 
-    def __init__(self, csv_path):        
-        self.entities = self._read_entities_from_csv(csv_path)
+    def __init__(self, sff_path, fb_path):        
+        self.entities  = self._read_entities_from_csv(sff_path)
+        self.forgeborn = self._read_forgeborn_from_csv(fb_path)
 
     def _read_forgeborn_from_csv(self, csv_path):
+        forgeborn = {}
         with open(csv_path, 'r') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=',')
             for row in reader:
                 id   = row['id']
-                title =  row['Forgeborn']  
-                card_type = 'Ability'                             
+                title =  row['Forgeborn']                                  
                 abilities = {}
                 for level in range(3):                    
-                    level += 1
-                    name = int(row[f"{level}name"]) if row.get(f"{level}name") else 0
-                    text = int(row[f"{level}text"]) if row.get(f"{level}text") else 0
-                    abilities[level] = {
-                        'name': row[name],
-                        'text': row[text]                                                        
-                    }
-                    Collection = InterfaceCollection(name)
-                    #TODO: to continue ...
+                    level += 2
+                    name = row[f"{level}name"] if row.get(f"{level}name") else ""
+                    text = row[f"{level}text"] if row.get(f"{level}text") else ""
+                    abilities[level] = self.search_entity(name,'Ability')
+
+                forgeborn[id] = Forgeborn(id, title, abilities)
+        return forgeborn
+        
 
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:
@@ -258,9 +246,7 @@ class UniversalCardLibrary:
                                 
                                     ISyn = Interface(name, key=key, value=value, range=range)                                    
                                     Collection.add(ISyn)
-                                
-                                    
-
+                                                                    
                 self.entities.append(Entity(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection))
         return self.entities
 
@@ -270,6 +256,13 @@ class UniversalCardLibrary:
             if card_type is None or entity.card_type == card_type:
                 if entity.name == name:
                     return entity
+        print(f"Entity not found: {name} , {card_type}")
+        return None
+
+    def get_forgeborn(self, id):
+        if id in self.forgeborn:
+            return self.forgeborn[id]
+        print(f"Forgeborn {id} could not be found")
         return None
 
     def load_decks_from_file(self, filepath):

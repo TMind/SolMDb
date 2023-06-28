@@ -19,14 +19,14 @@ def main(args):
         eval_graphs_name = f"{args.filename}_graphs"
 
     file_mappings = {
-        'cache/ucl.pkl': 'csv/sff.csv',
+        'cache/ucl.pkl': ['csv/sff.csv', 'csv/forgeborn.csv'],
         f"cache/{deck_library_name}.pkl": 'cache/ucl.pkl',
         f"cache/{eval_graphs_name}.pkl": f"cache/{deck_library_name}.pkl",
     }
 
     cache_manager = CacheManager(file_mappings)
 
-    myUCL = cache_manager.load_or_create('cache/ucl.pkl', lambda: UniversalCardLibrary(file_mappings['cache/ucl.pkl']))
+    myUCL = cache_manager.load_or_create('cache/ucl.pkl', lambda: UniversalCardLibrary(file_mappings['cache/ucl.pkl'][0],file_mappings['cache/ucl.pkl'][1]))
 
     myApi = NetApi()
     net_decks = myApi.request_decks(

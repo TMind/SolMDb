@@ -11,7 +11,9 @@ def find_best_pairs(graphs):
 
     deck_combinations = []
     for name, graph in graphs.items():
-        deck1, deck2 = name.split('|')
+        fusion = graph.graph['fusion']
+        decknames = [ deck.name for deck in fusion.decks]
+        deck1, deck2 = decknames[0], decknames[1]
         score = graph.graph['avglbl']
         deck_combinations.append((deck1, deck2, score))
 

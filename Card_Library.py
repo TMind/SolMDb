@@ -84,6 +84,8 @@ class Deck:
             #print(f"{name} : Deck fusion invalid. Same faction {self.faction}\n")
             return 
         forgeborn = self.forgeborn        
+        #if 'Inspire' in forgeborn.abilities:
+        #    forgeborn.abilities['Inspire'] = 
         faction = self.faction + '|' + other.faction                 
         cards = { **self.cards, **other.cards} 
         

@@ -74,7 +74,7 @@ def main(args):
             egraphs = eligible_graphs
 
         for name, EGraph in egraphs.items():            
-            Graph.print_graph(EGraph, eval_filename)
+            Graph.print_graph(EGraph, 'txt/' + eval_filename)
 
             if args.graph:
                 Graph.write_gexf_file(EGraph, name.replace('|', '_'))

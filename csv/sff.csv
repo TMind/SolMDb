@@ -344,7 +344,7 @@ Portal Shade,Nekrium,Common,Creature,Spirit,FALSE,,5,3,"<b>Stealth</b>
 
 <b>Activate:</b> Destroy this to give a creature +8A.",13,8,"<b>Stealth</b>
 
-<b>Activate:</b> Destroy this to give a creature +13A.",0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,
+<b>Activate:</b> Destroy this to give a creature +13A.",0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,.,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,
 Potent Zombie,Nekrium,Solbind,Creature,,FALSE,,3,5,<b>Activate:</b> Destroy this to give a creature +3A.,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,,,,
 Reaper,Nekrium,Common Rare,Creature,Spirit,TRUE,,2,3,"When one of your creatures damages the enemy player, give it +3A.",3,6,"When one of your creatures damages the enemy player, give it +5A.",4,9,"When one of your creatures damages the enemy player, give it +7A.",0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,
 Red Wasteland,Nekrium,Rare,Spell,Exalt,FALSE,,,,"<b>Deploy:</b> You may destroy one of your creatures. <br> <br> When one of your creatures is destroyed before combat, give your creatures in this lane +2A,+2H.",,,"<b>Deploy:</b> Destroy your [l1] Red Wasteland. You may destroy one of your creatures to play a card for <b>Free</b>. <br> <br> When one of your creatures is destroyed before combat, give your creatures in this lane +3A,+3H.",,,"<b>Deploy:</b> Destroy your [l1] and [l2] Red Wasteland. You may destroy one of your creatures to play a card for <b>Free</b>. <br> <br> When one of your creatures is destroyed before combat, give your creatures in this lane +5A,+5H.",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,1,1,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,,,,
@@ -795,7 +795,7 @@ Spring Dryad,Uterra,Common,Creature,Dryad,FALSE,,4,5,"When another one of your c
 
 <b>Deploy:</b> If you have more than 30H, give this +10A.
 
-When another one of your creatures comes into play, you gain 3H.",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,
+When another one of your creatures comes into play, you gain 3H.",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,
 Steggadon Alpha,Uterra,Common,Creature,Dinosaur,FALSE,,5,4,"<b>Slay:</b> Give another one of your creatures +2A,+2H.",8,6,"<b>Slay:</b> Give another one of your creatures +3A,+3H.",12,8,"<b>Slay:</b> Give another one of your creatures +5A,+5H.",0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,,,,
 Stouthide Stegadon,Uterra,Common,Creature,Dinosaur,FALSE,,5,5,"<b>Breakthrough</b>
 
@@ -977,7 +977,7 @@ Nanotech Disruptor,Steel Rosetta,,Ability,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,1,,,,,,,,
 Optimize,Steel Rosetta,,Ability,,,,,,,,,,,,,,,,,,,,,,,,,,,,,1,,1,,,,,,,,,,,,,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Gathering Storm,Sunder,,Ability,Face Damage,Spell Synergy,,,,"When you play a spell this turn, deal 5 damage to a creature or player.",,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,,,
 Ice Armor,Sunder,,Ability,Armor,,,,,You and one of your creatures get 15D this turn.,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,,,
-Stim bolt,Sunder,,Ability,Free,Spell Synergy,,,,Play a spell for <b>Free</b>.,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,Spell,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,,,
+Stim Bolt,Sunder,,Ability,Free,Spell Synergy,,,,Play a spell for <b>Free</b>.,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,Spell,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,,,
 Summon the Swarm,Sunder,,Ability,Minions,Elementals,,,,Play up to two Spell Sprite <b>Minions</b>.,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,,,
 Frost Blast,Sunder,,Ability,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Gale Surge,Sunder,,Ability,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

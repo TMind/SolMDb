@@ -20,8 +20,8 @@ def main(args):
 
     file_mappings = {
         'cache/ucl.pkl': ['csv/sff.csv', 'csv/forgeborn.csv'],
-        f"cache/{deck_library_name}.pkl": 'cache/ucl.pkl',
-        f"cache/{eval_graphs_name}.pkl": f"cache/{deck_library_name}.pkl",
+        f"cache/{deck_library_name}.pkl": ['cache/ucl.pkl'],
+        f"cache/{eval_graphs_name}.pkl": [f"cache/{deck_library_name}.pkl"],
     }
 
     cache_manager = CacheManager(file_mappings)

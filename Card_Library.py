@@ -84,6 +84,11 @@ class Deck:
             #print(f"{name} : Deck fusion invalid. Same faction {self.faction}\n")
             return 
         forgeborn = self.forgeborn        
+        
+        inspire_levels = [level for level, ability in forgeborn.abilities.items() if ability.name == 'Inspire']
+        for level in inspire_levels: 
+            forgeborn.abilities[level] = other.forgeborn.abilities[level]
+            
         faction = self.faction + '|' + other.faction                 
         cards = { **self.cards, **other.cards} 
         
@@ -256,7 +261,7 @@ class UniversalCardLibrary:
             if card_type is None or entity.card_type == card_type:
                 if entity.name == name:
                     return entity
-        print(f"Entity not found: {name} , {card_type}")
+        #print(f"Entity not found: {name} , {card_type}")
         return None
 
     def get_forgeborn(self, id):
@@ -287,18 +292,24 @@ class UniversalCardLibrary:
         
         for deck_data in decks_data:            
             try:
-                forgeborn_data = deck_data['forgeborn']
-                # If 'abilities' key is in forgeborn_data, use it.
-                # Else, create a list from the keys 'a2n', 'a3n', 'a4n' if they exist.
-                if 'abilities' in forgeborn_data:
-                    abilities_data = forgeborn_data['abilities']
-                else:
-                    abilities_data = [forgeborn_data[code] for code in ['a2n', 'a3n', 'a4n'] if code in forgeborn_data]
-                # Now abilities_data is always a list, so we can create the abilities.
-                abilities = {ability_name: self.search_entity(ability_name,card_type='Ability') for ability_name in abilities_data}
-       
-                forgeborn_name = forgeborn_data['title'] if 'title' in forgeborn_data else forgeborn_data['name']
-                forgeborn = Forgeborn(forgeborn_name, deck_data['faction'],abilities)
+                forgebornId   = deck_data['forgebornId']
+                
+                forgeborn = None
+                #if forgebornId in self.forgeborn :
+                forgeborn = self.forgeborn[forgebornId]
+                
+                # else :
+                #     forgeborn_data = deck_data['forgeborn']                   
+                #     if 'abilities' in forgeborn_data:
+                #         abilities_data = forgeborn_data['abilities']
+                #     else:
+                #         abilities_data = [forgeborn_data[code] for code in ['a2n', 'a3n', 'a4n'] if code in forgeborn_data]
+                #     # Now abilities_data is always a list, so we can create the abilities.
+                #     abilities = {ability_name: self.search_entity(ability_name,card_type='Ability') for ability_name in abilities_data}
+        
+                #     forgeborn_name = forgeborn_data['title'] if 'title' in forgeborn_data else forgeborn_data['name']
+                #     forgeborn = Forgeborn(forgeborn_name, deck_data['faction'],abilities)
+
             except Exception as e:
                 print(f"Exception: {e}")
                 print(f"Could not load Forgeborn data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")

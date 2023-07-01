@@ -1,4 +1,5 @@
 # Fixed Version
+from copy import deepcopy
 import csv, json
 from re import A
 from Interface import Interface, InterfaceCollection
@@ -86,9 +87,13 @@ class Deck:
         forgeborn = self.forgeborn        
         
         inspire_levels = [level for level, ability in forgeborn.abilities.items() if ability.name == 'Inspire']
-        for level in inspire_levels: 
-            forgeborn.abilities[level] = other.forgeborn.abilities[level]
-            
+        if inspire_levels:
+            inspired_abilities = deepcopy(forgeborn.abilities)
+            for level in inspire_levels: 
+                inspired_abilities[5] = other.forgeborn.abilities[level]            
+                print(f"Setting Ability 5 with {other.forgeborn.abilities[level]} from {other.faction}")
+            forgeborn = Forgeborn(forgeborn.id, forgeborn.name, inspired_abilities)
+                
         faction = self.faction + '|' + other.faction                 
         cards = { **self.cards, **other.cards} 
         
@@ -194,7 +199,7 @@ class UniversalCardLibrary:
                     name = row[f"{level}name"] if row.get(f"{level}name") else ""
                     text = row[f"{level}text"] if row.get(f"{level}text") else ""
                     abilities[level] = self.search_entity(name,'Ability')
-
+                #print(f"Forgeborn:  [{id}] {title} {','.join(ability.name for ability in abilities.values())}")
                 forgeborn[id] = Forgeborn(id, title, abilities)
         return forgeborn
         
@@ -296,7 +301,7 @@ class UniversalCardLibrary:
                 
                 forgeborn = None
                 #if forgebornId in self.forgeborn :
-                forgeborn = self.forgeborn[forgebornId]
+                forgeborn = self.forgeborn[forgebornId.replace('0','2')]
                 
                 # else :
                 #     forgeborn_data = deck_data['forgeborn']                   

@@ -139,8 +139,33 @@ def write_gexf_file(graph, filename):
     nx.write_gexf(graph, './gephi/' + filename + '.gexf')
 
 
-def is_eligible(Graph, node_names):
-    for node_name in node_names:
-        if node_name in Graph.nodes:
-            return True
-    return False
+def is_eligible(graph, logical_expression):
+    logical_expression = logical_expression.replace('-', ' or ')
+    logical_expression = logical_expression.replace('+', ' and ')
+
+    names = graph.nodes
+    for name in names:
+        logical_expression = logical_expression.replace(name, 'True')
+
+    result = eval_expression(logical_expression)
+    return result
+
+
+def eval_expression(expression):
+    undefined_vars = {}
+
+    def capture_undefined_vars(name):
+        undefined_vars[name] = None
+
+    try:
+        result = eval(expression, locals=capture_undefined_vars)
+    except NameError as e:
+        undefined_vars[str(e).split("'")[1]] = None
+
+    # Re-evaluate the expression after setting undefined variables to None
+    if undefined_vars:
+        translation = str.maketrans(undefined_vars)
+        expression = expression.translate(translation)
+        result = eval(expression, {'__builtins__': None})
+
+    return result

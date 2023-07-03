@@ -65,7 +65,7 @@ def main(args):
             cache_manager.save_object_to_cache(f"cache/{eval_graphs_name}.pkl", egraphs)
 
         if args.filter:
-            filter_names = args.filter.split(",")
+            filter_names = args.filter
             eligible_graphs = {}
             for name, graph in egraphs.items():
                 if Graph.is_eligible(graph,filter_names):

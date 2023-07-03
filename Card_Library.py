@@ -187,6 +187,7 @@ class UniversalCardLibrary:
             reader = csv.DictReader(csvfile, delimiter=',')
             for row in reader:
                 id   = row['id']
+                id   = id.replace('0', '2')
                 title =  row['Forgeborn']                                  
                 abilities = {}
                 for level in range(3):                    

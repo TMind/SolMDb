@@ -65,10 +65,10 @@ def main(args):
             cache_manager.save_object_to_cache(f"cache/{eval_graphs_name}.pkl", egraphs)
 
         if args.filter:
-            filter_names = args.filter
+            
             eligible_graphs = {}
             for name, graph in egraphs.items():
-                if Graph.is_eligible(graph,filter_names):
+                if Graph.is_eligible(graph,args.filter):
                     eligible_graphs[name] = graph
 
             egraphs = eligible_graphs
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     
     parser.add_argument("--eval", nargs='?', const=True, action="store",  help="Evaluate possible fusions. Optional filename for .csv export")    
     parser.add_argument("--graph", action="store_true",  help="Create Graph '.gefx'")
-    parser.add_argument("--filter", default=None, help="Filter by card names")
+    parser.add_argument("--filter", default=None, help="Filter by card names. Syntax: '<cardname>+<cardname>-<cardname>' + = AND, - = OR ")
     parser.add_argument("--select_pairs", action="store_true", help="Select top pairs")
     
     # Parse the command-line arguments

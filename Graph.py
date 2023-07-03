@@ -1,7 +1,7 @@
 from Interface import InterfaceCollection
 import networkx as nx
 from collections import defaultdict
-import os
+import os, re
 
 # def create_synergy_graph(decks, min_level=1):
 #     G = nx.Graph()
@@ -139,33 +139,25 @@ def write_gexf_file(graph, filename):
     nx.write_gexf(graph, './gephi/' + filename + '.gexf')
 
 
-def is_eligible(graph, logical_expression):
-    logical_expression = logical_expression.replace('-', ' or ')
-    logical_expression = logical_expression.replace('+', ' and ')
+def is_eligible(graph, logical_expression):        
+    translated_expression = translate_expression(graph, logical_expression)
+    evaluated_expression = eval(translated_expression)    
+    return evaluated_expression
 
-    names = graph.nodes
-    for name in names:
-        logical_expression = logical_expression.replace(name, 'True')
+def translate_expression( graph, logical_expression):
+    
+    translated_expression = logical_expression.replace('-', ' or ')
+    translated_expression = translated_expression.replace('+', ' and ')
+    
+    # Replace variable names with their graph presence checks
+    for variable_name in get_variable_names(logical_expression):        
+        presence_check = str(any(variable_name in node for node in graph.nodes))
+        translated_expression = translated_expression.replace(variable_name, presence_check)
+    
+    # Return the translated expression
+    return translated_expression
 
-    result = eval_expression(logical_expression)
-    return result
-
-
-def eval_expression(expression):
-    undefined_vars = {}
-
-    def capture_undefined_vars(name):
-        undefined_vars[name] = None
-
-    try:
-        result = eval(expression, locals=capture_undefined_vars)
-    except NameError as e:
-        undefined_vars[str(e).split("'")[1]] = None
-
-    # Re-evaluate the expression after setting undefined variables to None
-    if undefined_vars:
-        translation = str.maketrans(undefined_vars)
-        expression = expression.translate(translation)
-        result = eval(expression, {'__builtins__': None})
-
-    return result
+def get_variable_names(logical_expression):
+    variable_pattern = r'\b\w+\b'  # Regular expression pattern to match variable names
+    variable_names = re.findall(variable_pattern, logical_expression)
+    return variable_names

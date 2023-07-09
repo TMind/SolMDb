@@ -297,23 +297,11 @@ class UniversalCardLibrary:
         
         for deck_data in decks_data:            
             try:
-                forgebornId   = deck_data['forgebornId']
-                
-                forgeborn = None
-                #if forgebornId in self.forgeborn :
-                forgeborn = self.forgeborn[forgebornId.replace('0','2')]
-                
-                # else :
-                #     forgeborn_data = deck_data['forgeborn']                   
-                #     if 'abilities' in forgeborn_data:
-                #         abilities_data = forgeborn_data['abilities']
-                #     else:
-                #         abilities_data = [forgeborn_data[code] for code in ['a2n', 'a3n', 'a4n'] if code in forgeborn_data]
-                #     # Now abilities_data is always a list, so we can create the abilities.
-                #     abilities = {ability_name: self.search_entity(ability_name,card_type='Ability') for ability_name in abilities_data}
-        
-                #     forgeborn_name = forgeborn_data['title'] if 'title' in forgeborn_data else forgeborn_data['name']
-                #     forgeborn = Forgeborn(forgeborn_name, deck_data['faction'],abilities)
+                forgebornId = deck_data['forgebornId'][1:]
+                forgebornId = forgebornId.replace('0','2')
+                forgebornKey = [key for key in self.forgeborn if forgebornId in key]
+                forgeborn = self.forgeborn[forgebornKey[0]]
+            
 
             except Exception as e:
                 print(f"Exception: {e}")

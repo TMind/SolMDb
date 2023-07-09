@@ -1,5 +1,5 @@
 from DeckLibrary import DeckLibrary
-from Card_Library import Deck, UniversalCardLibrary
+from Card_Library import UniversalCardLibrary
 from NetApi import NetApi
 import Evaluation as ev
 import Graph
@@ -103,8 +103,7 @@ if __name__ == "__main__":
     # If both username and file is given, export deckbase to file.json 
     # If only file is given import deckbase from file.json 
     parser.add_argument("--filename",  default=None,  help="Offline Deck Database Name")
-    
-    #parser.add_argument("--filename", help="Filename for deck data for offline use")    
+    parser.add_argument("--synergies", help="CSV Filename for synergy lookup")    
 
     # Arguments for Evaluation
     

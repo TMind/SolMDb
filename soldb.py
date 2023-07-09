@@ -1,10 +1,12 @@
-from DeckLibrary import DeckLibrary
-from Card_Library import UniversalCardLibrary
-from NetApi import NetApi
+from DeckLibrary    import DeckLibrary
+from Card_Library   import UniversalCardLibrary
+from CacheManager   import CacheManager
+from Synergy        import SynergyTemplate
+from NetApi         import NetApi
 import Evaluation as ev
 import Graph
 import argparse
-from CacheManager import CacheManager
+
 
 def main(args):
     deck_library_name = "deck_library"
@@ -25,6 +27,9 @@ def main(args):
     }
 
     cache_manager = CacheManager(file_mappings)
+
+    # Initialize synergy template singleton with optional file
+    SynergyTemplate(args.synergies)
 
     myUCL = cache_manager.load_or_create('cache/ucl.pkl', lambda: UniversalCardLibrary(file_mappings['cache/ucl.pkl'][0],file_mappings['cache/ucl.pkl'][1]))
 
@@ -74,7 +79,7 @@ def main(args):
             egraphs = eligible_graphs
 
         for name, EGraph in egraphs.items():            
-            Graph.print_graph(EGraph, 'txt/' + eval_filename)
+            Graph.print_graph(EGraph, eval_filename)
 
             if args.graph:
                 Graph.write_gexf_file(EGraph, name.replace('|', '_'))
@@ -103,7 +108,7 @@ if __name__ == "__main__":
     # If both username and file is given, export deckbase to file.json 
     # If only file is given import deckbase from file.json 
     parser.add_argument("--filename",  default=None,  help="Offline Deck Database Name")
-    parser.add_argument("--synergies", help="CSV Filename for synergy lookup")    
+    parser.add_argument("--synergies", default=None, help="CSV Filename for synergy lookup")    
 
     # Arguments for Evaluation
     

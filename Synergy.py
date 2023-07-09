@@ -10,9 +10,9 @@ class SynergyTemplate:
             cls._instance.load_synergy_template(csvfilename)
         return cls._instance
 
-    def load_synergy_template(self, csvfilename='synergies'):
-        self.synergies = {}
-        csvpathname = f"csv/{csvfilename}.csv"
+    def load_synergy_template(self, csvfilename=None):
+        self.synergies = {}        
+        csvpathname = f"csv/{csvfilename or 'synergies'}.csv"
         self.from_csv(csvpathname)
 
     def add_synergy(self, name, weight, input_tags, output_tags):

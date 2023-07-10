@@ -98,10 +98,14 @@ def main(args):
             egraphs = eligible_graphs
 
         for name, EGraph in egraphs.items():            
-            Graph.print_graph(EGraph, eval_filename + ".txt")
+            Graph.print_graph(EGraph, eval_filename + "_eval.txt")
 
             if args.graph:
-                Graph.write_gexf_file(EGraph, name.replace('|', '_'))
+                eval_path = Path(eval_filename)
+                gefxFolder = os.path.join(eval_path.parent.absolute(),"gefx")
+                Path(gefxFolder).mkdir(parents=True, exist_ok=True)
+
+                Graph.write_gexf_file(EGraph, gefxFolder, name.replace('|', '_'))
 
         if eval_filename:
             print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")
@@ -109,7 +113,7 @@ def main(args):
             ev.export_csv(eval_filename, egraphs, False)
 
         if args.select_pairs:
-            ev.find_best_pairs(egraphs)
+            ev.find_best_pairs(egraphs,eval_filename + '_top_pairs.txt')
 
 
 

@@ -130,7 +130,7 @@ def export_csv(csvname, graphs, local_mode=False):
         #fieldnames.append(f"{label}_2")
 
 
-    with open(f"csv/{csvname}.csv", "w", newline="") as csvfile:
+    with open(f"{csvname}.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
         writer.writeheader()
 

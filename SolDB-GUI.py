@@ -2,17 +2,13 @@ from DeckLibrary import DeckLibrary
 from Card_Library import Deck, UniversalCardLibrary
 from NetApi import NetApi
 import Evaluation as ev
-import Graph
-import argparse
 from CacheManager import CacheManager
 
 
 import wx
 from wx.adv import AboutBox, AboutDialogInfo
 from wxSolDB import SolDBMainFrame, SolDBPanel
-import requests
-import json
-import os
+
 from urllib.parse import urlparse
 from soldb import main as SolDB
 from argparse import Namespace
@@ -58,21 +54,20 @@ class SolDBWindow(SolDBPanel):
 			return "deck"
 
 	def analyzeDeck( self, event ):
-		destination_path=""
-		with wx.DirDialog(self, "Select output folder:",
-                       style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dirDialog:
+		with wx.FileDialog(self, "Save evalulation files as:",
+                       style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
 
-			if dirDialog.ShowModal() == wx.ID_CANCEL:
+			if fileDialog.ShowModal() == wx.ID_CANCEL:
 				return
 
-			destination_path = dirDialog.GetPath()
+			saveAsPath = fileDialog.GetPath()
 
 
 		args = Namespace(username=self.userCtrl.Value, 
 						type=self.calcType(),
 						id=self.idCtrl.Value,
 						filename=None,
-						eval=self.idCtrl.Value,
+						eval=saveAsPath,
 						graph=False,
 						filter=None,
 						select_pairs=False

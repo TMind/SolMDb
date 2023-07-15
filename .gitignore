@@ -9,3 +9,4 @@ txt/*
 .vscode/launch.json
 .vscode/tasks.json
 .DS_Store
+.vscode/launch.json

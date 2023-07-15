@@ -8,7 +8,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",            
-            "justMyCode": true
+            "justMyCode": True
         },
         {
             "name": "Python: UCL",
@@ -16,7 +16,7 @@
             "request": "launch",
             "program": "SolDB.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": True,
             "args": ["--username","TMind", "--eval", "tmind"]
         },
     ]

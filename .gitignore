@@ -6,6 +6,5 @@ csv/*
 !csv/sff.csv
 !csv/synergies.csv
 txt/*
-.vscode/launch.json
-.vscode/tasks.json
+.vscode/*
 .DS_Store

@@ -80,7 +80,7 @@ def print_graph(G, output_filename=None):
     Returns:
         None
     """    
-    output_file = None if output_filename is None else "txt/{output_filename}" 
+    output_file = None if output_filename is None else f"txt/{output_filename}" 
     
     first_time = not output_file or not os.path.isfile(output_file)
     text = f"\n===============================================================\n"
@@ -164,7 +164,7 @@ def translate_expression(graph, logical_expression):
 
 
 def get_variable_names(logical_expression):
-    variable_pattern = r"\b\w+\b"  # Regular expression pattern to match variable names
+    variable_pattern = r"\b\w+(?: \w+)?\b" #r"\b\w+\b"  # Regular expression pattern to match variable names
     variable_names = re.findall(variable_pattern, logical_expression)
     return variable_names
 

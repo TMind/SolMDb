@@ -4,15 +4,16 @@ class SynergyTemplate:
 
     _instance = None
 
-    def __new__(cls):
+    def __new__(cls, csvfilename=None):
         if not cls._instance:
             cls._instance = super().__new__(cls)
-            cls._instance.load_synergy_template()
+            cls._instance.load_synergy_template(csvfilename)
         return cls._instance
 
-    def load_synergy_template(self):
-        self.synergies = {}
-        self.from_csv('csv/synergies.csv')
+    def load_synergy_template(self, csvfilename=None):
+        self.synergies = {}        
+        csvpathname = f"csv/{csvfilename or 'synergies'}.csv"
+        self.from_csv(csvpathname)
 
     def add_synergy(self, name, weight, input_tags, output_tags):
         synergy = Synergy(name, weight, input_tags, output_tags)

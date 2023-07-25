@@ -1,10 +1,10 @@
 __pycache__/
-gephi/*
-data/*
-cache/*
+gephi/
+data/
+cache/
 csv/*
 !csv/sff.csv
 !csv/synergies.csv
-txt/*
+txt/
 .vscode/*
 .DS_Store

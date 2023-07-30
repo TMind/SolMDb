@@ -7,7 +7,7 @@ import infomap
 import csv
 
 
-def find_best_pairs(graphs):
+def find_best_pairs(graphs,outpath):
 
     deck_combinations = []
     for name, graph in graphs.items():
@@ -32,10 +32,10 @@ def find_best_pairs(graphs):
             chosen_decks.add(deck1)
             chosen_decks.add(deck2)
 
-    print(f"Total score: {total_score}")
-    for combo in chosen_combinations:
-        print(
-            f"Chosen combination: {combo[0]}, {combo[1]}, Score: {combo[2]}")
+    with open(outpath, "w") as select_pair_file:
+        select_pair_file.write(f"Total score: {total_score}\n")
+        for combo in chosen_combinations:
+             select_pair_file.write( f"Chosen combination: {combo[0]}, {combo[1]}, Score: {combo[2]} \n")
 
 def evaluate_graph(G):
     Metric = {}
@@ -130,7 +130,7 @@ def export_csv(csvname, graphs, local_mode=False):
         #fieldnames.append(f"{label}_2")
 
 
-    with open(f"csv/{csvname}.csv", "w", newline="") as csvfile:
+    with open(f"{csvname}.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
         writer.writeheader()
 

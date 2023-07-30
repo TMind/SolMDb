@@ -4,9 +4,29 @@ from NetApi import NetApi
 import Evaluation as ev
 import Graph
 import argparse
+import sys
+import os
+from appdirs import user_data_dir
+from pathlib import Path
 from CacheManager import CacheManager
 
 def main(args):
+
+    #if we wanted to move stuff into app bundle on a mac we'd do this
+    #if sys.platform == 'darwin':
+    #    resourcePath =  os.path.join(os.environ['RESOURCEPATH'],"data")
+    #else:
+
+    resourcePath = os.path.dirname(__file__)
+
+    cacheFolder = os.path.join(resourcePath,"cache")
+    dataFolder = os.path.join(resourcePath,"csv")
+
+    #make sure needed folders exist
+    Path(cacheFolder).mkdir(parents=True, exist_ok=True)
+    Path(dataFolder).mkdir(parents=True, exist_ok=True)
+
+
     deck_library_name = "deck_library"
     eval_graphs_name = "eval_graphs"
 
@@ -18,15 +38,19 @@ def main(args):
         deck_library_name = f"{args.filename}_library"
         eval_graphs_name = f"{args.filename}_graphs"
 
+    ucl = os.path.join(cacheFolder,'ucl.pkl')
+    deckLibrary = os.path.join(cacheFolder,deck_library_name + '.pkl')
+    graphFolder = os.path.join(cacheFolder,eval_graphs_name + '.pkl')
+
     file_mappings = {
-        'cache/ucl.pkl': ['csv/sff.csv', 'csv/forgeborn.csv'],
-        f"cache/{deck_library_name}.pkl": ['cache/ucl.pkl'],
-        f"cache/{eval_graphs_name}.pkl": [f"cache/{deck_library_name}.pkl"],
+        ucl : [os.path.join(dataFolder,'sff.csv'), os.path.join(dataFolder,'forgeborn.csv')],
+        deckLibrary : [ucl],
+       graphFolder: [deckLibrary],
     }
 
     cache_manager = CacheManager(file_mappings)
 
-    myUCL = cache_manager.load_or_create('cache/ucl.pkl', lambda: UniversalCardLibrary(file_mappings['cache/ucl.pkl'][0],file_mappings['cache/ucl.pkl'][1]))
+    myUCL = cache_manager.load_or_create(ucl, lambda: UniversalCardLibrary(file_mappings[ucl][0],file_mappings[ucl][1]))
 
     myApi = NetApi()
     net_decks = myApi.request_decks(
@@ -40,17 +64,17 @@ def main(args):
     if not args.username and not args.id:
         local_decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
 
-    DeckCollection = cache_manager.load_or_create(f"cache/{deck_library_name}.pkl", lambda: DeckLibrary(local_decks))
+    DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary(local_decks))
 
     DeckCollection.update(net_decks)
-    cache_manager.save_object_to_cache(f"cache/{deck_library_name}.pkl", DeckCollection)
+    cache_manager.save_object_to_cache(deckLibrary, DeckCollection)
 
     if args.eval:
         eval_filename = None
         if args.eval is not True:
             eval_filename = args.eval
 
-        egraphs = cache_manager.load_object_from_cache(f"cache/{eval_graphs_name}.pkl") or {}
+        egraphs = cache_manager.load_object_from_cache(graphFolder) or {}
 
         new_graphs = False
         
@@ -62,7 +86,7 @@ def main(args):
                 new_graphs = True
 
         if new_graphs:
-            cache_manager.save_object_to_cache(f"cache/{eval_graphs_name}.pkl", egraphs)
+            cache_manager.save_object_to_cache(graphFolder, egraphs)
 
         if args.filter:
             
@@ -74,10 +98,14 @@ def main(args):
             egraphs = eligible_graphs
 
         for name, EGraph in egraphs.items():            
-            Graph.print_graph(EGraph, 'txt/' + eval_filename)
+            Graph.print_graph(EGraph, eval_filename + "_eval.txt")
 
             if args.graph:
-                Graph.write_gexf_file(EGraph, name.replace('|', '_'))
+                eval_path = Path(eval_filename)
+                gefxFolder = os.path.join(eval_path.parent.absolute(),"gefx")
+                Path(gefxFolder).mkdir(parents=True, exist_ok=True)
+
+                Graph.write_gexf_file(EGraph, gefxFolder, name.replace('|', '_'))
 
         if eval_filename:
             print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")
@@ -85,7 +113,7 @@ def main(args):
             ev.export_csv(eval_filename, egraphs, False)
 
         if args.select_pairs:
-            ev.find_best_pairs(egraphs)
+            ev.find_best_pairs(egraphs,eval_filename + '_top_pairs.txt')
 
 
 

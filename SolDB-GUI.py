@@ -1,21 +1,20 @@
+from contextlib import nullcontext
+from curses.ascii import NUL
 from DeckLibrary import DeckLibrary
 from Card_Library import Deck, UniversalCardLibrary
 from NetApi import NetApi
 import Evaluation as ev
-import Graph
-import argparse
 from CacheManager import CacheManager
 
 
 import wx
 from wx.adv import AboutBox, AboutDialogInfo
 from wxSolDB import SolDBMainFrame, SolDBPanel
-import requests
-import json
-import os
+
 from urllib.parse import urlparse
 from soldb import main as SolDB
 from argparse import Namespace
+import os
 
 class SolDBMain(SolDBMainFrame):
 	def __init__(self, parent):
@@ -59,29 +58,42 @@ class SolDBWindow(SolDBPanel):
 
 	def analyzeDeck( self, event ):
 		destination_path=""
-		with wx.DirDialog(self, "Select output folder:",
+		with wx.DirDialog(self, "Select folder to create evaluation in:",
                        style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as dirDialog:
 
 			if dirDialog.ShowModal() == wx.ID_CANCEL:
 				return
 
-			destination_path = dirDialog.GetPath()
+			destination_path = os.path.join(dirDialog.GetPath(),'evaluation') 
 
-
-		args = Namespace(username=self.userCtrl.Value, 
+			if self.SolDBTabs.GetSelection() == 0:
+				#single deck
+				args = Namespace(username=self.userCtrl.Value, 
 						type=self.calcType(),
 						id=self.idCtrl.Value,
 						filename=None,
-						eval=self.idCtrl.Value,
-						graph=False,
+						eval=destination_path,
+						graph=self.createGraphCtrl.Value,
 						filter=None,
 						select_pairs=False
 						)
+			else:
+				if self.filterCtrl.Value != "":
+					filterContent = self.filterCtrl.Value
+				else:
+					filterContent = None
+
+				args = Namespace(username=self.userCtrl.Value, 
+						type=self.calcType(),
+						id=self.idCtrl.Value,
+						filename=None,
+						eval=destination_path,
+						graph=self.createGraphCtrl.Value,
+						filter=filterContent,
+						select_pairs=self.selectPairsCtrl.Value
+						)
 
 		SolDB(args)
-
-	def evalDecks( self, event ):
-		event.Skip()
 
 	
 

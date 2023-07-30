@@ -124,8 +124,8 @@ def print_graph(G, output_file=None):
         print(text)
 
  
-def load_gexf_file(filename):
-    pathname = './gephi/' + filename + '.gexf'
+def load_gexf_file(graphfolder, filename):
+    pathname = os.path.join(graphfolder,filename + '.gexf')
     if not os.path.isfile(pathname):
         raise FileNotFoundError(f"File '{pathname}' not found.")
     
@@ -135,8 +135,8 @@ def load_gexf_file(filename):
     return G
 
 
-def write_gexf_file(graph, filename):
-    nx.write_gexf(graph, './gephi/' + filename + '.gexf')
+def write_gexf_file(graph, graphfolder, filename):
+    nx.write_gexf(graph, os.path.join(graphfolder,filename + '.gexf'))
 
 
 def is_eligible(graph, logical_expression):        

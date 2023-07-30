@@ -17,7 +17,7 @@ import wx.xrc
 class SolDBMainFrame ( wx.Frame ):
 
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"SolDB", pos = wx.DefaultPosition, size = wx.Size( 500,300 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"SolDB", pos = wx.DefaultPosition, size = wx.Size( 500,350 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
@@ -60,7 +60,7 @@ class SolDBMainFrame ( wx.Frame ):
 
 class SolDBPanel ( wx.Panel ):
 
-	def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( 549,499 ), style = wx.TAB_TRAVERSAL, name = wx.EmptyString ):
+	def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( 549,550 ), style = wx.TAB_TRAVERSAL, name = wx.EmptyString ):
 		wx.Panel.__init__ ( self, parent, id = id, pos = pos, size = size, style = style, name = name )
 
 		mainSizer = wx.BoxSizer( wx.VERTICAL )
@@ -100,48 +100,20 @@ class SolDBPanel ( wx.Panel ):
 		decksFirstHSizer1.Add( self.idLabel, 0, wx.ALL, 5 )
 
 		self.idCtrl = wx.TextCtrl( self.AnalyzeDeck, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 240,-1 ), 0 )
-		self.idCtrl.SetToolTip( u"id of deck" )
+		self.idCtrl.SetToolTip( u"Username used on the solforgefusion.com website" )
 
 		decksFirstHSizer1.Add( self.idCtrl, 0, wx.ALL, 5 )
 
 
 		analyzeMainSizer.Add( decksFirstHSizer1, 1, wx.EXPAND, 5 )
 
-		buttonHSizer = wx.BoxSizer( wx.HORIZONTAL )
-
-
-		buttonHSizer.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		self.AnalyzeBtn = wx.Button( self.AnalyzeDeck, wx.ID_ANY, u"Analyze", wx.DefaultPosition, wx.DefaultSize, 0 )
-
-		self.AnalyzeBtn.SetBitmapPosition( wx.RIGHT )
-		buttonHSizer.Add( self.AnalyzeBtn, 0, wx.ALL, 5 )
-
-
-		analyzeMainSizer.Add( buttonHSizer, 1, wx.EXPAND, 5 )
-
 
 		self.AnalyzeDeck.SetSizer( analyzeMainSizer )
 		self.AnalyzeDeck.Layout()
 		analyzeMainSizer.Fit( self.AnalyzeDeck )
-		self.SolDBTabs.AddPage( self.AnalyzeDeck, u"Analyze Deck", True )
+		self.SolDBTabs.AddPage( self.AnalyzeDeck, u"Evaluate Deck", True )
 		self.EvalCollection = wx.Panel( self.SolDBTabs, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		EvalMainSizer = wx.BoxSizer( wx.VERTICAL )
-
-		self.createGraphCtrl = wx.CheckBox( self.EvalCollection, wx.ID_ANY, u"Create Graph", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.createGraphCtrl.SetToolTip( u"Includes an extra card with faction logo for each faction in list, use it for minions or to seperate factions in the box" )
-
-		EvalMainSizer.Add( self.createGraphCtrl, 0, wx.ALL, 5 )
-
-		self.selectPairsCtrl = wx.CheckBox( self.EvalCollection, wx.ID_ANY, u"Create Top Pairs File", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.selectPairsCtrl.SetToolTip( u"Includes an extra card with faction logo for each faction in list, use it for minions or to seperate factions in the box" )
-
-		EvalMainSizer.Add( self.selectPairsCtrl, 0, wx.ALL, 5 )
-
-		self.offlineCtrl = wx.CheckBox( self.EvalCollection, wx.ID_ANY, u"Offline Mode", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.offlineCtrl.SetToolTip( u"Includes an extra card with faction logo for each faction in list, use it for minions or to seperate factions in the box" )
-
-		EvalMainSizer.Add( self.offlineCtrl, 0, wx.ALL, 5 )
 
 		filterHSizer = wx.BoxSizer( wx.HORIZONTAL )
 
@@ -158,18 +130,10 @@ class SolDBPanel ( wx.Panel ):
 
 		EvalMainSizer.Add( filterHSizer, 1, wx.EXPAND, 5 )
 
-		buttonLabelHSizer = wx.BoxSizer( wx.HORIZONTAL )
+		self.selectPairsCtrl = wx.CheckBox( self.EvalCollection, wx.ID_ANY, u"Create Top Pairs File", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.selectPairsCtrl.SetToolTip( u"Includes an extra card with faction logo for each faction in list, use it for minions or to seperate factions in the box" )
 
-
-		buttonLabelHSizer.Add( ( 0, 0), 1, wx.EXPAND, 5 )
-
-		self.EvalBtn = wx.Button( self.EvalCollection, wx.ID_ANY, u"Evaluate", wx.DefaultPosition, wx.DefaultSize, 0 )
-
-		self.EvalBtn.SetBitmapPosition( wx.RIGHT )
-		buttonLabelHSizer.Add( self.EvalBtn, 0, wx.ALL, 5 )
-
-
-		EvalMainSizer.Add( buttonLabelHSizer, 1, wx.EXPAND, 5 )
+		EvalMainSizer.Add( self.selectPairsCtrl, 0, wx.ALL, 5 )
 
 
 		self.EvalCollection.SetSizer( EvalMainSizer )
@@ -178,6 +142,31 @@ class SolDBPanel ( wx.Panel ):
 		self.SolDBTabs.AddPage( self.EvalCollection, u"Evaluate Collection", False )
 
 		SolDBMainSizer.Add( self.SolDBTabs, 0, wx.EXPAND |wx.ALL, 5 )
+
+		self.createGraphCtrl = wx.CheckBox( self.mainPage, wx.ID_ANY, u"Create Graph", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.createGraphCtrl.SetToolTip( u"Includes an extra card with faction logo for each faction in list, use it for minions or to seperate factions in the box" )
+
+		SolDBMainSizer.Add( self.createGraphCtrl, 0, wx.ALL, 5 )
+
+		self.offlineCtrl = wx.CheckBox( self.mainPage, wx.ID_ANY, u"Offline Mode", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.offlineCtrl.SetToolTip( u"Includes an extra card with faction logo for each faction in list, use it for minions or to seperate factions in the box" )
+
+		SolDBMainSizer.Add( self.offlineCtrl, 0, wx.ALL, 5 )
+
+		buttonHSizer = wx.BoxSizer( wx.HORIZONTAL )
+
+
+		buttonHSizer.Add( ( 0, 0), 1, wx.EXPAND, 5 )
+
+		self.AnalyzeBtn = wx.Button( self.mainPage, wx.ID_ANY, u"Evaluate", wx.DefaultPosition, wx.DefaultSize, 0 )
+
+		self.AnalyzeBtn.SetDefault()
+
+		self.AnalyzeBtn.SetBitmapPosition( wx.RIGHT )
+		buttonHSizer.Add( self.AnalyzeBtn, 0, wx.ALL, 5 )
+
+
+		SolDBMainSizer.Add( buttonHSizer, 1, wx.EXPAND, 5 )
 
 
 		self.mainPage.SetSizer( SolDBMainSizer )
@@ -191,7 +180,6 @@ class SolDBPanel ( wx.Panel ):
 
 		# Connect Events
 		self.AnalyzeBtn.Bind( wx.EVT_BUTTON, self.analyzeDeck )
-		self.EvalBtn.Bind( wx.EVT_BUTTON, self.evalDecks )
 
 	def __del__( self ):
 		pass
@@ -199,9 +187,6 @@ class SolDBPanel ( wx.Panel ):
 
 	# Virtual event handlers, override them in your derived class
 	def analyzeDeck( self, event ):
-		event.Skip()
-
-	def evalDecks( self, event ):
 		event.Skip()
 
 

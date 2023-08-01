@@ -90,8 +90,10 @@ class Deck:
         if inspire_levels:
             inspired_abilities = deepcopy(forgeborn.abilities)
             for level in inspire_levels: 
-                inspired_abilities[5] = other.forgeborn.abilities[level]            
-                print(f"Setting Ability 5 with {other.forgeborn.abilities[level]} from {other.faction}")
+                inspired_abilities[5]     = inspired_abilities[level]
+                inspired_abilities[level] = other.forgeborn.abilities[level]                
+                inspired_abilities[5].name = f"{level}{inspired_abilities[5].name}"
+                print(f"Setting Ability {level} with {other.forgeborn.abilities[level]} from {other.faction}")
             forgeborn = Forgeborn(forgeborn.id, forgeborn.name, inspired_abilities)
                 
         faction = self.faction + '|' + other.faction                 

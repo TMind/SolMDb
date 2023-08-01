@@ -38,7 +38,7 @@ def handle_synergy_and_edges(G, source_entity, target_entity):
 def create_deck_graph(fusion):        
     G = nx.DiGraph(name = fusion.name, fusion=fusion , mod = 0, between = 0, avglbl = 0, community_labels = {})
         
-    G.add_nodes_from(fusion.fused.cards)
+    G.add_nodes_from(list(fusion.fused.cards.keys()) + list(f"{entity.name}{level}" for level, entity in fusion.fused.forgeborn.abilities.items()))
 
     # Create a dictionary of whether any interface in the card has '*' or '+' in its range
     card_ranges = {}
@@ -146,7 +146,7 @@ def is_eligible(graph, logical_expression):
     evaluated_expression = eval(translated_expression)    
     return evaluated_expression
 
-def translate_expression(graph, logical_expression):
+def translate_expression(graph, logical_expression):                
     translated_expression = logical_expression.replace('-', ' or ')
     translated_expression = translated_expression.replace('+', ' and ')
 

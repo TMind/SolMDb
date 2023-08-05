@@ -1,6 +1,8 @@
-from DeckLibrary import DeckLibrary
-from Card_Library import Deck, UniversalCardLibrary
-from NetApi import NetApi
+from DeckLibrary    import DeckLibrary
+from Card_Library   import UniversalCardLibrary
+from CacheManager   import CacheManager
+from Synergy        import SynergyTemplate
+from NetApi         import NetApi
 import Evaluation as ev
 import Graph
 import argparse
@@ -9,6 +11,7 @@ import os
 from appdirs import user_data_dir
 from pathlib import Path
 from CacheManager import CacheManager
+
 
 def main(args):
 
@@ -50,7 +53,10 @@ def main(args):
 
     cache_manager = CacheManager(file_mappings)
 
-    myUCL = cache_manager.load_or_create(ucl, lambda: UniversalCardLibrary(file_mappings[ucl][0],file_mappings[ucl][1]))
+    # Initialize synergy template singleton with optional file
+    SynergyTemplate(args.synergies)
+
+    myUCL = cache_manager.load_or_create('cache/ucl.pkl', lambda: UniversalCardLibrary(file_mappings['cache/ucl.pkl'][0],file_mappings['cache/ucl.pkl'][1]))
 
     myApi = NetApi()
     net_decks = myApi.request_decks(
@@ -98,7 +104,7 @@ def main(args):
             egraphs = eligible_graphs
 
         for name, EGraph in egraphs.items():            
-            Graph.print_graph(EGraph, eval_filename + "_eval.txt")
+            Graph.print_graph(EGraph, eval_filename)
 
             if args.graph:
                 eval_path = Path(eval_filename)
@@ -131,14 +137,13 @@ if __name__ == "__main__":
     # If both username and file is given, export deckbase to file.json 
     # If only file is given import deckbase from file.json 
     parser.add_argument("--filename",  default=None,  help="Offline Deck Database Name")
-    
-    #parser.add_argument("--filename", help="Filename for deck data for offline use")    
+    parser.add_argument("--synergies", default=None, help="CSV Filename for synergy lookup")    
 
     # Arguments for Evaluation
     
     parser.add_argument("--eval", nargs='?', const=True, action="store",  help="Evaluate possible fusions. Optional filename for .csv export")    
     parser.add_argument("--graph", action="store_true",  help="Create Graph '.gefx'")
-    parser.add_argument("--filter", default=None, help="Filter by card names. Syntax: '<cardname>+<cardname>-<cardname>' + = AND, - = OR ")
+    parser.add_argument("--filter", default=None, help="Filter by card names. Syntax: \"<cardname>+'<card name>'-<cardname>\" + = AND, - = OR ")
     parser.add_argument("--select_pairs", action="store_true", help="Select top pairs")
     
     # Parse the command-line arguments

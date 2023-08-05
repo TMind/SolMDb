@@ -1,12 +1,11 @@
 __pycache__/
-gephi/*
-data/*
-cache/*
+gephi/
+data/
+cache/
 csv/*
 !csv/sff.csv
 !csv/synergies.csv
-txt/*
-.vscode/launch.json
-.vscode/tasks.json
+txt/
+.vscode/*
 .DS_Store
 .vscode/launch.json

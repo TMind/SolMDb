@@ -38,7 +38,7 @@ def handle_synergy_and_edges(G, source_entity, target_entity):
 def create_deck_graph(fusion):        
     G = nx.DiGraph(name = fusion.name, fusion=fusion , mod = 0, between = 0, avglbl = 0, community_labels = {})
         
-    G.add_nodes_from(fusion.fused.cards)
+    G.add_nodes_from(list(fusion.fused.cards.keys()) + list(f"{level}{entity.name}" for level, entity in fusion.fused.forgeborn.abilities.items()))
 
     # Create a dictionary of whether any interface in the card has '*' or '+' in its range
     card_ranges = {}
@@ -69,7 +69,7 @@ def create_deck_graph(fusion):
     return G
 
 
-def print_graph(G, output_file=None):
+def print_graph(G, output_filename=None):
     """
     Print or write the graph information in a tabular format.
 
@@ -79,7 +79,9 @@ def print_graph(G, output_file=None):
 
     Returns:
         None
-    """
+    """    
+    output_file = None if output_filename is None else f"txt/{output_filename}" 
+    
     first_time = not output_file or not os.path.isfile(output_file)
     text = f"\n===============================================================\n"
     text += f"\nFusion: {G.graph['name']}\n"
@@ -144,20 +146,26 @@ def is_eligible(graph, logical_expression):
     evaluated_expression = eval(translated_expression)    
     return evaluated_expression
 
-def translate_expression( graph, logical_expression):
-    
+def translate_expression(graph, logical_expression):                
     translated_expression = logical_expression.replace('-', ' or ')
     translated_expression = translated_expression.replace('+', ' and ')
-    
+
     # Replace variable names with their graph presence checks
-    for variable_name in get_variable_names(logical_expression):        
-        presence_check = str(any(variable_name in node for node in graph.nodes))
+    for variable_name in get_variable_names(logical_expression):
+        # Remove single quotes around the variable name if they exist
+        stripped_variable_name = variable_name.replace("'","") #strip("'")
+        presence_check = str(any(stripped_variable_name in node for node in graph.nodes))
+        # Replace the quoted or unquoted variable name with its presence check
+        translated_expression = translated_expression.replace(f"'{variable_name}'", presence_check)
         translated_expression = translated_expression.replace(variable_name, presence_check)
-    
+
     # Return the translated expression
     return translated_expression
 
+
 def get_variable_names(logical_expression):
-    variable_pattern = r'\b\w+\b'  # Regular expression pattern to match variable names
+    variable_pattern = r"\b(?:\w+\b\s*)+"
+    #variable_pattern = r"\b\w+(?: \w+)?\b" #r"\b\w+\b"  # Regular expression pattern to match variable names
     variable_names = re.findall(variable_pattern, logical_expression)
     return variable_names
+

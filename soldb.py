@@ -10,7 +10,6 @@ import sys
 import os
 from appdirs import user_data_dir
 from pathlib import Path
-from CacheManager import CacheManager
 
 
 def main(args):
@@ -55,8 +54,8 @@ def main(args):
 
     # Initialize synergy template singleton with optional file
     SynergyTemplate(args.synergies)
-
-    myUCL = cache_manager.load_or_create('cache/ucl.pkl', lambda: UniversalCardLibrary(file_mappings['cache/ucl.pkl'][0],file_mappings['cache/ucl.pkl'][1]))
+    
+    myUCL = cache_manager.load_or_create(ucl, lambda: UniversalCardLibrary(file_mappings[ucl][0],file_mappings[ucl][1]))
 
     myApi = NetApi()
     net_decks = myApi.request_decks(

@@ -1,5 +1,5 @@
 from DeckLibrary    import DeckLibrary
-from Card_Library   import UniversalCardLibrary
+from Card_Library   import Deck, UniversalCardLibrary
 from CacheManager   import CacheManager
 from Synergy        import SynergyTemplate
 from NetApi         import NetApi
@@ -53,7 +53,7 @@ def main(args):
     cache_manager = CacheManager(file_mappings)
 
     # Initialize synergy template singleton with optional file
-    SynergyTemplate(args.synergies)
+    SynergyTemplate()
     
     myUCL = cache_manager.load_or_create(ucl, lambda: UniversalCardLibrary(file_mappings[ucl][0],file_mappings[ucl][1]))
 
@@ -65,21 +65,41 @@ def main(args):
         filename=args.filename
     )
 
+#   Evaluation type  
+#   - collection / fusion / halfdeck 
+
+    SelectionType = 'Collection'
+    if args.id : 
+        if args.type == 'deck':
+            SelectionType = 'Deck'
+        elif args.type == 'fuseddeck':
+            SelectionType = 'Fusion'    
+        
     local_decks = []
-    if not args.username and not args.id:
+
+    if args.filename:
+    #if not args.username and not args.id:
         local_decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
 
-    DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary(local_decks))
+    DeckCollection = DeckLibrary([])
+
+    if SelectionType == 'Collection':
+        DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary(local_decks))
 
     DeckCollection.update(net_decks)
-    cache_manager.save_object_to_cache(deckLibrary, DeckCollection)
 
+    if SelectionType == 'Collection':
+        cache_manager.save_object_to_cache(deckLibrary, DeckCollection)
+
+
+    eval_filename = None
     if args.eval:
-        eval_filename = None
         if args.eval is not True:
             eval_filename = args.eval
 
-        egraphs = cache_manager.load_object_from_cache(graphFolder) or {}
+        egraphs = {}
+        if SelectionType == 'Collection':
+            egraphs = cache_manager.load_object_from_cache(graphFolder) or {}
 
         new_graphs = False
         
@@ -91,7 +111,8 @@ def main(args):
                 new_graphs = True
 
         if new_graphs:
-            cache_manager.save_object_to_cache(graphFolder, egraphs)
+            if SelectionType == 'Collection':
+                cache_manager.save_object_to_cache(graphFolder, egraphs)
 
         if args.filter:
             
@@ -113,7 +134,8 @@ def main(args):
                 Graph.write_gexf_file(EGraph, gefxFolder, name.replace('|', '_'))
 
         if eval_filename:
-            print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")
+            #eval_filename = f"{dataFolder}/{eval_filename}"
+            print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")            
             ev.export_csv(eval_filename + '_excl', egraphs, True)
             ev.export_csv(eval_filename, egraphs, False)
 

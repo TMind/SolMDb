@@ -200,9 +200,10 @@ class UniversalCardLibrary:
                 for level in range(3):                    
                     level += 2
                     name = row[f"{level}name"] if row.get(f"{level}name") else ""
-                    text = row[f"{level}text"] if row.get(f"{level}text") else ""
+                    text = row[f"{level}text"] if row.get(f"{level}text") else ""                 
+                    name = f"{level}{name}"   
                     abilities[level] = self.search_entity(name,'Ability')
-                #print(f"Forgeborn:  [{id}] {title} {','.join(ability.name for ability in abilities.values())}")
+                print(f"Forgeborn:  [{id}] {title} {','.join(ability.name for ability in abilities.values())}")
                 forgeborn[id] = Forgeborn(id, title, abilities)
         return forgeborn
         
@@ -269,7 +270,7 @@ class UniversalCardLibrary:
             if card_type is None or entity.card_type == card_type:
                 if entity.name == name:
                     return entity
-        #print(f"Entity not found: {name} , {card_type}")
+        print(f"Entity not found: {name} , {card_type}")
         return None
 
     def get_forgeborn(self, id):

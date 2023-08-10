@@ -69,7 +69,7 @@ def create_deck_graph(fusion):
     return G
 
 
-def print_graph(G, output_filename=None):
+def print_graph(G, output_file=None):
     """
     Print or write the graph information in a tabular format.
 
@@ -79,9 +79,7 @@ def print_graph(G, output_filename=None):
 
     Returns:
         None
-    """    
-    output_file = None if output_filename is None else f"txt/{output_filename}" 
-    
+    """        
     first_time = not output_file or not os.path.isfile(output_file)
     text = f"\n===============================================================\n"
     text += f"\nFusion: {G.graph['name']}\n"

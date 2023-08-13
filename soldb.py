@@ -1,13 +1,14 @@
 from DeckLibrary    import DeckLibrary
-from Card_Library   import Deck, UniversalCardLibrary
+from Card_Library   import UniversalCardLibrary
 from CacheManager   import CacheManager
 from Synergy        import SynergyTemplate
 from NetApi         import NetApi
+from Filter import Filter
 import Evaluation as ev
 import Graph
 import argparse
-import sys
-import os
+from tqdm import tqdm 
+import os, time
 from appdirs import user_data_dir
 from pathlib import Path
 
@@ -40,9 +41,9 @@ def main(args):
         deck_library_name = f"{args.filename}_library"
         eval_graphs_name = f"{args.filename}_graphs"
 
-    ucl = os.path.join(cacheFolder,'ucl.pkl')
-    deckLibrary = os.path.join(cacheFolder,deck_library_name + '.pkl')
-    graphFolder = os.path.join(cacheFolder,eval_graphs_name + '.pkl')
+    ucl = os.path.join(cacheFolder,'ucl.zpkl')
+    deckLibrary = os.path.join(cacheFolder,deck_library_name + '.zpkl')
+    graphFolder = os.path.join(cacheFolder,eval_graphs_name + '.zpkl')
 
     file_mappings = {
         ucl : [os.path.join(dataFolder,'sff.csv'), os.path.join(dataFolder,'forgeborn.csv')],
@@ -83,6 +84,19 @@ def main(args):
 
     DeckCollection = DeckLibrary([])
 
+    if args.filter:
+
+        col_filter_dict = {}
+        criteria_list = args.filter.split(", ")
+        for criteria in criteria_list:
+            key, values = criteria.split("=")
+            values_list = values.split(":")
+            col_filter_dict[key] = values_list
+
+        col_filter = Filter(col_filter_dict)
+        local_decks = col_filter.apply(local_decks)    
+        net_decks   = col_filter.apply(net_decks)
+
     if SelectionType == 'Collection':
         DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary(local_decks))
 
@@ -101,16 +115,22 @@ def main(args):
         if SelectionType == 'Collection':
             egraphs = cache_manager.load_object_from_cache(graphFolder) or {}
 
-        new_graphs = False
+        new_graphs = 0
         
+        total_fusions = len(DeckCollection.library['Fusion'])
+        progress_bar = tqdm(total=total_fusions, desc="Creating Fusion Graphs",mininterval=0.1, colour='BLUE')
+
         for name, fusion in DeckCollection.library['Fusion'].items():
             if name not in egraphs:
                 DeckGraph = Graph.create_deck_graph(fusion)
                 ev.evaluate_graph(DeckGraph)
-                egraphs[name] = DeckGraph
-                new_graphs = True
+                egraphs[name] = DeckGraph                
+            time.sleep(0.001)
+            progress_bar.update(1)
+            new_graphs += 1
+        progress_bar.close()
 
-        if new_graphs:
+        if new_graphs > 0:
             if SelectionType == 'Collection':
                 cache_manager.save_object_to_cache(graphFolder, egraphs)
 

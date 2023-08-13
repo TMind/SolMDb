@@ -1,11 +1,10 @@
 from collections import defaultdict
-from Interface import InterfaceCollection
 from Synergy import SynergyTemplate
-from itertools import chain
 import networkx as nx
 import infomap
 import csv
-
+import time
+from tqdm import tqdm
 
 def find_best_pairs(graphs,outpath):
 
@@ -134,7 +133,11 @@ def export_csv(csvname, graphs, local_mode=False):
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
         writer.writeheader()
 
-        for i, (key, EGraph) in enumerate(graphs.items()):         
+         # Create a tqdm instance for the loop
+        progress_bar = tqdm(graphs.items(), total=len(graphs), desc="Exporting CSV", mininterval=0.1, colour='RED')
+
+
+        for i, (key, EGraph) in enumerate(progress_bar):         
 
             #Fusion
             fusion = EGraph.graph['fusion']
@@ -210,3 +213,6 @@ def export_csv(csvname, graphs, local_mode=False):
                 row[label] = label_weights.get(label, 0)  # use 0 if the label does not exist in this graph
 
             writer.writerow(row)
+            time.sleep(0.001)
+
+        progress_bar.close()

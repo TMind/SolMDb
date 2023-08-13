@@ -2,7 +2,7 @@ import requests
 import json
 from Card_Library import UniversalCardLibrary, Fusion
 from typing import List, Tuple, Dict
-
+from tqdm import tqdm
 
 class NetApi:
 
@@ -33,6 +33,9 @@ class NetApi:
         else:
             paginatationRequired = False
 
+        # Create progress bar 
+        progress_bar = tqdm(total=data['Total'], initial=data['Count'] ,desc="Fetching Data", colour='YELLOW')
+
         while paginatationRequired == True:
             self.params["exclusiveStartKey"] = json.dumps(data['LastEvaluatedKey'])
             page_response = requests.get(endpoint, params=self.params)
@@ -41,12 +44,16 @@ class NetApi:
                 print(f"Error in response: {page_data['error']}")
                 return []
             data["Items"].extend(page_data["Items"])
+            
+            records_fetched = page_data['Count']
+            progress_bar.update(records_fetched)
+            
             if "LastEvaluatedKey" in page_data:
                 data["LastEvaluatedKey"] = page_data["LastEvaluatedKey"]
             else:
-                paginatationRequired = False
-                
+                paginatationRequired = False            
         #end pagination code
+        progress_bar.close()
 
         if 'error' in data:
             print(f"Error in response: {data['error']}")
@@ -55,7 +62,7 @@ class NetApi:
         with open('data/online_request.json', 'w') as f:
             json.dump(data, f)
 
-        print("Loading Data...")
+        #print("Loading Data...")
         decks_data = self.ucl.load_data('data/online_request.json')
         return decks_data
 

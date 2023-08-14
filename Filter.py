@@ -5,15 +5,22 @@ class Filter:
             'faction'  : 'faction',
             'deckname' : 'name',
             'forgeborn': 'forgeborn.name',
-            'cardname' : 'cards'
+            'cards'    : 'cards'
         }
 
     def apply(self, objects):
-        filtered_objects = []
-        for obj in objects:
-            if self.match(obj):
-                filtered_objects.append(obj)
-        return filtered_objects
+        if isinstance(objects, dict):
+            filtered_objects = {}
+            for key, obj in objects.items():
+                if self.match(obj):
+                    filtered_objects[key] = obj
+            return filtered_objects
+        else:
+            filtered_objects = []
+            for obj in objects:
+                if self.match(obj):
+                    filtered_objects.append(obj)
+            return filtered_objects
 
     def match(self, obj):
         for attribute, values in self.criteria_list.items():

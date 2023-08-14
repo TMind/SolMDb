@@ -84,10 +84,11 @@ def main(args):
 
     DeckCollection = DeckLibrary([])
 
+    col_filter = None
     if args.filter:
 
-        col_filter_dict = {}
-        criteria_list = args.filter.split(", ")
+        col_filter_dict = {}    
+        criteria_list = args.filter.split(",")
         for criteria in criteria_list:
             key, values = criteria.split("=")
             values_list = values.split(":")
@@ -97,12 +98,12 @@ def main(args):
         local_decks = col_filter.apply(local_decks)    
         net_decks   = col_filter.apply(net_decks)
 
-    if SelectionType == 'Collection':
+    elif SelectionType == 'Collection':
         DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary(local_decks))
 
     DeckCollection.update(net_decks)
 
-    if SelectionType == 'Collection':
+    if SelectionType == 'Collection' and not col_filter:
         cache_manager.save_object_to_cache(deckLibrary, DeckCollection)
 
 
@@ -112,7 +113,7 @@ def main(args):
             eval_filename = args.eval
 
         egraphs = {}
-        if SelectionType == 'Collection':
+        if SelectionType == 'Collection' and not col_filter:
             egraphs = cache_manager.load_object_from_cache(graphFolder) or {}
 
         new_graphs = 0
@@ -131,17 +132,17 @@ def main(args):
         progress_bar.close()
 
         if new_graphs > 0:
-            if SelectionType == 'Collection':
+            if SelectionType == 'Collection' and not col_filter:
                 cache_manager.save_object_to_cache(graphFolder, egraphs)
 
-        if args.filter:
+        # if args.filter:
             
-            eligible_graphs = {}
-            for name, graph in egraphs.items():
-                if Graph.is_eligible(graph,args.filter):
-                    eligible_graphs[name] = graph
+        #     eligible_graphs = {}
+        #     for name, graph in egraphs.items():
+        #         if Graph.is_eligible(graph,args.filter):
+        #             eligible_graphs[name] = graph
 
-            egraphs = eligible_graphs
+        #     egraphs = eligible_graphs
 
         for name, EGraph in egraphs.items():            
             Graph.print_graph(EGraph, eval_filename)

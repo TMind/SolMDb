@@ -1,6 +1,7 @@
 from Card_Library import Deck, Fusion
 from tqdm import tqdm 
 import time
+from prof import profileit
 class DeckLibrary:
     def __init__(self, decks_or_fusions):
         self.library = {
@@ -10,6 +11,7 @@ class DeckLibrary:
 
         self.update(decks_or_fusions)
 
+    @profileit("profile_for_make_fusions_001")
     def make_fusions(self):
         total_fusions = len(self.library['Deck']) ** 2 - len(self.library['Deck'])
         if total_fusions == 0: return 
@@ -28,6 +30,7 @@ class DeckLibrary:
                     progress_bar.update(1)
         progress_bar.close()
 
+    @profileit("profile_for_update_001")
     def update(self, objects):        
         total_updates = len(objects)
         if total_updates == 0 : return 

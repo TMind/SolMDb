@@ -8,7 +8,7 @@ import Evaluation as ev
 import Graph
 import argparse
 from tqdm import tqdm 
-import os, time
+import os, time, re
 from appdirs import user_data_dir
 from pathlib import Path
 
@@ -88,7 +88,8 @@ def main(args):
     if args.filter:
 
         col_filter_dict = {}    
-        criteria_list = args.filter.split(",")
+        criteria_list = re.split(r',\s*', args.filter)
+        #criteria_list = args.filter.split(",")
         for criteria in criteria_list:
             key, values = criteria.split("=")
             values_list = values.split(":")

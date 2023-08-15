@@ -86,15 +86,22 @@ class Deck:
             return 
         forgeborn = self.forgeborn        
         
-        inspire_levels = [level for level, ability in forgeborn.abilities.items() if ability.name == 'Inspire']
-        if inspire_levels:
-            inspired_abilities = deepcopy(forgeborn.abilities)
-            for level in inspire_levels: 
-                inspired_abilities[5]     = inspired_abilities[level]
-                inspired_abilities[level] = other.forgeborn.abilities[level]                
-                inspired_abilities[5].name = f"{level}{inspired_abilities[5].name}"
-                print(f"Setting Ability {level} with {other.forgeborn.abilities[level]} from {other.faction}")
-            forgeborn = Forgeborn(forgeborn.id, forgeborn.name, inspired_abilities)
+        inspire_abilities = [ability for ability in forgeborn.abilities if 'Inspire' in ability]
+
+        #inspire_levels = [ability[0] for ability in forgeborn.abilities if 'Inspire' in ability ]
+        if inspire_abilities:
+            new_abilities = forgeborn.abilities.copy()
+            
+
+            for inspire_ability in inspire_abilities: 
+                level = inspire_ability[0]
+                for other_ability_name, other_ability in other.forgeborn.abilities.items():
+                    if other_ability_name[0].startswith(str(level)):
+                        #print(f"Adding {other_ability_name} from {other.forgeborn.name}")
+                        new_abilities[other_ability_name] = other_ability
+                        break  # Assuming you only want the first match
+
+            forgeborn = Forgeborn(forgeborn.id, forgeborn.name, new_abilities)
                 
         faction = self.faction + '|' + other.faction                 
         cards = { **self.cards, **other.cards} 
@@ -188,6 +195,7 @@ class UniversalCardLibrary:
         self.entities  = self._read_entities_from_csv(sff_path)
         self.forgeborn = self._read_forgeborn_from_csv(fb_path)
 
+
     def _read_forgeborn_from_csv(self, csv_path):
         forgeborn = {}
         with open(csv_path, 'r') as csvfile:
@@ -202,7 +210,7 @@ class UniversalCardLibrary:
                     name = row[f"{level}name"] if row.get(f"{level}name") else ""
                     text = row[f"{level}text"] if row.get(f"{level}text") else ""                 
                     name = f"{level}{name}"   
-                    abilities[level] = self.search_entity(name,'Ability')
+                    abilities[name] = self.search_entity(name,'Ability')
                 #print(f"Forgeborn:  [{id}] {title} {','.join(ability.name for ability in abilities.values())}")
                 forgeborn[id] = Forgeborn(id, title, abilities)
         return forgeborn
@@ -412,8 +420,3 @@ class UniversalCardLibrary:
             entity_strings.append(str(entity))
         return "\n".join(entity_strings)    
   
-
-
-
-
-        

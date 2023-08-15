@@ -2,10 +2,11 @@ class Filter:
     def __init__(self, criteria_list):       
         self.criteria_list = criteria_list 
         self.criteria_dict = {
-            'faction'  : 'faction',
-            'deckname' : 'name',
-            'forgeborn': 'forgeborn.name',
-            'cards'    : 'cards'
+            'F'     : ('faction', str),
+            'D'     : ('name', str),
+            'FB'    : ('forgeborn.name', str),
+            'C'     : ('cards', list),
+            'A'     : ('forgeborn.abilities', list)
         }
 
     def apply(self, objects):
@@ -25,26 +26,21 @@ class Filter:
     def match(self, obj):
         for attribute, values in self.criteria_list.items():
             if attribute in self.criteria_dict:
-                attribute_to_check = self.criteria_dict[attribute]
-                attr_item = getattr(obj, attribute_to_check)
-                if isinstance(attr_item, dict):
-                    if any(value in key for key in attr_item.keys() for value in values):
+                attribute_path, data_type = self.criteria_dict[attribute]                                
+                attributes = attribute_path.split('.')
+                current_attr = obj
+                for attr in attributes:
+                    current_attr = getattr(current_attr, attr)
+
+                # Dictionary
+                if data_type is dict:
+                    if any(value in key for key in current_attr.values() for value in values):
                         return True
-                elif isinstance(attr_item, list):
-                    if any(value in attr for value in values for attr in attr_item):
+                #List
+                elif data_type is list:
+                    if any(value in attr for value in values for attr in current_attr):
                         return True
-                elif any(value in str(attr_item) for value in values):
+                #String
+                elif any(value in str(current_attr) for value in values):
                     return True
         return False
-
-
-
-
-
-# Criteria list exapmle
-# {    
-#    faction   => 'Alloyn'
-#    cardname  => 'Mantis'
-#    forgeborn => 'Cercee'
-#    deckname  => 'Whizzing'
-# }

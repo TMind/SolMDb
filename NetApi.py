@@ -33,8 +33,11 @@ class NetApi:
         else:
             paginatationRequired = False
 
-        # Create progress bar 
-        progress_bar = tqdm(total=data['Total'], initial=data['Count'] ,desc="Fetching Data", colour='YELLOW')
+        
+        # Create progress bar         
+        progress_bar = None
+        if not id:
+            progress_bar = tqdm(total=data['Total'], initial=data['Count'] ,desc="Fetching Data", colour='YELLOW') 
 
         while paginatationRequired == True:
             self.params["exclusiveStartKey"] = json.dumps(data['LastEvaluatedKey'])
@@ -52,8 +55,8 @@ class NetApi:
                 data["LastEvaluatedKey"] = page_data["LastEvaluatedKey"]
             else:
                 paginatationRequired = False            
-        #end pagination code
-        progress_bar.close()
+        #end pagination code        
+        progress_bar.close() if progress_bar else None
 
         if 'error' in data:
             print(f"Error in response: {data['error']}")

@@ -97,7 +97,7 @@ class Deck:
                 level = inspire_ability[0]
                 for other_ability_name, other_ability in other.forgeborn.abilities.items():
                     if other_ability_name[0].startswith(str(level)):
-                        print(f"Adding {other_ability_name} from {other.forgeborn.name}")
+                        #print(f"Adding {other_ability_name} from {other.forgeborn.name}")
                         new_abilities[other_ability_name] = other_ability
                         break  # Assuming you only want the first match
 

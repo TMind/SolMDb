@@ -38,7 +38,7 @@ def handle_synergy_and_edges(G, source_entity, target_entity):
 def create_deck_graph(fusion):        
     G = nx.DiGraph(name = fusion.name, fusion=fusion , mod = 0, between = 0, avglbl = 0, community_labels = {})
         
-    G.add_nodes_from(list(fusion.fused.cards.keys()) + list(f"{level}{entity.name}" for level, entity in fusion.fused.forgeborn.abilities.items()))
+    G.add_nodes_from(list(fusion.fused.cards.keys()) + list(name for name in fusion.fused.forgeborn.abilities))
 
     # Create a dictionary of whether any interface in the card has '*' or '+' in its range
     card_ranges = {}

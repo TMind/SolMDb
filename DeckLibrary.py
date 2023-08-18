@@ -13,21 +13,24 @@ class DeckLibrary:
 
     @profileit("profile_for_make_fusions_001")
     def make_fusions(self):
-        total_fusions = len(self.library['Deck']) ** 2 - len(self.library['Deck'])
+        total_fusions = len(self.library['Deck']) * (len(self.library['Deck']) - 1)
         if total_fusions == 0: return 
         progress_bar = tqdm(total=total_fusions, desc="Making Fusions", mininterval=0.1,colour='GREEN')
 
-        for deck1 in self.library['Deck'].values():
-            for deck2 in self.library['Deck'].values():
-                if deck1 is not deck2:
-                    fusion_name = f"{deck1.name}_{deck2.name}"
-                    if fusion_name not in self.library['Fusion']:
-                        fusion = Fusion(fusion_name, [deck1, deck2])
-                        if fusion.fused is not None:
-                            #print(f"+F {fusion_name}")
-                            self.library['Fusion'][fusion_name] = fusion
-                    time.sleep(0.001)
-                    progress_bar.update(1)
+        for i, deck1 in enumerate(self.library['Deck'].values()):
+            for j, deck2 in enumerate(self.library['Deck'].values()):
+                if i < j:
+                    # Create both fusion combinations for the two decks
+                    fusion1 = Fusion(f"{deck1.name}_{deck2.name}", [deck1, deck2])
+                    fusion2 = Fusion(f"{deck2.name}_{deck1.name}", [deck2, deck1])
+                    
+                    # Loop through the created fusions
+                    for fusion in [fusion1, fusion2]:
+                        if fusion.fused is not None and fusion.name not in self.library['Fusion']:
+                            #print(f"+F {fusion.name}")
+                            self.library['Fusion'][fusion.name] = fusion
+                    progress_bar.update(2)
+            time.sleep(0.001)
         progress_bar.close()
 
     @profileit("profile_for_update_001")

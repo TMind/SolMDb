@@ -80,7 +80,7 @@ class Deck:
 
         
     def __add__(self, other):      
-        name = self.name + '|' + other.name
+        name = self.name + '_' + other.name
         if self.faction == other.faction : 
             #print(f"{name} : Deck fusion invalid. Same faction {self.faction}\n")
             return 
@@ -107,6 +107,9 @@ class Deck:
         cards = { **self.cards, **other.cards} 
         
         return Deck(name, forgeborn, faction, cards)
+
+    def getDeck(self): 
+        return self
 
     def to_json(self):
         return {

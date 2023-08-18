@@ -87,15 +87,20 @@ def main(args):
     col_filter = None
     if args.filter:
 
-        col_filter_dict = {}    
-        criteria_list = re.split(r',\s*', args.filter)
-        #criteria_list = args.filter.split(",")
-        for criteria in criteria_list:
-            key, values = criteria.split("=")
-            values_list = values.split(":")
-            col_filter_dict[key] = values_list
+        # Example usage:
+        query = args.filter
+        attribute_map = {
+            'F'     : ('faction', str),
+            'D'     : ('name', str),
+            'FB'    : ('forgeborn.name', str),
+            'C'     : ('cards', list),
+            'A'     : ('forgeborn.abilities', list),
+            'K'     : ('composition', dict),            
+        }
+        col_filter = Filter(query, attribute_map) 
 
-        col_filter = Filter(col_filter_dict)
+        # To apply the filter:
+       #filtered_objects = filter.apply(some_objects)
         local_decks = col_filter.apply(local_decks)    
         net_decks   = col_filter.apply(net_decks)
 
@@ -124,13 +129,28 @@ def main(args):
 
         for name, fusion in DeckCollection.library['Fusion'].items():
             if name not in egraphs:
-                DeckGraph = Graph.create_deck_graph(fusion)
-                ev.evaluate_graph(DeckGraph)
-                egraphs[name] = DeckGraph                
+                FusionGraph = Graph.create_deck_graph(fusion)
+                ev.evaluate_graph(FusionGraph)
+                egraphs[name] = FusionGraph                
             time.sleep(0.001)
             progress_bar.update(1)
             new_graphs += 1
         progress_bar.close()
+
+        total_decks  = len(DeckCollection.library['Deck'])
+        progress_bar = tqdm(total=total_decks, desc="Creating Fusion Graphs",mininterval=0.1, colour='CYAN')
+
+        dgraphs = {}
+        for name, deck in DeckCollection.library['Deck'].items():
+            if name not in dgraphs:
+                DeckGraph = Graph.create_deck_graph(deck)
+                ev.evaluate_graph(DeckGraph)
+                dgraphs[name] = DeckGraph                
+            time.sleep(0.001)
+            progress_bar.update(1)
+            new_graphs += 1
+        progress_bar.close()
+
 
         if new_graphs > 0:
             if SelectionType == 'Collection' and not col_filter:
@@ -157,9 +177,10 @@ def main(args):
 
         if eval_filename:
             #eval_filename = f"{dataFolder}/{eval_filename}"
-            print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")            
+            #print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")            
             ev.export_csv(eval_filename + '_excl', egraphs, True)
             ev.export_csv(eval_filename, egraphs, False)
+            ev.export_csv(eval_filename + '.hd', dgraphs, False)
 
         if args.select_pairs:
             ev.find_best_pairs(egraphs,eval_filename + '_top_pairs.txt')

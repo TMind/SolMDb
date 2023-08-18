@@ -134,7 +134,7 @@ def export_csv(csvname, graphs, local_mode=False):
         writer.writeheader()
 
          # Create a tqdm instance for the loop
-        progress_bar = tqdm(graphs.items(), total=len(graphs), desc="Exporting CSV", mininterval=0.1, colour='RED')
+        progress_bar = tqdm(graphs.items(), total=len(graphs), desc=f"Exporting CSV {csvname}", mininterval=0.1, colour='RED')
 
 
         for i, (key, EGraph) in enumerate(progress_bar):         
@@ -142,17 +142,19 @@ def export_csv(csvname, graphs, local_mode=False):
             #Fusion
             fusion = EGraph.graph['fusion']
 
+            deck = fusion.getDeck()
+    
             #Composition of Fusion 
-            compositions = {deck.name : deck.composition for deck in fusion.decks }
-
+            composition = deck.composition
             #Determine decknames
-            forgeborn_name = fusion.decks[0].forgeborn.name
-            deck_names = [deck.name for deck in fusion.decks]
-            deck_factions = fusion.fused.faction
-            deckname1, deckname2 = deck_names[0], deck_names[1]   
+            forgeborn_name = deck.forgeborn.name
+            deck_names = deck.name.split('_')
+            deck_factions = deck.faction
+            deckname1, *rest = deck_names
+            deckname2 = rest[0] if rest else None
 
-            num_creatures = sum([ composition['Creature'] for composition in compositions.values() ])
-            num_spells    = sum([ composition['Spell']    for composition in compositions.values() ])
+            num_creatures = composition['Creature']
+            num_spells    = composition['Spell']
 
             # Create a dictionary mapping labels to weights
             community_labels = EGraph.graph['community_labels']
@@ -200,13 +202,13 @@ def export_csv(csvname, graphs, local_mode=False):
             # Add label weights to the row
             for label in all_labels:
 
-                output_tags = synergy_template.get_output_tags_by_synergy(label)
-                deck1_count = 0
-                deck2_count = 0
+                #output_tags = synergy_template.get_output_tags_by_synergy(label)
+                #deck1_count = 0
+                #deck2_count = 0
 
-                for tag in output_tags:
-                    deck1_count += compositions[deckname1].setdefault(tag,0) 
-                    deck2_count += compositions[deckname2].setdefault(tag,0)
+                #for tag in output_tags:
+                #    deck1_count += compositions[deckname1].setdefault(tag,0) 
+                #    deck2_count += compositions[deckname2].setdefault(tag,0)
                 
                 #row[f"{label}_1"] = deck1_count
                 #row[f"{label}_2"] = deck2_count

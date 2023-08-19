@@ -3,28 +3,6 @@ import networkx as nx
 from collections import defaultdict
 import os, re
 
-# def create_synergy_graph(decks, min_level=1):
-#     G = nx.Graph()
-#     decks = list(decks.values())
-
-#     LibDeck = DeckLibrary(decks)
-#     eval_decks = LibDeck.evaluate_decks()
-
-#     for fusion in LibDeck.fusions:
-#         create_deck_graph(fusion)
-
-#     for deck_name, score in eval_decks.items():
-#         deck_name2 = deck_name.split('|')[1] + '|' + deck_name.split('|')[0] 
-#         if eval_decks[deck_name2] < score :
-#             #print(f"Score {deck_name2} :  {eval_decks[deck_name2]} < {score} ")
-#             G.add_edge(deck_name.split('|')[0], deck_name.split('|')[1], weight=score, label=deck_name.split('|')[0])
-
-#     # Remove nodes with no edges
-#     nodes_to_remove = [node for node, degree in dict(G.degree()).items() if degree == 0]
-#     G.remove_nodes_from(nodes_to_remove)
-
-#     return G
-
 @staticmethod
 def handle_synergy_and_edges(G, source_entity, target_entity):
     syn_matches = InterfaceCollection.match_synergies(source_entity.ICollection, target_entity.ICollection)
@@ -38,13 +16,13 @@ def handle_synergy_and_edges(G, source_entity, target_entity):
 def create_deck_graph(deck_or_fusion):        
     G = nx.DiGraph(name = deck_or_fusion.name, fusion=deck_or_fusion , mod = 0, between = 0, avglbl = 0, community_labels = {})
 
-    deck = deck_or_fusion.getDeck()
+    deck = deck_or_fusion
 
     G.add_nodes_from(list(deck.cards.keys()) + list(name for name in deck.forgeborn.abilities))
 
     # Create a dictionary of whether any interface in the card has '*' or '+' in its range
     card_ranges = {}
-    for card_name, card in deck.cards.items():
+    for (faction,card_name), card in deck.cards.items():
         max_ranges = card.ICollection.get_max_ranges()
         card_ranges[card_name] = ','.join(max_ranges)  # Convert list to a string
 
@@ -52,9 +30,9 @@ def create_deck_graph(deck_or_fusion):
     nx.set_node_attributes(G, card_ranges, "max_ranges")
 
     
-    for i, (card_name_1, card_1) in enumerate(deck.cards.items()):
-        for j, (card_name_2, card_2) in enumerate(deck.cards.items()):                
-            if card_name_1 == card_name_2:
+    for i, ((faction1,card_name_1), card_1) in enumerate(deck.cards.items()):
+        for j, ((faction2,card_name_2), card_2) in enumerate(deck.cards.items()):                
+            if card_name_1 == card_name_2 and faction1 == faction2:
 
                 for ability_name, ability in deck.forgeborn.abilities.items():
                     handle_synergy_and_edges(G, card_1, ability)

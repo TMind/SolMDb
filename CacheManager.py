@@ -29,7 +29,7 @@ class CacheManager:
                 compressed_obj = base64.b64decode(base64_encoded_obj)                
                 serialized_obj = decompress_with_progress(compressed_obj)
                 bytes_reader = BytesReaderWrapper(serialized_obj)
-                with TQDMBytesReader(bytes_reader, desc='Unpickle', total=len(serialized_obj), colour='BLUE', unit='B', unit_scale=True) as pbfd:                
+                with TQDMBytesReader(bytes_reader, desc=f'Unpickle {os.path.basename(file_path)}', total=len(serialized_obj), colour='BLUE', unit='B', unit_scale=True) as pbfd:                
                     up = Unpickler(pbfd)
                     obj = up.load()                                
         return obj
@@ -94,8 +94,6 @@ class TQDMBytesReader(object):
         return self.tqdm.__exit__(*args, **kwargs)
 
 
-
-
 def decompress_with_progress(compressed_data, chunk_size=8192):
     decompressor = zlib.decompressobj()
     decompressed_data = bytearray()
@@ -103,13 +101,13 @@ def decompress_with_progress(compressed_data, chunk_size=8192):
     total_bytes = len(compressed_data)
     processed_bytes = 0
 
-    with tqdm(total=total_bytes, desc="Decompressing", unit="B", unit_scale=True) as progress_bar:
-        for i in range(0, total_bytes, chunk_size):
-            chunk = compressed_data[i:i + chunk_size]
-            decompressed_chunk = decompressor.decompress(chunk)
-            decompressed_data.extend(decompressed_chunk)
-            processed_bytes += len(chunk)
-            progress_bar.update(len(chunk))
+    #with tqdm(total=total_bytes, desc="Decompressing", unit="B", unit_scale=True) as progress_bar:
+    for i in range(0, total_bytes, chunk_size):
+        chunk = compressed_data[i:i + chunk_size]
+        decompressed_chunk = decompressor.decompress(chunk)
+        decompressed_data.extend(decompressed_chunk)
+        processed_bytes += len(chunk)
+    #       progress_bar.update(len(chunk))
 
     remaining_data = decompressor.flush()
     decompressed_data.extend(remaining_data)

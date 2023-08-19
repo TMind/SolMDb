@@ -13,30 +13,17 @@ class DeckLibrary:
 
     @profileit("profile_for_make_fusions_001")
     def make_fusions(self):
-        total_fusions = len(self.library['Deck']) * (len(self.library['Deck']) - 1)
+        total_fusions = len(self.library['Deck']) * (len(self.library['Deck']) - 1) / 2
         if total_fusions == 0: return 
         progress_bar = tqdm(total=total_fusions, desc="Making Fusions", mininterval=0.1,colour='GREEN')
 
         for i, deck1 in enumerate(self.library['Deck'].values()):
             for j, deck2 in enumerate(self.library['Deck'].values()):
-                if i < j and deck1.faction != deck2.faction: 
-                    # Create both fusion combinations for the two decks , but only one deck add
-                    cards = { **deck1.cards, **deck2.cards}                    
-                    D1 = Deck(f"{deck1.name}_{deck2.name}", deck1.forgeborn, f"{deck1.faction}|{deck2.faction}", cards)
-                    D2 = Deck(f"{deck2.name}_{deck1.name}", deck2.forgeborn, f"{deck1.faction}|{deck2.faction}", cards)
-
-                    fusion1 = Fusion(D1.name, [D1])
-                    fusion1.decks = [deck1,deck2]
-
-                    fusion2 = Fusion(D2.name, [D2])
-                    fusion2.decks = [deck2,deck1]
-                                        
-                    # Loop through the created fusions
-                    for fusion in [fusion1, fusion2]:
-                        if fusion.fused is not None and fusion.name not in self.library['Fusion']:
-                            #print(f"+F {fusion.name}")
-                            self.library['Fusion'][fusion.name] = fusion
-                    progress_bar.update(2)
+                if i < j and deck1.faction != deck2.faction:                    
+                    fusion_name = "_".join(sorted([deck.name for deck in [deck1,deck2]]))
+                    if self.library['Fusion'].get(fusion_name) is None :                            
+                            self.library['Fusion'][fusion_name] = Fusion([deck1, deck2])
+                    progress_bar.update(1)
             time.sleep(0.001)
         progress_bar.close()
 
@@ -49,7 +36,7 @@ class DeckLibrary:
         for obj in objects:
             obj_type = type(obj).__name__
             container = self.library[obj_type]
-            if obj.name not in container:
+            if container.get(obj.name) is None:
                 #print(f"+D {obj.name}")
                 container[obj.name] = obj
             progress_bar.update(1)

@@ -63,6 +63,13 @@ class InterfaceCollection:
             else:
                 self.interfaces[syn.name][interface.tag] = interface
 
+    def copy(self):
+        """
+        Return a new instance of InterfaceCollection that is a shallow copy of the current instance.
+        """
+        new_collection = InterfaceCollection(self.name)        
+        new_collection.interfaces = {k: v for k, v in self.interfaces.items()}
+        return new_collection
 
     def restrict_range(self, range):
         ICollection = InterfaceCollection(self.name)  # Create a new instance of the same class

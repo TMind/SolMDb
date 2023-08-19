@@ -58,13 +58,6 @@ def main(args):
     
     myUCL = cache_manager.load_or_create(ucl, lambda: UniversalCardLibrary(file_mappings[ucl][0],file_mappings[ucl][1]))
 
-    myApi = NetApi()
-    net_decks = myApi.request_decks(
-        id=args.id,
-        type=args.type,
-        username=args.username,
-        filename=args.filename
-    )
 
 #   Evaluation type  
 #   - collection / fusion / halfdeck 
@@ -75,13 +68,19 @@ def main(args):
             SelectionType = 'Deck'
         elif args.type == 'fuseddeck':
             SelectionType = 'Fusion'    
-        
-    local_decks = []
 
-    if args.filename:
-    #if not args.username and not args.id:
-        local_decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
+    net_decks = []
+    
+    if not args.offline:
 
+        myApi = NetApi()
+        net_decks = myApi.request_decks(
+            id=args.id,
+            type=args.type,
+            username=args.username,
+            filename=args.filename
+        )
+  
     DeckCollection = DeckLibrary([])
 
     col_filter = None
@@ -100,12 +99,11 @@ def main(args):
         col_filter = Filter(query, attribute_map) 
 
         # To apply the filter:
-       #filtered_objects = filter.apply(some_objects)
-        local_decks = col_filter.apply(local_decks)    
+       #filtered_objects = filter.apply(some_objects)        
         net_decks   = col_filter.apply(net_decks)
 
     elif SelectionType == 'Collection':
-        DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary(local_decks))
+        DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary([]))
 
     DeckCollection.update(net_decks)
 
@@ -124,22 +122,34 @@ def main(args):
 
         new_graphs = 0
         
-        total_fusions = len(DeckCollection.library['Fusion'])
+        total_fusions = len(DeckCollection.library['Fusion']) * 2
         progress_bar = tqdm(total=total_fusions, desc="Creating Fusion Graphs",mininterval=0.1, colour='BLUE')
-
         for name, fusion in DeckCollection.library['Fusion'].items():
-            if name not in egraphs:
-                FusionGraph = Graph.create_deck_graph(fusion)
-                ev.evaluate_graph(FusionGraph)
-                egraphs[name] = FusionGraph                
+            for idx in range(2):  # since there are 2 forgeborn_options for each fusion
+                
+                # Set the active Forgeborn for this Fusion
+                fusion.set_forgeborn(idx)
+                
+                # Create a unique name for each graph, based on the Fusion's name and the active Forgeborn's name
+                graph_name = f"{name}_{fusion.active_forgeborn.name}"
+                
+                if graph_name not in egraphs:
+                    
+                    # Create and evaluate the graph
+                    FusionGraph = Graph.create_deck_graph(fusion)
+                    ev.evaluate_graph(FusionGraph)
+                    
+                    # Store the graph in the egraphs dictionary
+                    egraphs[graph_name] = FusionGraph
+                    
+                    # Update the progress bar and increment the new_graphs counter                                        
+                    new_graphs += 1
+                    progress_bar.update(1)
             time.sleep(0.001)
-            progress_bar.update(1)
-            new_graphs += 1
         progress_bar.close()
 
         total_decks  = len(DeckCollection.library['Deck'])
-        progress_bar = tqdm(total=total_decks, desc="Creating Fusion Graphs",mininterval=0.1, colour='CYAN')
-
+        progress_bar = tqdm(total=total_decks, desc="Creating Deck Graphs",mininterval=0.1, colour='CYAN')
         dgraphs = {}
         for name, deck in DeckCollection.library['Deck'].items():
             if name not in dgraphs:

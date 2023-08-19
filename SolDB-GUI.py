@@ -90,6 +90,7 @@ class SolDBWindow(SolDBPanel):
 						eval=destination_path,
 						graph=self.createGraphCtrl.Value,
 						filter=filterContent,
+						offline=self.offlineCtrl.Value,
 						select_pairs=self.selectPairsCtrl.Value
 						)
 

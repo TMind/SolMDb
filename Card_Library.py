@@ -18,7 +18,6 @@ class Entity:
         self.abilities = abilities        
         self.provides = {sub_type: 1 for subtype in card_subtype.split(',') for sub_type in subtype.split(' ')}
         self.provides.update({card_type : 1})
-        self.seeks = {}
         self.ICollection = Collection
   
     def __str__(self):
@@ -26,150 +25,26 @@ class Entity:
         #synergy_str = ", ".join([str(synergy) for synergy in self.targets.values()])
         return f"{self.name}"
 
-class Deck:
-    def __init__(self, name, forgeborn, faction, cards):
-        self.name = name        
-        self.forgeborn = forgeborn
-        self.faction = faction
-        self.cards = cards
-        self.composition = self.get_composition()
-        self.seeks = {}
-        self.provides = {}                
-        int_col_deck = InterfaceCollection.from_deck(self)
-        int_col_fb   = InterfaceCollection.from_forgeborn(self.forgeborn)
-        self.ICollection = int_col_deck.update(int_col_fb)
-        self.populate()
-        
-
-
-    @classmethod
-    def empty(cls):
-        return cls("", None, "", {})
-
-    def populate(self):
-
-        for card_name, card in self.cards.items():            
-            if card.provides :
-                self.provides = dict(Counter(self.provides) + Counter(card.provides))
-            if card.seeks :
-                self.seeks    = dict(Counter(self.seeks) + Counter(card.seeks))
-
-    def get_rarities(self):
-        card_counter, forge_counter = 0, 0
-
-        for card in self.cards.values():
-            rarities = card.get_rarities()
-            card_rarity, *forge_rarity = rarities
-
-            card_counter += card_rarity.split(',')[0] == 'Rare'
-            forge_counter += forge_rarity == ['Rare'] if forge_rarity else 0
-
-        return [card_counter, forge_counter]
-
-    def get_composition(self):        
-        composition = {}        
-        for card in self.cards.values():            
-            #for synergy, interfaces in card.ICollection.get_interfaces_by_type('O').items():
-            for subtype in card.card_subtype.split(' '):
-                #composition[synergy] = composition.get(synergy, 0) + len(interfaces)
-                subtype = subtype.strip()
-                composition[subtype] = composition.get(subtype, 0) + 1
-            for cardtype in card.card_type.split(' '):
-                composition[cardtype] = composition.get(cardtype, 0) + 1
-        return composition
-
-        
-    def __add__(self, other):      
-        name = self.name + '_' + other.name
-        if self.faction == other.faction : 
-            #print(f"{name} : Deck fusion invalid. Same faction {self.faction}\n")
-            return 
-        forgeborn = self.forgeborn        
-        
-        inspire_abilities = [ability for ability in forgeborn.abilities if 'Inspire' in ability]
-
-        #inspire_levels = [ability[0] for ability in forgeborn.abilities if 'Inspire' in ability ]
-        if inspire_abilities:
-            new_abilities = forgeborn.abilities.copy()
-            
-
-            for inspire_ability in inspire_abilities: 
-                level = inspire_ability[0]
-                for other_ability_name, other_ability in other.forgeborn.abilities.items():
-                    if other_ability_name[0].startswith(str(level)):
-                        #print(f"Adding {other_ability_name} from {other.forgeborn.name}")
-                        new_abilities[other_ability_name] = other_ability
-                        break  # Assuming you only want the first match
-
-            forgeborn = Forgeborn(forgeborn.id, forgeborn.name, new_abilities)
-                
-        faction = self.faction + '|' + other.faction                 
-        cards = { **self.cards, **other.cards} 
-        
-        return Deck(name, forgeborn, faction, cards)
-
-    def getDeck(self): 
-        return self
-
-    def to_json(self):
-        return {
-            "name": self.name,
-            "faction": self.faction,
-            "forgeborn": self.forgeborn.to_json(),
-            "cards": [str(card) for card in self.cards.values()]
-        }    
-    
-    def __eq__(self, other):
-        if isinstance(other, Deck):
-            return self.name == other.name
-        return False
-    
-    def __str__(self):     
-        card_titles = [card.title for card in self.cards.values()]
-        return f"Deck Name: {self.name}\nFaction: {self.faction}\nForgeborn: {self.forgeborn}\nCards:\n{', '.join(card_titles)}\n"   
-
-
-class Fusion:
-    def __init__(self, name, decks):
-        self.name = name
-        self.fused = self.decks_to_fusion(decks)
-        self.decks = decks
-
-    def decks_to_fusion(self, decks):
-        fused = decks[0]
-        for deck in decks[1:]:
-            fused += deck
-        return fused
-
-    def getDeck(self):               
-        return self.fused
-
-
 class Forgeborn:
     def __init__(self, id, name, abilities):
         self.id = id 
         self.name = name
-        #self.faction = faction
         self.abilities = abilities        
         self.ICollection = InterfaceCollection.from_forgeborn(self)
 
     def __str__(self):
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
-        return f"Forgeborn Name: {self.name}\nFaction: {self.faction}\nAbilities:\n{abilities_str}\n"
+        return f"Forgeborn Name: {self.name}\nAbilities:\n{abilities_str}\n"
 
 
 class Card():
     def __init__(self, card, modifier=None): 
         self.entities = [card]             
         self.faction  = card.faction
-        self.provides = card.provides
-        self.seeks = card.seeks
         if modifier:
             self.title = modifier.name + ' ' + card.name
             if isinstance(modifier, Entity):
-                self.entities.append(modifier)
-                self.provides = dict(Counter(self.provides) + Counter(modifier.provides))
-                self.seeks    = dict(Counter(self.seeks)    + Counter(modifier.seeks))
+                self.entities.append(modifier)        
         else:
             self.title = card.name        
         self.card_type = card.card_type
@@ -185,10 +60,162 @@ class Card():
 
     def to_json(self):
         return {
-            "name": self.name,
-            "provides": self.provides,
-            "seeks": self.seeks            
+            "name": self.name,            
         }
+
+class Deck:
+    
+    def __init__(self, name: str, forgeborn, faction: str, cards: Dict[str, Card]):
+        assert isinstance(name, str) and name, "Name must be a non-empty string"
+        assert isinstance(faction, str) and faction, "Faction must be a non-empty string"
+        assert isinstance(cards, dict), "Cards must be a dictionary"
+
+        self.name = name        
+        self.forgeborn = forgeborn
+        self.faction = faction
+
+        if not isinstance(self, Fusion):
+            self.cards = self.associate_cards_with_factions(cards, faction)
+        else:
+            self.cards = cards
+        
+        self.composition = self.get_composition()        
+        self.ICollectionDeck = InterfaceCollection.from_deck(self)                   
+        self.ICollection = self.ICollectionDeck
+        self.update_ICollection_with_forgeborn()
+        
+    @classmethod
+    def empty(cls):
+        return cls("", None, "", {})
+
+    def get_composition(self):        
+        composition = {}        
+        for card in self.cards.values():            
+            #for synergy, interfaces in card.ICollection.get_interfaces_by_type('O').items():
+            for subtype in card.card_subtype.split(' '):
+                #composition[synergy] = composition.get(synergy, 0) + len(interfaces)
+                subtype = subtype.strip()
+                composition[subtype] = composition.get(subtype, 0) + 1
+            for cardtype in card.card_type.split(' '):
+                composition[cardtype] = composition.get(cardtype, 0) + 1
+        return composition
+    
+    def update_ICollection_with_forgeborn(self):
+        """
+        Update the ICollection of the Deck object by combining 
+        the ICollectionDeck of the Deck object and the ICollection
+        of the active Forgeborn.
+        """
+        self.ICollection = self.ICollectionDeck.copy()
+        self.ICollection.update(self.forgeborn.ICollection)
+
+    def associate_cards_with_factions(self, cards: Dict[str, Card], faction: str) -> Dict[str, Card]:
+        """
+        Associates each card in the input list with the corresponding deck's faction.
+        Parameters:
+        - cards (Dict[str, Card]): A dictionary of cards, where the key is the card name and the value is a Card object.
+        - faction (str): The faction associated with these cards.
+        
+        Returns:
+        - Dict[str, Card]: A dictionary where the keys are tuples (faction, card_name) and the values are Card objects.
+        """
+        faction_cards = {}
+        for card_name, card in cards.items():
+            faction_cards[(faction, card_name)] = card
+        return faction_cards
+
+
+class Fusion(Deck):
+    def __init__(self, decks):
+        if len(decks) == 1:
+            super().__init__(decks[0].name, decks[0].forgeborn, decks[0].faction, decks[0].cards)
+            self.forgeborn_options = [decks[0].forgeborn]
+            self.decks = decks
+            return
+        
+        deck1, deck2 = decks[0], decks[1]
+
+        if deck1.faction == deck2.faction:
+            raise ValueError("Cannot fuse decks of the same faction")
+
+        # Name and faction for the fusion
+
+        # Sort the deck names alphabetically and then join them with an underscore
+        self.fused_name = "_".join(sorted([deck.name for deck in decks]))
+
+        # Generate the fused faction name
+        #TODO: Fused Faction isn't connected to active forgeborn yet 
+        self.fused_faction = "|".join(sorted([deck.faction for deck in decks]))    
+        fused_cards = {**deck1.cards, **deck2.cards}
+        
+        # Additional properties specific to Fusion
+        self.deck1 = deck1
+        self.deck2 = deck2
+        self.forgeborn_options = self.inspire_forgeborn(deck1.forgeborn, deck2.forgeborn)
+        self.forgeborn_options.sort(key=lambda forgeborn: forgeborn.name)
+
+        # Choosing a default forgeborn (from deck1 for simplicity)
+        # Note: Here we're assuming that a 'forgeborn' variable exists in the 'Deck' class
+        self.active_forgeborn = self.forgeborn_options[0]
+
+        # Call the Deck's constructor
+        super().__init__(self.fused_name, self.active_forgeborn, self.fused_faction, fused_cards)
+        
+        
+    def inspire_forgeborn(self, forgeborn1, forgeborn2):
+        new_forgeborns = []
+        
+        for original_forgeborn, other_forgeborn in [(forgeborn1, forgeborn2), (forgeborn2, forgeborn1)]:
+            
+            inspire_abilities = [ability for ability in original_forgeborn.abilities if 'Inspire' in ability]
+            
+            if inspire_abilities:
+                new_abilities = original_forgeborn.abilities.copy()
+                
+                for inspire_ability in inspire_abilities:
+                    level = inspire_ability[0]
+                    
+                    for other_ability_name, other_ability in other_forgeborn.abilities.items():
+                        if other_ability_name[0].startswith(str(level)):
+                            new_abilities[other_ability_name] = other_ability
+                            break  # Assuming you only want the first match
+                    
+                new_forgeborn = Forgeborn(original_forgeborn.id, original_forgeborn.name, new_abilities)
+            else:
+                new_forgeborn = original_forgeborn
+            
+            new_forgeborns.append(new_forgeborn)    
+        return new_forgeborns
+
+    def set_forgeborn(self, idx_or_forgeborn):
+            """
+            Sets the active Forgeborn of the Fusion deck to the given index or Forgeborn object.
+            Also updates the Fusion's name and faction based on the new active Forgeborn.
+            """
+            if isinstance(idx_or_forgeborn, int):
+                new_forgeborn = self.forgeborn_options[idx_or_forgeborn]
+            else:
+                new_forgeborn = idx_or_forgeborn
+
+            # Check if the new Forgeborn is already the active one
+            if self.active_forgeborn == new_forgeborn: return
+
+            # Update the active Forgeborn
+            self.active_forgeborn = new_forgeborn
+
+            # Update the name and faction based on the active Forgeborn
+            if self.active_forgeborn == self.forgeborn_options[0]:
+                self.name = self.fused_name
+                self.faction = self.fused_faction
+            else:
+                self.name = f"{self.deck2.name}_{self.deck1.name}"
+                self.faction = f"{self.deck2.faction}|{self.deck1.faction}"
+            
+            # Update the forgeborn in the parent (Deck) class
+            self.forgeborn = self.active_forgeborn
+            self.update_ICollection_with_forgeborn()
+
+
 
 class UniversalCardLibrary:
 
@@ -336,18 +363,6 @@ class UniversalCardLibrary:
                     for card in cards_data.values():
                         card_title = str(card.get('title')) if 'title' in card else str(card.get('name'))
                         cards_title.append(card_title)
-
-                        # Extract additional data from the card dictionary
-                        default_value = 1
-                        provides = card.get('provides')
-                        seeks = card.get('seeks')
-                        list_provides = provides.split(', ') if provides else {}
-                        list_seeks = seeks.split(', ') if seeks else {}
-                        
-                        # Add the additional data to the cards_additional_data dictionary
-                        #cards_additional_data.setdefault(card_title, {})['betrayer'] = card.get('betrayer')
-                        cards_additional_data.setdefault(card_title, {})['provides'] = {key: default_value for key in list_provides}
-                        cards_additional_data.setdefault(card_title, {})['seeks'] = {key: default_value for key in list_seeks}
 
                 else:
                     cards_title = cards_data

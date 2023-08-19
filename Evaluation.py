@@ -141,9 +141,7 @@ def export_csv(csvname, graphs, local_mode=False):
         for i, (key, EGraph) in enumerate(progress_bar):         
 
             #Fusion
-            fusion = EGraph.graph['fusion']
-
-            deck = fusion.getDeck()
+            deck = EGraph.graph['fusion']
     
             #Composition of Fusion 
             composition = deck.composition

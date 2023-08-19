@@ -19,11 +19,18 @@ class DeckLibrary:
 
         for i, deck1 in enumerate(self.library['Deck'].values()):
             for j, deck2 in enumerate(self.library['Deck'].values()):
-                if i < j:
-                    # Create both fusion combinations for the two decks
-                    fusion1 = Fusion(f"{deck1.name}_{deck2.name}", [deck1, deck2])
-                    fusion2 = Fusion(f"{deck2.name}_{deck1.name}", [deck2, deck1])
-                    
+                if i < j and deck1.faction != deck2.faction: 
+                    # Create both fusion combinations for the two decks , but only one deck add
+                    cards = { **deck1.cards, **deck2.cards}                    
+                    D1 = Deck(f"{deck1.name}_{deck2.name}", deck1.forgeborn, f"{deck1.faction}|{deck2.faction}", cards)
+                    D2 = Deck(f"{deck2.name}_{deck1.name}", deck2.forgeborn, f"{deck1.faction}|{deck2.faction}", cards)
+
+                    fusion1 = Fusion(D1.name, [D1])
+                    fusion1.decks = [deck1,deck2]
+
+                    fusion2 = Fusion(D2.name, [D2])
+                    fusion2.decks = [deck2,deck1]
+                                        
                     # Loop through the created fusions
                     for fusion in [fusion1, fusion2]:
                         if fusion.fused is not None and fusion.name not in self.library['Fusion']:

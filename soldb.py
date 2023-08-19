@@ -164,7 +164,8 @@ def main(args):
         #             eligible_graphs[name] = graph
 
         #     egraphs = eligible_graphs
-
+        total_graphs  = len(egraphs)
+        progress_bar = tqdm(total=total_graphs, desc="Printing Fusion Graphs",mininterval=0.1, colour='YELLOW')
         for name, EGraph in egraphs.items():            
             Graph.print_graph(EGraph, eval_filename)
 
@@ -174,7 +175,9 @@ def main(args):
                 Path(gefxFolder).mkdir(parents=True, exist_ok=True)
 
                 Graph.write_gexf_file(EGraph, gefxFolder, name.replace('|', '_'))
-
+            progress_bar.update(1)
+        progress_bar.close()
+        
         if eval_filename:
             #eval_filename = f"{dataFolder}/{eval_filename}"
             #print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")            

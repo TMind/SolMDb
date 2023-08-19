@@ -4,6 +4,7 @@ import networkx as nx
 import infomap
 import csv
 import time
+import os
 from tqdm import tqdm
 
 def find_best_pairs(graphs,outpath):
@@ -39,11 +40,11 @@ def find_best_pairs(graphs,outpath):
 def evaluate_graph(G):
     Metric = {}
 
-    Metric['PageRank'] = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
-    Metric['degree'] = nx.degree_centrality(G)
-    Metric['cluster_coeff'] = nx.clustering(G)
+    #Metric['PageRank'] = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
+    #Metric['degree'] = nx.degree_centrality(G)
+    #Metric['cluster_coeff'] = nx.clustering(G)
     Metric['between'] = nx.betweenness_centrality(G)
-    Metric['katz'] = nx.katz_centrality(G, alpha=0.1, beta=1.0)
+    #Metric['katz'] = nx.katz_centrality(G, alpha=0.1, beta=1.0)
 
     # Create a mapping of nodes to integers
     node_to_int = {node: i for i, node in enumerate(G.nodes)}
@@ -103,9 +104,9 @@ def evaluate_graph(G):
     for name, metric in Metric.items():
         nx.set_node_attributes(G, metric, name)
 
-    for node_name in G.nodes:
-        combined_metric = Metric['between'][node_name] * Metric['cluster_coeff'][node_name]
-        G.nodes[node_name]['total'] = combined_metric
+    #for node_name in G.nodes:
+    #    combined_metric = Metric['between'][node_name] * Metric['cluster_coeff'][node_name]
+    #    G.nodes[node_name]['total'] = combined_metric
         #G.graph['value'] += combined_metric
 
 def calculate_weight(synergy, count):
@@ -134,7 +135,7 @@ def export_csv(csvname, graphs, local_mode=False):
         writer.writeheader()
 
          # Create a tqdm instance for the loop
-        progress_bar = tqdm(graphs.items(), total=len(graphs), desc=f"Exporting CSV {csvname}", mininterval=0.1, colour='RED')
+        progress_bar = tqdm(graphs.items(), total=len(graphs), desc=f"Exporting CSV {os.path.basename(csvname)}", mininterval=0.1, colour='RED')
 
 
         for i, (key, EGraph) in enumerate(progress_bar):         

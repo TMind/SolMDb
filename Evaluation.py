@@ -146,9 +146,9 @@ def export_csv(csvname, graphs, local_mode=False):
             #Composition of Fusion 
             composition = deck.composition
             #Determine decknames
-            forgeborn_name = deck.forgeborn.name
-            deck_names = deck.name.split('_')
-            deck_factions = deck.faction
+            forgeborn_name = EGraph.graph['forgeborn']
+            deck_names    = EGraph.graph['name'].split('_')
+            deck_factions = EGraph.graph['faction']
             deckname1, *rest = deck_names
             deckname2 = rest[0] if rest else None
 
@@ -164,13 +164,9 @@ def export_csv(csvname, graphs, local_mode=False):
                     label_weights[label] += weight
             
          
-           # Gather max_ranges data
-            max_node_ranges = {}
-            for node, node_data in EGraph.nodes(data=True):
-                if "max_ranges" in node_data:
-                    max_node_ranges[node] = node_data["max_ranges"].split(',')
-            # Flatten the lists and exclude empty strings
-            max_graph_ranges = [syn for syn_list in max_node_ranges.values() for syn in syn_list if syn]
+           # Gather max_ranges data            
+            max_ranges = EGraph.graph['max_ranges']
+            max_graph_ranges = [syn for syn_list in max_ranges.values() for syn in syn_list.split(',') if syn]
 
             # Ensure the list has at least 3 elements
             #max_graph_ranges += [''] * (3 - len(max_graph_ranges))

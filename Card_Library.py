@@ -90,10 +90,8 @@ class Deck:
 
     def get_composition(self):        
         composition = {}        
-        for card in self.cards.values():            
-            #for synergy, interfaces in card.ICollection.get_interfaces_by_type('O').items():
-            for subtype in card.card_subtype.split(' '):
-                #composition[synergy] = composition.get(synergy, 0) + len(interfaces)
+        for card in self.cards.values():                        
+            for subtype in card.card_subtype.split(' '):                
                 subtype = subtype.strip()
                 composition[subtype] = composition.get(subtype, 0) + 1
             for cardtype in card.card_type.split(' '):
@@ -141,25 +139,26 @@ class Fusion(Deck):
         # Name and faction for the fusion
 
         # Sort the deck names alphabetically and then join them with an underscore
+        name = "_".join([deck.name for deck in decks])
         self.fused_name = "_".join(sorted([deck.name for deck in decks]))
 
         # Generate the fused faction name
         #TODO: Fused Faction isn't connected to active forgeborn yet 
-        self.fused_faction = "|".join(sorted([deck.faction for deck in decks]))    
+        self.fused_faction = "|".join([deck.faction for deck in decks]) 
         fused_cards = {**deck1.cards, **deck2.cards}
         
         # Additional properties specific to Fusion
         self.deck1 = deck1
         self.deck2 = deck2
         self.forgeborn_options = self.inspire_forgeborn(deck1.forgeborn, deck2.forgeborn)
-        self.forgeborn_options.sort(key=lambda forgeborn: forgeborn.name)
+        #self.forgeborn_options.sort(key=lambda forgeborn: forgeborn.name)
 
         # Choosing a default forgeborn (from deck1 for simplicity)
         # Note: Here we're assuming that a 'forgeborn' variable exists in the 'Deck' class
         self.active_forgeborn = self.forgeborn_options[0]
 
         # Call the Deck's constructor
-        super().__init__(self.fused_name, self.active_forgeborn, self.fused_faction, fused_cards)
+        super().__init__(name, self.active_forgeborn, self.fused_faction, fused_cards)
         
         
     def inspire_forgeborn(self, forgeborn1, forgeborn2):
@@ -205,10 +204,10 @@ class Fusion(Deck):
 
             # Update the name and faction based on the active Forgeborn
             if self.active_forgeborn == self.forgeborn_options[0]:
-                self.name = self.fused_name
-                self.faction = self.fused_faction
+                self.name    = f"{self.deck1.name}_{self.deck2.name}"
+                self.faction = f"{self.deck1.faction}|{self.deck2.faction}"
             else:
-                self.name = f"{self.deck2.name}_{self.deck1.name}"
+                self.name    = f"{self.deck2.name}_{self.deck1.name}"
                 self.faction = f"{self.deck2.faction}|{self.deck1.faction}"
             
             # Update the forgeborn in the parent (Deck) class

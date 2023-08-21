@@ -11,7 +11,8 @@ from tqdm import tqdm
 import os, time, re
 from appdirs import user_data_dir
 from pathlib import Path
-
+from queue import Queue
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 def main(args):
 
@@ -20,43 +21,12 @@ def main(args):
     #    resourcePath =  os.path.join(os.environ['RESOURCEPATH'],"data")
     #else:
 
-    resourcePath = os.path.dirname(__file__)
-
-    cacheFolder = os.path.join(resourcePath,"cache")
-    dataFolder = os.path.join(resourcePath,"csv")
-
-    #make sure needed folders exist
-    Path(cacheFolder).mkdir(parents=True, exist_ok=True)
-    Path(dataFolder).mkdir(parents=True, exist_ok=True)
-
-
-    deck_library_name = "deck_library"
-    eval_graphs_name = "eval_graphs"
-
-    if args.username:
-        deck_library_name += f"_{args.username}"
-        eval_graphs_name += f"_{args.username}"
-
-    if args.filename:
-        deck_library_name = f"{args.filename}_library"
-        eval_graphs_name = f"{args.filename}_graphs"
-
-    ucl = os.path.join(cacheFolder,'ucl.zpkl')
-    deckLibrary = os.path.join(cacheFolder,deck_library_name + '.zpkl')
-    graphFolder = os.path.join(cacheFolder,eval_graphs_name + '.zpkl')
-
-    file_mappings = {
-        ucl : [os.path.join(dataFolder,'sff.csv'), os.path.join(dataFolder,'forgeborn.csv')],
-        deckLibrary : [ucl],
-       graphFolder: [deckLibrary],
-    }
-
-    cache_manager = CacheManager(file_mappings)
-
     # Initialize synergy template singleton with optional file
     SynergyTemplate()
-    
-    myUCL = cache_manager.load_or_create(ucl, lambda: UniversalCardLibrary(file_mappings[ucl][0],file_mappings[ucl][1]))
+    cache_manager = cache_init(args)
+
+    card_dependencies = cache_manager.get_dependencies('CardLib')
+    myUCL = cache_manager.load_or_create('CardLib', lambda: UniversalCardLibrary(*card_dependencies))
 
 
 #   Evaluation type  
@@ -69,11 +39,16 @@ def main(args):
         elif args.type == 'fuseddeck':
             SelectionType = 'Fusion'    
 
-    net_decks = []
     
+    DeckCollection = DeckLibrary([])
+    net_decks = []
+
+    if args.offline or SelectionType == 'Collection':
+        DeckCollection = cache_manager.load_or_create('DeckLib', lambda: DeckLibrary([]))
+
     if not args.offline:
 
-        myApi = NetApi()
+        myApi = NetApi(myUCL)
         net_decks = myApi.request_decks(
             id=args.id,
             type=args.type,
@@ -81,7 +56,6 @@ def main(args):
             filename=args.filename
         )
   
-    DeckCollection = DeckLibrary([])
 
     col_filter = None
     if args.filter:
@@ -98,17 +72,18 @@ def main(args):
         }
         col_filter = Filter(query, attribute_map) 
 
-        # To apply the filter:
-       #filtered_objects = filter.apply(some_objects)        
+        # Apply the filter:      
         net_decks   = col_filter.apply(net_decks)
 
-    elif SelectionType == 'Collection':
-        DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary([]))
+        DeckCollection.filter(col_filter)
+
+   # elif SelectionType == 'Collection':
+   #     DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary([]))
 
     DeckCollection.update(net_decks)
 
     if SelectionType == 'Collection' and not col_filter:
-        cache_manager.save_object_to_cache(deckLibrary, DeckCollection)
+        cache_manager.save_object_to_cache("DeckLib", DeckCollection)
 
 
     eval_filename = None
@@ -118,35 +93,55 @@ def main(args):
 
         egraphs = {}
         if SelectionType == 'Collection' and not col_filter:
-            egraphs = cache_manager.load_object_from_cache(graphFolder) or {}
+            egraphs = cache_manager.load_object_from_cache('GraphLib') or {}
 
+        # queue = Queue()
         new_graphs = 0
         
-        total_fusions = len(DeckCollection.library['Fusion']) * 2
-        progress_bar = tqdm(total=total_fusions, desc="Creating Fusion Graphs",mininterval=0.1, colour='BLUE')
-        for name, fusion in DeckCollection.library['Fusion'].items():
+        # with ProcessPoolExecutor() as executor:
+        #     futures = [executor.submit(process_fusion, name, fusion, idx, egraphs, queue)
+        #             for name, fusion in DeckCollection.library['Fusion'].items()
+        #             for idx in range(2)]
+            
+        #     progress_bar = tqdm(total=len(futures), desc="Creating Fusion Graphs", mininterval=0.1, colour='BLUE')
+            
+        #     for _ in as_completed(futures):
+        #         new_graphs = queue.get()
+        #         progress_bar.update(new_graphs)
+            
+        #     progress_bar.close()
+
+
+        lib_fusions = DeckCollection.library['Fusion']
+
+        if col_filter:
+            lib_fusions   = col_filter.apply(lib_fusions)
+
+        progress_bar = tqdm(total=len(lib_fusions)*2, desc="Creating Fusion Graphs", mininterval=0.1, colour='BLUE')
+        for name, fusion in lib_fusions.items():
             for idx in range(2):  # since there are 2 forgeborn_options for each fusion
                 
                 # Set the active Forgeborn for this Fusion
                 fusion.set_forgeborn(idx)
                 
                 # Create a unique name for each graph, based on the Fusion's name and the active Forgeborn's name
-                graph_name = f"{name}_{fusion.active_forgeborn.name}"
+               #graph_name = f"{fusion.name}_{fusion.active_forgeborn.name}"
                 
-                if graph_name not in egraphs:
+                if egraphs.get(fusion.name) is None:
                     
                     # Create and evaluate the graph
                     FusionGraph = Graph.create_deck_graph(fusion)
                     ev.evaluate_graph(FusionGraph)
                     
                     # Store the graph in the egraphs dictionary
-                    egraphs[graph_name] = FusionGraph
+                    egraphs[FusionGraph.graph['name']] = FusionGraph
                     
                     # Update the progress bar and increment the new_graphs counter                                        
                     new_graphs += 1
                     progress_bar.update(1)
             time.sleep(0.001)
         progress_bar.close()
+        
 
         total_decks  = len(DeckCollection.library['Deck'])
         progress_bar = tqdm(total=total_decks, desc="Creating Deck Graphs",mininterval=0.1, colour='CYAN')
@@ -157,23 +152,14 @@ def main(args):
                 ev.evaluate_graph(DeckGraph)
                 dgraphs[name] = DeckGraph                
             time.sleep(0.001)
-            progress_bar.update(1)
-            new_graphs += 1
+            progress_bar.update(1)            
         progress_bar.close()
 
 
         if new_graphs > 0:
             if SelectionType == 'Collection' and not col_filter:
-                cache_manager.save_object_to_cache(graphFolder, egraphs)
+                cache_manager.save_object_to_cache('GraphLib', egraphs)
 
-        # if args.filter:
-            
-        #     eligible_graphs = {}
-        #     for name, graph in egraphs.items():
-        #         if Graph.is_eligible(graph,args.filter):
-        #             eligible_graphs[name] = graph
-
-        #     egraphs = eligible_graphs
         total_graphs  = len(egraphs)
         progress_bar = tqdm(total=total_graphs, desc="Printing Fusion Graphs",mininterval=0.1, colour='YELLOW')
         for name, EGraph in egraphs.items():            
@@ -188,17 +174,78 @@ def main(args):
             progress_bar.update(1)
         progress_bar.close()
         
-        if eval_filename:
-            #eval_filename = f"{dataFolder}/{eval_filename}"
-            #print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")            
+        if eval_filename:     
             ev.export_csv(eval_filename + '_excl', egraphs, True)
             ev.export_csv(eval_filename, egraphs, False)
             ev.export_csv(eval_filename + '.hd', dgraphs, False)
 
         if args.select_pairs:
+            if not eval_filename: eval_filename = 'evaluation'
             ev.find_best_pairs(egraphs,eval_filename + '_top_pairs.txt')
 
+def cache_init(args):
+    """
+    Initialize the cache system based on the given arguments.
 
+    Parameters:
+    - args: Arguments containing username, filename, eval, and other potential configurations.
+
+    Returns:
+    - CacheManager instance initialized with the correct file mappings.
+    """
+    resourcePath = os.path.dirname(__file__)
+    cacheFolder = os.path.join(resourcePath, "cache")
+    dataFolder = os.path.join(resourcePath, "csv")
+    
+    # ensure folders exist
+    Path(cacheFolder).mkdir(parents=True, exist_ok=True)
+    Path(dataFolder).mkdir(parents=True, exist_ok=True)
+
+    deck_library_name = "deck_library"
+    eval_graphs_name = "eval_graphs"
+
+    if args.username:
+        deck_library_name += f"_{args.username}"
+        eval_graphs_name  += f"_{args.username}"
+        args.eval         += f"_{args.username}"
+
+    if args.filename:
+        deck_library_name = f"{args.filename}_library"
+        eval_graphs_name = f"{args.filename}_graphs"
+    
+    ucl_path = os.path.join(cacheFolder,'ucl.zpkl')
+    deckLibrary_path = os.path.join(cacheFolder,deck_library_name + '.zpkl')
+    graphFolder_path = os.path.join(cacheFolder,eval_graphs_name + '.zpkl')
+
+    # File paths mapping
+    file_paths = {
+        "CardLib": ucl_path,
+        "DeckLib": deckLibrary_path,
+        "GraphLib": graphFolder_path,
+    }
+
+    # Dependencies mapping
+    dependencies = {
+        "CardLib": [os.path.join(dataFolder, 'sff.csv'), os.path.join(dataFolder, 'forgeborn.csv')],
+        "DeckLib": ["CardLib"],
+        "GraphLib": ["DeckLib"],
+    }
+
+    return CacheManager(file_paths, dependencies)
+
+# Parallelization Code
+
+def process_fusion(name, fusion, idx, egraphs, queue):
+    fusion.set_forgeborn(idx)
+    graph_name = f"{name}_{fusion.active_forgeborn.name}"
+    
+    if egraphs.get(graph_name) is None:
+        FusionGraph = Graph.create_deck_graph(fusion)
+        ev.evaluate_graph(FusionGraph)
+        egraphs[graph_name] = FusionGraph
+        queue.put(1)
+    else:
+        queue.put(0)
 
 if __name__ == "__main__":
     # Create an argument parser
@@ -215,6 +262,7 @@ if __name__ == "__main__":
     # If only file is given import deckbase from file.json 
     parser.add_argument("--filename",  default=None,  help="Offline Deck Database Name")
     parser.add_argument("--synergies", default=None, help="CSV Filename for synergy lookup")    
+    parser.add_argument("--offline", default=None, help="Offline use only")    
 
     # Arguments for Evaluation
     

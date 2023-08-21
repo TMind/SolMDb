@@ -11,7 +11,6 @@ class DeckLibrary:
 
         self.update(decks_or_fusions)
 
-    @profileit("profile_for_make_fusions_001")
     def make_fusions(self):
         total_fusions = len(self.library['Deck']) * (len(self.library['Deck']) - 1) / 2
         if total_fusions == 0: return 
@@ -27,7 +26,6 @@ class DeckLibrary:
             time.sleep(0.001)
         progress_bar.close()
 
-    @profileit("profile_for_update_001")
     def update(self, objects):        
         total_updates = len(objects)
         if total_updates == 0 : return 
@@ -44,6 +42,10 @@ class DeckLibrary:
         progress_bar.close()
 
         self.make_fusions()
+
+    def filter(self, Filter):       
+        self.library['Deck']   = Filter.apply(self.library['Deck'])
+        self.library['Fusion'] = Filter.apply(self.library['Fusion'])
 
     def to_json(self):
         return {

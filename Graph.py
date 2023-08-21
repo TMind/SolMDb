@@ -14,37 +14,37 @@ def handle_synergy_and_edges(G, source_entity, target_entity):
 
 
 def create_deck_graph(deck_or_fusion):        
-    G = nx.DiGraph(name = deck_or_fusion.name, fusion=deck_or_fusion , mod = 0, between = 0, avglbl = 0, community_labels = {})
+    G = nx.DiGraph(name = deck_or_fusion.name, faction = deck_or_fusion.faction , forgeborn = deck_or_fusion.forgeborn.name, fusion=deck_or_fusion, mod = 0, between = 0, avglbl = 0, community_labels = {}, max_ranges = {})
 
     deck = deck_or_fusion
 
-    G.add_nodes_from(list(deck.cards.keys()) + list(name for name in deck.forgeborn.abilities))
+    G.add_nodes_from(list(deck.cards.keys()) + [name for name in deck.forgeborn.abilities])
 
     # Create a dictionary of whether any interface in the card has '*' or '+' in its range
-    card_ranges = {}
-    for (faction,card_name), card in deck.cards.items():
-        max_ranges = card.ICollection.get_max_ranges()
-        card_ranges[card_name] = ','.join(max_ranges)  # Convert list to a string
-
-    # Add the card range flags as node attributes
-    nx.set_node_attributes(G, card_ranges, "max_ranges")
-
+    card_ranges = {
+        card_name: ','.join(card.ICollection.get_max_ranges())
+        for (faction, card_name), card in deck.cards.items()
+    }
     
-    for i, ((faction1,card_name_1), card_1) in enumerate(deck.cards.items()):
-        for j, ((faction2,card_name_2), card_2) in enumerate(deck.cards.items()):                
-            if card_name_1 == card_name_2 and faction1 == faction2:
+    # Add the card range flags as node attributes
+    G.graph['max_ranges'] = card_ranges
 
-                for ability_name, ability in deck.forgeborn.abilities.items():
-                    handle_synergy_and_edges(G, card_1, ability)
-                    handle_synergy_and_edges(G, ability, card_2)
-                        
-                handle_synergy_and_edges(G, card_1, card_1)
-                                                                                                                                                  
-            if i < j:
-                # compare only cards whose indices are greater        
-                # Check if the cards have any synergies                
-                handle_synergy_and_edges(G, card_1, card_2)
-                handle_synergy_and_edges(G, card_2, card_1)
+    cards_items = list(deck.cards.items())
+    for i, ((faction1, card_name_1), card_1) in enumerate(cards_items):
+        
+        # Handle self synergy
+        handle_synergy_and_edges(G, card_1, card_1)
+
+        # Check synergy with Forgeborn abilities
+        for ability_name, ability in deck.forgeborn.abilities.items():
+            handle_synergy_and_edges(G, card_1, ability)
+            handle_synergy_and_edges(G, ability, card_1)
+        
+        # Compare only cards whose indices are greater        
+        for j, ((faction2, card_name_2), card_2) in enumerate(cards_items[i + 1:], start=i + 1):        
+            # Check if the cards have any synergies                
+            handle_synergy_and_edges(G, card_1, card_2)
+            handle_synergy_and_edges(G, card_2, card_1)
             
     return G
 

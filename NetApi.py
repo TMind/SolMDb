@@ -6,9 +6,9 @@ from tqdm import tqdm
 
 class NetApi:
 
-    def __init__(self, csvfile=None):
+    def __init__(self, ucl, csvfile=None):
         self.csvfile = csvfile or 'csv/sff.csv'
-        self.ucl = UniversalCardLibrary(self.csvfile, 'csv/forgeborn.csv')
+        self.ucl = ucl
         self.base_url = "https://ul51g2rg42.execute-api.us-east-1.amazonaws.com/main"
         self.params = {
             "inclCards": "true",

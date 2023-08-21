@@ -23,7 +23,8 @@ class Filter:
         self.ast = self.parse(tokens)
         
     def tokenize(self, query):
-        return re.findall(r'&|\||!|\w+(?::\w+)?|[=<>~]+|\d+|\(|\)', query)
+        # Match strings between quotes, or any other existing pattern
+        return re.findall(r'".+?"|&|\||!|\w+(?::\w+)?|[=<>~]+|\d+|\(|\)', query)
 
     
     def parse(self, tokens):
@@ -64,6 +65,10 @@ class Filter:
 
         operator = tokens.pop(0)
         value = tokens.pop(0)
+
+        # Remove surrounding quotation marks if they exist
+        if value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
 
         attribute, dtype = self.attribute_map[abbreviation]
         if dtype is float:

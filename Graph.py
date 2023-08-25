@@ -18,7 +18,7 @@ def create_deck_graph(deck_or_fusion):
 
     deck = deck_or_fusion
 
-    G.add_nodes_from(list(deck.cards.keys()) + [name for name in deck.forgeborn.abilities])
+    G.add_nodes_from([card.title for card in deck.cards.values()] + [name for name in deck.forgeborn.abilities])
 
     # Create a dictionary of whether any interface in the card has '*' or '+' in its range
     card_ranges = {

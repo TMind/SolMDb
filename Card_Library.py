@@ -1,5 +1,4 @@
 # Fixed Version
-from copy import deepcopy
 import csv, json
 from re import A
 from Interface import Interface, InterfaceCollection
@@ -124,7 +123,7 @@ class Deck:
 
 
 class Fusion(Deck):
-    def __init__(self, decks):
+    def __init__(self, decks, name=None):
         if len(decks) == 1:
             super().__init__(decks[0].name, decks[0].forgeborn, decks[0].faction, decks[0].cards)
             self.forgeborn_options = [decks[0].forgeborn]
@@ -139,11 +138,10 @@ class Fusion(Deck):
         # Name and faction for the fusion
 
         # Sort the deck names alphabetically and then join them with an underscore
-        name = "_".join([deck.name for deck in decks])
-        self.fused_name = "_".join(sorted([deck.name for deck in decks]))
+        #name = "_".join([deck.name for deck in decks])
+        self.fused_name = name or "_".join(sorted([deck.name for deck in decks]))
 
-        # Generate the fused faction name
-        #TODO: Fused Faction isn't connected to active forgeborn yet 
+        # Generate the fused faction name        
         self.fused_faction = "|".join([deck.faction for deck in decks]) 
         fused_cards = {**deck1.cards, **deck2.cards}
         
@@ -158,7 +156,7 @@ class Fusion(Deck):
         self.active_forgeborn = self.forgeborn_options[0]
 
         # Call the Deck's constructor
-        super().__init__(name, self.active_forgeborn, self.fused_faction, fused_cards)
+        super().__init__(name or self.fused_name, self.active_forgeborn, self.fused_faction, fused_cards)
         
         
     def inspire_forgeborn(self, forgeborn1, forgeborn2):
@@ -390,7 +388,7 @@ class UniversalCardLibrary:
                 decks, incomplete_decksdata = self.load_decks_from_data(fusion_data['myDecks'])
                 name = fusion_data['name'] if 'name' in fusion_data else ""
                 if decks:
-                    fusion = Fusion(name, decks)
+                    fusion = Fusion(decks, name)
                     fusions.append(fusion)
                 if incomplete_decksdata:
                    incomplete_fusionsdata.append(

@@ -92,8 +92,10 @@ def main(args):
             eval_filename = args.eval
 
         egraphs = {}
-        if SelectionType == 'Collection' and not col_filter:
-            egraphs = cache_manager.load_object_from_cache('GraphLib') or {}
+
+        
+        #if SelectionType == 'Collection' and not col_filter:
+        local_graphs = cache_manager.load_object_from_cache('GraphLib') or {}
 
         # queue = Queue()
         new_graphs = 0
@@ -124,25 +126,33 @@ def main(args):
                 # Set the active Forgeborn for this Fusion
                 fusion.set_forgeborn(idx)
                 
-                # Create a unique name for each graph, based on the Fusion's name and the active Forgeborn's name
-               #graph_name = f"{fusion.name}_{fusion.active_forgeborn.name}"
-                
-                if egraphs.get(fusion.name) is None:
-                    
+                # Create a unique name for each graph, based on the Fusion's name and the active Forgeborn's name               
+                FusionGraph = local_graphs.get(fusion.name)
+
+                if not FusionGraph:                                                                          
                     # Create and evaluate the graph
                     FusionGraph = Graph.create_deck_graph(fusion)
                     ev.evaluate_graph(FusionGraph)
                     
                     # Store the graph in the egraphs dictionary
-                    egraphs[FusionGraph.graph['name']] = FusionGraph
+                    local_graphs[FusionGraph.graph['name']] = FusionGraph
                     
                     # Update the progress bar and increment the new_graphs counter                                        
                     new_graphs += 1
                     progress_bar.update(1)
+
+                #Store the Graph in the output dictionary
+                egraphs[FusionGraph.graph['name']] = FusionGraph
+
             time.sleep(0.001)
         progress_bar.close()
+
+        #Store the graph library if new graphs have been added 
+        if new_graphs > 0 and SelectionType == 'Collection':
+                cache_manager.save_object_to_cache('GraphLib', local_graphs)
         
 
+        #Evaluate single decks 
         total_decks  = len(DeckCollection.library['Deck'])
         progress_bar = tqdm(total=total_decks, desc="Creating Deck Graphs",mininterval=0.1, colour='CYAN')
         dgraphs = {}
@@ -155,11 +165,7 @@ def main(args):
             progress_bar.update(1)            
         progress_bar.close()
 
-
-        if new_graphs > 0:
-            if SelectionType == 'Collection' and not col_filter:
-                cache_manager.save_object_to_cache('GraphLib', egraphs)
-
+        #Print Graph relations in file / gefx 
         total_graphs  = len(egraphs)
         progress_bar = tqdm(total=total_graphs, desc="Printing Fusion Graphs",mininterval=0.1, colour='YELLOW')
         for name, EGraph in egraphs.items():            
@@ -181,6 +187,7 @@ def main(args):
 
         if args.select_pairs:
             if not eval_filename: eval_filename = 'evaluation'
+            print("Selecting top unique pairs\n")
             ev.find_best_pairs(egraphs,eval_filename + '_top_pairs.txt')
 
 def cache_init(args):

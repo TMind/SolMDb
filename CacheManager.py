@@ -48,11 +48,11 @@ class CacheManager:
 
 
 
-    def save_object_to_cache(self, keyword, obj):
-        file_path = self.get_filepath(keyword)
+    def save_object_to_cache(self, keyword_or_path, obj):
+        file_path = self.get_filepath(keyword_or_path) if keyword_or_path in self.file_paths else keyword_or_path
         
         if file_path is None:
-            raise ValueError(f"No file path associated with the keyword: {keyword}")
+            raise ValueError(f"No file path associated with the keyword: {keyword_or_path}")
             
         with open(file_path, "wb") as file:
             serialized_obj = pickle.dumps(obj)

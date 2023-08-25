@@ -75,6 +75,7 @@ class SolDBWindow(SolDBPanel):
 						eval=destination_path,
 						graph=self.createGraphCtrl.Value,
 						filter=None,
+						offline=False,
 						select_pairs=False
 						)
 			else:

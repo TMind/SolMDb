@@ -1,7 +1,10 @@
 from Interface import InterfaceCollection
-import networkx as nx
 from collections import defaultdict
+from itertools import combinations
+from Card_Library import Fusion
+import networkx as nx
 import os, re
+
 
 @staticmethod
 def handle_synergy_and_edges(G, source_entity, target_entity):
@@ -13,12 +16,16 @@ def handle_synergy_and_edges(G, source_entity, target_entity):
         G.add_edge(source_entity.name, target_entity.name, label=label, weight=weight, local=type)
 
 
-def create_deck_graph(deck_or_fusion):        
-    G = nx.DiGraph(name = deck_or_fusion.name, faction = deck_or_fusion.faction , forgeborn = deck_or_fusion.forgeborn.name, fusion=deck_or_fusion, mod = 0, between = 0, avglbl = 0, community_labels = {}, max_ranges = {})
+def create_deck_graph(deck, forgeborn_name=None):        
+    if forgeborn_name:
+        deck.set_forgeborn(forgeborn_name)
+    name = deck.name 
+    faction = deck.faction 
+    forgeborn = deck.forgeborn
+    
+    G = nx.DiGraph(name = name, faction = faction, forgeborn = forgeborn_name, fusion=deck, mod = 0, between = 0, avglbl = 0, community_labels = {}, max_ranges = {})
 
-    deck = deck_or_fusion
-
-    G.add_nodes_from([card.title for card in deck.cards.values()] + [name for name in deck.forgeborn.abilities])
+    G.add_nodes_from([card.title for card in deck.cards.values()] + [name for name in forgeborn.abilities])
 
     # Create a dictionary of whether any interface in the card has '*' or '+' in its range
     card_ranges = {
@@ -30,21 +37,19 @@ def create_deck_graph(deck_or_fusion):
     G.graph['max_ranges'] = card_ranges
 
     cards_items = list(deck.cards.items())
-    for i, ((faction1, card_name_1), card_1) in enumerate(cards_items):
-        
-        # Handle self synergy
-        handle_synergy_and_edges(G, card_1, card_1)
 
-        # Check synergy with Forgeborn abilities
+    # Handle self synergy and synergy with Forgeborn abilities for each card
+    for ((faction, card_name), card) in cards_items:
+        handle_synergy_and_edges(G, card, card)
+
         for ability_name, ability in deck.forgeborn.abilities.items():
-            handle_synergy_and_edges(G, card_1, ability)
-            handle_synergy_and_edges(G, ability, card_1)
-        
-        # Compare only cards whose indices are greater        
-        for j, ((faction2, card_name_2), card_2) in enumerate(cards_items[i + 1:], start=i + 1):        
-            # Check if the cards have any synergies                
-            handle_synergy_and_edges(G, card_1, card_2)
-            handle_synergy_and_edges(G, card_2, card_1)
+            handle_synergy_and_edges(G, card, ability)
+            handle_synergy_and_edges(G, ability, card)    
+
+    # Create pairs of cards to check for synergies between them
+    for ((faction1, card_name_1), card_1), ((faction2, card_name_2), card_2) in combinations(cards_items, 2):
+        handle_synergy_and_edges(G, card_1, card_2)
+        handle_synergy_and_edges(G, card_2, card_1)
             
     return G
 
@@ -118,32 +123,4 @@ def load_gexf_file(graphfolder, filename):
 def write_gexf_file(graph, graphfolder, filename):
     nx.write_gexf(graph, os.path.join(graphfolder,filename + '.gexf'))
 
-
-def is_eligible(graph, logical_expression):        
-    translated_expression = translate_expression(graph, logical_expression)
-    evaluated_expression = eval(translated_expression)    
-    return evaluated_expression
-
-def translate_expression(graph, logical_expression):                
-    translated_expression = logical_expression.replace('-', ' or ')
-    translated_expression = translated_expression.replace('+', ' and ')
-
-    # Replace variable names with their graph presence checks
-    for variable_name in get_variable_names(logical_expression):
-        # Remove single quotes around the variable name if they exist
-        stripped_variable_name = variable_name.replace("'","") #strip("'")
-        presence_check = str(any(stripped_variable_name in node for node in graph.nodes))
-        # Replace the quoted or unquoted variable name with its presence check
-        translated_expression = translated_expression.replace(f"'{variable_name}'", presence_check)
-        translated_expression = translated_expression.replace(variable_name, presence_check)
-
-    # Return the translated expression
-    return translated_expression
-
-
-def get_variable_names(logical_expression):
-    variable_pattern = r"\b(?:\w+\b\s*)+"
-    #variable_pattern = r"\b\w+(?: \w+)?\b" #r"\b\w+\b"  # Regular expression pattern to match variable names
-    variable_names = re.findall(variable_pattern, logical_expression)
-    return variable_names
 

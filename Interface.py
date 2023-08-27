@@ -156,34 +156,42 @@ class InterfaceCollection:
         return synergies_str 
 
     @staticmethod
-    def match_synergies(collection1, collection2):
-        matched_synergies = {}
-        
-        #print(f"Match Collections: {collection1.name} <=> {collection2.name}")
+    def match_synergies(collection1, collection2):        
+        """
+        Matches synergies between two collections.
+
+        Args:
+        collection1: The first collection object.
+        collection2: The second collection object.
+
+        Returns:
+        A dictionary of matched synergies and their associated factor.
+        """
+        # Restrict range if collections are the same
         if collection1.name == collection2.name:
-            restricted_collection = collection1.restrict_range('+')
-            collection1 = restricted_collection
-            #collection2 = restricted_collection
+            collection1 = collection1.restrict_range('+')
             
         input_interfaces2 = collection2.get_interfaces_by_type("I")
         output_interfaces1 = collection1.get_interfaces_by_type("O")
-        
-        for synergy, input_interfaces in input_interfaces2.items():            
-            output_interfaces = output_interfaces1.get(synergy, [])
-            
-            if len(output_interfaces) > 0:
 
-                factor = len(input_interfaces) * len(output_interfaces)
-                input_ranges = set()
-                for interface in input_interfaces:
-                    input_ranges.update(interface.ranges) 
-                if '*' in input_ranges:
-                    factor *= 1
-                if '+' in input_ranges:
-                    factor *= 1                                            
-                matched_synergies[synergy] = factor
+        if not input_interfaces2 or not output_interfaces1: return {} 
+
+        matched_synergies = {
+            synergy: len(input_interfaces) * len(output_interfaces1.get(synergy, []))
+            for synergy, input_interfaces in input_interfaces2.items()
+            if output_interfaces1.get(synergy)
+        }
 
         return matched_synergies
+        # for synergy, input_interfaces in input_interfaces2.items():
+        #     output_interfaces = output_interfaces1.get(synergy)
+
+        #     if output_interfaces:
+        #         factor = len(input_interfaces) * len(output_interfaces)
+        #         matched_synergies[synergy] = factor
+
+
+
 
 
 class Interface:

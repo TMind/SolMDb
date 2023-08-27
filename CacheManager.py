@@ -7,8 +7,6 @@ from pickle import Unpickler
 
 class CacheManager:
 
-    CHUNK_SIZE = 1024 * 1024  # 1 MB chunk size (adjust as needed)
-
     def __init__(self, file_paths, dependencies):
         self.file_paths = file_paths
         self.dependencies = dependencies
@@ -41,7 +39,7 @@ class CacheManager:
                 compressed_obj = base64.b64decode(base64_encoded_obj)                
                 serialized_obj = decompress_with_progress(compressed_obj)
                 bytes_reader = BytesReaderWrapper(serialized_obj)
-                with TQDMBytesReader(bytes_reader, desc=f'Unpickle {os.path.basename(file_path)}', total=len(serialized_obj), colour='BLUE', unit='B', unit_scale=True) as pbfd:                
+                with TQDMBytesRWer(bytes_reader, desc=f'Unpickle {os.path.basename(file_path)}', total=len(bytes_reader.data), colour='BLUE', unit='B', unit_scale=True) as pbfd:                
                     up = Unpickler(pbfd)
                     obj = up.load()                                
         return obj
@@ -58,7 +56,9 @@ class CacheManager:
             serialized_obj = pickle.dumps(obj)
             compressed_obj = zlib.compress(serialized_obj)            
             base64_encoded_obj = base64.b64encode(compressed_obj)
-            file.write(base64_encoded_obj)
+            #bytes_reader = BytesReaderWrapper(base64_encoded_obj)
+            byte_writer = TQDMBytesRWer(file, desc=f'Write {os.path.basename(file_path)}', total=len(base64_encoded_obj), colour='BLUE', unit='B', unit_scale=True)
+            byte_writer.write_from(BytesReaderWrapper(base64_encoded_obj))
 
 
     def is_cache_invalid(self, keyword):
@@ -111,7 +111,7 @@ class BytesReaderWrapper:
         self.offset += len(result)
         return result
 
-class TQDMBytesReader(object):
+class TQDMBytesRWer(object):
 
     def __init__(self, fd, **kwargs):
         self.fd = fd
@@ -122,6 +122,17 @@ class TQDMBytesReader(object):
         bytes = self.fd.read(size)
         self.tqdm.update(len(bytes))
         return bytes
+    
+    def write_from(self, data_object, chunk_size=8192):
+        total_written = 0
+        while True:
+            chunk = data_object.read(chunk_size)
+            if not chunk:
+                break
+            self.fd.write(chunk)
+            total_written += len(chunk)
+            self.tqdm.update(len(chunk))
+        return total_written
 
     def readline(self):
         bytes = self.fd.readline()
@@ -133,7 +144,9 @@ class TQDMBytesReader(object):
         return self
 
     def __exit__(self, *args, **kwargs):
+        self.tqdm.close()  # Ensure the progress bar is closed when done
         return self.tqdm.__exit__(*args, **kwargs)
+
 
 
 def decompress_with_progress(compressed_data, chunk_size=8192):

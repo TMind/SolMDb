@@ -11,8 +11,8 @@ from tqdm import tqdm
 import os, time, re
 from appdirs import user_data_dir
 from pathlib import Path
-from queue import Queue
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from multiprocessing import Pool, cpu_count
+
 
 def main(args):
 
@@ -80,11 +80,9 @@ def main(args):
    # elif SelectionType == 'Collection':
    #     DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary([]))
 
-    DeckCollection.update(net_decks)
-
-    if SelectionType == 'Collection' and not col_filter:
-        cache_manager.save_object_to_cache("DeckLib", DeckCollection)
-
+    if DeckCollection.update(net_decks):
+        if SelectionType == 'Collection' and not col_filter:
+            cache_manager.save_object_to_cache("DeckLib", DeckCollection)
 
     eval_filename = None
     if args.eval:
@@ -98,57 +96,58 @@ def main(args):
         local_graphs = cache_manager.load_object_from_cache('GraphLib') or {}
 
         # queue = Queue()
-        new_graphs = 0
+        fusions_without_graphs = {}
         
-        # with ProcessPoolExecutor() as executor:
-        #     futures = [executor.submit(process_fusion, name, fusion, idx, egraphs, queue)
-        #             for name, fusion in DeckCollection.library['Fusion'].items()
-        #             for idx in range(2)]
-            
-        #     progress_bar = tqdm(total=len(futures), desc="Creating Fusion Graphs", mininterval=0.1, colour='BLUE')
-            
-        #     for _ in as_completed(futures):
-        #         new_graphs = queue.get()
-        #         progress_bar.update(new_graphs)
-            
-        #     progress_bar.close()
-
-
         lib_fusions = DeckCollection.library['Fusion']
 
         if col_filter:
             lib_fusions   = col_filter.apply(lib_fusions)
 
-        progress_bar = tqdm(total=len(lib_fusions)*2, desc="Creating Fusion Graphs", mininterval=0.1, colour='BLUE')
-        for name, fusion in lib_fusions.items():
-            for idx in range(2):  # since there are 2 forgeborn_options for each fusion
-                
+
+        pbar = tqdm(total=len(lib_fusions)*2, desc="Checking Fusions", mininterval=0.1, colour='GREEN')
+        for fusion in lib_fusions.values():
+            for idx in range(2):
+
                 # Set the active Forgeborn for this Fusion
-                fusion.set_forgeborn(idx)
-                
+                fusion.set_forgeborn(idx)                
                 # Create a unique name for each graph, based on the Fusion's name and the active Forgeborn's name               
                 FusionGraph = local_graphs.get(fusion.name)
-
                 if not FusionGraph:                                                                          
-                    # Create and evaluate the graph
-                    FusionGraph = Graph.create_deck_graph(fusion)
-                    ev.evaluate_graph(FusionGraph)
-                    
-                    # Store the graph in the egraphs dictionary
-                    local_graphs[FusionGraph.graph['name']] = FusionGraph
-                    
-                    # Update the progress bar and increment the new_graphs counter                                        
-                    new_graphs += 1
-                    progress_bar.update(1)
+                    # Add fusion to creation_list     
+                    forgeborn_name = fusion.get_forgeborn(idx).name                
+                    fusions_without_graphs[fusion.name] = (fusion,forgeborn_name)
+                else: 
+                    #Store the Graph in the output dictionary                 
+                    egraphs[fusion.name]  = FusionGraph   
+                pbar.update()
+        pbar.close()     
 
-                #Store the Graph in the output dictionary
-                egraphs[FusionGraph.graph['name']] = FusionGraph
+#        for name, fusion in fusions_without_graphs.items():
+#            if name != fusion.name:
+#                print(f"Before multiprocessing: {name} != {fusion.name}")
 
-            time.sleep(0.001)
-        progress_bar.close()
+        if fusions_without_graphs:
+            # Multiprocess portion        
+            with Pool(processes=cpu_count()) as pool:
+                fusion_results = {}
+                args_list = [(fb_name, fusion) for name, (fusion, fb_name ) in fusions_without_graphs.items() ]
+                # Initialize the progress bar
+                pbar = tqdm(total=len(args_list), desc="Create Graphs", mininterval=0.1, colour='BLUE')
+                for FusionGraph in pool.imap_unordered(process_fusion, args_list):
+                    fusion_results[FusionGraph.graph['name']] = FusionGraph
+                    pbar.update()
+                pbar.close()
+
+            # Collecting results        
+            for graph_name , FusionGraph in fusion_results.items():                  
+                if local_graphs.get(graph_name) is not None:
+                    print(f"{graph_name} already exists locally !")         
+                local_graphs[graph_name] = FusionGraph
+                egraphs[graph_name]      = FusionGraph
 
         #Store the graph library if new graphs have been added 
-        if new_graphs > 0 and SelectionType == 'Collection':
+        if len(fusions_without_graphs) > 0 and SelectionType == 'Collection':
+                print(f"Saving {len(fusions_without_graphs)} / {len(local_graphs)}")
                 cache_manager.save_object_to_cache('GraphLib', local_graphs)
         
 
@@ -166,7 +165,7 @@ def main(args):
         progress_bar.close()
 
         #Print Graph relations in file / gefx 
-        total_graphs  = len(egraphs)
+        total_graphs  = len(egraphs) 
         progress_bar = tqdm(total=total_graphs, desc="Printing Fusion Graphs",mininterval=0.1, colour='YELLOW')
         for name, EGraph in egraphs.items():            
             Graph.print_graph(EGraph, eval_filename)
@@ -241,18 +240,13 @@ def cache_init(args):
     return CacheManager(file_paths, dependencies)
 
 # Parallelization Code
+def process_fusion(args):
+    fb_name, fusion = args
+   
+    FusionGraph = Graph.create_deck_graph(fusion, fb_name)
+    ev.evaluate_graph(FusionGraph)
 
-def process_fusion(name, fusion, idx, egraphs, queue):
-    fusion.set_forgeborn(idx)
-    graph_name = f"{name}_{fusion.active_forgeborn.name}"
-    
-    if egraphs.get(graph_name) is None:
-        FusionGraph = Graph.create_deck_graph(fusion)
-        ev.evaluate_graph(FusionGraph)
-        egraphs[graph_name] = FusionGraph
-        queue.put(1)
-    else:
-        queue.put(0)
+    return FusionGraph
 
 if __name__ == "__main__":
     # Create an argument parser

@@ -138,7 +138,7 @@ class Fusion(Deck):
         # Name and faction for the fusion
 
         # Sort the deck names alphabetically and then join them with an underscore
-        #name = "_".join([deck.name for deck in decks])
+        fusion_name = "_".join([deck.name for deck in decks])
         self.fused_name = name or "_".join(sorted([deck.name for deck in decks]))
 
         # Generate the fused faction name        
@@ -151,12 +151,12 @@ class Fusion(Deck):
         self.forgeborn_options = self.inspire_forgeborn(deck1.forgeborn, deck2.forgeborn)
         #self.forgeborn_options.sort(key=lambda forgeborn: forgeborn.name)
 
-        # Choosing a default forgeborn (from deck1 for simplicity)
+        # Choosing a default forgeborn (frosm deck1 for simplicity)
         # Note: Here we're assuming that a 'forgeborn' variable exists in the 'Deck' class
         self.active_forgeborn = self.forgeborn_options[0]
 
         # Call the Deck's constructor
-        super().__init__(name or self.fused_name, self.active_forgeborn, self.fused_faction, fused_cards)
+        super().__init__(name or fusion_name, self.active_forgeborn, self.fused_faction, fused_cards)
         
         
     def inspire_forgeborn(self, forgeborn1, forgeborn2):
@@ -184,15 +184,15 @@ class Fusion(Deck):
             new_forgeborns.append(new_forgeborn)    
         return new_forgeborns
 
-    def set_forgeborn(self, idx_or_forgeborn):
+    def set_forgeborn(self, idx_or_forgeborn_name):
             """
             Sets the active Forgeborn of the Fusion deck to the given index or Forgeborn object.
             Also updates the Fusion's name and faction based on the new active Forgeborn.
             """
-            if isinstance(idx_or_forgeborn, int):
-                new_forgeborn = self.forgeborn_options[idx_or_forgeborn]
+            if isinstance(idx_or_forgeborn_name, int):
+                new_forgeborn = self.forgeborn_options[idx_or_forgeborn_name]
             else:
-                new_forgeborn = idx_or_forgeborn
+                new_forgeborn = self.get_forgeborn(idx_or_forgeborn_name)
 
             # Check if the new Forgeborn is already the active one
             if self.active_forgeborn == new_forgeborn: return
@@ -211,6 +211,15 @@ class Fusion(Deck):
             # Update the forgeborn in the parent (Deck) class
             self.forgeborn = self.active_forgeborn
             self.update_ICollection_with_forgeborn()
+ 
+    def get_forgeborn(self, id_or_forgeborn_name):        
+        if isinstance(id_or_forgeborn_name, int):
+            return self.forgeborn_options[id_or_forgeborn_name]
+        else :
+            for forgeborn in self.forgeborn_options:
+                if id_or_forgeborn_name == forgeborn.name:
+                    return forgeborn
+        return None
 
 
 

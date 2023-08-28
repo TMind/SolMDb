@@ -1,9 +1,8 @@
 # Fixed Version
 import csv, json
-from re import A
 from Interface import Interface, InterfaceCollection
 from typing import List, Tuple, Dict
-from collections import Counter
+from copy import copy
 
 class Entity:
     def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection):
@@ -72,6 +71,7 @@ class Deck:
         self.name = name        
         self.forgeborn = forgeborn
         self.faction = faction
+        self.abilities = forgeborn.abilities 
 
         if not isinstance(self, Fusion):
             self.cards = self.associate_cards_with_factions(cards, faction)
@@ -135,12 +135,13 @@ class Fusion(Deck):
         if deck1.faction == deck2.faction:
             raise ValueError("Cannot fuse decks of the same faction")
 
+        
+        # Default Values 
+        fusion_name = "_".join([deck.name for deck in decks])        
         # Name and faction for the fusion
 
         # Sort the deck names alphabetically and then join them with an underscore
-        fusion_name = "_".join([deck.name for deck in decks])
         self.fused_name = name or "_".join(sorted([deck.name for deck in decks]))
-
         # Generate the fused faction name        
         self.fused_faction = "|".join([deck.faction for deck in decks]) 
         fused_cards = {**deck1.cards, **deck2.cards}
@@ -149,15 +150,16 @@ class Fusion(Deck):
         self.deck1 = deck1
         self.deck2 = deck2
         self.forgeborn_options = self.inspire_forgeborn(deck1.forgeborn, deck2.forgeborn)
-        #self.forgeborn_options.sort(key=lambda forgeborn: forgeborn.name)
+        self.fused_abilities = [ability for forgeborn in self.forgeborn_options for ability in forgeborn.abilities]
+        
 
         # Choosing a default forgeborn (frosm deck1 for simplicity)
         # Note: Here we're assuming that a 'forgeborn' variable exists in the 'Deck' class
         self.active_forgeborn = self.forgeborn_options[0]
 
-        # Call the Deck's constructor
-        super().__init__(name or fusion_name, self.active_forgeborn, self.fused_faction, fused_cards)
-        
+        # Call the Deck's constructor and exchange fused abilities 
+        super().__init__(name or fusion_name, self.active_forgeborn, self.fused_faction, fused_cards)        
+        self.abilities = self.fused_abilities
         
     def inspire_forgeborn(self, forgeborn1, forgeborn2):
         new_forgeborns = []
@@ -189,11 +191,13 @@ class Fusion(Deck):
             Sets the active Forgeborn of the Fusion deck to the given index or Forgeborn object.
             Also updates the Fusion's name and faction based on the new active Forgeborn.
             """
+            new_forgeborn = self.active_forgeborn
             if isinstance(idx_or_forgeborn_name, int):
                 new_forgeborn = self.forgeborn_options[idx_or_forgeborn_name]
             else:
                 new_forgeborn = self.get_forgeborn(idx_or_forgeborn_name)
 
+            self.abilities = new_forgeborn.abilities
             # Check if the new Forgeborn is already the active one
             if self.active_forgeborn == new_forgeborn: return
 
@@ -209,9 +213,17 @@ class Fusion(Deck):
                 self.faction = f"{self.deck2.faction}|{self.deck1.faction}"
             
             # Update the forgeborn in the parent (Deck) class
-            self.forgeborn = self.active_forgeborn
+            self.forgeborn = self.active_forgeborn    
             self.update_ICollection_with_forgeborn()
  
+
+    def copyset_forgeborn(self, idx_or_forgeborn_name):
+
+        final_fusion = copy(self)
+        final_fusion.set_forgeborn(idx_or_forgeborn_name)
+
+        return final_fusion
+
     def get_forgeborn(self, id_or_forgeborn_name):        
         if isinstance(id_or_forgeborn_name, int):
             return self.forgeborn_options[id_or_forgeborn_name]

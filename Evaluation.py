@@ -120,7 +120,7 @@ def export_csv(csvname, graphs, local_mode=False):
 
     
     # Define the fieldnames for the CSV
-    fieldnames = ["deckname1", "deckname2","forgeborn", "factions", "numlbl", "seeks1", "seeks2", "seeks3", "seeks4", "Creatures", "Spells"]
+    fieldnames = ["deckname1", "deckname2","forgeborn", "L2", "L3", "L4", "factions", "numlbl", "seeks1", "seeks2", "seeks3", "seeks4", "Creatures", "Spells"]
     # Add columns for each label before and after
     for label in all_labels:
         #fieldnames.append(f"{label}_1")
@@ -174,6 +174,13 @@ def export_csv(csvname, graphs, local_mode=False):
             range3 = max_graph_ranges[2] if len(max_graph_ranges) > 2 else ''
             range4 = ', '.join(max_graph_ranges[3:]) if len(max_graph_ranges) > 3 else ''
 
+
+            ability = {}
+            for ability_name in deck.forgeborn.abilities:
+                if "Inspire" in ability_name: continue
+                level = ability_name[0]
+                ability[level] = ability_name
+            
             # Assign values to range1, range2, and range3
 #            range1, range2, range3 = max_graph_ranges[:3]
             # Now you can add these to your dictionary:
@@ -182,6 +189,9 @@ def export_csv(csvname, graphs, local_mode=False):
                 "deckname1": deckname1,
                 "deckname2": deckname2,
                 "forgeborn": forgeborn_name,
+                "L2" : ability['2'],
+                "L3" : ability['3'],
+                "L4" : ability['4'],
                 "factions":  deck_factions,
                 "numlbl": f"{EGraph.graph['avglbl']:.4f}",
                 "seeks1": range1,

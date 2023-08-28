@@ -66,9 +66,9 @@ def main(args):
             'F'     : ('faction', str),
             'D'     : ('name', str),
             'FB'    : ('forgeborn.name', str),
-            'C'     : ('cards', list),
-            'A'     : ('forgeborn.abilities', list),
-            'K'     : ('composition', dict),            
+            'C'     : ('cards', dict, 'keys'),
+            'A'     : ('abilities', dict, 'keys'),            
+            'K'     : ('composition', dict, 'values'),            
         }
         col_filter = Filter(query, attribute_map) 
 
@@ -90,41 +90,35 @@ def main(args):
             eval_filename = args.eval
 
         egraphs = {}
-
-        
-        #if SelectionType == 'Collection' and not col_filter:
-        local_graphs = cache_manager.load_object_from_cache('GraphLib') or {}
-
-        # queue = Queue()
         fusions_without_graphs = {}
+
+        local_graphs = cache_manager.load_object_from_cache('GraphLib') or {}                        
+        lib_fusions = DeckCollection.library['Fusion']      
         
-        lib_fusions = DeckCollection.library['Fusion']
-
-        if col_filter:
-            lib_fusions   = col_filter.apply(lib_fusions)
-
-
         pbar = tqdm(total=len(lib_fusions)*2, desc="Checking Fusions", mininterval=0.1, colour='GREEN')
         for fusion in lib_fusions.values():
             for idx in range(2):
 
                 # Set the active Forgeborn for this Fusion
-                fusion.set_forgeborn(idx)                
+                final_fusion = fusion.copyset_forgeborn(idx)
                 # Create a unique name for each graph, based on the Fusion's name and the active Forgeborn's name               
-                FusionGraph = local_graphs.get(fusion.name)
+                FusionGraph = local_graphs.get(final_fusion.name)
+
+                if col_filter and not col_filter.apply([final_fusion]): continue
+
                 if not FusionGraph:                                                                          
                     # Add fusion to creation_list     
-                    forgeborn_name = fusion.get_forgeborn(idx).name                
-                    fusions_without_graphs[fusion.name] = (fusion,forgeborn_name)
+                    forgeborn_name = final_fusion.get_forgeborn(idx).name                
+                    fusions_without_graphs[final_fusion.name] = (final_fusion,forgeborn_name)
                 else: 
                     #Store the Graph in the output dictionary                 
-                    egraphs[fusion.name]  = FusionGraph   
+                    egraphs[final_fusion.name]  = FusionGraph   
                 pbar.update()
         pbar.close()     
 
-#        for name, fusion in fusions_without_graphs.items():
-#            if name != fusion.name:
-#                print(f"Before multiprocessing: {name} != {fusion.name}")
+        #for name, (fusion,forgeborn) in fusions_without_graphs.items():
+        #    if name != fusion.name:
+        #        print(f"Before multiprocessing: {name} != {fusion.name}")
 
         if fusions_without_graphs:
             # Multiprocess portion        
@@ -147,7 +141,7 @@ def main(args):
 
         #Store the graph library if new graphs have been added 
         if len(fusions_without_graphs) > 0 and SelectionType == 'Collection':
-                print(f"Saving {len(fusions_without_graphs)} / {len(local_graphs)}")
+                #print(f"Saving {len(fusions_without_graphs)} / {len(local_graphs)}")
                 cache_manager.save_object_to_cache('GraphLib', local_graphs)
         
 

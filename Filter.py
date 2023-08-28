@@ -10,11 +10,12 @@ class LogicalOperator(Node):
         self.operator = operator
 
 class Condition(Node):
-    def __init__(self, attribute, operator, value, dict_key=None):
+    def __init__(self, attribute, operator, value, dict_key=None, focus=None):
         self.attribute = attribute
         self.operator = operator
         self.value = value
         self.dict_key = dict_key
+        self.focus = focus # Either 'keys' , 'values' or None
 
 class Filter:
     def __init__(self, query, attribute_map):
@@ -70,7 +71,7 @@ class Filter:
         if value.startswith('"') and value.endswith('"'):
             value = value[1:-1]
 
-        attribute, dtype = self.attribute_map[abbreviation]
+        attribute, dtype, focus = self.attribute_map[abbreviation]
         if dtype is float:
             value = float(value)
         elif dtype is int:
@@ -78,7 +79,7 @@ class Filter:
         elif dtype is bool:
             value = value.lower() in ['true', '1', 'yes']
 
-        return Condition(attribute, operator, value, dict_key)
+        return Condition(attribute, operator, value, dict_key, focus)
 
     def apply(self, objects):
         if isinstance(objects, dict):
@@ -104,11 +105,18 @@ class Filter:
         operator = condition.operator
         value = condition.value
         dict_key = condition.dict_key
-
+        focus = condition.focus 
+        
         current_attr = self.get_nested_attribute(obj, attribute)
 
         if current_attr is None:
             return False
+        
+        #Adjust based on the focus 
+        if focus == 'keys' and isinstance(current_attr, dict):
+            current_attr = [k[1] if isinstance(k, tuple) else k for k in current_attr.keys()]
+        elif focus == 'values' and isinstance(current_attr, dict):
+            current_attr = list(current_attr.values())
 
         if dict_key:
             if isinstance(current_attr, dict):

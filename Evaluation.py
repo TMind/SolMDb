@@ -171,9 +171,9 @@ def export_csv(csvname, graphs, local_mode=False):
 
 
             ability = {}
-            for ability_name in deck.forgeborn.abilities:
-                if "Inspire" in ability_name: continue
+            for ability_name in deck.forgeborn.abilities:                    
                 level = ability_name[0]
+                if "Inspire" in ability_name and ability.get(level): continue                
                 ability[level] = ability_name
             
             # Assign values to range1, range2, and range3

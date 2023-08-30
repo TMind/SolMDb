@@ -31,3 +31,4 @@ DESTROY SYN,1.0,SelfDestruction Activator,Destruction Synergy
 DEPLOY,1.0,Reanimate Activator,Deploy
 READY,1.0,Reanimate Activator,Activate
 FORGEBORN,1.0,Forgeborn Synergy,Forgeborn Ability
+BATTLE,1.0,"Battle Synergy, Stat Buff",Battle

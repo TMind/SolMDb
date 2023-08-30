@@ -102,11 +102,6 @@ def evaluate_graph(G):
     for name, metric in Metric.items():
         nx.set_node_attributes(G, metric, name)
 
-    #for node_name in G.nodes:
-    #    combined_metric = Metric['between'][node_name] * Metric['cluster_coeff'][node_name]
-    #    G.nodes[node_name]['total'] = combined_metric
-        #G.graph['value'] += combined_metric
-
 def calculate_weight(synergy, count):
 
     syn = SynergyTemplate().get_synergy_by_name(synergy)

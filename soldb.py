@@ -63,9 +63,9 @@ def main(args):
         # Example usage:
         query = args.filter
         attribute_map = {
-            'F'     : ('faction', str),
-            'D'     : ('name', str),
-            'FB'    : ('forgeborn.name', str),
+            'F'     : ('faction', str, None),
+            'D'     : ('name', str, None),
+            'FB'    : ('forgeborn.name', str, None),
             'C'     : ('cards', dict, 'keys'),
             'A'     : ('abilities', dict, 'keys'),            
             'K'     : ('composition', dict, 'values'),            

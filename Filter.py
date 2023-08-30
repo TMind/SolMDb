@@ -27,10 +27,17 @@ class Filter:
         # Match strings between quotes, or any other existing pattern
         return re.findall(r'".+?"|&|\||!|\w+(?::\w+)?|[=<>~]+|\d+|\(|\)', query)
 
-    
     def parse(self, tokens):
-        return self._parse_or(tokens)
-    
+        return self._parse_logical(tokens)
+
+    def _parse_logical(self, tokens):
+        node = self._parse_or(tokens)
+        while tokens and tokens[0] in ('|', '&'):
+            operator = tokens.pop(0)
+            right = self._parse_or(tokens)
+            node = LogicalOperator(node, right, operator)
+        return node
+
     def _parse_or(self, tokens):
         node = self._parse_and(tokens)
         while tokens and tokens[0] == '|':
@@ -38,7 +45,7 @@ class Filter:
             right = self._parse_and(tokens)
             node = LogicalOperator(node, right, '|')
         return node
-    
+
     def _parse_and(self, tokens):
         node = self._parse_not(tokens)
         while tokens and tokens[0] == '&':
@@ -53,7 +60,16 @@ class Filter:
             node = self._parse_not(tokens)
             return LogicalOperator(None, node, '!')
         else:
-            return self._parse_condition(tokens)
+            return self._parse_group(tokens) if tokens and tokens[0] == '(' else self._parse_condition(tokens)
+
+    def _parse_group(self, tokens):
+        tokens.pop(0)  # Consume the opening parenthesis
+        node = self._parse_logical(tokens)
+        if tokens and tokens[0] == ')':
+            tokens.pop(0)  # Consume the closing parenthesis
+        else:
+            raise ValueError("Missing closing parenthesis in group")
+        return node
         
     def _parse_condition(self, tokens):
         token = tokens.pop(0)

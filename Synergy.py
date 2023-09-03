@@ -86,7 +86,7 @@ class SynergyTemplate:
     def from_csv(self, filename):
         
         with open(filename, "r") as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = csv.DictReader(csvfile, delimiter=';')
             for row in reader:
                 name = row["name"]
                 weight = float(row["weight"])

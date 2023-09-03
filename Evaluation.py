@@ -172,8 +172,8 @@ def export_csv(csvname, graphs, local_mode=False):
 
             ability = {}
             for ability_name in deck.forgeborn.abilities:
-                if "Inspire" in ability_name: continue
                 level = ability_name[0]
+                if "Inspire" in ability_name and ability.get(level): continue                
                 ability[level] = ability_name
             
             # Assign values to range1, range2, and range3
@@ -188,7 +188,7 @@ def export_csv(csvname, graphs, local_mode=False):
                 "L3" : ability['3'],
                 "L4" : ability['4'],
                 "factions":  deck_factions,
-                "numlbl": f"{EGraph.graph['avglbl']:.4f}",
+                "numlbl": EGraph.graph['avglbl'],
                 "seeks1": range1,
                 "seeks2": range2,
                 "seeks3": range3,
@@ -210,7 +210,7 @@ def export_csv(csvname, graphs, local_mode=False):
                 
                 #row[f"{label}_1"] = deck1_count
                 #row[f"{label}_2"] = deck2_count
-                row[label] = label_weights.get(label, 0)  # use 0 if the label does not exist in this graph
+                row[label] = int(label_weights.get(label, 0))  # use 0 if the label does not exist in this graph
 
             writer.writerow(row)
             time.sleep(0.001)

@@ -1,34 +1,34 @@
-name,weight,input_tags,output_tags
-BEAST,1.0,Beast Synergy,Beast
-DINOSAUR,1.0,Dinosaur Synergy,Dinosaur
-MAGE,1.0,Mage Synergy,Mage
-ROBOT,1.0,Robot Synergy,Robot
-SCIENTIST,1.0,Scientist Synergy,Scientist
-SPIRIT,1.0,Spirit Synergy,Spirit
-WARRIOR,1.0,Warrior Synergy,Warrior
-ZOMBIE,1.0,Zombie Synergy,Zombie
-MINION,1.0,Minion Synergy,Minion
-DRAGON,1.0,Dragon Synergy,Dragon
-ELEMENTAL,1.0,Elemental Synergy,Elemental
-PLANT,1.0,Plant Synergy,Plant
-SPELL,1.0,Spell Synergy,Spell
-HEALING,1.0,Healing Synergy,Healing Source
-MOVEMENT,1.0,Movement Benefit,Movement
-ARMOR,1.0,Armor Synergy,"Armor, Armor Giver "
-ACTIVATION,1.0,Ready,Activate
-FREE,1.0,Free,Free
-FREE HEALING,1.0,Free Healing,Healing Source
-FREE DESTROY,1.0,Free SelfDestruction,"Destruction Synergy, Minion"
-FREE UPGRADE,1.0,Free Upgrade,Upgrade
-FREE SELFDMG,1.0,Free Self Damage,Self Damage Activator
-FREE SPELL,1.0,Free Spell,Spell
-FREE REPLACE,1.0,Free Replacement,"Replace Setup, Minion"
-FREE MAGE,1.0,Free Mage,Mage
-UPGRADE,1.0,Upgrade Synergy,Upgrade
-REPLACE,1.0,Replace Profit,Replace Setup
-SELFDAMAGE,1.0,Self Damage Payoff,Self Damage Activator
-DESTROY SYN,1.0,SelfDestruction Activator,Destruction Synergy
-DEPLOY,1.0,Reanimate Activator,Deploy
-READY,1.0,Reanimate Activator,Activate
-FORGEBORN,1.0,Forgeborn Synergy,Forgeborn Ability
-BATTLE,1.0,"Battle Synergy, Stat Buff",Battle
+name;weight;input_tags;output_tags
+BEAST;1;Beast Synergy;Beast
+DINOSAUR;1;Dinosaur Synergy;Dinosaur
+MAGE;1;Mage Synergy;Mage
+ROBOT;1;Robot Synergy;Robot
+SCIENTIST;1;Scientist Synergy;Scientist
+SPIRIT;1;Spirit Synergy;Spirit
+WARRIOR;1;Warrior Synergy;Warrior
+ZOMBIE;1;Zombie Synergy;Zombie
+MINION;1;Minion Synergy;Minion
+DRAGON;1;Dragon Synergy;Dragon
+ELEMENTAL;1;Elemental Synergy;Elemental
+PLANT;1;Plant Synergy;Plant
+SPELL;1;Spell Synergy;Spell
+HEALING;1;Healing Synergy;Healing Source
+MOVEMENT;1;Movement Benefit;Movement
+ARMOR;1;Armor Synergy;Armor, Armor Giver 
+ACTIVATION;1;Ready;Activate
+FREE;1;Free;Free
+FREE HEALING;1;Free Healing;Healing Source
+FREE DESTROY;1;Free SelfDestruction;Destruction Synergy, Minion
+FREE UPGRADE;1;Free Upgrade;Upgrade
+FREE SELFDMG;1;Free Self Damage;Self Damage Activator
+FREE SPELL;1;Free Spell;Spell
+FREE REPLACE;1;Free Replacement;Replace Setup, Minion
+FREE MAGE;1;Free Mage;Mage
+UPGRADE;1;Upgrade Synergy;Upgrade
+REPLACE;1;Replace Profit;Replace Setup
+SELFDAMAGE;1;Self Damage Payoff;Self Damage Activator
+DESTROY SYN;1;SelfDestruction Activator;Destruction Synergy
+DEPLOY;1;Reanimate Activator;Deploy
+READY;1;Reanimate Activator;Activate
+FORGEBORN;1;Forgeborn Synergy;Forgeborn Ability
+BATTLE;1;Battle Synergy;Battle

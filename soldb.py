@@ -68,11 +68,11 @@ def main(args):
             'FB'    : ('forgeborn.name', str, None),
             'C'     : ('cards', dict, 'keys'),
             'A'     : ('abilities', dict, 'keys'),            
-            'K'     : ('composition', dict, 'values'),            
+            'K'     : ('composition', dict, None),            
         }
         col_filter = Filter(query, attribute_map) 
 
-        # Apply the filter:      
+        # Apply the filter:       
         net_decks   = col_filter.apply(net_decks)
 
         DeckCollection.filter(col_filter)

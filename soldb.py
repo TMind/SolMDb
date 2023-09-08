@@ -92,7 +92,7 @@ def main(args):
         egraphs = {}
         fusions_without_graphs = {}
 
-        local_graphs = cache_manager.load_object_from_cache('GraphLib') or {}                        
+        local_graphs = cache_manager.load_or_create('GraphLib', {})
         lib_fusions = DeckCollection.library['Fusion']      
         
         pbar = tqdm(total=len(lib_fusions)*2, desc="Checking Fusions", mininterval=0.1, colour='GREEN')
@@ -251,7 +251,7 @@ def cache_init(args):
         "GraphLib": ["DeckLib"],
     }
 
-    return CacheManager(file_paths, dependencies)
+    return CacheManager.instance(file_paths, dependencies)
 
 # Parallelization Code
 def process_fusion(args):

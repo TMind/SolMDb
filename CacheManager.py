@@ -6,10 +6,20 @@ import pickle
 from pickle import Unpickler
 
 class CacheManager:
+    _instance = None
+
+    @classmethod  
+    def instance(cls, file_paths=None, dependencies=None):  
+        if cls._instance is None:  
+            if file_paths is None or dependencies is None:  
+                raise ValueError("CacheManager must be initialized with file_paths and dependencies on the first call.")  
+            cls._instance = cls(file_paths, dependencies)  
+        return cls._instance  
 
     def __init__(self, file_paths, dependencies):
         self.file_paths = file_paths
         self.dependencies = dependencies
+        self.loaded_data = {}
 
     def get_filepath(self, keyword):
         return self.file_paths.get(keyword, None)
@@ -25,6 +35,7 @@ class CacheManager:
             obj = create_func()
             self.save_object_to_cache(file_path, obj)
 
+        self.loaded_data[file_path] = obj
         return obj
 
 
@@ -32,6 +43,9 @@ class CacheManager:
         # Convert keyword to file path if needed
         file_path = self.get_filepath(keyword_or_path) if keyword_or_path in self.file_paths else keyword_or_path
         
+        if file_path in self.loaded_data:
+            return self.loaded_data[file_path]
+
         obj = None
         if os.path.exists(file_path):
             with open(file_path, "rb") as file:
@@ -41,7 +55,7 @@ class CacheManager:
                 bytes_reader = BytesReaderWrapper(serialized_obj)
                 with TQDMBytesRWer(bytes_reader, desc=f'Unpickle {os.path.basename(file_path)}', total=len(bytes_reader.data), colour='BLUE', unit='B', unit_scale=True) as pbfd:                
                     up = Unpickler(pbfd)
-                    obj = up.load()                                
+                    obj = up.load()                                        
         return obj
 
 

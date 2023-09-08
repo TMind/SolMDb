@@ -1,8 +1,7 @@
 from Card_Library import Deck, Fusion
 from tqdm import tqdm 
 from itertools import combinations
-from multiprocessing import Pool, cpu_count
-import time
+from multiprocessing import Pool, cpu_count, Event
 from prof import profileit
 
 class DeckLibrary:
@@ -28,13 +27,29 @@ class DeckLibrary:
                     deck_pairs.append((deck1, deck2))
 
         with Pool(processes=cpu_count()) as pool:
+            terminate_event = Event()
             fusion_results = []
             args_list = [(deck1, deck2) for (deck1, deck2) in deck_pairs ]
             # Initialize the progress bar
             pbar = tqdm(total=len(args_list), desc="Fusioning", mininterval=0.1, colour='BLUE')
-            for fusion in pool.imap_unordered(Fusion, args_list):
-                self.library['Fusion'][fusion.fused_name] = fusion
-                pbar.update()            
+
+            try:
+
+                for fusion in pool.imap_unordered(Fusion, args_list):
+                    if terminate_event.is_set():
+                        print("Parent Process signaled termination. Exiting child processes!")
+                        pool.terminate()
+                        break
+
+                    if fusion:
+                        self.library['Fusion'][fusion.fused_name] = fusion
+                        pbar.update()            
+
+            except KeyboardInterrupt:
+                print("Interrupter! Terminating processes...")
+                pool.terminate()
+                pool.join()
+
             pbar.close()
 
         return len(deck_pairs) or 0

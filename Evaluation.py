@@ -1,7 +1,7 @@
 from collections import defaultdict
 from Synergy import SynergyTemplate
 import networkx as nx
-import infomap
+#import infomap
 import csv
 import time
 import os
@@ -45,21 +45,21 @@ def evaluate_graph(G):
     #Metric['katz'] = nx.katz_centrality(G, alpha=0.1, beta=1.0)
 
     # Create a mapping of nodes to integers
-    node_to_int = {node: i for i, node in enumerate(G.nodes)}
+    #node_to_int = {node: i for i, node in enumerate(G.nodes)}
 
     # Initialize Infomap
-    infomap_wrapper = infomap.Infomap("--two-level --silent")
+    #infomap_wrapper = infomap.Infomap("--two-level --silent")
 
     # Add nodes and edges to Infomap
-    for node in node_to_int.values():
-        infomap_wrapper.add_node(node)
+    #for node in node_to_int.values():
+    #   infomap_wrapper.add_node(node)
 
-    for edge in G.edges:
-        infomap_wrapper.add_link(
-            node_to_int[edge[0]], node_to_int[edge[1]])
+    #for edge in G.edges:
+    #    infomap_wrapper.add_link(
+    #        node_to_int[edge[0]], node_to_int[edge[1]])
 
     # Run Infomap
-    infomap_wrapper.run()
+    #infomap_wrapper.run()
         # create a dictionary to store labels in each community
     community_labelinfos = defaultdict(list)
 
@@ -74,16 +74,16 @@ def evaluate_graph(G):
          # Calculate weight for each label
         weight_per_label = total_weight / len(labels)
         # Get the nodes of the edge
-        nodeA, nodeB = edge[0], edge[1]
+        #nodeA, nodeB = edge[0], edge[1]
         # Get the community of the nodes
-        communityA = infomap_wrapper.get_modules()[node_to_int[nodeA]]
-        communityB = infomap_wrapper.get_modules()[node_to_int[nodeB]]
+    #    communityA = infomap_wrapper.get_modules()[node_to_int[nodeA]]
+    #    communityB = infomap_wrapper.get_modules()[node_to_int[nodeB]]
         # If the nodes belong to the same community, add the label(s) and the weight to the corresponding community
         local_comm = False
-        if communityA == communityB: local_comm = True 
+    #    if communityA == communityB: local_comm = True 
         
         for label in labels:
-            community_labelinfos[communityA].append((label.strip(), weight_per_label, local_faction, local_comm))
+            community_labelinfos['Community'].append((label.strip(), weight_per_label, local_faction, local_comm))
 
 
     # Calculate the total number of community labels and the average number of labels per community

@@ -8,10 +8,10 @@ import Evaluation as ev
 import Graph
 import argparse
 from tqdm import tqdm 
-import os, time, re
+import os, time
 from appdirs import user_data_dir
 from pathlib import Path
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool, cpu_count,Event
 
 
 def main(args):
@@ -123,13 +123,31 @@ def main(args):
         if fusions_without_graphs:
             # Multiprocess portion        
             with Pool(processes=cpu_count()) as pool:
+                terminate_event = Event()
                 fusion_results = {}
                 args_list = [(fb_name, fusion) for name, (fusion, fb_name ) in fusions_without_graphs.items() ]
                 # Initialize the progress bar
                 pbar = tqdm(total=len(args_list), desc="Create Graphs", mininterval=0.1, colour='BLUE')
-                for FusionGraph in pool.imap_unordered(process_fusion, args_list):
-                    fusion_results[FusionGraph.graph['name']] = FusionGraph
-                    pbar.update()
+
+                try:
+                    for FusionGraph in pool.imap_unordered(process_fusion, args_list, chunksize=1):
+                        if terminate_event.is_set(): 
+                            print("Parent Process signaled termination. Exiting child processes!")
+                            pool.terminate()
+                            break
+                                                
+                        if FusionGraph:
+                            fusion_results[FusionGraph.graph['name']] = FusionGraph
+                            pbar.update()
+                
+                except KeyboardInterrupt:
+                
+                    # Handle keyboard interruption (Ctrl+C)
+                    print("Interrupted! Terminating processes...")
+                    terminate_event.set()
+                    pool.terminate()
+                    pool.join()
+                        
                 pbar.close()
 
             # Collecting results        
@@ -194,11 +212,13 @@ def cache_init(args):
     - CacheManager instance initialized with the correct file mappings.
     """
     resourcePath = os.path.dirname(__file__)
-    cacheFolder = os.path.join(resourcePath, "cache")
-    dataFolder = os.path.join(resourcePath, "csv")
+    cacheFolder  = os.path.join(resourcePath, "cache")
+    dataFolder   = os.path.join(resourcePath, "data")
+    csvFolder    = os.path.join(resourcePath, "csv")
     
     # ensure folders exist
     Path(cacheFolder).mkdir(parents=True, exist_ok=True)
+    Path(csvFolder).mkdir(parents=True, exist_ok=True)
     Path(dataFolder).mkdir(parents=True, exist_ok=True)
 
     deck_library_name = "deck_library"
@@ -226,7 +246,7 @@ def cache_init(args):
 
     # Dependencies mapping
     dependencies = {
-        "CardLib": [os.path.join(dataFolder, 'sff.csv'), os.path.join(dataFolder, 'forgeborn.csv')],
+        "CardLib": [os.path.join(csvFolder, 'sff.csv'), os.path.join(csvFolder, 'forgeborn.csv')],
         "DeckLib": ["CardLib"],
         "GraphLib": ["DeckLib"],
     }
@@ -243,6 +263,8 @@ def process_fusion(args):
     return FusionGraph
 
 if __name__ == "__main__":
+
+    
     # Create an argument parser
     parser = argparse.ArgumentParser(description="Script description")
 

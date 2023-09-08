@@ -1,10 +1,13 @@
+import platform
 from contextlib import nullcontext
-from curses.ascii import NUL
+if platform.system() != 'Windows':
+	from curses.ascii import NUL
 from DeckLibrary import DeckLibrary
 from Card_Library import Deck, UniversalCardLibrary
 from NetApi import NetApi
 import Evaluation as ev
 from CacheManager import CacheManager
+from multiprocessing import freeze_support
 
 
 import wx
@@ -35,7 +38,7 @@ class SolDBMain(SolDBMainFrame):
 		aboutInfo.SetName("SolDB")
 		aboutInfo.SetVersion("0.1")
 		aboutInfo.SetDescription("")
-		aboutInfo.SetCopyright("(C) tmind")
+		aboutInfo.SetCopyright("(C) TMind")
 		aboutInfo.SetWebSite("")
 		#aboutInfo.AddDeveloper("Gorman Christian with thanks to (and no affiliation):")
 		aboutInfo.AddDeveloper("reportlab https://www.reportlab.com/opensource/")
@@ -100,6 +103,7 @@ class SolDBWindow(SolDBPanel):
 	
 
 if __name__ == '__main__':
+	freeze_support()
 	app = wx.App(redirect=False)
 	frame = SolDBMain(None)
 	frame.Show(True)

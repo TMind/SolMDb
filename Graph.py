@@ -1,12 +1,12 @@
 from Interface import InterfaceCollection
 from collections import defaultdict
 from itertools import combinations
-from Card_Library import Fusion
+import os
 import networkx as nx
-import os, re
+from graphspace_python.api.client import GraphSpace
+from graphspace_python.graphs.classes.gsgraph import GSGraph
 
 
-@staticmethod
 def handle_synergy_and_edges(G, source_entity, target_entity):
     syn_matches = InterfaceCollection.match_synergies(source_entity.ICollection, target_entity.ICollection)
     if syn_matches:
@@ -16,14 +16,15 @@ def handle_synergy_and_edges(G, source_entity, target_entity):
         G.add_edge(source_entity.name, target_entity.name, label=label, weight=weight, local=type)
 
 
-def create_deck_graph(deck, forgeborn_name=None):        
+def create_deck_graph(deck, forgeborn_name=None):
     if forgeborn_name:
         deck.set_forgeborn(forgeborn_name)
-    name = deck.name 
-    faction = deck.faction 
+    name = deck.name
+    faction = deck.faction
     forgeborn = deck.forgeborn
-    
-    G = nx.DiGraph(name = name, faction = faction, forgeborn = forgeborn_name, fusion=deck, mod = 0, between = 0, avglbl = 0, community_labels = {}, max_ranges = {})
+
+    G = nx.DiGraph(name=name, faction=faction, forgeborn=forgeborn_name, fusion=deck, mod=0, between=0, avglbl=0,
+                community_labels={}, max_ranges={})
 
     G.add_nodes_from([card.title for card in deck.cards.values()] + [name for name in forgeborn.abilities])
 
@@ -32,7 +33,7 @@ def create_deck_graph(deck, forgeborn_name=None):
         card_name: ','.join(card.ICollection.get_max_ranges())
         for (faction, card_name), card in deck.cards.items()
     }
-    
+
     # Add the card range flags as node attributes
     G.graph['max_ranges'] = card_ranges
 
@@ -44,27 +45,26 @@ def create_deck_graph(deck, forgeborn_name=None):
 
         for ability_name, ability in deck.forgeborn.abilities.items():
             handle_synergy_and_edges(G, card, ability)
-            handle_synergy_and_edges(G, ability, card)    
+            handle_synergy_and_edges(G, ability, card)
 
     # Create pairs of cards to check for synergies between them
     for ((faction1, card_name_1), card_1), ((faction2, card_name_2), card_2) in combinations(cards_items, 2):
         handle_synergy_and_edges(G, card_1, card_2)
         handle_synergy_and_edges(G, card_2, card_1)
-            
-    return G
 
+    return G
 
 def print_graph(G, output_file=None):
     """
     Print or write the graph information in a tabular format.
 
     Args:
-        G (networkx.Graph): The graph object to print or write.
+        G (graphspace.Graph): The graph object to print or write.
         output_file (str, optional): The file path to write the output. If not provided, the output is printed to stdout.
 
     Returns:
         None
-    """        
+    """
     first_time = not output_file or not os.path.isfile(output_file)
     text = f"\n===============================================================\n"
     text += f"\nFusion: {G.graph['name']}\n"
@@ -90,16 +90,13 @@ def print_graph(G, output_file=None):
             label_infos[label]['weight'] += weight
             label_infos[label]['loc_faction'] += 1 if loc_faction else 0
             label_infos[label]['loc_comm'] += 1 if loc_comm else 0
-        
+
         for label, label_info in label_infos.items():
             text += f"Label: {label:<30}, Weight: {label_info['weight']}\n"
             total_nr_community_labels += label_info['weight']
 
-                  #, LocComm: {label_info['loc_comm']}, LocFact: {label_info['loc_faction']}")
-
     avg_lbl_com = total_nr_community_labels / len(community_labelinfos) if community_labelinfos else 0
     text += f"\nAvg Labels: {total_nr_community_labels} / {len(community_labelinfos)} = {avg_lbl_com}\n"
-    
 
     if output_file:
         mode = 'w' if first_time else 'a'
@@ -108,17 +105,15 @@ def print_graph(G, output_file=None):
     else:
         print(text)
 
- 
 def load_gexf_file(graphfolder, filename):
-    pathname = os.path.join(graphfolder,filename + '.gexf')
+    pathname = os.path.join(graphfolder, filename + '.gexf')
     if not os.path.isfile(pathname):
         raise FileNotFoundError(f"File '{pathname}' not found.")
-    
+
     # Load the graph from the GEXF file
     G = nx.read_gexf(pathname)
     
     return G
-
 
 def write_gexf_file(graph, graphfolder, filename):
     nx.write_gexf(graph, os.path.join(graphfolder,filename + '.gexf'))

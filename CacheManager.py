@@ -128,8 +128,7 @@ class BytesReaderWrapper:
 class TQDMBytesRWer(object):
 
     def __init__(self, fd, **kwargs):
-        self.fd = fd
-        from tqdm import tqdm
+        self.fd = fd        
         self.tqdm = tqdm(**kwargs)
 
     def read(self, size=-1):

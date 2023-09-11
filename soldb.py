@@ -92,7 +92,7 @@ def main(args):
         egraphs = {}
         fusions_without_graphs = {}
 
-        local_graphs = cache_manager.load_or_create('GraphLib', {})
+        local_graphs = cache_manager.load_or_create('GraphLib', lambda: dict())
         lib_fusions = DeckCollection.library['Fusion']      
         
         pbar = tqdm(total=len(lib_fusions)*2, desc="Checking Fusions", mininterval=0.1, colour='GREEN')

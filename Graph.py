@@ -3,8 +3,8 @@ from collections import defaultdict
 from itertools import combinations
 import os
 import networkx as nx
-from graphspace_python.api.client import GraphSpace
-from graphspace_python.graphs.classes.gsgraph import GSGraph
+#from graphspace_python.api.client import GraphSpace
+#from graphspace_python.graphs.classes.gsgraph import GSGraph
 
 
 def handle_synergy_and_edges(G, source_entity, target_entity):

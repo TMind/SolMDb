@@ -34,10 +34,11 @@ def main(args):
 
     SelectionType = 'Collection'
     if args.id : 
-        if args.type == 'deck':
-            SelectionType = 'Deck'
-        elif args.type == 'fuseddeck':
-            SelectionType = 'Fusion'    
+        if not args.username:
+            if args.type == 'deck':
+                SelectionType = 'Deck'
+            elif args.type == 'fuseddeck':
+                SelectionType = 'Fusion'    
 
     
     DeckCollection = DeckLibrary([])

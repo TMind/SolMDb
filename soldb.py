@@ -8,7 +8,7 @@ import Evaluation as ev
 import Graph
 import argparse
 from tqdm import tqdm 
-import os, time
+import os, time, re
 from appdirs import user_data_dir
 from pathlib import Path
 from multiprocessing import Pool, cpu_count,Event
@@ -34,7 +34,7 @@ def main(args):
 
     SelectionType = 'Collection'
     if args.id : 
-        if not args.username:
+        if not args.username :
             if args.type == 'deck':
                 SelectionType = 'Deck'
             elif args.type == 'fuseddeck':
@@ -45,23 +45,54 @@ def main(args):
     net_decks = []
 
     if args.offline or SelectionType == 'Collection':
-        DeckCollection = cache_manager.load_or_create('DeckLib', lambda: DeckLibrary([]))
-
+        DeckCollection = cache_manager.load_or_create('DeckLib', lambda: DeckLibrary([]))    
+        
     if not args.offline:
 
-        myApi = NetApi(myUCL)
-        net_decks = myApi.request_decks(
-            id=args.id,
-            type=args.type,
-            username=args.username,
-            filename=args.filename
-        )
-  
+        if args.id :
+
+            urls = args.id.split('\n')
+
+            pattern = r"\/([^\/]+)$"  
+
+            myApi = NetApi(myUCL)
+            for url in urls:  
+                match = re.search(pattern, url)  
+                if match:  
+                    id = match.group(1)
+                    
+                    url_deck = myApi.request_decks(
+                        id=id,
+                        type=args.type,
+                        username=args.username,
+                        filename=args.filename
+                    )
+                    net_decks += url_deck
+
+        else:
+
+            net_decks = myApi.request_decks(
+                id=args.id,
+                type=args.type,
+                username=args.username,
+                filename=args.filename
+            )
+
+        
 
     col_filter = None
     if args.filter:
 
         # Example usage:
+
+        # F =>  String: Faction                  'Alloyn'              F=Alloyn
+        # D =>  String: Deckname                 'Insane'              D~Forge
+        # FB => String: Forgeborn               'Ironbeard'            FB=Ironbeard
+        # C  => List:   Cardnames               'Digitize'             C~Digitize
+        # A  => List:   Forgeborn - Ability     'Army Commander'       A~'Army Commander'
+        # K  => Dict:   Composition             'Robot'                K:Robot > 3
+
+
         query = args.filter
         attribute_map = {
             'F'     : ('faction', str, None),
@@ -78,11 +109,8 @@ def main(args):
 
         DeckCollection.filter(col_filter)
 
-   # elif SelectionType == 'Collection':
-   #     DeckCollection = cache_manager.load_or_create(deckLibrary, lambda: DeckLibrary([]))
-
     if DeckCollection.update(net_decks):
-        if SelectionType == 'Collection' and not col_filter:
+        if not col_filter:  #SelectionType == 'Collection' and 
             cache_manager.save_object_to_cache("DeckLib", DeckCollection)
 
     eval_filename = None

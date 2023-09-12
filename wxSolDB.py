@@ -67,13 +67,13 @@ class SolDBPanel ( wx.Panel ):
 
 		decksFirstHSizer = wx.BoxSizer( wx.HORIZONTAL )
 
-		self.userLbl = wx.StaticText( self, wx.ID_ANY, u"SFF User Name: ", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.userLbl = wx.StaticText( self, wx.ID_ANY, u"SFF User/Collection Name: ", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.userLbl.Wrap( -1 )
 
 		decksFirstHSizer.Add( self.userLbl, 0, wx.ALL, 5 )
 
 		self.userCtrl = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 240,-1 ), 0 )
-		self.userCtrl.SetToolTip( u"Username used on the solforgefusion.com website" )
+		self.userCtrl.SetToolTip( u"Username used on the solforgefusion.com website or Library-Name" )
 
 		decksFirstHSizer.Add( self.userCtrl, 0, wx.ALL, 5 )
 
@@ -99,10 +99,10 @@ class SolDBPanel ( wx.Panel ):
 
 		decksFirstHSizer1.Add( self.idLabel, 0, wx.ALL, 5 )
 
-		self.idCtrl = wx.TextCtrl( self.AnalyzeDeck, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 240,-1 ), 0 )
-		self.idCtrl.SetToolTip( u"Username used on the solforgefusion.com website" )
+		self.idCtrl = wx.TextCtrl( self.AnalyzeDeck, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 240,-1 ), wx.TE_MULTILINE )
+		self.idCtrl.SetToolTip( u"Deck ID(s) separated by newline" )
 
-		decksFirstHSizer1.Add( self.idCtrl, 0, wx.ALL, 5 )
+		decksFirstHSizer1.Add( self.idCtrl, 1, wx.ALL | wx.EXPAND, 5 )
 
 
 		analyzeMainSizer.Add( decksFirstHSizer1, 1, wx.EXPAND, 5 )
@@ -112,6 +112,7 @@ class SolDBPanel ( wx.Panel ):
 		self.AnalyzeDeck.Layout()
 		analyzeMainSizer.Fit( self.AnalyzeDeck )
 		self.SolDBTabs.AddPage( self.AnalyzeDeck, u"Evaluate Deck", True )
+		# Eval Collection 
 		self.EvalCollection = wx.Panel( self.SolDBTabs, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		EvalMainSizer = wx.BoxSizer( wx.VERTICAL )
 

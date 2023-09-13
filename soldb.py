@@ -49,13 +49,13 @@ def main(args):
         
     if not args.offline:
 
+        myApi = NetApi(myUCL)
         if args.id :
 
             urls = args.id.split('\n')
 
             pattern = r"\/([^\/]+)$"  
-
-            myApi = NetApi(myUCL)
+            
             for url in urls:  
                 match = re.search(pattern, url)  
                 if match:  

@@ -174,7 +174,7 @@ class InterfaceCollection:
         input_interfaces2 = collection2.get_interfaces_by_type("I")
         output_interfaces1 = collection1.get_interfaces_by_type("O")
 
-        if not input_interfaces2 or not output_interfaces1: return {} 
+        if not input_interfaces2: return {}, {} 
 
         matched_synergies = {
             synergy: len(input_interfaces) * len(output_interfaces1.get(synergy, []))
@@ -182,16 +182,14 @@ class InterfaceCollection:
             if output_interfaces1.get(synergy)
         }
 
-        return matched_synergies
-        # for synergy, input_interfaces in input_interfaces2.items():
-        #     output_interfaces = output_interfaces1.get(synergy)
+        # Calculate unmatched input interfaces
+        unmatched_input_interfaces = {
+            synergy: input_interfaces
+            for synergy, input_interfaces in input_interfaces2.items()
+            if not output_interfaces1.get(synergy)
+        }
 
-        #     if output_interfaces:
-        #         factor = len(input_interfaces) * len(output_interfaces)
-        #         matched_synergies[synergy] = factor
-
-
-
+        return matched_synergies , unmatched_input_interfaces
 
 
 class Interface:

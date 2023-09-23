@@ -5,7 +5,7 @@ from Synergy        import SynergyTemplate
 from NetApi         import NetApi
 from Filter import Filter
 import Evaluation as ev
-import Graph
+from Graph import MyGraph
 import argparse
 from tqdm import tqdm 
 import os, time, re
@@ -166,7 +166,7 @@ def main(args):
                             break
                                                 
                         if FusionGraph:
-                            fusion_results[FusionGraph.graph['name']] = FusionGraph
+                            fusion_results[FusionGraph.name] = FusionGraph
                             pbar.update()
                 
                 except KeyboardInterrupt:
@@ -198,7 +198,7 @@ def main(args):
         dgraphs = {}
         for name, deck in DeckCollection.library['Deck'].items():
             if name not in dgraphs:
-                DeckGraph = Graph.create_deck_graph(deck)
+                DeckGraph =  MyGraph(deck)
                 ev.evaluate_graph(DeckGraph)
                 dgraphs[name] = DeckGraph                
             time.sleep(0.001)
@@ -208,15 +208,15 @@ def main(args):
         #Print Graph relations in file / gefx 
         total_graphs  = len(egraphs) 
         progress_bar = tqdm(total=total_graphs, desc="Printing Fusion Graphs",mininterval=0.1, colour='YELLOW')
-        for name, EGraph in egraphs.items():            
-            Graph.print_graph(EGraph, eval_filename)
+        for name, myGraph in egraphs.items():            
+            myGraph.print_graph(eval_filename)
 
             if args.graph:
                 eval_path = Path(eval_filename)
                 gefxFolder = os.path.join(eval_path.parent.absolute(),"gefx")
                 Path(gefxFolder).mkdir(parents=True, exist_ok=True)
 
-                Graph.write_gexf_file(EGraph, gefxFolder, name.replace('|', '_'))
+                myGraph.write_gexf_file(gefxFolder, name.replace('|', '_'))
             progress_bar.update(1)
         progress_bar.close()
         
@@ -275,7 +275,7 @@ def cache_init(args):
 
     # Dependencies mapping
     dependencies = {
-        "CardLib": [os.path.join(csvFolder, 'sff.csv'), os.path.join(csvFolder, 'forgeborn.csv')],
+        "CardLib": [os.path.join(csvFolder, 'sff.csv'), os.path.join(csvFolder, 'forgeborn.csv'), os.path.join(csvFolder, 'synergies.csv')],
         "DeckLib": ["CardLib"],
         "GraphLib": ["DeckLib"],
     }
@@ -286,7 +286,7 @@ def cache_init(args):
 def process_fusion(args):
     fb_name, fusion = args
    
-    FusionGraph = Graph.create_deck_graph(fusion, fb_name)
+    FusionGraph = MyGraph(fusion, fb_name)
     ev.evaluate_graph(FusionGraph)
 
     return FusionGraph

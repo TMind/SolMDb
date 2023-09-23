@@ -11,6 +11,7 @@ MINION;1;Minion Synergy;Minion
 DRAGON;1;Dragon Synergy;Dragon
 ELEMENTAL;1;Elemental Synergy;Elemental
 PLANT;1;Plant Synergy;Plant
+EXALT;1;Exalt Synergy;Exalts
 SPELL;1;Spell Synergy;Spell
 HEALING;1;Healing Synergy;Healing Source
 MOVEMENT;1;Movement Benefit;Movement
@@ -32,3 +33,4 @@ DEPLOY;1;Reanimate Activator;Deploy
 READY;1;Reanimate Activator;Activate
 FORGEBORN;1;Forgeborn Synergy;Forgeborn Ability
 BATTLE;1;Battle Synergy;Battle
+SLAY;1;Slay;Battle

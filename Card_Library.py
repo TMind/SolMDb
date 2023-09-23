@@ -239,7 +239,7 @@ class UniversalCardLibrary:
 
     entities = []
 
-    def __init__(self, sff_path, fb_path):        
+    def __init__(self, sff_path, fb_path, syn_path):        
         self.entities  = self._read_entities_from_csv(sff_path)
         self.forgeborn = self._read_forgeborn_from_csv(fb_path)
 
@@ -266,7 +266,7 @@ class UniversalCardLibrary:
 
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=',')
+            reader = csv.DictReader(csvfile, delimiter=';')
             for row in reader:                
                 name = row['Name']
                 faction = row['faction']

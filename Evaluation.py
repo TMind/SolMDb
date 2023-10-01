@@ -122,7 +122,9 @@ def export_csv(csvname, my_graphs, local_mode=False):
 
     
     # Define the fieldnames for the CSV
-    fieldnames = ["deckname1", "deckname2","forgeborn", "L2", "L3", "L4", "factions", "numlbl", "seeks1", "seeks2", "seeks3", "seeks4", "Creatures", "Spells"]
+    fieldnames = ["deckname1", "deckname2","forgeborn", "L2", "L3", "L4", "factions", "numlbl", "#>~1stats", "#>~2stats", "#>~3stats", 
+                  #"seeks1", "seeks2", "seeks3", "seeks4", 
+                  "Creatures", "Spells"]
     # Add columns for each label before and after
     for label in all_labels:
         #fieldnames.append(f"{label}_1")
@@ -148,6 +150,9 @@ def export_csv(csvname, my_graphs, local_mode=False):
 
             num_creatures = composition['Creature']
             num_spells    = composition['Spell']
+            above_stats1  = f"{composition['1attack']}/{composition['1health']}"
+            above_stats2  = f"{composition['2attack']}/{composition['2health']}"
+            above_stats3  = f"{composition['3attack']}/{composition['3health']}"
 
             # Create a dictionary mapping labels to weights
             community_labels = MyGraph.community_labels
@@ -187,10 +192,13 @@ def export_csv(csvname, my_graphs, local_mode=False):
                 "L4" : ability['4'],
                 "factions":  MyGraph.faction,
                 "numlbl": MyGraph.avglbl,
-                "seeks1": range1,
-                "seeks2": range2,
-                "seeks3": range3,
-                "seeks4": range4,
+                "#>~1stats": above_stats1,
+                "#>~2stats": above_stats2,
+                "#>~3stats": above_stats3,
+                # "seeks1": range1,
+                # "seeks2": range2,
+                # "seeks3": range3,
+                # "seeks4": range4,
                 "Creatures": num_creatures,
                 "Spells": num_spells
             }

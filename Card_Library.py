@@ -5,17 +5,19 @@ from typing import List, Tuple, Dict
 from copy import copy
 
 class Entity:
-    def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection):
+    #def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection):
+    def __init__(self, name, faction, attributes, abilities, Collection):
         self.name = name
+        self.attributes = attributes
         self.faction = faction
-        self.rarity = rarity
-        self.card_type = card_type
-        self.card_subtype = card_subtype
-        self.spliced = spliced
-        self.solbind = solbind        
+        # self.rarity = rarity
+        # self.card_type = card_type
+        # self.card_subtype = card_subtype
+        # self.spliced = spliced
+        # self.solbind = solbind        
         self.abilities = abilities        
-        self.provides = {sub_type: 1 for subtype in card_subtype.split(',') for sub_type in subtype.split(' ')}
-        self.provides.update({card_type : 1})
+        self.provides = {sub_type: 1 for subtype in attributes['cardSubType'].split(',') for sub_type in subtype.split(' ')}
+        self.provides.update({attributes['cardType'] : 1})
         self.ICollection = Collection
   
     def __str__(self):
@@ -45,10 +47,26 @@ class Card():
                 self.entities.append(modifier)        
         else:
             self.title = card.name        
-        self.card_type = card.card_type
-        self.card_subtype = card.card_subtype
+        self.cardType = card.attributes['cardType']
+        self.cardSubType = card.attributes['cardSubType']
         self.name = self.title
         self.ICollection = InterfaceCollection.from_card(self)        
+        
+        def aggregate_attribute(attribute_name):
+            aggregated = {}
+            for entity in self.entities:                
+                for level in entity.abilities:
+                    aggregated[level] = aggregated.get(level,0) + entity.abilities[level][attribute_name]  
+            return aggregated      
+
+        self.attack = aggregate_attribute('attack')
+        self.health = aggregate_attribute('health')
+        self.above_stat ={'attack' : {}, 'health' : {}}
+
+        for stat in self.above_stat.keys():
+            stats = getattr(self, stat)
+            for level in stats: 
+                self.above_stat[stat][level] = stats[level] >= 3 * ( level + 1 )
 
     def get_rarities(self):
         return [item.rarity for item in self.entities]
@@ -90,11 +108,15 @@ class Deck:
     def get_composition(self):        
         composition = {}        
         for card in self.cards.values():                        
-            for subtype in card.card_subtype.split(' '):                
+            for subtype in card.cardSubType.split(' '):                
                 subtype = subtype.strip()
                 composition[subtype] = composition.get(subtype, 0) + 1
-            for cardtype in card.card_type.split(' '):
+            for cardtype in card.cardType.split(' '):
                 composition[cardtype] = composition.get(cardtype, 0) + 1
+            for stat in card.above_stat.keys():
+                for level in card.above_stat[stat]:
+                    entry = f"{level}{stat}"
+                    composition[entry] = composition.get(entry, 0) + int(card.above_stat[stat][level])
         return composition
     
     def update_ICollection_with_forgeborn(self):
@@ -267,18 +289,20 @@ class UniversalCardLibrary:
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=';')
-            for row in reader:                
+            for row in reader:    
+                keys = ['rarity', 'cardType', 'cardSubType', 'spliced', 'solbind']            
+                attributes = {k: row[k] for k in keys if k in row}
                 name = row['Name']
                 faction = row['faction']
-                rarity = row['rarity']
-                card_type = row['cardType']
-                card_subtype = row['cardSubType']
-                spliced = bool(row['spliced'])
-                solbind = bool(row['solbind'])
+                # rarity = row['rarity']
+                # card_type = row['cardType']
+                # card_subtype = row['cardSubType']
+                # spliced = bool(row['spliced'])
+                # solbind = bool(row['solbind'])
                 abilities = {}
                 
                 for ability in row.keys():
-                    if ability.endswith('text') and row[ability]:
+                    if ability.endswith('text'):
                         level = int(ability[0])
                         attack = int(row[f"{level}attack"]) if row.get(f"{level}attack") else 0
                         health = int(row[f"{level}health"]) if row.get(f"{level}health") else 0
@@ -317,16 +341,16 @@ class UniversalCardLibrary:
                                     ISyn = Interface(name, key=key, value=value, range=range)                                    
                                     Collection.add(ISyn)
                                                                     
-                self.entities.append(Entity(name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection))
+                self.entities.append(Entity(name, faction, attributes, abilities, Collection))
         return self.entities
 
-    def search_entity(self,name, card_type=None):
+    def search_entity(self,name, cardType=None):
         #print(f"Searching Entity: {name}")
         for entity in self.entities:
-            if card_type is None or entity.card_type == card_type:
+            if cardType is None or entity.attributes['cardType'] == cardType:
                 if entity.name == name:
                     return entity
-        #print(f"Entity not found: {name} , {card_type}")
+        #print(f"Entity not found: {name} , {cardType}")
         return None
 
     def get_forgeborn(self, id):
@@ -448,7 +472,7 @@ class UniversalCardLibrary:
                 return Card(card_entity, modifier_entity)
 
         # If no entities found, create a card with just the card title
-        return Card(Entity(name=card_title, card_type='Unknown'))
+        return Card(Entity(name=card_title, cardType='Unknown'))
                 
     def __str__(self):
         entity_strings = []

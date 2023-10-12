@@ -1,7 +1,7 @@
 from Synergy import SynergyTemplate
 
 class InterfaceCollection:
-    def __init__(self, name, interfaces=None):
+    def __init__(self, name):
         self.name = name
         self.interfaces = {}
         self._cache = {}  # Initialize the cache dictionary
@@ -11,16 +11,6 @@ class InterfaceCollection:
 
         if self.synergies:
             self.interfaces = {syn: {} for syn in self.synergies}
-        
-        if interfaces:
-            for interface in interfaces:
-                for syn in interface.synergies:
-                    if interface.tag in self.interfaces[syn]:
-                        myInterface = self.interfaces[syn][interface.tag]
-                        myInterface.types.update(interface.types)
-                        myInterface.ranges.update(interface.ranges)
-                    else:
-                        self.interfaces[syn][interface.tag] = interface
              
     @classmethod
     def from_entities(cls, name, entities):        
@@ -134,6 +124,9 @@ class InterfaceCollection:
         
         # Return the cached value
         return self._cache.get(cache_key, {})
+    
+    def get_synergies(self):
+        return [synergy for synergy in self.interfaces if self.interfaces[synergy]]
 
     def _get_cache_key(self, interface_types, synergy=None):
         """
@@ -169,25 +162,28 @@ class InterfaceCollection:
         """
         # Restrict range if collections are the same
         if collection1.name == collection2.name:
-            collection1 = collection1.restrict_range('+')
+            collection1 = collection2 = collection1.restrict_range('+')
             
-        input_interfaces2 = collection2.get_interfaces_by_type("I")
-        output_interfaces1 = collection1.get_interfaces_by_type("O")
+        synergies = collection2.get_synergies()
 
-        if not input_interfaces2: return {}, {} 
+        matched_synergies = {}
+        unmatched_input_interfaces = {}
 
-        matched_synergies = {
-            synergy: len(input_interfaces) * len(output_interfaces1.get(synergy, []))
-            for synergy, input_interfaces in input_interfaces2.items()
-            if output_interfaces1.get(synergy)
-        }
+        for synergy in synergies:
 
-        # Calculate unmatched input interfaces
-        unmatched_input_interfaces = {
-            synergy: input_interfaces
-            for synergy, input_interfaces in input_interfaces2.items()
-            if not output_interfaces1.get(synergy)
-        }
+            input_interfaces_by_syn = collection2.get_interfaces_by_type("I", synergy)
+            output_interfaces_by_syn = collection1.get_interfaces_by_type("O", synergy)
+
+            if not input_interfaces_by_syn: 
+                continue
+
+            if output_interfaces_by_syn:
+                matched_synergies[synergy] = {
+                    'input' : input_interfaces_by_syn[synergy], 
+                    'output': output_interfaces_by_syn[synergy]
+                }
+            else:
+                unmatched_input_interfaces[synergy] = input_interfaces_by_syn[synergy]
 
         return matched_synergies , unmatched_input_interfaces
 

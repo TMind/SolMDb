@@ -221,9 +221,9 @@ def main(args):
         progress_bar.close()
         
         if eval_filename:     
-            ev.export_csv(eval_filename + '_excl', egraphs, True)
+            ev.export_csv(eval_filename + '_interfaction_only', egraphs, True)
             ev.export_csv(eval_filename, egraphs, False)
-            ev.export_csv(eval_filename + '.hd', dgraphs, False)
+            ev.export_csv(eval_filename + '.halfdecks_only', dgraphs, False)
 
         if args.select_pairs:
             if not eval_filename: eval_filename = 'evaluation'

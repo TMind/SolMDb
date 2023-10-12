@@ -5,16 +5,10 @@ from typing import List, Tuple, Dict
 from copy import copy
 
 class Entity:
-    #def __init__(self, name, faction, rarity, card_type, card_subtype, spliced, solbind, abilities, Collection):
     def __init__(self, name, faction, attributes, abilities, Collection):
         self.name = name
         self.attributes = attributes
-        self.faction = faction
-        # self.rarity = rarity
-        # self.card_type = card_type
-        # self.card_subtype = card_subtype
-        # self.spliced = spliced
-        # self.solbind = solbind        
+        self.faction = faction      
         self.abilities = abilities        
         self.provides = {sub_type: 1 for subtype in attributes['cardSubType'].split(',') for sub_type in subtype.split(' ')}
         self.provides.update({attributes['cardType'] : 1})
@@ -293,12 +287,7 @@ class UniversalCardLibrary:
                 keys = ['rarity', 'cardType', 'cardSubType', 'spliced', 'solbind']            
                 attributes = {k: row[k] for k in keys if k in row}
                 name = row['Name']
-                faction = row['faction']
-                # rarity = row['rarity']
-                # card_type = row['cardType']
-                # card_subtype = row['cardSubType']
-                # spliced = bool(row['spliced'])
-                # solbind = bool(row['solbind'])
+                faction = row['faction']  
                 abilities = {}
                 
                 for ability in row.keys():

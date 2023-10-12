@@ -1,4 +1,6 @@
 from collections import defaultdict
+
+from more_itertools import value_chain
 from Synergy import SynergyTemplate
 import networkx as nx
 #import infomap
@@ -36,31 +38,8 @@ def find_best_pairs(graphs,outpath):
              select_pair_file.write( f"Chosen combination: {combo[0]}, {combo[1]}, Score: {combo[2]} \n")
 
 def evaluate_graph(my_graph):
-    Metric = {}
-
-    #Metric['PageRank'] = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
-    #Metric['degree'] = nx.degree_centrality(G)
-    #Metric['cluster_coeff'] = nx.clustering(G)
-    Metric['between'] = nx.betweenness_centrality(my_graph.G)
-    #Metric['katz'] = nx.katz_centrality(G, alpha=0.1, beta=1.0)
-
-    # Create a mapping of nodes to integers
-    #node_to_int = {node: i for i, node in enumerate(G.nodes)}
-
-    # Initialize Infomap
-    #infomap_wrapper = infomap.Infomap("--two-level --silent")
-
-    # Add nodes and edges to Infomap
-    #for node in node_to_int.values():
-    #   infomap_wrapper.add_node(node)
-
-    #for edge in G.edges:
-    #    infomap_wrapper.add_link(
-    #        node_to_int[edge[0]], node_to_int[edge[1]])
-
-    # Run Infomap
-    #infomap_wrapper.run()
-        # create a dictionary to store labels in each community
+  
+    # create a dictionary to store labels in each community
     community_labelinfos = defaultdict(list)
 
    # Iterate over the edges in the graph
@@ -73,14 +52,6 @@ def evaluate_graph(my_graph):
         total_weight = edge[2]['weight']
          # Calculate weight for each label
         weight_per_label = total_weight / len(labels)
-        # Get the nodes of the edge
-        #nodeA, nodeB = edge[0], edge[1]
-        # Get the community of the nodes
-    #    communityA = infomap_wrapper.get_modules()[node_to_int[nodeA]]
-    #    communityB = infomap_wrapper.get_modules()[node_to_int[nodeB]]
-        # If the nodes belong to the same community, add the label(s) and the weight to the corresponding community
-    #    local_comm = False
-    #    if communityA == communityB: local_comm = True 
         
         for label in labels:
             community_labelinfos['Community'].append((label.strip(), weight_per_label, local_faction))
@@ -93,18 +64,8 @@ def evaluate_graph(my_graph):
     # Calculate the total number of community labels and the average number of labels per community
     total_nr_community_labels = sum(len(labelinfos) for labelinfos in community_labelinfos.values())
 
-    #partition = nx.community.greedy_modularity_communities(G)
-    #mod = nx.community.modularity(G, partition)
-    clustering_coefficients = nx.average_clustering(my_graph.G)
-    density = nx.density(my_graph.G)
-
-    my_graph.G.graph['cluster_coeff'] = clustering_coefficients
-    my_graph.G.graph['density'] = density
     my_graph.avglbl = total_nr_community_labels
     my_graph.community_labels = community_labelinfos
-
-    for name, metric in Metric.items():
-        nx.set_node_attributes(my_graph.G, metric, name)
 
     return my_graph
 
@@ -127,98 +88,119 @@ def export_csv(csvname, my_graphs, local_mode=False):
                   "Creatures", "Spells"]
     # Add columns for each label before and after
     for label in all_labels:
-        #fieldnames.append(f"{label}_1")
+        #fieldnames.append(f"{label}_OUT->")        
         fieldnames.append(f"{label}")
-        #fieldnames.append(f"{label}_2")
+        #fieldnames.append(f"{label}_<-IN")
+        
 
+    # Create an in-memory CSV writer
+    from io import StringIO
+    csv_buffer = StringIO()
+    writer = csv.DictWriter(csv_buffer, fieldnames = fieldnames, delimiter=';')
+    writer.writeheader()
 
-    with open(f"{csvname}.csv", "w", newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
-        writer.writeheader()
+    # Create a tqdm instance for the loop
+    progress_bar = tqdm(my_graphs.items(), total=len(my_graphs), desc=f"Exporting CSV {os.path.basename(csvname)}", mininterval=0.1, colour='RED')
 
-         # Create a tqdm instance for the loop
-        progress_bar = tqdm(my_graphs.items(), total=len(my_graphs), desc=f"Exporting CSV {os.path.basename(csvname)}", mininterval=0.1, colour='RED')
+    for i, (key, MyGraph) in enumerate(progress_bar):         
 
+        #Composition of Fusion 
+        composition = MyGraph.fusion.composition
+        #Determine decknames                                    
+        deckname1, *rest = MyGraph.name.split('_')
+        deckname2 = rest[0] if rest else None
 
-        for i, (key, MyGraph) in enumerate(progress_bar):         
+        num_creatures = composition['Creature']
+        num_spells    = composition['Spell']
+        above_stats1  = f"{composition['1attack']}/{composition['1health']}"
+        above_stats2  = f"{composition['2attack']}/{composition['2health']}"
+        above_stats3  = f"{composition['3attack']}/{composition['3health']}"
 
-            #Composition of Fusion 
-            composition = MyGraph.fusion.composition
-            #Determine decknames                                    
-            deckname1, *rest = MyGraph.name.split('_')
-            deckname2 = rest[0] if rest else None
+        # Create a dictionary mapping labels to weights
+        community_labels = MyGraph.community_labels
+        label_weights = defaultdict(float)
+        for label_info in community_labels.values():
+            for label, weight, loc_faction in label_info:
+                if loc_faction and local_mode: continue
+                label_weights[label] += weight
+                    
+        max_graph_ranges = [syn for syn_list in MyGraph.max_ranges.values() for syn in syn_list.split(',') if syn]
 
-            num_creatures = composition['Creature']
-            num_spells    = composition['Spell']
-            above_stats1  = f"{composition['1attack']}/{composition['1health']}"
-            above_stats2  = f"{composition['2attack']}/{composition['2health']}"
-            above_stats3  = f"{composition['3attack']}/{composition['3health']}"
+        # Ensure the list has at least 3 elements
+        #max_graph_ranges += [''] * (3 - len(max_graph_ranges))
 
-            # Create a dictionary mapping labels to weights
-            community_labels = MyGraph.community_labels
-            label_weights = defaultdict(float)
-            for label_info in community_labels.values():
-                for label, weight, loc_faction in label_info:
-                    if loc_faction and local_mode: continue
-                    label_weights[label] += weight
-                     
-            max_graph_ranges = [syn for syn_list in MyGraph.max_ranges.values() for syn in syn_list.split(',') if syn]
+        range1 = max_graph_ranges[0] if len(max_graph_ranges) > 0 else ''
+        range2 = max_graph_ranges[1] if len(max_graph_ranges) > 1 else ''
+        range3 = max_graph_ranges[2] if len(max_graph_ranges) > 2 else ''
+        range4 = ', '.join(max_graph_ranges[3:]) if len(max_graph_ranges) > 3 else ''
 
-            # Ensure the list has at least 3 elements
-            #max_graph_ranges += [''] * (3 - len(max_graph_ranges))
+        ability = {}
+        for ability_name in MyGraph.fusion.forgeborn.abilities:
+            level = ability_name[0]
+            if "Inspire" in ability_name and ability.get(level): continue                
+            ability[level] = ability_name
+        
+        row = {
+            "deckname1": deckname1,
+            "deckname2": deckname2,
+            "forgeborn": MyGraph.forgeborn_name,
+            "L2" : ability['2'],
+            "L3" : ability['3'],
+            "L4" : ability['4'],
+            "factions":  MyGraph.faction,
+            "numlbl": MyGraph.avglbl,
+            "#>~1stats": above_stats1,
+            "#>~2stats": above_stats2,
+            "#>~3stats": above_stats3,
+            # "seeks1": range1,
+            # "seeks2": range2,
+            # "seeks3": range3,
+            # "seeks4": range4,
+            "Creatures": num_creatures,
+            "Spells": num_spells
+        }
 
-            range1 = max_graph_ranges[0] if len(max_graph_ranges) > 0 else ''
-            range2 = max_graph_ranges[1] if len(max_graph_ranges) > 1 else ''
-            range3 = max_graph_ranges[2] if len(max_graph_ranges) > 2 else ''
-            range4 = ', '.join(max_graph_ranges[3:]) if len(max_graph_ranges) > 3 else ''
+        # Add label weights to the row
+        for label in all_labels:
 
+            #output_tags = synergy_template.get_output_tags_by_synergy(label)
+            #deck1_count = 0
+            #deck2_count = 0
 
-            ability = {}
-            for ability_name in MyGraph.fusion.forgeborn.abilities:
-                level = ability_name[0]
-                if "Inspire" in ability_name and ability.get(level): continue                
-                ability[level] = ability_name
+            #for tag in output_tags:
+            #    deck1_count += compositions[deckname1].setdefault(tag,0) 
+            #    deck2_count += compositions[deckname2].setdefault(tag,0)
             
-            # Assign values to range1, range2, and range3
-#            range1, range2, range3 = max_graph_ranges[:3]
-            # Now you can add these to your dictionary:
+            #row[f"{label}_1"] = deck1_count                
+            input = len(MyGraph.matched_synergies.get(label,[]))
+            
+            weight = int(label_weights.get(label, 0))  
+            
+            row[label] = weight
+            #row[f"{label}_<-IN"] = input            
 
-            row = {
-                "deckname1": deckname1,
-                "deckname2": deckname2,
-                "forgeborn": MyGraph.forgeborn_name,
-                "L2" : ability['2'],
-                "L3" : ability['3'],
-                "L4" : ability['4'],
-                "factions":  MyGraph.faction,
-                "numlbl": MyGraph.avglbl,
-                "#>~1stats": above_stats1,
-                "#>~2stats": above_stats2,
-                "#>~3stats": above_stats3,
-                # "seeks1": range1,
-                # "seeks2": range2,
-                # "seeks3": range3,
-                # "seeks4": range4,
-                "Creatures": num_creatures,
-                "Spells": num_spells
-            }
+        writer.writerow(row)
+        time.sleep(0.001)
 
-            # Add label weights to the row
-            for label in all_labels:
+    progress_bar.close()
 
-                #output_tags = synergy_template.get_output_tags_by_synergy(label)
-                #deck1_count = 0
-                #deck2_count = 0
+    csv_content = csv_buffer.getvalue()
+    csv_buffer.close()
 
-                #for tag in output_tags:
-                #    deck1_count += compositions[deckname1].setdefault(tag,0) 
-                #    deck2_count += compositions[deckname2].setdefault(tag,0)
-                
-                #row[f"{label}_1"] = deck1_count
-                #row[f"{label}_2"] = deck2_count
-                row[label] = int(label_weights.get(label, 0))  # use 0 if the label does not exist in this graph
+    # Split the CSV content into lines
+    csv_lines = csv_content.strip().split('\n')
 
-            writer.writerow(row)
-            time.sleep(0.001)
+    # Modify the header row with custom headers
+    header = csv_lines[0].split(';')
+    custom_headers = {
+        key: key.split('_')[-1]
+        for key in header
+    }
+    header = [custom_headers.get(header_item, header_item) for header_item in header]
 
-        progress_bar.close()
+    # Replace the header row in the CSV content
+    csv_lines[0] = ';'.join(header)
+
+    # Write the final CSV content to the output file
+    with open(f"{csvname}.csv","w", newline="") as csvfile:
+        csvfile.write('\n'.join(csv_lines))

@@ -1,4 +1,3 @@
-from traitlets import default
 from Interface import InterfaceCollection
 from collections import defaultdict
 from itertools import combinations
@@ -22,35 +21,45 @@ class MyGraph:
         self.fusion     = deck        
         self.community_labels   =  {}
         self.max_ranges = {}        
+        self.Metric = {}
         self.forgeborn_name     = forgeborn_name        
         if forgeborn_name: 
             deck.set_forgeborn(forgeborn_name)
         self.forgeborn  = deck.forgeborn        
         
-        self.unmatched_synergies = defaultdict(default_int)
-        self.matched_synergies   = defaultdict(int)
+        self.unmatched_synergies = {} #defaultdict(default_int)
+        self.matched_synergies   = {} #defaultdict(int)
 
         self.create_deck_graph()
-        self.cancel_non_matching_synergies()        
+        self.cancel_non_matching_synergies()       
+        self.calculate_metrics() 
     
-
     def handle_synergy_and_edges(self, source_entity, target_entity):
         syn_matches, syn_misses = InterfaceCollection.match_synergies(source_entity.ICollection, target_entity.ICollection)
+
         if syn_matches:
-            label = ",".join(synergy for synergy, count in syn_matches.items() if count > 0)
-            weight = sum(syn_matches.values())
+            label = ",".join(synergy for synergy in syn_matches.keys() if 'input' in syn_matches[synergy])
+            weight = sum(len(syn_matches[synergy]['input']) for synergy in syn_matches.keys() if 'input' in syn_matches[synergy])
             type = source_entity.faction == target_entity.faction
             self.G.add_edge(source_entity.name, target_entity.name, label=label, weight=weight, local=type)
 
-            for synergy, num in syn_matches.items():                
-                self.matched_synergies[synergy] += num
-
+            for synergy in syn_matches:
+                for type in ['input', 'output']:
+                    if syn_matches[synergy][type]:                        
+                        if synergy not in self.matched_synergies:
+                            self.matched_synergies[synergy] = { 'input' : set(), 'output' : set() }
+                        self.matched_synergies[synergy][type].update(interface.name for interface in syn_matches[synergy][type])
+                        
         # Handle unmatched synergies and update miss count
         if syn_misses:
-            for synergy, input_interfaces in syn_misses.items():                
+            for synergy, input_interfaces in syn_misses.items():
+                if synergy not in self.unmatched_synergies:
+                    self.unmatched_synergies[synergy] = {}
+
                 for input_interface in input_interfaces:
                     self.unmatched_synergies[synergy][input_interface.name] = input_interface.value
-                
+
+
 
 
     def create_deck_graph(self):
@@ -85,6 +94,23 @@ class MyGraph:
                 del self.unmatched_synergies[synergy]
 
 
+    def calculate_metrics(self):
+        
+        clustering_coefficients = nx.average_clustering(self.G)
+        density = nx.density(self.G)
+
+        self.Metric['cluster_coeff'] = clustering_coefficients
+        self.Metric['density'] = density
+
+        Metric = {}              
+        Metric['between'] = nx.betweenness_centrality(self.G)
+        #Metric['PageRank'] = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
+        #Metric['degree'] = nx.degree_centrality(G)
+        #Metric['cluster_coeff'] = nx.clustering(G)        
+        #Metric['katz'] = nx.katz_centrality(G, alpha=0.1, beta=1.0)
+
+        for name, metric in Metric.items():
+            nx.set_node_attributes(self.G, metric, name)
 
     def print_graph(self, output_file=None):
         """

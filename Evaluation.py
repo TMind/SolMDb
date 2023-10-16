@@ -12,9 +12,9 @@ from tqdm import tqdm
 def find_best_pairs(graphs,outpath):
 
     deck_combinations = []
-    for name, graph in graphs.items():        
+    for name, myGraph in graphs.items():        
         deck1, deck2 = name.split('_')
-        score = graph.graph['avglbl']
+        score = myGraph.avglbl
         deck_combinations.append((deck1, deck2, score))
 
     # sort deck combinations by score in decreasing order

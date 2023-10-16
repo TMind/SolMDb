@@ -153,8 +153,8 @@ class MyGraph:
                 text += f"Label: {label:<30}, Weight: {label_info['weight']}\n"
                 total_nr_community_labels += label_info['weight']
 
-        avg_lbl_com = total_nr_community_labels / len(self.community_labels) if self.community_labels else 0
-        text += f"\nAvg Labels: {total_nr_community_labels} / {len(self.community_labels)} = {avg_lbl_com}\n"
+        #avg_lbl_com = total_nr_community_labels / len(self.community_labels) if self.community_labels else 0
+        text += f"\nTotal Labels: {total_nr_community_labels}\n"
 
         if output_file:
             mode = 'w' if first_time else 'a'

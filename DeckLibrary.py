@@ -3,6 +3,7 @@ from tqdm import tqdm
 from itertools import combinations
 from multiprocessing import Pool, cpu_count, Event
 from prof import profileit
+import time
 
 class DeckLibrary:
     def __init__(self, decks_or_fusions):
@@ -35,7 +36,7 @@ class DeckLibrary:
 
             try:
 
-                for fusion in pool.imap_unordered(Fusion, args_list):
+                for fusion in pool.imap_unordered(process_decks, args_list):
                     if terminate_event.is_set():
                         print("Parent Process signaled termination. Exiting child processes!")
                         pool.terminate()
@@ -84,3 +85,10 @@ class DeckLibrary:
             'decks': [deck.to_json() for deck in self.library['Deck'].values()],
             'fusions': [fusion.to_json() for fusion in self.library['Fusion'].values()]         
         }
+    
+
+def process_decks(decks):
+
+    time.sleep(0.001)
+    return Fusion(decks)
+    

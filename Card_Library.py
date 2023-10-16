@@ -1,5 +1,5 @@
 # Fixed Version
-import csv, json
+import csv, json, re
 from Interface import Interface, InterfaceCollection
 from typing import List, Tuple, Dict
 from copy import copy
@@ -266,7 +266,8 @@ class UniversalCardLibrary:
             reader = csv.DictReader(csvfile, delimiter=',')
             for row in reader:
                 id   = row['id']
-                id   = id.replace('0', '2')
+                id   = id.replace('0', '2')                
+                re.sub(r'^a', 's', id)
                 title =  row['Forgeborn']                                  
                 abilities = {}
                 for level in range(3):                    

@@ -110,7 +110,8 @@ def main(args):
         DeckCollection.filter(col_filter)
 
     if DeckCollection.update(net_decks):
-        if not col_filter:  #SelectionType == 'Collection' and 
+        #if not col_filter:  
+        if  SelectionType == 'Collection':
             cache_manager.save_object_to_cache("DeckLib", DeckCollection)
 
     eval_filename = None
@@ -240,7 +241,7 @@ def cache_init(args):
     Returns:
     - CacheManager instance initialized with the correct file mappings.
     """
-    resourcePath = os.path.dirname(__file__)
+    resourcePath = os.getcwd()
     cacheFolder  = os.path.join(resourcePath, "cache")
     dataFolder   = os.path.join(resourcePath, "data")
     csvFolder    = os.path.join(resourcePath, "csv")
@@ -289,6 +290,7 @@ def process_fusion(args):
     FusionGraph = MyGraph(fusion, fb_name)
     ev.evaluate_graph(FusionGraph)
 
+    time.sleep(0.001)
     return FusionGraph
 
 if __name__ == "__main__":

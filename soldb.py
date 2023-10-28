@@ -1,6 +1,7 @@
 from DeckLibrary    import DeckLibrary
 from Card_Library   import UniversalCardLibrary
 from CacheManager   import CacheManager
+from MemoryMap import MemoryMapManager
 from Synergy        import SynergyTemplate
 from NetApi         import NetApi
 from Filter import Filter
@@ -9,227 +10,185 @@ from Graph import MyGraph
 import argparse
 from tqdm import tqdm 
 import os, time, re
-from appdirs import user_data_dir
 from pathlib import Path
 from multiprocessing import Pool, cpu_count,Event
 
-
 def main(args):
-
-    #if we wanted to move stuff into app bundle on a mac we'd do this
-    #if sys.platform == 'darwin':
-    #    resourcePath =  os.path.join(os.environ['RESOURCEPATH'],"data")
-    #else:
-
-    # Initialize synergy template singleton with optional file
-    SynergyTemplate()
+    synergy_template = SynergyTemplate()
     cache_manager = cache_init(args)
-
-    card_dependencies = cache_manager.get_dependencies('CardLib')
-    myUCL = cache_manager.load_or_create('CardLib', lambda: UniversalCardLibrary(*card_dependencies))
-
-
-#   Evaluation type  
-#   - collection / fusion / halfdeck 
-
-    SelectionType = 'Collection'
-    if args.id : 
-        if not args.username :
-            if args.type == 'deck':
-                SelectionType = 'Deck'
-            elif args.type == 'fuseddeck':
-                SelectionType = 'Fusion'    
-
+    myUCL = cache_manager.load_or_create('CardLib', lambda: UniversalCardLibrary(*cache_manager.get_dependencies('CardLib')))
     
+    SelectionType = 'Collection'
+    if args.id:
+        if not args.username:
+            SelectionType = 'Deck' if args.type == 'deck' else 'Fusion' if args.type == 'fuseddeck' else 'Collection'
+
     DeckCollection = DeckLibrary([])
     net_decks = []
 
     if args.offline or SelectionType == 'Collection':
-        DeckCollection = cache_manager.load_or_create('DeckLib', lambda: DeckLibrary([]))    
-        
+        DeckCollection = cache_manager.load_or_create('DeckLib', lambda: DeckLibrary([]))
+
     if not args.offline:
-
         myApi = NetApi(myUCL)
-        if args.id :
-
-            urls = args.id.split('\n')
-
-            pattern = r"\/([^\/]+)$"  
-            
-            for url in urls:  
-                match = re.search(pattern, url)  
-                if match:  
-                    id = match.group(1)
-                    
-                    url_deck = myApi.request_decks(
-                        id=id,
-                        type=args.type,
-                        username=args.username,
-                        filename=args.filename
-                    )
-                    net_decks += url_deck
-
-        else:
-
-            net_decks = myApi.request_decks(
-                id=args.id,
-                type=args.type,
-                username=args.username,
-                filename=args.filename
-            )
-
+        net_decks = get_net_decks(args, myApi)
         
+    col_filter = get_col_filter(args)
+    DeckCollection.filter(col_filter) if col_filter else None
 
-    col_filter = None
+    MyMemoryMap = MemoryMapManager('DeckCollection.mmap', len(net_decks))
+    MyMemoryMap.update(net_decks)
+    MyMemoryMap.print_index()
+
+    if DeckCollection.update(net_decks) and SelectionType == 'Collection':
+        cache_manager.save_object_to_cache("DeckLib", DeckCollection)
+
+    eval_filename, egraphs, local_graphs = evaluate_fusions(args, DeckCollection)
+
+    evaluate_single_decks(DeckCollection, eval_filename, egraphs, local_graphs, args)
+
+def get_net_decks(args, myApi):
+    if args.id:
+        urls = args.id.split('\n')
+        pattern = r"\/([^\/]+)$"
+        net_decks = []
+        for url in urls:
+            match = re.search(pattern, url)
+            if match:
+                id = match.group(1)
+                url_deck = myApi.request_decks(
+                    id=id,
+                    type=args.type,
+                    username=args.username,
+                    filename=args.filename
+                )
+                net_decks += url_deck
+        return net_decks
+    else:
+        return myApi.request_decks(
+            id=args.id,
+            type=args.type,
+            username=args.username,
+            filename=args.filename
+        )
+
+def get_col_filter(args):
     if args.filter:
-
-        # Example usage:
-
-        # F =>  String: Faction                  'Alloyn'              F=Alloyn
-        # D =>  String: Deckname                 'Insane'              D~Forge
-        # FB => String: Forgeborn               'Ironbeard'            FB=Ironbeard
-        # C  => List:   Cardnames               'Digitize'             C~Digitize
-        # A  => List:   Forgeborn - Ability     'Army Commander'       A~'Army Commander'
-        # K  => Dict:   Composition             'Robot'                K:Robot > 3
-
-
         query = args.filter
         attribute_map = {
-            'F'     : ('faction', str, None),
-            'D'     : ('name', str, None),
-            'FB'    : ('forgeborn.name', str, None),
-            'C'     : ('cards', dict, 'keys'),
-            'A'     : ('abilities', dict, 'keys'),            
-            'K'     : ('composition', dict, None),            
+            'F': ('faction', str, None),
+            'D': ('name', str, None),
+            'FB': ('forgeborn.name', str, None),
+            'C': ('cards', dict, 'keys'),
+            'A': ('abilities', dict, 'keys'),
+            'K': ('composition', dict, None),
         }
-        col_filter = Filter(query, attribute_map) 
+        return Filter(query, attribute_map)
 
-        # Apply the filter:       
-        net_decks   = col_filter.apply(net_decks)
-
-        DeckCollection.filter(col_filter)
-
-    if DeckCollection.update(net_decks):
-        #if not col_filter:  
-        if  SelectionType == 'Collection':
-            cache_manager.save_object_to_cache("DeckLib", DeckCollection)
-
+def evaluate_fusions(args, DeckCollection):
     eval_filename = None
     if args.eval:
-        if args.eval is not True:
-            eval_filename = args.eval
-
+        eval_filename = args.eval if args.eval is not True else None
         egraphs = {}
         fusions_without_graphs = {}
 
         local_graphs = cache_manager.load_or_create('GraphLib', lambda: dict())
-        lib_fusions = DeckCollection.library['Fusion']      
-        
-        pbar = tqdm(total=len(lib_fusions)*2, desc="Checking Fusions", mininterval=0.1, colour='GREEN')
+        lib_fusions = DeckCollection.library['Fusion']
+
+        pbar = tqdm(total=len(lib_fusions) * 2, desc="Checking Fusions", mininterval=0.1, colour='GREEN')
         for fusion in lib_fusions.values():
             for idx in range(2):
-
-                # Set the active Forgeborn for this Fusion
                 final_fusion = fusion.copyset_forgeborn(idx)
-                # Create a unique name for each graph, based on the Fusion's name and the active Forgeborn's name               
                 FusionGraph = local_graphs.get(final_fusion.name)
 
-                if col_filter and not col_filter.apply([final_fusion]): continue
+                if col_filter and not col_filter.apply([final_fusion]):
+                    continue
 
-                if not FusionGraph:                                                                          
-                    # Add fusion to creation_list     
-                    forgeborn_name = final_fusion.get_forgeborn(idx).name                
-                    fusions_without_graphs[final_fusion.name] = (final_fusion,forgeborn_name)
-                else: 
-                    #Store the Graph in the output dictionary                 
-                    egraphs[final_fusion.name]  = FusionGraph   
+                if not FusionGraph:
+                    forgeborn_name = final_fusion.get_forgeborn(idx).name
+                    fusions_without_graphs[final_fusion.name] = (final_fusion, forgeborn_name)
+                else:
+                    egraphs[final_fusion.name] = FusionGraph
                 pbar.update()
-        pbar.close()     
-
-        #for name, (fusion,forgeborn) in fusions_without_graphs.items():
-        #    if name != fusion.name:
-        #        print(f"Before multiprocessing: {name} != {fusion.name}")
+        pbar.close()
 
         if fusions_without_graphs:
-            # Multiprocess portion        
-            with Pool(processes=cpu_count()) as pool:
-                terminate_event = Event()
-                fusion_results = {}
-                args_list = [(fb_name, fusion) for name, (fusion, fb_name ) in fusions_without_graphs.items() ]
-                # Initialize the progress bar
-                pbar = tqdm(total=len(args_list), desc="Create Graphs", mininterval=0.1, colour='BLUE')
-
-                try:
-                    for FusionGraph in pool.imap_unordered(process_fusion, args_list, chunksize=1):
-                        if terminate_event.is_set(): 
-                            print("Parent Process signaled termination. Exiting child processes!")
-                            pool.terminate()
-                            break
-                                                
-                        if FusionGraph:
-                            fusion_results[FusionGraph.name] = FusionGraph
-                            pbar.update()
-                
-                except KeyboardInterrupt:
-                
-                    # Handle keyboard interruption (Ctrl+C)
-                    print("Interrupted! Terminating processes...")
-                    terminate_event.set()
-                    pool.terminate()
-                    pool.join()
-                        
-                pbar.close()
-
-            # Collecting results        
-            for graph_name , FusionGraph in fusion_results.items():                  
+            fusion_results = evaluate_fusions_multiprocess(fusions_without_graphs)
+            for graph_name, FusionGraph in fusion_results.items():
                 if local_graphs.get(graph_name) is not None:
-                    print(f"{graph_name} already exists locally !")         
+                    print(f"{graph_name} already exists locally !")
                 local_graphs[graph_name] = FusionGraph
-                egraphs[graph_name]      = FusionGraph
+                egraphs[graph_name] = FusionGraph
 
-        #Store the graph library if new graphs have been added 
         if len(fusions_without_graphs) > 0 and SelectionType == 'Collection':
-                #print(f"Saving {len(fusions_without_graphs)} / {len(local_graphs)}")
-                cache_manager.save_object_to_cache('GraphLib', local_graphs)
-        
+            cache_manager.save_object_to_cache('GraphLib', local_graphs)
 
-        #Evaluate single decks 
-        total_decks  = len(DeckCollection.library['Deck'])
-        progress_bar = tqdm(total=total_decks, desc="Creating Deck Graphs",mininterval=0.1, colour='CYAN')
-        dgraphs = {}
-        for name, deck in DeckCollection.library['Deck'].items():
-            if name not in dgraphs:
-                DeckGraph =  MyGraph(deck)
-                ev.evaluate_graph(DeckGraph)
-                dgraphs[name] = DeckGraph                
-            time.sleep(0.001)
-            progress_bar.update(1)            
-        progress_bar.close()
+        return eval_filename, egraphs, local_graphs
 
-        #Print Graph relations in file / gefx 
-        total_graphs  = len(egraphs) 
-        progress_bar = tqdm(total=total_graphs, desc="Printing Fusion Graphs",mininterval=0.1, colour='YELLOW')
-        for name, myGraph in egraphs.items():            
-            myGraph.print_graph(eval_filename)
+def evaluate_fusions_multiprocess(fusions_without_graphs):
+    with Pool(processes=cpu_count()) as pool:
+        terminate_event = Event()
+        fusion_results = {}
+        args_list = [(fb_name, fusion) for name, (fusion, fb_name) in fusions_without_graphs.items()]
+        pbar = tqdm(total=len(args_list), desc="Create Graphs", mininterval=0.1, colour='BLUE')
+        try:
+            for FusionGraph in pool.imap_unordered(process_fusion, args_list, chunksize=1):
+                if terminate_event.is_set():
+                    print("Parent Process signaled termination. Exiting child processes!")
+                    pool.terminate()
+                    break
 
-            if args.graph:
-                eval_path = Path(eval_filename)
-                gefxFolder = os.path.join(eval_path.parent.absolute(),"gefx")
-                Path(gefxFolder).mkdir(parents=True, exist_ok=True)
+                if FusionGraph:
+                    fusion_results[FusionGraph.name] = FusionGraph
+                    pbar.update()
 
-                myGraph.write_gexf_file(gefxFolder, name.replace('|', '_'))
-            progress_bar.update(1)
-        progress_bar.close()
-        
-        if eval_filename:     
-            ev.export_csv(eval_filename + '_interfaction_only', egraphs, True)
-            ev.export_csv(eval_filename, egraphs, False)
-            ev.export_csv(eval_filename + '.halfdecks_only', dgraphs, False)
+        except KeyboardInterrupt:
+            print("Interrupted! Terminating processes...")
+            terminate_event.set()
+            pool.terminate()
+            pool.join()
+        pbar.close()
 
-        if args.select_pairs:
-            if not eval_filename: eval_filename = 'evaluation'
-            print("Selecting top unique pairs\n")
-            ev.find_best_pairs(egraphs,eval_filename + '_top_pairs.txt')
+    return fusion_results
+
+def evaluate_single_decks(DeckCollection, eval_filename, egraphs, local_graphs, args):
+    total_decks = len(DeckCollection.library['Deck'])
+    progress_bar = tqdm(total=total_decks, desc="Creating Deck Graphs", mininterval=0.1, colour='CYAN')
+    dgraphs = {}
+    for name, deck in DeckCollection.library['Deck'].items():
+        if name not in dgraphs:
+            DeckGraph = MyGraph(deck)
+            ev.evaluate_graph(DeckGraph)
+            dgraphs[name] = DeckGraph
+        time.sleep(0.001)
+        progress_bar.update(1)
+    progress_bar.close()
+
+    total_graphs = len(egraphs)
+    progress_bar = tqdm(total=total_graphs, desc="Printing Fusion Graphs", mininterval=0.1, colour='YELLOW')
+    for name, myGraph in egraphs.items():
+        myGraph.print_graph(eval_filename)
+
+        if args.graph:
+            eval_path = Path(eval_filename)
+            gefxFolder = os.path.join(eval_path.parent.absolute(), "gefx")
+            Path(gefxFolder).mkdir(parents=True, exist_ok=True)
+
+            myGraph.write_gexf_file(gefxFolder, name.replace('|', '_'))
+        progress_bar.update(1)
+    progress_bar.close()
+
+    if eval_filename:
+        ev.export_csv(eval_filename + '_interfaction_only', egraphs, True)
+        ev.export_csv(eval_filename, egraphs, False)
+        ev.export_csv(eval_filename + '.halfdecks_only', dgraphs, False)
+
+    if args.select_pairs:
+        if not eval_filename:
+            eval_filename = 'evaluation'
+        print("Selecting top unique pairs\n")
+        ev.find_best_pairs(egraphs, eval_filename + '_top_pairs.txt')
+
 
 def cache_init(args):
     """

@@ -1,6 +1,6 @@
 from collections import defaultdict
+from threading import local
 
-from more_itertools import value_chain
 from Synergy import SynergyTemplate
 import networkx as nx
 #import infomap
@@ -8,6 +8,8 @@ import csv
 import time
 import os
 from tqdm import tqdm
+
+INTER_FACTION_FACTOR = 1
 
 def find_best_pairs(graphs,outpath):
 
@@ -52,17 +54,27 @@ def evaluate_graph(my_graph):
         total_weight = edge[2]['weight']
          # Calculate weight for each label
         weight_per_label = total_weight / len(labels)
-        
-        for label in labels:
-            community_labelinfos['Community'].append((label.strip(), weight_per_label, local_faction))
 
+
+        for label in labels:
+            if local_faction: 
+                # Count once for local_faction=True or every other local_faction=False
+                community_labelinfos['Community'].append((label.strip(), weight_per_label, local_faction))
+            else:
+                # Count twice for every other local_faction=False
+                community_labelinfos['Community'].append((label.strip(), weight_per_label * INTER_FACTION_FACTOR, local_faction))
 
     for synergy, interfaces in my_graph.unmatched_synergies.items():        
         total =sum(int(value) for value in interfaces.values())
         community_labelinfos['Community'].append((synergy, -total, 0))
 
     # Calculate the total number of community labels and the average number of labels per community
-    total_nr_community_labels = sum(len(labelinfos) for labelinfos in community_labelinfos.values())
+    total_nr_community_labels = 0
+
+    for labelinfo in community_labelinfos['Community']:        
+            total_nr_community_labels += labelinfo[1]
+        
+    #total_nr_community_labels = sum(len(labelinfo[1]) if labelinfo[2] else 2*len(labelinfo) for labelinfos in community_labelinfos.values() for labelinfo in labelinfos )
 
     my_graph.avglbl = total_nr_community_labels
     my_graph.community_labels = community_labelinfos

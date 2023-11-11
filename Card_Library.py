@@ -149,7 +149,8 @@ class Fusion(Deck):
         deck1, deck2 = decks[0], decks[1]
 
         if deck1.faction == deck2.faction:
-            raise ValueError("Cannot fuse decks of the same faction")
+            #raise ValueError("Cannot fuse decks of the same faction")
+            return None
 
         # Default Values 
         fusion_name = "_".join([deck.name for deck in decks])        

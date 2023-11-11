@@ -1,94 +1,84 @@
 from Card_Library import Fusion
 from tqdm import tqdm 
 from itertools import combinations
-from multiprocessing import Pool, cpu_count, Event
-import time, signal
-from MemoryMap import MemoryMapManager
+from multiprocessing import Pool, cpu_count, shared_memory
+import time
+from MemoryMap import MemoryMap
+import pickle
+from math import comb
+from MMapWorker import MMapWorker
 
 class DeckLibrary:
-    def __init__(self, decks_or_fusions, filename='decklibrary.mmap'):
-        #self.library = {
-        #    'Deck': {},
-        #    'Fusion': {}
-        #}
-        self.memorymap = MemoryMapManager(filename)
-
+    def __init__(self, decks_or_fusions, filename='DeckLibrary.mmap'):
+        maxsize = len(pickle.dumps(decks_or_fusions[0])) if decks_or_fusions else 65536
+        self.memorymap = MemoryMap(filename, len(decks_or_fusions),len(decks_or_fusions))
         self.update(decks_or_fusions)
 
     def make_fusions(self, fusion_limit=None):
-        #total_fusions = len(self.library['Deck']) * (len(self.library['Deck']) - 1) / 2
-        total_fusions = self.memorymap.size()
-        if total_fusions == 0:
+        total_decks = len(self.memorymap)
+        if total_decks == 0:
             return 0
-
-        deck_pairs = []
-
-        #for deck1, deck2 in combinations(self.library['Deck'].values(), 2):
-        for deckname1, deckname2 in combinations(self.memorymap.keys(), 2):
-            #if deckname1.faction != deck2.faction:
-            unique_fusion_name = "_".join(sorted([deckname1,deckname2]))
-            #if self.library['Fusion'].get(unique_fusion_name) is None:
-            if self.memorymap._get(unique_fusion_name) is None:
-                deck_pairs.append((deckname1, deckname2))
-
-        if fusion_limit is not None:
-            deck_pairs = deck_pairs[:fusion_limit]  # Limit the deck pairs to the specified fusion limit
-
-
-        with Pool(processes=cpu_count()) as pool:
-            terminate_event = Event()
-            fusion_results = []
-            args_list = [(self.memorymap._get(deckname1), self.memorymap._get(deckname2)) for (deckname1, deckname2) in deck_pairs ]
-            # Initialize the progress bar
-            pbar = tqdm(total=len(args_list), desc="Fusioning", mininterval=0.1, colour='BLUE')
-
-            try:
-                def signal_handler(sig, frame):
-                    terminate_event.set()
-                    signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-                signal.signal(signal.SIGINT, signal_handler)
-
-                for fusion in pool.imap_unordered(process_decks, args_list):
-                    if terminate_event.is_set():
-                        print("Parent Process signaled termination. Exiting child processes!")
-                        pool.terminate()
-                        break
-
-                    if fusion:
-                        self.memorymap.add(fusion)
-                        #self.library['Fusion'][fusiox.fused_name] = fusion
-                        pbar.update()            
-
-            except KeyboardInterrupt:
-                print("Interrupter! Terminating processes...")
-                pool.terminate()
-                pool.join()
-
-            pbar.close()
-
-        return len(deck_pairs) or 0
         
+        # Create shared memory with diagonal decks
+        half_deck_list = self.memorymap.get_diagonal()  
+        #deck_data_size = sum(len(deck) for deck in serialized_decks)
+        #shm = shared_memory.SharedMemory(create=True, size=deck_data_size)
+
+        #offset = 0
+        #for serialized_deck in serialized_decks:
+        #    shm.buf[offset:offset + len(serialized_deck)] = serialized_deck
+        #    offset += len(serialized_deck)
+        
+        #shared_deck_memory_name = shm.name
+
+        # Usage example, assuming shared deck memory and index chunks are set up
+        workers = []        
+        #index_chunks = self.memorymap.index_file.split_index_data(cpu_count())
+        mm_chunks = self.memorymap.get_slices(cpu_count())
+        # Now create workers with the determined start_offset and end_offset
+        for worker_id, mm_chunk in enumerate(mm_chunks):
+            worker = MMapWorker(worker_id, self.memorymap.filename, half_deck_list, mm_chunk)
+            workers.append(worker)
+            worker.start()
+
+        # Wait for all workers to finish
+        for worker in workers:
+            worker.join()
+
+        #shm.unlink
+        #shared_deck_memory_name = ''
+
+        # Prepare the arguments for the fusion_task
+        # args = [(self.memorymap.ni_get(deckname1), self.memorymap.ni_get(deckname2)) for deckname1, deckname2 in combinations(self.memorymap.ni_keys(), 2)]
+        # total_combinations = len(args)
+
+        # with tqdm(total=total_combinations, desc="Fusioning", mininterval=0.1, colour='GREEN') as pbar:
+        #     with Pool(processes=cpu_count()) as pool:
+        #         try:
+        #             for fusion in pool.imap_unordered(create_fusion, args):
+        #                 if fusion:
+        #                     self.memorymap.add_fusion(fusion)
+        #                     pbar.update()
+        #         except KeyboardInterrupt:
+        #             print("Interrupted! Terminating processes...")
+        #             pool.terminate()
+        #             pool.join()
+
+        #     pbar.close()
+
 
     def update(self, objects, limit=None):        
         total_updates = len(objects)
-        if total_updates == 0 : return 
+        #if total_updates == 0 : return 
         progress_bar = tqdm(total=total_updates, desc="Updating Library",mininterval=0.1, colour='MAGENTA')
 
         num = 0
-        #for obj in objects:
-            #obj_type = type(obj).__name__
-            #container = self.library[obj_type]
-            #if container.get(obj.name) is None:
-                #print(f"+D {obj.name}")
-            #    num += 1
-            #    container[obj.name] = obj
-        self.memorymap.update(objects)
-        progress_bar.update(len(objects))
-
+        for obj in objects:
+            self.memorymap.ni_add(obj)
+            progress_bar.update(1)
         progress_bar.close()
 
-        num += self.make_fusions(limit)
+        self.make_fusions(limit)
         return num 
 
     def filter(self, Filter):       
@@ -100,10 +90,12 @@ class DeckLibrary:
             'decks': [deck.to_json() for deck in self.library['Deck'].values()],
             'fusions': [fusion.to_json() for fusion in self.library['Fusion'].values()]         
         }
-    
 
-def process_decks(decks):
+def create_fusion(decks):    
+    deck1, deck2 = decks
+    fusion = None
+    if deck1.faction != deck2.faction:
+        fusion = Fusion(decks)
+    return fusion
 
-    time.sleep(0.001)
-    return Fusion(decks)
-    
+

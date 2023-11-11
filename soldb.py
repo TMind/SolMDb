@@ -1,7 +1,7 @@
 from DeckLibrary    import DeckLibrary
-from Card_Library   import UniversalCardLibrary
+from Card_Library   import Deck, UniversalCardLibrary
 from CacheManager   import CacheManager
-from MemoryMap import MemoryMapManager
+from MemoryMap import MemoryMap
 from Synergy        import SynergyTemplate
 from NetApi         import NetApi
 from Filter import Filter
@@ -12,6 +12,7 @@ from tqdm import tqdm
 import os, time, re
 from pathlib import Path
 from multiprocessing import Pool, cpu_count,Event
+import pickle
 
 def main(args):
     synergy_template = SynergyTemplate()
@@ -23,25 +24,22 @@ def main(args):
         if not args.username:
             SelectionType = 'Deck' if args.type == 'deck' else 'Fusion' if args.type == 'fuseddeck' else 'Collection'
 
-    DeckCollection = DeckLibrary([])
+    #DeckCollection = DeckLibrary([])
     net_decks = []
 
-    if args.offline or SelectionType == 'Collection':
-        DeckCollection = cache_manager.load_or_create('DeckLib', lambda: DeckLibrary([]))
+    #if args.offline or SelectionType == 'Collection':
+    #    DeckCollection = cache_manager.load_or_create('DeckLib', lambda: DeckLibrary([]))
 
     if not args.offline:
         myApi = NetApi(myUCL)
         net_decks = get_net_decks(args, myApi)
         
     col_filter = get_col_filter(args)
-    DeckCollection.filter(col_filter) if col_filter else None
+    #DeckCollection.filter(col_filter) if col_filter else None
 
-    MyMemoryMap = MemoryMapManager('DeckCollection.mmap', len(net_decks))
-    MyMemoryMap.update(net_decks)
-    MyMemoryMap.print_index()
-
-    if DeckCollection.update(net_decks) and SelectionType == 'Collection':
-        cache_manager.save_object_to_cache("DeckLib", DeckCollection)
+    DeckCollection = DeckLibrary(net_decks)
+    #if DeckCollection.update(net_decks) and SelectionType == 'Collection':
+    #    cache_manager.save_object_to_cache("DeckLib", DeckCollection)
 
     eval_filename, egraphs, local_graphs = evaluate_fusions(args, DeckCollection)
 

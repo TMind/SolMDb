@@ -1,4 +1,8 @@
+from more_itertools import value_chain
+from MongoDB.DatabaseManager import DatabaseObject
+from dataclasses import dataclass, field
 from Synergy import SynergyTemplate
+from Card_Library import Entity, Deck, Card
 
 class InterfaceCollection:
     def __init__(self, name):
@@ -11,25 +15,49 @@ class InterfaceCollection:
 
         if self.synergies:
             self.interfaces = {syn: {} for syn in self.synergies}
-             
+
     @classmethod
-    def from_entities(cls, name, entities):        
-        ICollection = InterfaceCollection(name)        
-
-        for entity in entities:
-            if type(entity).__name__ == 'Entity':
-                ICollection.update(entity.ICollection)            
-            else:
-                raise ValueError(f"Not an Entity: {entity}")
-
+    def from_interfaces(cls, name, interfaces):
+        ICollection = InterfaceCollection(name)
+        for interface in interfaces:
+            ICollection.add(interface)
         return ICollection
 
     @classmethod
-    def from_card(cls, card):        
-        return cls.from_entities(card.title, card.entities)
+    def from_collections(cls, name, collections):
+        ICollection = InterfaceCollection(name)
+        for collection in collections:
+            ICollection.update(collection)
+        return ICollection
+    
+    @classmethod
+    def from_entities(cls, name, entity_names):
+        ICollection = InterfaceCollection(name)
+
+        # Consider fetching all entities in one go if possible
+        entities = [Entity.load(entity_name) for entity_name in entity_names]
+
+        for entity in entities:
+            myInterface = Interface.from_data(entity.collection_data['interfaces'])
+            if entity and 'interfaces' in entity.collection_data:
+                for interface_name, value in entity.collection_data['interfaces'].items():
+                    # Validate interface_data format here if necessary
+                    interface = Interface.from_data(interface_data)
+                    ICollection.add(interface)
+                    
+        return ICollection
+
+
+    @classmethod
+    def from_card(cls, card):      
+        if type(card) is dict:
+            card = Card.from_data(card)
+        return cls.from_entities(card.title, card.entity_names)
 
     @classmethod
     def from_deck(cls, deck):       
+        if type(deck) is dict:
+            deck = Deck.from_dict(deck['forgeborn'], deck['faction'], deck['cards'])
         entities = [ entity for card in deck.cards.values() for entity in card.entities ]
         return cls.from_entities(deck.name, entities)
 
@@ -61,7 +89,8 @@ class InterfaceCollection:
 
 
     def update(self, other):
-        for interface_dict in other.interfaces.values():            
+        
+        for interface_dict in other.collection_data:
             for interface in interface_dict.values():
                 self.add(interface)      
         self._cache.clear()
@@ -69,12 +98,12 @@ class InterfaceCollection:
 
 
     def add(self, interface):
-        for syn in interface.synergies:
-            if interface.tag in self.interfaces[syn.name]:
-                existing_interface = self.interfaces[syn.name][interface.tag]
+        for synergy_name in interface.synergies:
+            if interface.tag in self.interfaces[synergy_name]:
+                existing_interface = self.interfaces[synergy_name][interface.tag]
                 existing_interface.types.update(interface.types)  # Add interface.types as a single item to the set
             else:
-                self.interfaces[syn.name][interface.tag] = interface
+                self.interfaces[synergy_name][interface.tag] = interface
         self._cache.clear() # Clear the cache whenever the collection is updated.
 
     def copy(self):
@@ -187,24 +216,58 @@ class InterfaceCollection:
 
         return matched_synergies , unmatched_input_interfaces
 
+    def to_data(self):
+        """
+        Convert the InterfaceCollection to a dictionary that is JSON serializable.
+        """
+        interfaces_dict = {}
+        for synergy, interface_dict in self.interfaces.items():
+            for name, interface in interface_dict.items():
+                #idict = interface.to_data()
+                interfaces_dict[synergy] = name #{name: idict}
+        return {
+            "name": self.name,
+            "interfaces": interfaces_dict,            
+        }
+    @classmethod
+    def from_data(cls, data):
+        """
+        Create an InterfaceCollection from a dictionary.
+        """
+        name = data['name']
+        interfaces = data['interfaces']
+        ICollection = cls(name)
+        for synergy, interface_dict in interfaces.items():
+            for name, interface in interface_dict.items():
+                ICollection.add(interface)
+        return ICollection
 
-class Interface:
-    def __init__(self, element_name, key=None, value=None, range=None):
-        self.name = element_name
-        self.tag = key
-        self.value = value
-        self.types = set()
-        self.ranges = set(range) if range else set()
-        self.synergies = []
+@dataclass
+class InterfaceData:
+    name: str       = ''
+    tag:  str       = ''
+    value: any      = 0
+    ranges: str     = ''
+    types: dict     = field(default_factory=dict)
+    synergies: list = field(default_factory=list)
 
-        synergy_template = SynergyTemplate()  # Instantiate only once here
-        if key:
-            self.synergies = synergy_template.get_synergies_by_tag(key)
-            if key in synergy_template.get_output_tags():
-                self.types.add("O")
-            if key in synergy_template.get_input_tags():
-                self.types.add("I")            
+class Interface(DatabaseObject):
+    def __init__(self, data: InterfaceData):
+        # Initialize the base class first if it does important setup
+        super().__init__(data)
 
+        # Then do the specific initialization for Interface
+        self._initialize_types_and_synergies(data)
+
+    def _initialize_types_and_synergies(self, data: InterfaceData):
+        synergy_template = SynergyTemplate()
+        if data.tag:
+            self.synergies = [synergy.name for synergy in synergy_template.get_synergies_by_tag(data.tag)]
+            self.types = {
+                'O': int(data.tag in synergy_template.get_output_tags()),
+                'I': int(data.tag in synergy_template.get_input_tags())
+            }
+    
     def get_type(self):
         return self.types
     
@@ -216,8 +279,16 @@ class Interface:
 
     def has_tag_of_type(self, synergy, type):
         if type == "I":
-            return any(tag in synergy.get_target_tags() for tag in self.synergy_template.get_input_tags())
+            return any(tag in synergy.get_target_tags() for tag in SynergyTemplate().get_input_tags())
         elif type == "O":
-            return any(tag in synergy.get_source_tags() for tag in self.synergy_template.get_output_tags())        
+            return any(tag in synergy.get_source_tags() for tag in SynergyTemplate().get_output_tags())        
         else:
             return False
+    
+    def __str__(self):
+        string = f"{self.name} {self.tag} {self.value} {[synergy.name for synergy in self.synergies]}"
+        return string
+
+
+    def get_collection_names(self):
+        return self.synergies

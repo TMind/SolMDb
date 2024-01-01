@@ -1,13 +1,20 @@
 {
     "version": "0.2.0",
     "configurations": [
-
+        {
+            "name": "Python: UCL GUI",
+            "type": "python",
+            "request": "launch",
+            "program": "SolDB-GUI.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
         {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal",            
+            "console": "integratedTerminal",
             "justMyCode": True
         },
         {
@@ -17,7 +24,25 @@
             "program": "SolDB.py",
             "console": "integratedTerminal",
             "justMyCode": True,
-            "args": ["--username","TMind", "--eval", "tmind"]
+            "args": [
+                "--username", "tmind",
+              //  "--filter", "K:Robot > 3 | F=Nekrium",
+                "--eval", "tmind",
+              // "--offline", "1"
+            ]
+        },
+        {
+            "name": "Python: UCL maru",
+            "type": "python",
+            "request": "launch",
+            "program": "SolDB.py",
+            "console": "integratedTerminal",
+            "justMyCode": True,
+            "args": [
+                "--username", "maru",
+              //  "--filter", "K:Robot > 3 | F=Nekrium",
+                "--eval", "mаru"
+            ]
         },
     ]
 }

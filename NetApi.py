@@ -1,6 +1,7 @@
 import requests
 import json
-from Card_Library import UniversalCardLibrary, Fusion
+from UniversalLibrary import UniversalLibrary
+from Card_Library import Fusion
 from typing import List, Tuple, Dict
 from tqdm import tqdm
 
@@ -62,13 +63,14 @@ class NetApi:
             print(f"Error in response: {data['error']}")
             return []
 
-        with open('data/online_request.json', 'w') as f:
-            json.dump(data, f)
+        #with open('data/online_request.json', 'w') as f:
+        #    json.dump(data, f)
 
         #print("Loading Data...")
-        decks_data = self.ucl.load_data('data/online_request.json')
-        return decks_data
-
+        #decks_data = self.load_data('data/online_request.json')
+        if 'Items' in data:     return data['Items']
+        else:                   return [data]
+       
     def handle_response(self, data, type):
         decks_data = data
 
@@ -88,20 +90,23 @@ class NetApi:
                     fusions.append(Fusion(incomplete_fusiondata['name'], fusion_decks))                                                    
             return fusions
         else:
-            decks, incompletes = self.ucl.load_decks_from_data(decks_data)
-            return decks
+            #decks, incompletes = self.ucl.load_decks_from_data(decks_data)
+            return decks_data
 
 
     def request_decks(self, id="", type="deck", username="TMind", filename=None):
         if id.startswith('Fused'):  type = 'fuseddeck'         
-        decks_data = self.make_request(id, type, username)
-        decks = self.handle_response(decks_data, type)
+        data = self.make_request(id, type, username)
+        decks_data = self.handle_response(data, type)        
 
-        if filename:
-            deck_data = [deck.to_json() for deck in decks]
-            filepath = f"data/{filename}.json"
-            with open(filepath, "w") as f:
-                json.dump(deck_data, f)
-                print(f"Dumped deck data to: {filepath}")
+        return decks_data
 
-        return decks
+    def load_data(self, filename):
+        with open(filename, 'r') as f:
+            content = f.read()
+            data = json.loads(content)
+
+        if 'Items' in data:
+            return data['Items']
+        else:                                
+            return [data]

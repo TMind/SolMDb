@@ -1,0 +1,81 @@
+classDiagram
+    class DatabaseObject {
+    }
+
+    class EntityData {
+        +String name
+        +String faction
+        +Dictionary attributes
+        +Dictionary abilities
+        +Dictionary interfaceCollection_data
+    }
+
+    class ForgebornData {
+        +String id
+        +String name
+        +List entity_names
+    }
+
+    class CardData {
+        +String title
+        +String faction
+        +String cardType
+        +String cardSubType
+        +Dictionary attack
+        +Dictionary health
+        +List entity_names
+    }
+
+    class DeckData {
+        +String name
+        +String forgebornId
+        +String faction
+        +List cardIds
+        +Dictionary cards
+    }
+
+    class Entity {
+        +EntityData data
+        +get_collection_names()
+    }
+
+    class Forgeborn {
+        +ForgebornData data
+        +__str__()
+        +get_collection_names()
+    }
+
+    class Card {
+        +CardData data
+        +get_entity_names_from_title(String)
+        +get_collection_names()
+    }
+
+    class Deck {
+        +DeckData data
+        +get_collection_names()
+    }
+
+    class Fusion {
+        +Deck* deck1
+        +Deck* deck2
+        +List forgeborn_options
+        +List fused_abilities
+        +inspire_forgeborn(Forgeborn, Forgeborn)
+        +set_forgeborn(int_or_string)
+        +copyset_forgeborn(int_or_string)
+        +get_forgeborn(int_or_string)
+        +to_dict()
+    }
+
+    DatabaseObject <|-- Entity
+    DatabaseObject <|-- Forgeborn
+    DatabaseObject <|-- Card
+    DatabaseObject <|-- Deck
+
+    EntityData --o Entity
+    ForgebornData --o Forgeborn
+    CardData --o Card
+    DeckData --o Deck
+
+    Deck <|-- Fusion

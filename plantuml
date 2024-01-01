@@ -1,0 +1,32 @@
+@startuml
+
+class DatabaseObject {
+}
+
+class SynergyTemplate {
+    - synergies: dict
+    + save_to_database(db_manager, collection_name): void
+    + load_from_database(db_manager, collection_name, query): SynergyTemplate
+}
+
+class Synergy {
+    - name: string
+    - weight: float
+    - input_tags: list
+    - output_tags: list
+    + to_data(): dict
+    + from_data(data): Synergy
+}
+
+class SynergyTemplateData {
+    + synergies: dict
+}
+
+DatabaseObject <|-- SynergyTemplate
+DatabaseObject <|-- Synergy
+
+note right of SynergyTemplate : Singleton pattern is used\nwith a private _instance attribute
+
+SynergyTemplate "1" *-- "many" Synergy : contains
+
+@enduml

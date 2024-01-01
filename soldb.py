@@ -1,7 +1,6 @@
 from DeckLibrary    import DeckLibrary
-from Card_Library   import Deck, UniversalCardLibrary
-from CacheManager   import CacheManager
-from MemoryMap import MemoryMap
+from UniversalLibrary import UniversalLibrary
+#from CacheManager   import CacheManager
 from Synergy        import SynergyTemplate
 from NetApi         import NetApi
 from Filter import Filter
@@ -12,12 +11,19 @@ from tqdm import tqdm
 import os, time, re
 from pathlib import Path
 from multiprocessing import Pool, cpu_count,Event
-import pickle
+from MongoDB.DatabaseManager import DatabaseManager
+import GlobalVariables
 
-def main(args):
-    synergy_template = SynergyTemplate()
-    cache_manager = cache_init(args)
-    myUCL = cache_manager.load_or_create('CardLib', lambda: UniversalCardLibrary(*cache_manager.get_dependencies('CardLib')))
+def main(args):    
+    GlobalVariables.username = args.username or 'Default'
+
+    synergy_template = SynergyTemplate()    
+    #dbm = MongoDBManager(args.username)
+    ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
+
+    #Read Entities and Forgeborns from Files into Database
+    myUCL = UniversalLibrary(args.username, *ucl_paths)
+    #myUCL = cache_manager.load_or_create('CardLib', lambda: UniversalLibrary(*cache_manager.get_dependencies('CardLib')))
     
     SelectionType = 'Collection'
     if args.id:
@@ -33,7 +39,7 @@ def main(args):
     if not args.offline:
         myApi = NetApi(myUCL)
         net_decks = get_net_decks(args, myApi)
-        
+
     col_filter = get_col_filter(args)
     #DeckCollection.filter(col_filter) if col_filter else None
 
@@ -50,25 +56,28 @@ def get_net_decks(args, myApi):
         urls = args.id.split('\n')
         pattern = r"\/([^\/]+)$"
         net_decks = []
+        net_data  = []
         for url in urls:
             match = re.search(pattern, url)
             if match:
                 id = match.group(1)
-                url_deck = myApi.request_decks(
+                url_data = myApi.request_decks(
                     id=id,
                     type=args.type,
                     username=args.username,
                     filename=args.filename
                 )
-                net_decks += url_deck
-        return net_decks
+                net_data  += url_data
+                #dbm.upsert('Request',{'url': url},data=net_data)
+        return net_data
     else:
-        return myApi.request_decks(
+        net_data = myApi.request_decks(
             id=args.id,
             type=args.type,
             username=args.username,
             filename=args.filename
         )
+        return net_data
 
 def get_col_filter(args):
     if args.filter:
@@ -186,59 +195,6 @@ def evaluate_single_decks(DeckCollection, eval_filename, egraphs, local_graphs, 
             eval_filename = 'evaluation'
         print("Selecting top unique pairs\n")
         ev.find_best_pairs(egraphs, eval_filename + '_top_pairs.txt')
-
-
-def cache_init(args):
-    """
-    Initialize the cache system based on the given arguments.
-
-    Parameters:
-    - args: Arguments containing username, filename, eval, and other potential configurations.
-
-    Returns:
-    - CacheManager instance initialized with the correct file mappings.
-    """
-    resourcePath = os.getcwd()
-    cacheFolder  = os.path.join(resourcePath, "cache")
-    dataFolder   = os.path.join(resourcePath, "data")
-    csvFolder    = os.path.join(resourcePath, "csv")
-    
-    # ensure folders exist
-    Path(cacheFolder).mkdir(parents=True, exist_ok=True)
-    Path(csvFolder).mkdir(parents=True, exist_ok=True)
-    Path(dataFolder).mkdir(parents=True, exist_ok=True)
-
-    deck_library_name = "deck_library"
-    eval_graphs_name = "eval_graphs"
-
-    if args.username:
-        deck_library_name += f"_{args.username}"
-        eval_graphs_name  += f"_{args.username}"
-        args.eval         += f"_{args.username}"
-
-    if args.filename:
-        deck_library_name = f"{args.filename}_library"
-        eval_graphs_name = f"{args.filename}_graphs"
-    
-    ucl_path = os.path.join(cacheFolder,'ucl.zpkl')
-    deckLibrary_path = os.path.join(cacheFolder,deck_library_name + '.zpkl')
-    graphFolder_path = os.path.join(cacheFolder,eval_graphs_name + '.zpkl')
-
-    # File paths mapping
-    file_paths = {
-        "CardLib": ucl_path,
-        "DeckLib": deckLibrary_path,
-        "GraphLib": graphFolder_path,
-    }
-
-    # Dependencies mapping
-    dependencies = {
-        "CardLib": [os.path.join(csvFolder, 'sff.csv'), os.path.join(csvFolder, 'forgeborn.csv'), os.path.join(csvFolder, 'synergies.csv')],
-        "DeckLib": ["CardLib"],
-        "GraphLib": ["DeckLib"],
-    }
-
-    return CacheManager.instance(file_paths, dependencies)
 
 # Parallelization Code
 def process_fusion(args):

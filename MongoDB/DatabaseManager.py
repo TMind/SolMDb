@@ -4,7 +4,6 @@ from MongoDB.MongoDB import MongoDB
 import GlobalVariables
 from dataclasses import dataclass, fields, asdict
 from typing import Any, Dict
-#from abc import ABC, abstractmethod
 
 
 class DatabaseManager:

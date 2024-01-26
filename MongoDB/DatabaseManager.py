@@ -119,11 +119,10 @@ class DatabaseObject:
         
         data = None        
         object = self
-        while not isinstance(object, InterfaceCollection):
+        if not isinstance(object, InterfaceCollection):
             classname = object.__class__.__name__
-
-            if classname == 'Deck':
-                object = InterfaceCollection.from_entities(self.name, [self])
+            if classname == 'Fusion':
+                object = InterfaceCollection.from_deck(self)
             if classname == 'Entity':
                 object = InterfaceCollection.from_entities(self.name, [self])
             if classname == 'Forgeborn':
@@ -134,6 +133,7 @@ class DatabaseObject:
                 object = InterfaceCollection.from_card(self)
             else:
                 object = None
+        return object 
 
 
     def save(self, name, collection_name=None):

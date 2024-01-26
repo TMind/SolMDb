@@ -19,7 +19,7 @@ class DeckLibrary:
             for card_data in deck.cards.values():
                 card_obj = Card.from_data(card_data)
                 ICollection = card_obj.get_collection()
-                ICollection.save(card_obj.name)
+                #ICollection.save(ICollection.name, collection_name=ICollection.__class__.__name__)
         
     def make_fusions(self, fusion_limit=None):
         total_decks = len(self.decks)

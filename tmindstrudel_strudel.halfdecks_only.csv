@@ -1,0 +1,144 @@
+deckname1;deckname2;forgeborn;L2;L3;L4;factions;numlbl;#>~1stats;#>~2stats;#>~3stats;Creatures;Spells;BEAST;DINOSAUR;MAGE;ROBOT;SCIENTIST;SPIRIT;WARRIOR;ZOMBIE;MINION;DRAGON;ELEMENTAL;PLANT;EXALT;SPELL;HEALING;MOVEMENT;ARMOR;ACTIVATION;FREE;FREE HEALING;FREE DESTROY;FREE UPGRADE;FREE SELFDMG;FREE SPELL;FREE REPLACE;FREE MAGE;UPGRADE;REPLACE;SELFDAMAGE;DESTRUCTION;DEPLOY;READY;FORGEBORN;BATTLE;SLAY;FACE DMG
+The Mending Rexes Guardian;;;2Tinker;3Inspire;4Repurpose;Alloyin;12;1/1;1/0;0/1;6;4;0;0;2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;3;2;0;-1;2;2;0;0;0;0
+The Sailors of Third Fable;;;2Gathering Storm;3Ice Armor;4Summon the Swarm;Tempys;23;2/1;3/1;3/1;6;4;0;0;0;0;0;0;0;0;2;0;0;0;0;16;0;0;0;0;0;-1;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0
+The Tutors of Temporary Poisons;;;2Raising Dead;3Dark Summoning;4Army of the Damned;Nekrium;26;0/1;0/1;1/2;8;2;0;0;0;0;0;0;0;5;6;0;0;0;0;0;1;0;0;0;0;1;0;4;0;0;0;0;0;0;-1;2;1;4;0;-1;0;0
+The Boars of Glowhive Spitters;;;2Shapeshift;3Barkskin;4Darkforge Drain;Uterra;15;0/4;0/3;5/5;7;3;0;0;0;0;0;0;0;0;0;0;0;0;0;6;2;0;0;0;0;2;0;0;0;3;0;0;0;1;0;-1;0;0;0;0;0;0
+Storm's Cackling Guides;;;2Summon the Swarm;3Stim Bolt;4Frost Blast;Tempys;38;1/2;1/1;3/3;5;5;0;2;0;0;0;0;0;0;0;0;0;0;0;20;0;3;-1;0;0;0;0;0;0;10;0;0;0;0;-1;-1;0;0;0;0;0;0
+The Vigilantes of Revelation;;;2Spirit Bond;3Shapeshift;4Darkforge Drain;Uterra;10;2/2;2/1;5/3;8;2;0;3;0;0;0;0;1;0;1;0;0;0;0;2;0;0;0;0;1;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0;-1;0
+The Technicians of Hovering;;;2Shields Up;3Formation;4Promote;Alloyin;7;3/0;2/0;3/1;7;3;0;0;0;0;0;0;5;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;-1;0;0;0;0;0;0
+The Bending Gloomfiends Snakes;;;2Dark Summoning;3Soulrip;4Dark Ritual;Nekrium;25;0/1;0/1;1/3;7;3;0;0;0;0;0;0;0;0;6;0;0;0;0;0;0;0;0;0;-1;0;5;2;0;0;0;0;0;0;-2;9;0;0;0;-1;0;0
+The Square Proposing Sentry Angels;;;2Enhance;3Inspire;4Optimize;Alloyin;30;0/1;1/1;3/1;7;3;0;0;0;14;1;0;3;0;0;0;0;0;0;0;0;0;4;0;0;0;0;2;0;0;0;0;0;3;-1;1;0;0;0;0;-1;0
+Deformity's Betrayers;;;2Soul Syphon;3Shadowcast;4Army Commander;Nekrium;14;1/2;1/2;1/2;7;3;0;0;0;0;0;0;0;2;0;0;0;0;1;0;0;0;0;0;-1;0;0;2;0;0;0;0;0;0;-2;4;1;-1;0;0;-2;0
+The Valkyries of the Nargath Cape;;;2Demolish;3Lightning Speed;4Earthen Fists;Tempys;10;0/4;0/2;3/5;7;3;0;0;0;0;0;-1;0;0;0;0;0;0;0;6;0;2;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0
+The Abundant Champs;;;2Nova's Dominion;3Nova's Judgement;4Nova's Might;Uterra;9;0/0;0/0;2/3;7;3;0;0;0;0;0;0;0;0;5;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0;0;0;-1;0;-1;0;0;0;0;1;0
+Xrath's Governors;;;2Shadowcast;3Army Commander;4Sorrow;Nekrium;9;1/0;0/2;0/1;8;2;0;0;0;0;0;0;0;1;0;0;0;0;1;2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-1;1;2;1;0;0;0;0
+The Band of the Steelskin North;;;2Mind Over Matter;3Shattered Psyche;4Precognition;Alloyin;12;1/2;1/2;1/1;6;4;0;0;0;0;0;0;3;0;0;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0;0;0;3;0;-2;0;0;0;0;-1;0
+The Corps of the Prismatic Riddle;;;2Summon the Swarm;3Gale Surge;4Stim Bolt;Tempys;24;1/2;2/2;2/2;6;4;0;0;1;0;0;0;0;0;0;0;3;0;0;8;0;0;0;0;0;0;0;0;0;8;0;0;0;0;2;-1;0;0;0;0;-1;0
+The Stone Hillbilly Stomachs;;;2Shapeshift;3Spell Surge;4Spirit Bond;Uterra;11;3/3;2/4;4/2;8;2;0;4;0;0;0;0;3;0;0;0;0;0;0;2;0;0;0;0;1;0;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0
+Silence's Dying Guard;;;2Shadowcast;3Sorrow;4Army Commander;Nekrium;22;0/3;0/3;2/4;8;2;0;0;0;0;0;0;0;2;2;0;0;0;1;0;0;0;0;0;3;0;0;1;0;0;0;0;0;0;-4;12;0;0;0;0;0;0
+The Brilliant Buying Duchesses;;;2Enhance;3Inspire;4Nanotech Disruptor;Alloyin;15;1/3;1/1;1/1;6;4;0;0;0;5;1;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;2;0;0;0;0;0;4;-1;1;0;0;0;0;0;0
+The Bulls of Wiping Tremorsaurs;;;2Bounty;3Nova's Dominion;4Nova's Might;Uterra;7;2/4;2/4;3/5;8;2;0;0;0;0;0;3;0;0;-1;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;-1;0;0;0;0;-1;0
+The Arcane Allies;;;2Stim Bolt;3Frost Blast;4Summon the Swarm;Tempys;35;0/1;0/1;0/1;5;5;0;0;1;0;0;-1;0;0;0;0;0;0;0;20;0;-1;0;0;0;0;0;0;0;10;0;0;0;-1;0;-2;0;0;0;0;0;0
+The Oracles of Arguing Heavens;;;2Earthen Fists;3Demolish;4Blast Wave;Tempys;13;1/1;2/0;3/1;7;3;0;0;0;0;0;-1;1;0;0;0;0;0;0;6;0;3;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;-1;0
+The Lucid Shocking Daughters;;;2Intimidate;3Shields Up;4Promote;Alloyin;24;1/3;2/3;2/3;7;3;0;-1;0;0;3;0;0;0;0;1;0;0;1;0;0;0;12;1;0;0;0;1;0;0;0;0;1;2;0;0;0;0;0;0;1;0
+The Bunch of Alluvian and Staying;;;2Soulrip;3Dark Summoning;4Endless Death;Nekrium;30;0/4;0/4;1/4;7;3;0;0;0;0;0;0;0;7;2;0;0;0;1;3;0;0;0;0;1;0;5;1;0;0;0;0;0;0;-3;7;0;0;0;0;0;2
+The Vikings of Marking Warclaws;;;2Shapeshift;3Darkforge Drain;4Spirit Bond;Uterra;17;1/2;1/2;1/4;6;4;0;0;0;0;0;0;0;0;2;0;0;3;0;10;0;0;0;0;0;0;0;0;0;0;0;0;-1;0;0;-1;0;0;0;0;0;0
+The Folk of the Mega Reducing Asir;;;2Summon the Swarm;3Gale Surge;4Frost Blast;Tempys;19;0/2;1/3;2/4;7;3;0;3;0;0;0;0;2;0;0;0;0;0;0;6;0;0;-1;0;0;-1;0;0;0;3;0;0;0;0;2;0;0;0;0;0;-2;0
+The Torturers of Yellow Petrification;;;2Shadowcast;3Army Commander;4Soul Syphon;Nekrium;36;0/0;0/0;1/1;7;3;2;0;0;0;2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;4;0;0;0;0;0;0;-4;20;2;4;0;-1;0;0
+The Vigilantes of Cleric and Seed;;;2Darkforge Drain;3Shapeshift;4Spell Surge;Uterra;12;1/3;1/3;3/5;7;3;0;1;0;0;0;0;0;0;0;0;0;2;0;6;1;0;0;0;0;0;0;0;0;0;0;0;0;-1;0;-1;0;0;0;0;0;0
+The Belonging Drix Innumerable;;;2Shields Up;3Intimidate;4Promote;Alloyin;12;0/3;0/4;0/3;5;5;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;5;0;0;0;0;1;0;0;0;0;0;4;0;-1;0;0;0;0;0;0
+Innumerable of Crawler and West;;;2Sorrow;3Shadowcast;4Soul Syphon;Nekrium;21;0/1;0/1;0/2;6;4;0;0;0;0;0;0;0;4;3;0;0;0;0;0;0;2;0;0;0;0;0;4;0;0;0;0;0;0;-2;4;1;-1;0;-1;0;0
+The Deceiving Hero Perfumers;;;2Frost Blast;3Summon the Swarm;4Gale Surge;Tempys;16;0/3;0/3;1/4;7;3;0;3;1;0;0;0;0;0;0;0;0;0;1;6;0;0;-1;0;0;0;0;0;0;0;1;0;0;-1;-1;-2;0;0;0;0;0;0
+Regiment of Sprite and Warclaw;;;2Darkforge Drain;3Shapeshift;4Spirit Bond;Uterra;9;1/4;2/4;3/5;7;3;0;2;0;0;0;0;0;0;0;0;0;0;0;3;0;0;0;0;1;0;0;0;0;0;0;0;0;-1;0;-2;0;0;0;0;-1;0
+Force's Adding Defenders;;;2Shields Up;3Formation;4Intimidate;Alloyin;24;0/1;0/1;1/1;8;2;0;0;0;7;0;0;3;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;12;0;-1;0;0;0;0;-1;0
+The Ornate Sipping Egg Guides;;;2Lightning Speed;3Demolish;4Earthen Fists;Tempys;10;1/4;2/3;1/4;8;2;0;0;1;0;0;0;0;0;0;0;0;0;0;5;0;0;0;0;0;0;0;0;0;0;0;0;0;0;2;-2;0;0;0;0;-1;0
+The Arid Monkey Wolves;;;2Nova's Might;3Bounty;4Nova's Dominion;Uterra;17;0/2;1/2;2/3;6;4;0;6;0;0;0;4;0;0;1;0;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;-1;0
+The Common Wrench Swarm;;;2Shields Up;3Intimidate;4Promote;Alloyin;20;0/1;0/1;1/2;7;3;0;0;0;14;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;2;0;0;0;0;0;3;-1;0;0;0;0;0;0;0
+The Upstaging Eternity Worms;;;2Soulrip;3Endless Death;4Dark Ritual;Nekrium;45;1/0;1/0;2/0;7;3;2;0;0;0;2;0;0;0;0;0;0;0;0;6;0;0;0;0;0;0;5;0;0;6;0;0;0;0;2;18;2;1;0;0;-2;0
+The Armoring Studious Power Cult;;;2Shields Up;3Promote;4Formation;Alloyin;15;0/2;0/2;1/1;7;3;0;0;0;4;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;-2;0;-2;2;-1;0;0;1;0
+The Vigilantes of the Titanic Druid;;;2Darkforge Drain;3Spell Surge;4Shapeshift;Uterra;21;0/3;1/3;3/5;6;4;0;0;0;0;0;4;0;0;0;0;0;0;0;12;2;0;0;0;0;0;0;0;0;0;0;0;0;2;0;0;0;0;0;0;-1;0
+Vice's Quoting Custodians;;;2Army Commander;3Shadowcast;4Sorrow;Nekrium;21;2/2;2/3;2/4;7;3;0;0;0;0;0;0;0;2;1;0;0;0;1;6;0;1;0;0;0;0;0;2;0;3;0;0;0;0;2;2;0;0;0;0;-1;0
+The Aunts who became Ticklers;;;2Earthen Fists;3Demolish;4Lightning Speed;Tempys;15;4/1;4/1;4/2;8;2;0;0;0;0;0;0;0;0;0;0;0;0;1;10;0;0;0;0;0;0;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0
+The Companions of the Void;;;2Soul Syphon;3Army Commander;4Sorrow;Nekrium;18;0/0;0/2;2/3;7;3;0;0;0;0;0;0;0;7;2;0;0;0;0;0;0;0;0;0;0;0;0;2;0;0;0;0;0;0;-2;2;2;-1;0;0;0;1
+The Brigade of Relic and Aetherscale;;;2Enhance;3Nanotech Disruptor;4Optimize;Alloyin;15;0/2;0/2;2/3;8;2;0;0;0;0;1;0;2;0;0;0;0;0;1;0;0;2;0;0;0;0;0;2;0;0;0;0;0;5;-1;1;0;0;0;0;0;0
+The Chieftains of Dripping Loti;;;2Nova's Judgement;3Nova's Dominion;4Bounty;Uterra;8;1/0;1/1;1/1;6;4;0;1;0;0;0;0;2;0;2;0;0;0;0;0;2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0
+The Madness Wrestlers;;;2Demolish;3Lightning Speed;4Blast Wave;Tempys;22;2/1;2/2;2/2;6;4;0;0;0;0;0;0;2;0;0;0;0;0;0;16;0;0;0;0;0;0;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0
+The Murderous Totem Empresses;;;2Endless Death;3Dark Ritual;4Dark Summoning;Nekrium;20;1/1;2/2;2/4;7;3;0;0;0;0;0;0;0;2;0;0;0;0;0;0;0;0;0;0;0;0;0;2;0;0;0;0;0;0;-1;3;8;2;0;-1;0;-1
+The Glorious Stressing Scouts;;;2Precognition;3Mind Over Matter;4Synaptic Siphon;Alloyin;20;0/1;0/1;0/1;6;4;0;0;0;0;0;0;3;0;0;0;0;0;0;0;0;0;9;0;0;0;0;0;0;0;0;0;0;6;0;-1;0;0;0;0;-1;0
+Cluster of Visiting and Collecting;;;2Demolish;3Lightning Speed;4Earthen Fists;Tempys;14;2/3;2/1;2/3;7;3;0;0;3;0;0;0;0;0;0;0;1;0;1;6;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;-1;0;0;0;0;-1;0
+The Angry Wedding Bizarre Archers;;;2Spell Surge;3Spirit Bond;4Shapeshift;Uterra;10;1/4;3/3;3/5;7;3;0;4;0;0;0;0;0;0;1;0;0;0;0;3;1;0;0;0;0;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0;0
+The Wise Infinity Brewers;;;2Repurpose;3Enhance;4Inspire;Alloyin;18;0/2;1/3;1/3;7;3;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;4;0;0;0;0;2;8;-1;0;2;-1;0;0;0;0
+The Simian Raid Guides;;;2Growth Aura;3Darkforge Drain;4Barkskin;Uterra;28;1/3;1/3;1/5;6;4;0;3;0;0;0;1;0;0;2;0;0;0;0;8;6;0;0;0;0;0;0;0;0;4;0;0;0;-2;0;0;0;0;3;0;0;0
+The Harming Mad Glutton Scientists;;;2Life Drain;3Deathtouch;4Army Commander;Nekrium;7;0/0;0/0;1/0;7;3;1;0;0;0;0;2;0;2;0;0;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0;0;0;-3;0;0;0;0;0;0;0
+The Adored Droning Coopers;;;2Repurpose;3Tinker;4Inspire;Alloyin;17;1/2;0/3;1/3;7;3;0;0;0;5;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;1;6;-1;0;2;-1;0;0;0;0
+The Opalescent Ancient Bunch;;;2Lightning Speed;3Demolish;4Whirlwind;Tempys;9;2/2;4/3;5/3;7;3;0;0;2;0;0;0;0;0;0;0;0;0;0;6;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+The Order of Winter and Crushing;;;2Shapeshift;3Barkskin;4Darkforge Drain;Uterra;15;0/3;0/1;1/5;7;3;0;0;0;0;0;0;2;0;3;0;0;0;0;3;4;0;0;0;0;2;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0
+The Randomness Army;;;2Life Drain;3Army Commander;4Soul Syphon;Nekrium;26;1/1;1/1;2/2;7;3;0;0;0;0;1;0;0;9;0;0;0;0;0;0;0;0;0;0;0;0;0;6;0;0;0;0;0;0;-3;6;2;1;0;0;0;0
+The Fifth Training Invaders;;;2Ice Armor;3Stim Bolt;4Gathering Storm;Tempys;25;2/2;1/1;4/2;6;4;0;0;0;0;0;0;0;0;0;0;0;0;0;19;0;0;0;0;0;0;0;0;-1;4;0;0;0;0;-2;0;0;0;0;0;0;0
+The Club Farmers;;;2Growth Aura;3Darkforge Drain;4Shapeshift;Uterra;12;1/2;1/1;2/3;7;3;0;0;0;0;0;0;2;0;1;0;0;0;0;3;3;0;0;1;0;0;0;0;0;0;0;0;0;-1;-1;0;0;0;0;0;0;0
+The Steely Killion Regiment;;;2Shields Up;3Knockback;4Intimidate;Alloyin;7;1/4;2/3;2/2;6;4;0;0;0;0;0;0;2;0;0;0;0;0;0;0;0;3;0;0;0;0;0;1;0;0;0;0;0;1;0;0;0;0;0;0;0;0
+The Queens of Emptying Winter;;;2Darkforge Drain;3Barkskin;4Shapeshift;Uterra;7;0/3;1/3;1/3;7;3;0;0;0;0;0;0;1;0;0;0;0;0;0;3;0;0;0;0;0;0;0;0;0;0;0;0;0;-3;-1;-1;0;0;0;0;0;0
+The Able Laughter Pilots;;;2Reinforce;3Intimidate;4Shields Up;Alloyin;13;2/3;1/2;1/3;6;4;0;0;0;0;0;0;1;0;0;0;0;0;0;4;0;0;0;0;0;0;0;3;0;0;0;0;3;0;-1;1;0;0;0;0;0;0
+The Scriveners of Changing Depth;;;2Ice Armor;3Summon the Swarm;4Gathering Storm;Tempys;26;4/0;3/1;4/1;6;4;0;1;1;0;0;0;0;0;0;0;0;0;0;16;0;0;0;0;0;-1;0;0;0;4;0;1;0;0;2;0;0;0;0;0;0;0
+The Scourge Shadows;;;2Army Commander;3Deathtouch;4Soul Syphon;Nekrium;42;1/0;0/0;0/0;9;1;0;0;0;0;0;0;0;4;2;0;0;0;0;0;0;0;0;0;0;0;0;20;0;0;0;0;0;0;-3;9;2;3;0;-1;0;0
+Grotesquery's Awful Oozes;;;2Army of the Damned;3Soulrip;4Dark Summoning;Nekrium;44;1/1;1/1;2/2;8;2;0;0;0;0;0;0;0;11;9;0;0;0;0;0;0;0;0;0;0;0;7;1;0;0;0;0;0;0;-5;15;0;0;0;0;0;0
+The Sixth Catching Swords;;;2Shapeshift;3Darkforge Drain;4Growth Aura;Uterra;17;0/1;1/2;4/5;7;3;0;3;0;0;0;0;0;0;6;0;0;0;0;3;3;0;0;0;0;0;0;0;0;0;0;0;-1;-1;0;0;0;0;0;0;0;0
+The Antique Voting Aunts;;;2Shields Up;3Knockback;4Reinforce;Alloyin;10;2/4;2/4;2/2;8;2;0;0;0;0;0;0;3;0;0;0;0;0;0;0;0;0;3;0;0;0;0;2;0;0;0;0;0;-2;-1;0;0;0;0;0;0;0
+The Quitting Fanciness Overseers;;;2Demolish;3Whirlwind;4Flame Strike;Tempys;11;2/2;3/0;3/2;7;3;0;0;2;0;0;0;0;0;0;0;0;0;0;8;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+The Bunch of the Drawing Resolve;;;2Shields Up;3Reinforce;4Intimidate;Alloyin;10;1/1;2/2;2/2;7;3;0;0;0;4;2;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;2;-1;0;0;0;0;0;0;0
+Champs of Wheezing and Writhing;;;2Soul Syphon;3Deathtouch;4Army Commander;Nekrium;17;0/0;0/0;0/1;7;3;0;0;0;0;0;2;0;2;0;0;0;0;0;0;0;0;0;0;-1;0;0;6;0;0;0;0;0;0;-2;4;0;0;0;-1;0;0
+The Legion of Dance and Journey;;;2Nova's Dominion;3Nova's Wrath;4Nova's Touch;Uterra;14;1/2;1/1;3/2;6;4;0;0;0;0;0;0;2;0;-1;0;0;0;0;0;4;0;0;0;0;2;0;0;0;0;0;0;2;0;0;0;0;0;3;0;0;0
+Sutherlord's Oracles;;;2Flame Strike;3Demolish;4Lightning Speed;Tempys;9;1/2;1/2;2/2;7;3;0;0;0;0;0;0;0;0;0;0;0;0;0;8;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0;0;0;0;0;0;0
+The Improvization Masons;;;2Knockback;3Reinforce;4Intimidate;Alloyin;13;1/3;1/2;2/3;8;2;0;0;6;3;2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;-1;0;0;0;0;0;0;0
+The Shadowflame Odd Vigilantes;;;2Stim Bolt;3Gathering Storm;4Ice Armor;Tempys;20;1/2;2/2;1/2;7;3;0;0;1;0;0;0;0;0;0;0;0;0;0;15;0;1;0;0;0;0;0;0;0;3;0;0;0;0;0;0;0;0;0;0;0;0
+Solitude's Sleeping Book Burners;;;2Nova's Dominion;3Nova's Might;4Nova's Wrath;Uterra;9;2/2;2/1;3/3;8;2;0;0;0;0;0;0;2;0;1;0;0;0;0;0;4;0;0;0;1;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0;0
+The Shading Cacklebones Herd;;;2Raising Dead;3Dark Summoning;4Army of the Damned;Nekrium;4;3/1;3/2;4/3;8;2;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-2;2;0;0;0;0;0;0
+The Scarred Sneaky Uncles;;;2Soulrip;3Dark Summoning;4Raising Dead;Nekrium;23;1/2;1/1;2/2;7;3;0;0;0;0;0;2;0;3;2;0;0;0;0;0;0;0;0;0;0;0;3;0;0;0;0;0;0;0;-2;6;4;1;0;-1;0;0
+The Zephyr Surveyors of Berserk Fire;;;2Flame Strike;3Demolish;4Lightning Speed;Tempys;13;0/2;0/2;2/2;7;3;0;0;0;0;0;0;0;0;0;0;0;0;0;12;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0
+The Relentless Foolishness Squad;;;2Darkforge Drain;3Shapeshift;4Barkskin;Uterra;8;2/1;4/1;6/2;8;2;0;0;0;0;0;0;0;0;4;0;0;0;0;2;0;0;0;0;0;0;0;0;0;0;0;0;-1;1;0;0;0;0;0;0;0;0
+The Fixing Fort Peacekeepers;;;2Knockback;3Intimidate;4Reinforce;Alloyin;18;2/1;2/1;2/2;7;3;0;0;0;6;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;6;0;0;0;0;3;3;0;0;0;0;0;0;0;0
+Day's Locksmiths;;;2Inspire;3Enhance;4Repurpose;Alloyin;18;2/2;2/1;1/2;6;4;0;0;0;0;0;0;2;0;0;0;0;0;0;0;0;0;0;-1;0;0;0;3;0;0;0;0;3;4;-1;0;3;-1;0;0;0;0
+The Heralds of Silk Collection;;;2Gathering Storm;3Ice Armor;4Summon the Swarm;Tempys;26;2/2;2/1;4/3;7;3;0;0;2;0;0;0;0;0;0;0;0;0;0;15;0;0;0;0;0;0;0;0;0;6;0;2;0;-1;0;0;0;0;0;0;0;0
+Wrongdoing's Suspending Workers;;;2Army Commander;3Soul Syphon;4Deathtouch;Nekrium;18;2/1;2/1;2/1;8;2;1;0;0;0;0;2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;-3;9;3;1;0;0;0;1
+The Causing Titanic Venom Wildlings;;;2Nova's Might;3Nova's Dominion;4Nova's Touch;Uterra;8;2/4;3/3;4/5;7;3;0;0;0;0;0;0;0;0;2;0;0;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;-1;-2;0;0;0;0;0;0;0;0
+Impulse's Shadowflame Squad;;;2Demolish;3Flame Strike;4Lightning Speed;Tempys;17;1/2;2/1;2/2;5;5;0;2;1;0;0;0;1;0;0;0;0;0;0;10;0;0;0;0;0;0;0;0;0;0;-1;0;0;-1;1;0;0;0;0;0;0;0
+The Mutant Constructing Gang;;;2Tinker;3Repurpose;4Enhance;Alloyin;22;0/2;1/3;1/3;7;3;0;0;3;3;0;0;0;0;2;0;0;0;0;0;0;3;0;0;0;0;0;2;0;0;0;0;2;2;0;0;2;3;0;0;0;0
+The Wiry Antique Governors;;;2Soulrip;3Army of the Damned;4Dark Summoning;Nekrium;20;2/1;0/2;3/2;8;2;0;0;0;0;0;0;0;7;0;0;0;0;0;0;0;0;0;0;0;0;3;1;0;0;0;0;0;0;-2;8;0;0;0;0;0;0
+The Scavenger Rabid Daggers;;;2Darkforge Drain;3Shapeshift;4Growth Aura;Uterra;15;1/2;1/2;3/4;7;3;0;0;0;0;0;0;0;0;-1;0;0;0;0;3;8;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;3;0;0;0
+The People of Bearing;;;2Repurpose;3Tinker;4Inspire;Alloyin;42;0/0;1/0;1/0;7;3;0;0;0;6;2;0;0;0;3;0;0;0;0;3;0;0;1;0;0;0;0;6;0;0;3;0;2;12;0;0;3;1;0;0;0;0
+The Creeping Hell Protectors;;;2Dark Summoning;3Soulrip;4Raising Dead;Nekrium;27;0/2;0/1;0/2;8;2;0;0;0;0;0;0;0;4;2;0;0;0;0;0;1;0;0;0;-1;1;8;4;0;0;0;0;0;0;-1;2;0;0;0;-1;0;2
+The Mixing Figment Collectors;;;2Stim Bolt;3Summon the Swarm;4Gathering Storm;Tempys;19;1/1;2/1;4/1;7;3;0;1;0;0;0;0;0;0;0;0;0;0;0;12;0;0;0;0;1;0;0;0;2;3;0;0;0;0;0;0;0;0;0;0;0;0
+Venom's Fifth Swarm;;;2Nova's Touch;3Nova's Wrath;4Nova's Dominion;Uterra;7;1/4;1/2;2/2;8;2;0;0;0;0;0;0;0;0;2;0;0;0;0;0;3;0;0;0;0;0;0;0;0;0;0;0;0;-2;0;-1;0;0;0;0;0;0
+The Tentacles of the Diseased Bone;;;2Army Commander;3Life Drain;4Deathtouch;Nekrium;29;1/0;1/2;1/1;7;3;0;0;0;0;4;0;0;0;12;0;0;0;0;3;0;0;0;0;0;0;0;1;0;0;0;0;0;0;-3;4;2;-1;0;0;0;1
+The Sentrys of Failure Faith;;;2Enhance;3Tinker;4Inspire;Alloyin;13;1/1;1/2;2/4;7;3;0;0;0;0;6;0;2;0;2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;2;-1;0;0;0;0;0;0;0
+The Omnivore Brutish Herders;;;2Darkforge Drain;3Growth Aura;4Barkskin;Uterra;9;1/3;2/3;3/4;7;3;0;0;0;0;0;0;3;0;0;0;0;0;0;3;0;0;0;0;0;0;0;0;0;0;0;0;0;-4;-1;-1;0;0;0;0;0;0
+The Former Hoping Valkyrie Trustees;;;2Flame Strike;3Whirlwind;4Demolish;Tempys;7;2/3;2/2;2/5;7;3;0;0;0;0;0;0;0;0;0;0;0;0;0;6;0;0;0;0;0;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0;0
+The Simple Lords;;;2Nova's Dominion;3Nova's Wrath;4Nova's Might;Uterra;13;1/6;1/3;2/3;6;4;0;0;0;0;0;0;2;0;7;0;0;0;0;0;1;0;0;0;1;0;0;0;0;0;0;0;0;-1;-1;0;0;0;0;0;0;0
+The Fire Breathers of the Heartseeker;;;2Summon the Swarm;3Gathering Storm;4Stim Bolt;Tempys;23;2/2;0/3;3/3;7;3;0;0;2;0;0;0;0;0;0;0;0;0;0;9;0;0;0;0;0;0;0;0;2;6;0;0;0;0;4;0;0;0;0;0;0;0
+Army of Alpha and Curing;;;2Nova's Might;3Nova's Dominion;4Nova's Wrath;Uterra;16;0/2;0/1;3/2;7;3;1;0;0;0;0;0;0;0;4;0;0;0;0;0;4;0;0;2;0;0;0;0;0;0;0;0;0;1;0;-1;0;0;3;0;0;0
+The Mothers of the Plutonium Echo;;;2Knockback;3Reinforce;4Intimidate;Alloyin;16;0/0;1/0;2/1;8;2;0;0;0;5;0;0;3;0;0;0;0;0;0;0;0;0;5;0;0;0;0;0;0;0;0;0;2;1;0;0;0;0;0;0;0;0
+The Hurting Demons Larvae;;;2Army of the Damned;3Soulrip;4Raising Dead;Nekrium;26;1/1;3/2;3/5;7;3;0;0;0;0;0;2;0;0;1;0;0;0;0;6;2;0;0;0;0;2;6;0;0;3;0;0;0;0;-1;3;0;0;0;0;0;0
+The Aunts of Bleeding Brightsteel;;;2Repurpose;3Enhance;4Inspire;Alloyin;18;0/2;0/2;1/3;7;3;0;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;9;-1;1;2;1;0;0;0;0
+The Liches of Rebirth and Duskmaw;;;2Raising Dead;3Dark Summoning;4Army of the Damned;Nekrium;16;0/1;0/1;2/2;7;3;0;0;0;0;0;0;0;0;2;0;0;0;0;3;1;0;0;0;0;1;0;-1;0;0;0;0;0;0;-3;3;2;2;0;0;0;0
+The Fortelling Aggravating Ticklers;;;2Lightning Speed;3Whirlwind;4Demolish;Tempys;11;2/1;3/1;3/1;6;4;0;1;0;0;0;0;0;0;0;0;0;0;0;7;0;0;0;0;0;-1;0;0;0;0;1;0;0;-1;0;0;0;0;0;0;0;0
+The Opening Sisters Liches;;;2Deathtouch;3Life Drain;4Soul Syphon;Nekrium;27;1/1;1/0;2/2;7;3;0;0;0;0;2;3;0;3;0;0;0;0;0;6;0;0;0;0;0;0;3;2;0;0;0;0;0;0;-2;6;0;0;0;-1;0;0
+Vindicators of Sobbing and Baking;;;2Summon the Swarm;3Gathering Storm;4Stim Bolt;Tempys;20;0/2;1/1;2/3;6;4;0;1;2;0;0;0;0;0;0;0;0;0;0;8;1;0;0;0;0;0;0;0;2;4;0;0;0;0;2;0;0;0;0;0;0;0
+Brigade of Druid and Weird;;;2Nova's Might;3Nova's Wrath;4Nova's Dominion;Uterra;14;1/4;1/5;2/5;8;2;0;0;0;0;0;0;0;0;2;0;0;0;0;0;6;0;0;0;0;3;0;0;0;0;0;0;-1;-2;0;-1;0;0;0;0;0;0
+Sparky's Attentive Combatants;;;2Tinker;3Repurpose;4Inspire;Alloyin;12;3/3;1/4;2/5;7;3;0;0;0;0;2;0;1;0;0;0;0;0;0;0;0;2;0;0;0;0;0;0;0;0;0;0;0;2;0;0;4;1;0;0;0;0
+The Raiders of Hound and Mask;;;2Soul Syphon;3Army Commander;4Deathtouch;Nekrium;18;0/1;0/1;0/1;6;4;0;0;0;0;0;1;0;7;0;0;0;0;0;4;0;0;0;0;0;0;0;1;0;0;0;0;0;0;-1;4;0;0;0;0;0;0
+The Serious Silver Soldiers;;;2Intimidate;3Shields Up;4Knockback;Alloyin;9;2/3;2/4;3/3;6;4;0;0;0;0;0;0;2;0;0;0;0;0;0;0;0;0;4;0;0;0;0;1;0;0;0;0;1;-1;0;0;0;0;0;0;0;0
+The Sorcerers of the Oratek Eruptor;;;2Stim Bolt;3Summon the Swarm;4Gathering Storm;Tempys;38;0/1;0/1;2/2;5;5;0;0;2;0;0;0;1;0;0;0;0;0;0;24;0;0;0;0;0;0;0;0;1;10;0;0;0;0;0;0;0;0;0;0;0;0
+The Farmers of the Spiky Tunnels;;;2Shapeshift;3Growth Aura;4Barkskin;Uterra;4;0/4;2/1;4/3;8;2;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;2;0;0;0;0;0;0;0;0
+The Sixth Barb Band;;;2Soul Syphon;3Life Drain;4Deathtouch;Nekrium;25;1/1;0/0;1/0;6;4;2;0;0;0;0;0;0;8;0;0;0;0;0;0;0;0;0;0;0;0;0;4;0;0;0;0;0;0;3;6;0;0;0;0;0;2
+The Masters of Swearing;;;2Whirlwind;3Flame Strike;4Demolish;Tempys;12;1/1;1/1;2/2;7;3;0;1;2;0;0;0;0;0;0;0;0;0;0;6;0;0;0;0;0;0;0;0;0;0;0;0;0;-1;2;0;0;0;0;0;0;0
+The Quantums of Metal and Faith;;;2Enhance;3Repurpose;4Tinker;Alloyin;25;2/0;1/0;2/1;7;3;0;0;0;0;3;0;0;0;0;0;0;0;0;6;0;0;1;0;0;0;0;1;0;0;3;0;1;6;-1;0;1;2;0;0;0;0
+The Phalanx of Everflow Treefolk;;;2Barkskin;3Growth Aura;4Shapeshift;Uterra;16;1/3;0/0;1/3;7;3;0;2;0;0;0;0;8;0;0;0;0;0;0;0;2;0;0;0;0;2;0;0;0;0;0;0;0;-1;-1;0;0;0;0;0;0;0
+The Champions of the Whisker;;;2Nova's Might;3Nova's Touch;4Nova's Wrath;Uterra;22;0/0;1/1;3/2;7;3;0;0;0;0;0;0;0;0;15;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;-1;-2;0;-1;0;0;3;0;0;0
+The Overseers of Sparky;;;2Tinker;3Enhance;4Repurpose;Alloyin;13;2/4;1/3;3/5;7;3;0;0;0;0;0;0;2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;2;0;0;0;0;0;4;-1;1;2;1;0;0;0;0
+Doctors of Tatoo and Comparing;;;2Whirlwind;3Demolish;4Lightning Speed;Tempys;19;1/3;1/3;1/3;7;3;0;0;6;0;0;0;0;0;0;0;0;0;0;9;0;2;0;0;0;0;0;0;0;0;0;0;0;0;2;0;0;0;0;0;0;0
+The Savants of the Ending Predator;;;2Raising Dead;3Army of the Damned;4Soulrip;Nekrium;24;3/3;0/1;0/1;7;3;0;0;0;0;1;0;0;4;6;0;0;0;0;3;0;0;0;0;0;0;4;1;0;0;0;0;0;0;-2;2;1;1;0;0;0;0
+The Hermit Spiders;;;2Nova's Touch;3Nova's Might;4Nova's Dominion;Uterra;16;1/3;2/2;3/2;8;2;0;0;0;0;0;4;0;0;2;0;0;0;0;0;2;0;0;2;0;0;0;0;0;0;0;0;0;2;0;-1;0;0;3;0;0;0
+The Host of the Confident Miracles;;;2Gathering Storm;3Stim Bolt;4Ice Armor;Tempys;16;2/1;3/2;5/3;7;3;0;0;1;0;0;0;2;0;0;0;0;0;0;9;0;0;0;0;0;0;0;0;0;3;0;1;0;0;0;0;0;0;0;0;0;0
+The King Varna Generals;;;2Soul Syphon;3Deathtouch;4Army Commander;Nekrium;12;3/1;1/0;1/1;7;3;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;-1;0;0;0;0;0;0;0;0;0;-3;9;0;0;0;0;0;0
+The Pondering Iron Advisers;;;2Reinforce;3Intimidate;4Knockback;Alloyin;16;1/0;2/0;2/2;7;3;0;0;0;6;0;0;2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;2;0;0;0;0;2;2;-1;1;0;0;0;0;0;0
+The Company of Botany;;;2Barkskin;3Darkforge Drain;4Shapeshift;Uterra;16;0/1;1/3;2/4;7;3;0;0;0;0;0;0;0;0;3;0;0;0;0;3;6;0;0;0;1;0;0;0;0;0;0;0;-1;-2;0;-1;0;0;0;0;0;0
+The Raiders of Leading Capitals;;;2Shields Up;3Intimidate;4Reinforce;Alloyin;16;1/0;2/0;3/1;5;5;0;0;0;6;0;0;0;0;0;0;0;0;0;0;0;0;3;-1;0;0;0;4;0;0;0;0;2;0;0;0;0;0;0;0;0;0
+The Monks of the Great Quitting Fire;;;2Gathering Storm;3Summon the Swarm;4Ice Armor;Tempys;7;2/4;2/2;3/3;9;1;0;0;3;0;0;0;0;0;1;0;0;0;0;1;0;0;0;0;0;0;0;0;1;0;0;0;0;0;1;0;0;0;0;0;0;0
+The Mice of the Fierce Fur;;;2Darkforge Drain;3Growth Aura;4Shapeshift;Uterra;13;0/2;0/3;1/4;6;4;0;0;0;0;0;0;0;0;1;0;0;0;0;4;5;0;0;0;0;0;0;0;0;0;0;0;-1;0;-1;-1;0;0;0;0;0;0
+The Senseis who became Champs;;;2Demolish;3Lightning Speed;4Whirlwind;Tempys;15;3/3;3/3;3/2;7;3;0;0;2;0;0;0;0;0;0;0;0;0;0;9;0;0;0;0;0;0;0;0;0;0;0;2;0;0;2;0;0;0;0;0;0;0
+The Protectors of the Saving Herbs;;;2Knockback;3Shields Up;4Intimidate;Alloyin;13;0/0;1/1;2/2;7;3;0;0;0;5;2;0;0;0;1;0;0;0;0;0;0;0;4;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0
+The Crossing Soul Hags;;;2Deathtouch;3Army Commander;4Life Drain;Nekrium;16;0/0;1/1;1/0;7;3;0;0;0;0;0;3;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;6;0;0;0;0;0;0;3;3;0;0;0;0;0;0
+The Professing Watchdogs;;;2Knockback;3Reinforce;4Shields Up;Alloyin;14;1/1;2/3;5/5;8;2;0;0;0;6;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;4;0;0;0;0;4;0;0;0;0;0;0;0;0;0
+The Group of Brass Conspiracies;;;2Raising Dead;3Army of the Damned;4Soulrip;Nekrium;26;0/0;1/1;1/2;6;4;0;0;0;0;0;1;0;5;3;0;0;0;0;0;1;0;0;0;0;1;5;0;0;0;0;0;0;0;-3;9;0;0;0;0;0;0
+The Fleeing Feasting Brother Flock;;;2Nova's Dominion;3Nova's Wrath;4Nova's Might;Uterra;19;0/4;0/3;1/5;7;3;0;0;0;0;0;0;2;0;4;0;0;0;0;3;6;0;0;0;0;0;0;0;0;3;0;0;0;-1;0;0;0;0;0;0;0;0
+The Squadron of the Fire;;;2Gathering Storm;3Stim Bolt;4Summon the Swarm;Tempys;29;1/5;1/6;3/6;8;2;0;0;1;0;0;0;0;0;0;0;0;0;0;4;0;0;0;2;0;0;0;0;8;2;0;0;0;0;12;0;0;0;0;0;0;0
+The Imps of Descending Chiron;;;2Life Drain;3Soul Syphon;4Deathtouch;Nekrium;16;2/2;1/2;2/5;9;1;0;0;0;0;0;0;0;1;-2;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;-4;8;0;0;0;0;0;4
+Outfit of Camping and Waving;;;2Growth Aura;3Barkskin;4Darkforge Drain;Uterra;13;1/2;0/2;1/4;6;4;0;0;0;0;0;0;1;0;0;0;0;0;0;4;0;0;0;2;1;0;0;0;0;0;0;0;0;-1;-1;0;0;0;3;0;0;0
+The Thespian Mumbling Team;;;2Army Commander;3Deathtouch;4Soul Syphon;Nekrium;11;0/2;1/3;0/3;7;3;0;0;0;0;0;0;0;0;1;0;0;0;0;3;1;0;0;0;0;1;0;0;0;0;0;0;0;0;-1;3;0;0;0;0;0;1
+Steam's Rumblestone Detachment;;;2Gathering Storm;3Ice Armor;4Stim Bolt;Tempys;11;1/3;0/2;2/4;8;2;0;0;0;0;0;0;0;0;0;0;0;0;0;7;0;0;0;0;0;0;0;0;0;2;0;0;0;0;2;0;0;0;0;0;0;0
+Counselors of McGear and Law;;;2Inspire;3Enhance;4Repurpose;Alloyin;16;3/3;3/3;4/2;7;3;0;0;0;0;1;0;2;0;2;0;0;0;0;3;0;0;0;1;0;0;0;0;0;0;0;0;2;2;0;0;2;1;0;0;0;0
+The Steely-Thewed Thorniness Druids;;;2Shapeshift;3Growth Aura;4Barkskin;Uterra;6;1/3;1/1;3/2;8;2;0;0;0;0;0;0;0;0;0;0;0;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0;-2;-1;0;0;0;0;0;0;0
+Cartographers of Anger and Theory;;;2Summon the Swarm;3Gale Surge;4Stim Bolt;Tempys;18;2/4;1/4;2/5;7;3;0;0;0;0;0;0;2;0;0;0;0;0;0;9;0;0;0;0;1;-1;0;0;0;3;0;0;0;0;2;0;0;0;0;0;0;0
+The Hags of the Damning Ire;;;2Soulrip;3Dark Ritual;4Dark Summoning;Nekrium;49;0/0;1/1;0/1;6;4;1;0;0;0;0;1;0;5;0;0;0;0;0;4;0;0;0;0;0;0;8;4;0;0;4;0;0;-1;-5;20;0;0;0;0;0;0
+The Spiky Sympathizing Bulls;;;2Nova's Dominion;3Bounty;4Nova's Judgement;Uterra;15;2/2;2/1;3/2;7;3;0;1;0;0;0;0;0;0;0;0;0;0;0;6;2;0;0;-1;0;0;0;0;0;3;0;0;0;2;0;0;0;0;0;0;0;0
+The Experts of Pointing;;;2Nanotech Disruptor;3Inspire;4Optimize;Alloyin;13;1/2;1/2;1/3;6;4;0;0;2;0;0;0;0;0;0;0;0;0;3;0;0;0;0;0;1;0;0;1;0;0;0;0;0;5;0;-1;0;0;0;0;0;0

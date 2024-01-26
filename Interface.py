@@ -14,7 +14,7 @@ class InterfaceCollection:
         self.synergies = synergy_template.synergies
 
         if self.synergies:
-            self.interfaces = {syn: {} for syn in self.synergies}
+            self.interfaces = {syn: {} for syn in self.synergies}        
 
     @classmethod
     def from_interfaces(cls, name, interfaces):
@@ -38,13 +38,12 @@ class InterfaceCollection:
         entities = [Entity.load(entity_name) for entity_name in entity_names]
 
         for entity in entities:
-            myInterface = Interface.from_data(entity.collection_data['interfaces'])
-            if entity and 'interfaces' in entity.collection_data:
-                for interface_name, value in entity.collection_data['interfaces'].items():
-                    # Validate interface_data format here if necessary
-                    interface = Interface.from_data(interface_data)
-                    ICollection.add(interface)
-                    
+            if entity:     
+                #Add items from interfaceCollection_data to ICollection.interfaces  
+                interfaceCollectionData = entity.interfaceCollection_data                                      
+                interface = Interface.from_data(interfaceCollectionData)
+                ICollection.add(interface)
+                 
         return ICollection
 
 
@@ -215,6 +214,9 @@ class InterfaceCollection:
                 unmatched_input_interfaces[synergy] = input_interfaces_by_syn[synergy]
 
         return matched_synergies , unmatched_input_interfaces
+
+
+
 
     def to_data(self):
         """

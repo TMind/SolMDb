@@ -17,7 +17,7 @@ class SynergyTemplate(DatabaseObject):
         return cls._instance
 
     def to_data(self):
-        synergy_data_list = [synergy.to_data() for synergy in self.synergies.values()]
+        synergy_data_list = [synergy.name for synergy in self.synergies.values()]
         return SynergyTemplateData(synergies=synergy_data_list)
 
     @classmethod

@@ -10,15 +10,18 @@ class DeckLibrary:
         self.Decks = 'Decks'        
         self.Fusions = 'Fusions'
 
-        for deck_data in decks_data: 
+        deck_name = ""
+        for deck_data in decks_data:
             deck = Deck.from_data(deck_data)
+            deck_name = deck.name
             deck.save(deck.name)
         
-        deck = Deck.lookup(name="The Scourge Shadows")
+        deck = Deck.lookup(name=deck_name)
         if deck:
             for card_data in deck.cards.values():
                 card_obj = Card.from_data(card_data)
-                ICollection = card_obj.get_collection()
+                from Interface import InterfaceCollection
+                ICollection = InterfaceCollection.from_card(card_obj)  #card_obj.get_collection()
                 #ICollection.save(ICollection.name, collection_name=ICollection.__class__.__name__)
         
     def make_fusions(self, fusion_limit=None):

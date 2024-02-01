@@ -32,16 +32,16 @@
             ]
         },
         {
-            "name": "Python: UCL maru",
+            "name": "Python: UCL strudel",
             "type": "python",
             "request": "launch",
             "program": "SolDB.py",
             "console": "integratedTerminal",
             "justMyCode": True,
             "args": [
-                "--username", "maru",
+                "--username", "strudel",
               //  "--filter", "K:Robot > 3 | F=Nekrium",
-                "--eval", "mаru"
+                "--eval", "strudel"
             ]
         },
     ]

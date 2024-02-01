@@ -11,7 +11,7 @@ class UniversalLibrary:
     entities = []
 
     def __init__(self, username, sff_path, fb_path, syn_path):        
-        self.database = DatabaseManager(username) 
+        self.database = DatabaseManager('local') 
         
         self.database.ensure_unique_index('Entity', 'name')        
         self.database.ensure_unique_index('Forgeborn', 'id')

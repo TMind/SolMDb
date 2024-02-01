@@ -37,7 +37,7 @@ class Forgeborn(DatabaseObject):
 
 @dataclass
 class CardData():
-    title    : str  = ''
+    name    : str  = ''
     faction : str   = ''
     cardType: str   = ''
     cardSubType: str    =''
@@ -51,7 +51,7 @@ class Card(DatabaseObject):
         super().__init__(data)
         
         if self.data is not None:
-            self.data.entity_names = self.get_entity_names_from_title(self.title)   
+            self.data.entity_names = self.get_entity_names_from_title(self.name)   
         
         # self.above_stat = None
         # def aggregate_attribute(attribute_name):
@@ -72,17 +72,17 @@ class Card(DatabaseObject):
 
     def get_entity_names_from_title(self, card_title):
         # First try with full title        
-        card_entity = self.db_manager.get_record_by_name('Entities', card_title)        
-        if card_entity:          
-            return card_entity.name
+        card_entity_data = self.db_manager.get_record_by_name('Entity', card_title)        
+        if card_entity_data:          
+            return card_entity_data['name']
 
         # If not found, try with decreasing title length
         parts = card_title.split(' ')
         for i in range(1, len(parts)):
             modifier_title = ' '.join(parts[:i])
             card_title = ' '.join(parts[i:])
-            modifier_entity_data = self.db_manager.get_record_by_name('Entities', modifier_title)
-            card_entity_data = self.db_manager.get_record_by_name('Entities', card_title)
+            modifier_entity_data = self.db_manager.get_record_by_name('Entity', modifier_title)
+            card_entity_data = self.db_manager.get_record_by_name('Entity', card_title)
             if modifier_entity_data and card_entity_data:
                 return [entity_name for entity_name in [modifier_entity_data['name'], card_entity_data['name']]]
     

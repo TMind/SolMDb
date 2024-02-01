@@ -51,7 +51,7 @@ class InterfaceCollection:
     def from_card(cls, card):      
         if type(card) is dict:
             card = Card.from_data(card)
-        return cls.from_entities(card.title, card.entity_names)
+        return cls.from_entities(card.name, card.entity_names)
 
     @classmethod
     def from_deck(cls, deck):       
@@ -259,7 +259,7 @@ class Interface(DatabaseObject):
         super().__init__(data)
 
         # Then do the specific initialization for Interface
-        self._initialize_types_and_synergies(data)
+        if data : self._initialize_types_and_synergies(data)
 
     def _initialize_types_and_synergies(self, data: InterfaceData):
         synergy_template = SynergyTemplate()

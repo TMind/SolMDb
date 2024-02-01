@@ -36,12 +36,28 @@ class DatabaseManager:
         return self.find_one(collection_name, {'name': name})
 
 class DatabaseObject:
-    db_manager = None
+    _db_manager = None
+
+    @property
+    def db_manager(self):
+        if self._db_manager is None:
+            # Determine the database name based on data class
+            data_class = self.get_data_class()
+            if data_class.__name__ in ['EntityData', 'ForgebornData', 'CardData']:
+                self.db_name = 'local'
+            else:
+                self.db_name = GlobalVariables.username or 'user_specific'
+            
+            # Initialize the db_manager for this instance
+            self._db_manager = DatabaseManager(self.db_name)
+        
+        return self._db_manager
+
 
     def __init__(self, data=None):
-        if self.db_manager:
-            self.db_manager.set_database_name(GlobalVariables.username or 'Default')
+    
         data_class = self.get_data_class()
+
         #print(f"Data class: {data_class}, Data: {data}, Type of Data: {type(data)}")
 
         if data_class is not None and isinstance(data, data_class):
@@ -49,8 +65,14 @@ class DatabaseObject:
         else:
             self.data = None
 
+        if data_class.__name__ in ['EntityData', 'ForgebornData', 'CardData']:
+            self.db_name = 'local'
+        else:
+            self.db_name = GlobalVariables.username or 'user_specific'
 
-    
+        if self.db_manager:
+                self.db_manager.set_database_name(self.db_name)
+
     def get_data_class(self):
         if self.__class__.DataClass is None:
             module_name = self.__class__.__module__
@@ -59,10 +81,16 @@ class DatabaseObject:
             self.__class__.DataClass = getattr(module, data_class_name)
         return self.__class__.DataClass
 
+    #@classmethod
+    #def initialize_db_manager(cls):
+    #    if cls.db_manager is None:
+    #        cls.db_manager = DatabaseManager(GlobalVariables.username or 'Default')
+
     @classmethod
-    def initialize_db_manager(cls):
-        if cls.db_manager is None:
-            cls.db_manager = DatabaseManager(GlobalVariables.username or 'Default')
+    def _get_class_db_manager(cls):
+        db_name = 'local' if cls.__name__ in ['Entity', 'Forgeborn', 'Card'] else GlobalVariables.username or 'user_specific'
+        return DatabaseManager(db_name)
+
 
     @classmethod
     def from_data(cls, data: Dict[str, Any]):
@@ -89,14 +117,14 @@ class DatabaseObject:
     DataClass = None
     extra_data = None  # Placeholder for extra data
 
-    @classmethod
-    def lookup(cls, name, type='name', collection_name=None):
-        collection_name = collection_name or cls.__name__
-        data = cls.db_manager.find_one(collection_name, {type: name})
+    # @classmethod
+    # def lookup(cls, name, type='name', collection_name=None):
+    #     collection_name = collection_name or cls.__name__
+    #     data = cls.db_manager.find_one(collection_name, {type: name})
         
-        if data:    return cls.from_data(data)
-        else:       return None  # Or handle the 'not found' case as needed
-        
+    #     if data:    return cls.from_data(data)
+    #     else:       return None  # Or handle the 'not found' case as needed
+
     def __getattr__(self, name):
         # Check if the attribute exists as a member variable
         if name in self.__dict__:
@@ -139,7 +167,8 @@ class DatabaseObject:
     def save(self, name, collection_name=None):
         collection_name = collection_name or self.__class__.__name__
         data_to_save = self.to_data() if isinstance(self.to_data(), dict) else vars(self.to_data())
-        DatabaseObject.db_manager.upsert(collection_name, {'name' : name }, data_to_save)     
+        #DatabaseObject.db_manager.upsert(collection_name, {'name' : name }, data_to_save)     
+        self.db_manager.upsert(collection_name, {'name' : name }, data_to_save)     
 
 
     def to_data(self):
@@ -149,16 +178,21 @@ class DatabaseObject:
             return asdict(self.data)        
         
     @classmethod
-    def load(cls, name, collection_name=None):
+    def lookup(cls, name, type='name', collection_name=None):
+        db_manager = cls._get_class_db_manager()
         collection_name = collection_name or cls.__name__
-        data = cls.db_manager.get_record_by_name(collection_name, name)
+        data = db_manager.find_one(collection_name, {type: name})
+        if data:    return cls.from_data(data)
+        else:       return None    
+
+    @classmethod
+    def load(cls, name, collection_name=None):
+        db_manager = cls._get_class_db_manager()
+        collection_name = collection_name or cls.__name__
+        data = db_manager.get_record_by_name(collection_name, name)
         
-        if data:
-            instance = cls.from_data(data)
-            instance.db_manager = cls.db_manager  # Set the db_manager for the instance
-            return instance
-        else:
-            return None
+        if data:    return cls.from_data(data)
+        else:       return None
         
 #Initialize the DatabaseManager 
-DatabaseObject.initialize_db_manager()
+#DatabaseObject.initialize_db_manager()

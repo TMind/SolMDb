@@ -117,14 +117,6 @@ class DatabaseObject:
     DataClass = None
     extra_data = None  # Placeholder for extra data
 
-    # @classmethod
-    # def lookup(cls, name, type='name', collection_name=None):
-    #     collection_name = collection_name or cls.__name__
-    #     data = cls.db_manager.find_one(collection_name, {type: name})
-        
-    #     if data:    return cls.from_data(data)
-    #     else:       return None  # Or handle the 'not found' case as needed
-
     def __getattr__(self, name):
         # Check if the attribute exists as a member variable
         if name in self.__dict__:

@@ -35,3 +35,4 @@ FORGEBORN;1;Forgeborn Synergy;Forgeborn Ability;
 BATTLE;1;Battle Synergy;Battle;
 SLAY;1;Slay;Battle;
 FACE DMG;1;Face Damage Synergy;Face Damage, Breakthrough Giver, Stealth Giver, Aggressive Giver;
+BREAKTHROUGH;0.5;Breakthrough, Breakthrough Giver;Stat Buff, Attack Buff;

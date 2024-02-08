@@ -37,7 +37,7 @@ class Forgeborn(DatabaseObject):
 
 @dataclass
 class CardData():
-    name    : str  = ''
+    title   : str  = ''
     faction : str   = ''
     cardType: str   = ''
     cardSubType: str    =''
@@ -51,7 +51,7 @@ class Card(DatabaseObject):
         super().__init__(data)
         
         if self.data is not None:
-            self.data.entity_names = self.get_entity_names_from_title(self.name)   
+            self.data.entity_names = self.get_entity_names_from_title(self.title)   
         
         # self.above_stat = None
         # def aggregate_attribute(attribute_name):

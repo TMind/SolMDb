@@ -39,11 +39,9 @@ class InterfaceCollection:
 
         for entity in entities:
             if entity:     
-                #Add items from interfaceCollection_data to ICollection.interfaces  
-                interfaceCollectionData = entity.interfaceCollection_data                                      
-                interface = Interface.from_data(interfaceCollectionData)
-                ICollection.add(interface)
-                 
+                #Add items from interfaceCollection_data to ICollection.
+                interfaceCollectionData = entity.interfaceCollection_data 
+                ICollection.add_data(interfaceCollectionData)                                 
         return ICollection
 
 
@@ -51,7 +49,7 @@ class InterfaceCollection:
     def from_card(cls, card):      
         if type(card) is dict:
             card = Card.from_data(card)
-        return cls.from_entities(card.name, card.entity_names)
+        return cls.from_entities(card.title, card.entity_names)
 
     @classmethod
     def from_deck(cls, deck):       
@@ -63,6 +61,11 @@ class InterfaceCollection:
     @classmethod
     def from_forgeborn(cls, forgeborn):    
         return cls.from_entities(forgeborn.name, forgeborn.abilities.values())
+
+
+    def add_data(self, data):
+        # Assuming data is a dictionary where keys are interface names and values are Interface instances
+        self.interfaces.update(data)
 
     def _update_cache(self, interface_types, synergy=None):
         """

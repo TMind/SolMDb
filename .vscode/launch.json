@@ -3,10 +3,10 @@
     "configurations": [
 
         {
-            "name": "Python: Current File",
+            "name": "Python: UCL Gui",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceFolder}/SolDB-GUI.py",
             "console": "integratedTerminal",            
             "justMyCode": True
         },

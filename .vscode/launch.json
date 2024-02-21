@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Python: UCL GUI",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "SolDB-GUI.py",
             "console": "integratedTerminal",
@@ -11,19 +11,19 @@
         },
         {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": True
+            "justMyCode": true
         },
         {
             "name": "Python: UCL",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "SolDB.py",
             "console": "integratedTerminal",
-            "justMyCode": True,
+            "justMyCode": true,
             "args": [
                 "--username", "tmind",
               //  "--filter", "K:Robot > 3 | F=Nekrium",
@@ -33,11 +33,11 @@
         },
         {
             "name": "Python: UCL strudel",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "SolDB.py",
             "console": "integratedTerminal",
-            "justMyCode": True,
+            "justMyCode": true,
             "args": [
                 "--username", "strudel",
               //  "--filter", "K:Robot > 3 | F=Nekrium",

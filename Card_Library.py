@@ -4,29 +4,30 @@ from dataclasses import dataclass, field
 
 @dataclass
 class EntityData:
-    name: str    
-    faction: str
-    attributes: dict
-    abilities: dict
-    interfaceCollection_data: dict
-
+    name: str    = ''
+    faction: str = ''
+    attributes: dict = field(default_factory=dict)
+    abilities: dict = field(default_factory=dict)
+    range : str = "" 
+    children_data: dict = field(default_factory=dict)
+    
 class Entity(DatabaseObject):
-    def __init__(self, data: EntityData):
+    def __init__(self, data: EntityData):        
         super().__init__(data)
-        
-    def get_collection_names(self):
-        return self.interfaceCollection_data
+        self._id = self.name
         
     
 @dataclass
 class ForgebornData:
     id: str = ''
     name: str   = ''
-    entity_names: list = field(default_factory=list)
+    abilities: list = field(default_factory=list)
+    children_data: dict = field(default_factory=dict)    
 
 class Forgeborn(DatabaseObject):
-    def __init__(self, data: ForgebornData):
+    def __init__(self, data: ForgebornData):        
         super().__init__(data)
+        self._id = self.id         
             
     def __str__(self):
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.entity_names.items()])
@@ -37,22 +38,26 @@ class Forgeborn(DatabaseObject):
 
 @dataclass
 class CardData():
-    title   : str  = ''
+    title   : str   = ''
     faction : str   = ''
     cardType: str   = ''
     cardSubType: str    =''
     attack  : dict  =field(default_factory=dict)
     health  : dict  =field(default_factory=dict)
-    entity_names : list = field(default_factory=list)
+    #entity_names : list = field(default_factory=list)    
+    children_data: dict = field(default_factory=dict)
 
 class Card(DatabaseObject):
 
-    def __init__(self, data: CardData):         
+    def __init__(self, data: CardData):                 
         super().__init__(data)
+        self._id = self.title
         
         if self.data is not None:
-            self.data.entity_names = self.get_entity_names_from_title(self.title)   
-        
+            entityNames = self.get_entity_names_from_title(self.title)   
+            if entityNames:
+                self.data.children_data = {entityName: 'Card_Library.Entity' for entityName in entityNames}
+                    
         # self.above_stat = None
         # def aggregate_attribute(attribute_name):
         #     aggregated = {}
@@ -70,11 +75,13 @@ class Card(DatabaseObject):
         #         self.above_stat[stat][level] = stats[level] >= 3 * ( level + 1 )
 
 
-    def get_entity_names_from_title(self, card_title):
+    def get_entity_names_from_title(self, card_title):        
+        if not card_title or card_title == '': return None
+
         # First try with full title        
         card_entity_data = self.db_manager.get_record_by_name('Entity', card_title)        
         if card_entity_data:          
-            return card_entity_data['name']
+            return [card_entity_data['name']]
 
         # If not found, try with decreasing title length
         parts = card_title.split(' ')
@@ -86,36 +93,34 @@ class Card(DatabaseObject):
             if modifier_entity_data and card_entity_data:
                 return [entity_name for entity_name in [modifier_entity_data['name'], card_entity_data['name']]]
     
-        # If no entities found, create a card with just the card title
+        # If no entities found, return card_title
         return [card_title]
 
-    def get_collection_names(self):
-        return self.entity_names
-
 @dataclass
-class DeckData:
+class DeckData:    
     name        : str
     forgebornId : str
     faction     : str    
-    cardIds     : list
-    cards       : dict              # Card ids from Net API
+    cardIds     : list  # Card ids from Net API
+    cards       : dict       
+    children_data: dict = field(default_factory=dict)           
 
 class Deck(DatabaseObject):
     
-    def __init__(self, data: DeckData):
-        super().__init__(data)
-        
-    # def __init__(self, name: str='', forgebornId : str='0', faction: str='', cardIds: list=[], cards: dict={}):        
-
-    #     self.data = DeckData(
-    #         name = name,
-    #         forgebornId = forgebornId,
-    #         faction = faction,
-    #         cardIds = cardIds,
-    #         cards = cards
-    #     )      
+    def __init__(self, data: DeckData):        
+        super().__init__(data)         
+        self._id = self.name       
+    
     def get_collection_names(self):
         return self.cards
+
+
+@dataclass
+class FusionData:
+    name: str
+    forgeborn_options: list
+    fused_abilities: list
+    children_data: dict = field(default_factory=dict)
 
 class Fusion(Deck):
     def __init__(self, decks, name=None):

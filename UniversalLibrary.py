@@ -1,10 +1,10 @@
+from dataclasses import asdict
 import Card_Library
 #from Card_Library import EntityData, Entity, Forgeborn, Deck, ForgebornData, Fusion, Card
 from Interface import InterfaceCollection, Interface, InterfaceData
 from MongoDB.DatabaseManager import DatabaseManager
-from typing import List, Tuple, Dict
+from typing import Tuple, List, Dict
 import csv, json, re
-from dataclasses import asdict 
 
 class UniversalLibrary:
 
@@ -34,18 +34,20 @@ class UniversalLibrary:
                     text = row[f"{level}text"] if row.get(f"{level}text") else ""                 
                     name = f"{level}{name}"
                     abilities.append(name)
-                forgeborn = Card_Library.Forgeborn(Card_Library.ForgebornData(id, title,abilities))                
-                result = self.database.upsert('Forgeborn', {'id': id} , data=forgeborn.to_data())                  
-        #return forgeborn
-        
 
+                #Add the class and module name to the children_data dictionary                
+                children_data = {entityName: 'Card_Library.Entity' for entityName in abilities}
+                forgeborn = Card_Library.Forgeborn(Card_Library.ForgebornData(id, title, abilities, children_data))   
+                result = forgeborn.save()             
+                #result = self.database.upsert('Forgeborn', {'id': id} , data=forgeborn.to_data())                  
+        
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=';')
             for row in reader:    
                 keys = ['rarity', 'cardType', 'cardSubType', 'spliced', 'solbind']            
                 attributes = {k: row[k] for k in keys if k in row}
-                name = row['Name']
+                entityName = row['Name']
                 faction = row['faction']  
                 abilities = {}
                 
@@ -60,18 +62,20 @@ class UniversalLibrary:
                             'health': health
                         }
                                                  
-                Collection = InterfaceCollection(name)
+                #Collection = InterfaceCollection(entityName)
+                children_data = {}
+                vrange = ''
                 
                 read_synergies = False
-                for key, value in row.items():
-                    if key == "3text":
+                for tag, value in row.items():
+                    if tag == "3text":
                         read_synergies = True   
                     elif read_synergies:
-                        vrange   = None                # Default: Any                           
+                        vrange   = ""
                         if value is not None:                             
                             if not value.isnumeric():
-                                if key == "Free":                                    
-                                    key = f"Free {value}"            
+                                if tag == "Free":                                    
+                                    tag = f"Free {value}"            
                                     value = 1
                                     
                                 else: 
@@ -83,15 +87,21 @@ class UniversalLibrary:
                                         vrange = ''
                                         value = 0
                                     
-                            if int(value) > 0:                    
-                                    interface_data = InterfaceData(name, key, value, vrange)                                                                                    
+                            if int(value) > 0:                                                                
+                                    interface_data = InterfaceData(tag, value, vrange)                                    
                                     ISyn = Interface(interface_data)
-                                    Collection.add(ISyn)
-                interfaceCollection_data = Collection.to_data()
-                entity_data = Card_Library.EntityData(name, faction, attributes, abilities, interfaceCollection_data)               
+                                    ISyn.save()
+                                    #Add the class and module name to the children_data dictionary
+                                    class_name = ISyn.__class__.__name__
+                                    module_name = ISyn.__module__
+                                    children_data[tag] = ISyn.getClassPath()
+                
+                #interfaceCollection_data = Collection.to_data()
+                
+                entity_data = Card_Library.EntityData(entityName, faction, attributes, abilities, vrange, children_data)               
                 entity = Card_Library.Entity(entity_data)
                 #self.entities.append(Entity(name, faction, attributes, abilities, Collection))
-                result = entity.save(entity.name)
+                result = entity.save()
                 #result = self.database.upsert('Entity', {'name': entity.name}, data=entity.to_data())
             
         #return self.entities

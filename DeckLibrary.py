@@ -9,21 +9,21 @@ class DeckLibrary:
         self.decks = {}        
         self.Decks = 'Decks'        
         self.Fusions = 'Fusions'
-
-        deck_name = ""
+        
         for deck_data in decks_data:
-            deck = Deck.from_data(deck_data)
-            deck_name = deck.name
-            deck.save(deck.name)
+            deck = Deck.from_data(deck_data) 
+            deck.children_data = {cardId : 'Card_Library.Card' for cardId in deck.cardIds}
+            deck.save()
+            deckHash = deck.hash_children()
+            print(deckHash)
         
-        deck = Deck.lookup(name=deck_name)
-        if deck:
-            for card_data in deck.cards.values():
-                card_obj = Card.from_data(card_data)
-                from Interface import InterfaceCollection
-                ICollection = InterfaceCollection.from_card(card_obj)  #card_obj.get_collection()
-                #ICollection.save(ICollection.name, collection_name=ICollection.__class__.__name__)
-        
+        #deck = Deck.lookup(name=deck.name)
+        #if deck:
+        #    for card_data in deck.cards.values():
+        #        card_obj = Card.from_data(card_data)                
+        #        myInterfaceHash = {card_obj._id : card_obj.hash_children() }
+        #        if myInterfaceHash: print(myInterfaceHash) 
+                 
     def make_fusions(self, fusion_limit=None):
         total_decks = len(self.decks)
         if total_decks == 0:

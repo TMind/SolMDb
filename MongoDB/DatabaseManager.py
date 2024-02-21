@@ -81,11 +81,6 @@ class DatabaseObject:
             self.__class__.DataClass = getattr(module, data_class_name)
         return self.__class__.DataClass
 
-    #@classmethod
-    #def initialize_db_manager(cls):
-    #    if cls.db_manager is None:
-    #        cls.db_manager = DatabaseManager(GlobalVariables.username or 'Default')
-
     @classmethod
     def _get_class_db_manager(cls):
         db_name = 'local' if cls.__name__ in ['Entity', 'Forgeborn', 'Card'] else GlobalVariables.username or 'user_specific'
@@ -133,34 +128,12 @@ class DatabaseObject:
         #print(f"{self.__class__.__name__} object has no attribute '{name}'")            
         return None
     
-    def get_collection(self):
-        # Import here to avoid circular imports
-        from Interface import InterfaceCollection
-        
-        data = None        
-        object = self
-        if not isinstance(object, InterfaceCollection):
-            classname = object.__class__.__name__
-            if classname == 'Fusion':
-                object = InterfaceCollection.from_deck(self)
-            if classname == 'Entity':
-                object = InterfaceCollection.from_entities(self.name, [self])
-            if classname == 'Forgeborn':
-                object = InterfaceCollection.from_forgeborn(self.id)
-            if classname == 'Deck':
-                object = InterfaceCollection.from_deck(self)
-            if classname == 'Card':
-                object = InterfaceCollection.from_card(self)
-            else:
-                object = None
-        return object 
-
-
-    def save(self, name, collection_name=None):
+    def save(self, collection_name=None):
         collection_name = collection_name or self.__class__.__name__
-        data_to_save = self.to_data() if isinstance(self.to_data(), dict) else vars(self.to_data())
-        #DatabaseObject.db_manager.upsert(collection_name, {'name' : name }, data_to_save)     
-        self.db_manager.upsert(collection_name, {'name' : name }, data_to_save)     
+        data = self.to_data()
+        data_to_save = data if isinstance(data, dict) else vars(data)
+        identifier = {'_id': self._id} if hasattr(self, '_id') and self._id != '' else {'name': self.name}        
+        self.db_manager.upsert(collection_name, identifier, data_to_save)     
 
 
     def to_data(self):
@@ -170,10 +143,11 @@ class DatabaseObject:
             return asdict(self.data)        
         
     @classmethod
-    def lookup(cls, name, type='name', collection_name=None):
+    def lookup(cls, name, type='_id', collection_name=None):
         db_manager = cls._get_class_db_manager()
         collection_name = collection_name or cls.__name__
         data = db_manager.find_one(collection_name, {type: name})
+        
         if data:    return cls.from_data(data)
         else:       return None    
 
@@ -185,6 +159,48 @@ class DatabaseObject:
         
         if data:    return cls.from_data(data)
         else:       return None
+    
+    def getClassPath(self):
+        return self.__module__ + '.' + self.__class__.__name__
+
+    def hash_children(self):
+        myHash = {}
+        if self.children_data:
+            for child_name, full_class_path in self.children_data.items():
+                
+                # Assume full_class_path is in the format "module_name.ClassName"
+                if '.' not in full_class_path:
+                    print(f"No Module found: {full_class_path}")
+                    continue
+
+                module_name, class_name = full_class_path.rsplit('.', 1)  # Split on last dot
+
+                if class_name == 'Card' and self.__class__.__name__ == 'Deck':
+                    # Get index from card list
+                    card_index = self.cardIds.index(child_name)
+                    card_data  = self.cards[str(card_index+1)]
+                    from Card_Library import Card
+                    child_object = Card.from_data(card_data)
+                else:                    
+                    try:
+                        module = importlib.import_module(module_name)
+                        cls = getattr(module, class_name)
+                    except (ModuleNotFoundError, AttributeError) as e:
+                        print(f"Error loading {full_class_path}: {e}")
+                        continue                    
+                    # Assuming lookup is a class method that returns an instance or None
+                    child_object = cls.lookup(child_name)
+                
+                if child_object:
+                    # Ensure child_type dict exists
+                    child_type = class_name  # Use class name as child type
+                    if child_type not in myHash:
+                        myHash[child_type] = {}
+                    # Add or update the child_name key under child_type
+                    myHash[child_type][child_name] = child_object.hash_children()
+                    
+        #print(myHash)
+        return myHash
+
+
         
-#Initialize the DatabaseManager 
-#DatabaseObject.initialize_db_manager()

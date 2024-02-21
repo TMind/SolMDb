@@ -3,6 +3,13 @@ from MongoDB.DatabaseManager import DatabaseObject
 from dataclasses import dataclass, field
 from Synergy import SynergyTemplate
 from Card_Library import Entity, Deck, Card
+from dataclasses import field
+from typing import List
+
+@dataclass 
+class InterfaceCollectionData:
+    name: str
+    interfaces: dict = field(default_factory=dict)
 
 class InterfaceCollection:
     def __init__(self, name):
@@ -100,10 +107,10 @@ class InterfaceCollection:
 
 
     def add(self, interface):
-        for synergy_name in interface.synergies:
+        for synergy_name in interface.synergyNames:
             if interface.tag in self.interfaces[synergy_name]:
                 existing_interface = self.interfaces[synergy_name][interface.tag]
-                existing_interface.types.update(interface.types)  # Add interface.types as a single item to the set
+                #existing_interface.types.update(interface.types)  # Add interface.types as a single item to the set
             else:
                 self.interfaces[synergy_name][interface.tag] = interface
         self._cache.clear() # Clear the cache whenever the collection is updated.
@@ -218,9 +225,6 @@ class InterfaceCollection:
 
         return matched_synergies , unmatched_input_interfaces
 
-
-
-
     def to_data(self):
         """
         Convert the InterfaceCollection to a dictionary that is JSON serializable.
@@ -249,38 +253,30 @@ class InterfaceCollection:
 
 @dataclass
 class InterfaceData:
-    name: str       = ''
     tag:  str       = ''
     value: any      = 0
     ranges: str     = ''
-    types: dict     = field(default_factory=dict)
-    synergies: list = field(default_factory=list)
+    #synergyNames: list = field(default_factory=list)
+    #inputSynergyNames: list = field(default_factory=list)
+    #outputSynergyNames: list = field(default_factory=list)    
+    children_data: dict = field(default_factory=dict) # SynergyNames 
 
 class Interface(DatabaseObject):
     def __init__(self, data: InterfaceData):
         # Initialize the base class first if it does important setup
         super().__init__(data)
-
+        
         # Then do the specific initialization for Interface
-        if data : self._initialize_types_and_synergies(data)
+        if data : self._initialize_types_and_synergies(data)            
 
     def _initialize_types_and_synergies(self, data: InterfaceData):
-        synergy_template = SynergyTemplate()
+        synergy_template = SynergyTemplate()        
         if data.tag:
-            self.synergies = [synergy.name for synergy in synergy_template.get_synergies_by_tag(data.tag)]
-            self.types = {
-                'O': int(data.tag in synergy_template.get_output_tags()),
-                'I': int(data.tag in synergy_template.get_input_tags())
-            }
-    
-    def get_type(self):
-        return self.types
-    
-    def is_type(self, type):
-        return type in self.types
-
+            self._id = data.tag
+            data.children_data = { synergy.name: 'Synergy.Synergy' for synergy in synergy_template.get_synergies_by_tag(data.tag) }
+                    
     def get_synergies_by_type(self, type):
-        return [synergy for synergy in self.synergies if self.has_tag_of_type(synergy, type)]
+        return [synergyName for synergyName in self.synergyNames if self.has_tag_of_type(synergyName, type)]
 
     def has_tag_of_type(self, synergy, type):
         if type == "I":
@@ -291,9 +287,5 @@ class Interface(DatabaseObject):
             return False
     
     def __str__(self):
-        string = f"{self.name} {self.tag} {self.value} {[synergy.name for synergy in self.synergies]}"
+        string = f"{self.name} {self.tag} {self.value} {[synergyName for synergyName in self.synergyNames]}"
         return string
-
-
-    def get_collection_names(self):
-        return self.synergies

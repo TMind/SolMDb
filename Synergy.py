@@ -1,5 +1,6 @@
 from dataclasses import dataclass, asdict
 from MongoDB.DatabaseManager import DatabaseObject
+from dataclasses import field
 import csv
 
 @dataclass
@@ -17,15 +18,15 @@ class SynergyTemplate(DatabaseObject):
         return cls._instance
 
     def to_data(self):
-        synergy_data_list = [synergy.name for synergy in self.synergies.values()]
+        synergy_data_list = {synergy.name : synergy for synergy in self.synergies.values()}
         return SynergyTemplateData(synergies=synergy_data_list)
 
     @classmethod
     def from_data(cls, data):
         instance = cls()
-        for synergy_data in data.synergies:
+        for synergyName, synergy_data in data.synergies:
             synergy = Synergy.from_data(synergy_data)
-            instance.synergies[synergy.name] = synergy
+            instance.synergies[synergyName] = synergy
         return instance
 
     def save(self):
@@ -37,8 +38,8 @@ class SynergyTemplate(DatabaseObject):
         csvpathname = f"csv/{csvfilename or 'synergies'}.csv"
         self.from_csv(csvpathname)
 
-    def add_synergy(self, name, weight, input_tags, output_tags):
-        synergy_data = SynergyData(name, weight, input_tags, output_tags)
+    def add_synergy(self, name, weight, input_tags, output_tags, children_data={}):
+        synergy_data = SynergyData(name, weight, input_tags, output_tags, children_data)
         synergy = Synergy(synergy_data)
         self.synergies[name] = synergy
 
@@ -52,10 +53,16 @@ class SynergyTemplate(DatabaseObject):
     def get_synergy_by_name(self, name):
         return self.synergies[name]        
 
-    def get_synergies_by_tag(self, tag):
+    def get_synergies_by_tag(self, tag, input_or_output="IO"):
         input_synergies = [synergy for synergy in self.synergies.values() if tag in synergy.input_tags]
-        output_synergies = [synergy for synergy in self.synergies.values() if tag in synergy.output_tags]        
-        return input_synergies + output_synergies
+        output_synergies = [synergy for synergy in self.synergies.values() if tag in synergy.output_tags]
+        
+        if input_or_output == "I":
+            return input_synergies
+        elif input_or_output == "O":
+            return output_synergies
+        else:
+            return input_synergies + output_synergies
 
     def get_output_tags_by_synergy(self, synergyname):
         synergy = self.get_synergy_by_name(synergyname)
@@ -115,7 +122,13 @@ class SynergyTemplate(DatabaseObject):
                 weight = float(row["weight"])
                 input_tags = [tag.strip() for tag in row["input_tags"].split(",")]
                 output_tags = [tag.strip() for tag in row["output_tags"].split(",")]
-                self.add_synergy(name, weight, input_tags, output_tags)
+                children_data = {}
+                children_data.update({input_tag : 'Input' for input_tag in input_tags})
+                children_data.update({output_tag : 'Output' for output_tag in output_tags})
+                self.add_synergy(name, weight, input_tags, output_tags, children_data)
+        for synergy in self.synergies.values():
+            synergy.save()
+        
 
     def get_collection_names(self):
         return self.synergies
@@ -123,12 +136,16 @@ class SynergyTemplate(DatabaseObject):
 
 @dataclass
 class SynergyData:
-    name: str
-    weight: float
-    input_tags: list
-    output_tags: list
+    name: str   = ''
+    weight: float   = 0.0
+    input_tags: list    = field(default_factory=list)
+    output_tags: list   = field(default_factory=list)    
+    children_data: dict = field(default_factory=dict)
 
 class Synergy(DatabaseObject):
+
+    def __init__(self, data: SynergyData):
+        super().__init__(data)
 
     def get_input_tags(self):
         return self.data.input_tags

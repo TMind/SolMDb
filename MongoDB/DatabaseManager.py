@@ -1,5 +1,7 @@
 import importlib
 from math import e
+
+from traitlets import default
 from MongoDB.MongoDB import MongoDB
 import GlobalVariables
 from dataclasses import dataclass, fields, asdict
@@ -173,8 +175,8 @@ class DatabaseObject:
                 
                 # Assume full_class_path is in the format "module_name.ClassName"
                 if '.' not in full_class_path:
-                    #print(f"No Module found: {full_class_path}")
-                    return full_class_path                    
+                    print(f"No Module found: {child_name} {full_class_path}")
+                    return full_class_path                  
 
                 module_name, class_name = full_class_path.rsplit('.', 1)  # Split on last dot
                    
@@ -186,19 +188,18 @@ class DatabaseObject:
                     continue                    
                 # Assuming lookup is a class method that returns an instance or None
                 if class_name == 'Synergy': 
-                    child_object = cls.load(child_name)    
+                    child_object = cls.load(child_name)                        
+                    myHash.setdefault(class_name, {})['Input']  = child_object.input_tags
+                    myHash.setdefault(class_name, {})['Output'] = child_object.output_tags
+                    return myHash
                 else:
                     child_object = cls.lookup(child_name)
             
-                if child_object:
-                    # Ensure child_type dict exists
-                    child_type = class_name  # Use class name as child type                            
-                    if child_type not in myHash:
-                        myHash[child_type] = {}
+                if child_object:                    
                     # Add or update the child_name key under child_type
-                    myHash[child_type][child_name] = child_object.hash_children()
+                    # Ensure child_type dict exists, initializing as an empty dict if not
+                    myHash.setdefault(class_name, {})[child_name] = child_object.hash_children()
                     
-        #print(myHash)
         return myHash
 
 

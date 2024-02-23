@@ -21,14 +21,7 @@ class DeckLibrary:
                 myCard.save()
             deckHash = deck.hash_children()
             print(deckHash)
-        
-        #deck = Deck.lookup(name=deck.name)
-        #if deck:
-        #    for card_data in deck.cards.values():
-        #        card_obj = Card.from_data(card_data)                
-        #        myInterfaceHash = {card_obj._id : card_obj.hash_children() }
-        #        if myInterfaceHash: print(myInterfaceHash) 
-                 
+                         
     def make_fusions(self, fusion_limit=None):
         total_decks = len(self.decks)
         if total_decks == 0:

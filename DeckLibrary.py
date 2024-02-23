@@ -12,8 +12,13 @@ class DeckLibrary:
         
         for deck_data in decks_data:
             deck = Deck.from_data(deck_data) 
-            deck.children_data = {cardId : 'Card_Library.Card' for cardId in deck.cardIds}
+            #deck.children_data = {cardId : 'Card_Library.Card' for cardId in deck.cardIds}            
             deck.save()
+            for index, card in deck.cards.items():                      
+                myCard = Card.from_data(card)
+                id = deck.cardIds[int(index)-1]
+                myCard._id = id
+                myCard.save()
             deckHash = deck.hash_children()
             print(deckHash)
         

@@ -43,7 +43,7 @@ class DatabaseObject:
         if self._db_manager is None:
             # Determine the database name based on data class
             data_class = self.get_data_class()
-            if data_class.__name__ in ['EntityData', 'ForgebornData', 'CardData']:
+            if data_class.__name__ in ['EntityData', 'ForgebornData', 'CardData','InterfaceData','SynergyData']:
                 self.db_name = 'local'
             else:
                 self.db_name = GlobalVariables.username or 'user_specific'
@@ -61,7 +61,7 @@ class DatabaseObject:
         #print(f"Data class: {data_class}, Data: {data}, Type of Data: {type(data)}")
 
         if data_class is not None and isinstance(data, data_class):
-            self.data = data
+            self.data = data            
         else:
             self.data = None
 
@@ -83,7 +83,7 @@ class DatabaseObject:
 
     @classmethod
     def _get_class_db_manager(cls):
-        db_name = 'local' if cls.__name__ in ['Entity', 'Forgeborn', 'Card'] else GlobalVariables.username or 'user_specific'
+        db_name = 'local' if cls.__name__ in ['Entity', 'Forgeborn', 'Card', 'Interface', 'Synergy'] else GlobalVariables.username or 'user_specific'
         return DatabaseManager(db_name)
 
 
@@ -132,12 +132,15 @@ class DatabaseObject:
         collection_name = collection_name or self.__class__.__name__
         data = self.to_data()
         data_to_save = data if isinstance(data, dict) else vars(data)
-        identifier = {'_id': self._id} if hasattr(self, '_id') and self._id != '' else {'name': self.name}        
+        # Exclude '_id' from data_to_save if it's None or an empty string
+        if '_id' in data_to_save and (data_to_save['_id'] == '' or data_to_save['_id'] is None):
+            del data_to_save['_id']
+        identifier = {'_id': self._id} if hasattr(self, '_id') and self._id not in [None, ''] else {'name': self.name}
         self.db_manager.upsert(collection_name, identifier, data_to_save)     
 
 
-    def to_data(self):
-        if isinstance(self.data, dict):
+    def to_data(self):        
+        if isinstance(self.data, dict):            
             return self.data
         elif self.data is not None:
             return asdict(self.data)        
@@ -170,30 +173,26 @@ class DatabaseObject:
                 
                 # Assume full_class_path is in the format "module_name.ClassName"
                 if '.' not in full_class_path:
-                    print(f"No Module found: {full_class_path}")
-                    continue
+                    #print(f"No Module found: {full_class_path}")
+                    return full_class_path                    
 
                 module_name, class_name = full_class_path.rsplit('.', 1)  # Split on last dot
-
-                if class_name == 'Card' and self.__class__.__name__ == 'Deck':
-                    # Get index from card list
-                    card_index = self.cardIds.index(child_name)
-                    card_data  = self.cards[str(card_index+1)]
-                    from Card_Library import Card
-                    child_object = Card.from_data(card_data)
-                else:                    
-                    try:
-                        module = importlib.import_module(module_name)
-                        cls = getattr(module, class_name)
-                    except (ModuleNotFoundError, AttributeError) as e:
-                        print(f"Error loading {full_class_path}: {e}")
-                        continue                    
-                    # Assuming lookup is a class method that returns an instance or None
+                   
+                try:
+                    module = importlib.import_module(module_name)
+                    cls = getattr(module, class_name)
+                except (ModuleNotFoundError, AttributeError) as e:
+                    print(f"Error loading {full_class_path}: {e}")
+                    continue                    
+                # Assuming lookup is a class method that returns an instance or None
+                if class_name == 'Synergy': 
+                    child_object = cls.load(child_name)    
+                else:
                     child_object = cls.lookup(child_name)
-                
+            
                 if child_object:
                     # Ensure child_type dict exists
-                    child_type = class_name  # Use class name as child type
+                    child_type = class_name  # Use class name as child type                            
                     if child_type not in myHash:
                         myHash[child_type] = {}
                     # Add or update the child_name key under child_type

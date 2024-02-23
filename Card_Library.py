@@ -51,7 +51,7 @@ class Card(DatabaseObject):
 
     def __init__(self, data: CardData):                 
         super().__init__(data)
-        self._id = self.title
+        #self._id = self.title
         
         if self.data is not None:
             entityNames = self.get_entity_names_from_title(self.title)   
@@ -109,7 +109,9 @@ class Deck(DatabaseObject):
     
     def __init__(self, data: DeckData):        
         super().__init__(data)         
-        self._id = self.name       
+        self._id = self.name  
+        if self.data and self.cardIds: 
+            self.data.children_data = {cardId: 'Card_Library.Card' for cardId in self.cardIds}
     
     def get_collection_names(self):
         return self.cards

@@ -2,7 +2,7 @@ from more_itertools import value_chain
 from MongoDB.DatabaseManager import DatabaseObject
 from dataclasses import dataclass, field
 from Synergy import SynergyTemplate
-from Card_Library import Entity, Deck, Card
+from CardLibrary import Entity, Deck, Card
 from dataclasses import field
 from typing import List
 
@@ -256,10 +256,8 @@ class InterfaceData:
     tag:  str       = ''
     value: any      = 0
     ranges: str     = ''
-    #synergyNames: list = field(default_factory=list)
-    #inputSynergyNames: list = field(default_factory=list)
-    #outputSynergyNames: list = field(default_factory=list)    
-    children_data: dict = field(default_factory=dict) # SynergyNames 
+    children_data: dict = field(default_factory=dict)
+    #synergyNames: list = field(default_factory=list)    
 
 class Interface(DatabaseObject):
     def __init__(self, data: InterfaceData):
@@ -267,16 +265,16 @@ class Interface(DatabaseObject):
         super().__init__(data)
         
         # Then do the specific initialization for Interface
-        if data : self._initialize_types_and_synergies(data)            
+        if data : self._initialize_types_and_synergies()            
 
-    def _initialize_types_and_synergies(self, data: InterfaceData):
+    def _initialize_types_and_synergies(self):
         synergy_template = SynergyTemplate()        
-        if data.tag:
-            self._id = data.tag
-            data.children_data = { synergy.name: 'Synergy.Synergy' for synergy in synergy_template.get_synergies_by_tag(data.tag) }
+        if self.data:
+            self._id = self.tag
+            self.data.children_data = { synergy.name: 'Synergy.Synergy' for synergy in synergy_template.get_synergies_by_tag(self.tag) }
                     
     def get_synergies_by_type(self, type):
-        return [synergyName for synergyName in self.synergyNames if self.has_tag_of_type(synergyName, type)]
+        return [synergyName for synergyName in self.children_data.keys() if self.has_tag_of_type(synergyName, type)]
 
     def has_tag_of_type(self, synergy, type):
         if type == "I":

@@ -1,6 +1,6 @@
 from dataclasses import asdict
-import Card_Library
-#from Card_Library import EntityData, Entity, Forgeborn, Deck, ForgebornData, Fusion, Card
+import CardLibrary
+#from CardLibrary import EntityData, Entity, Forgeborn, Deck, ForgebornData, Fusion, Card
 from Interface import InterfaceCollection, Interface, InterfaceData
 from MongoDB.DatabaseManager import DatabaseManager
 from typing import Tuple, List, Dict
@@ -36,10 +36,8 @@ class UniversalLibrary:
                     abilities.append(name)
 
                 #Add the class and module name to the children_data dictionary                
-                children_data = {entityName: 'Card_Library.Entity' for entityName in abilities}
-                forgeborn = Card_Library.Forgeborn(Card_Library.ForgebornData(id, title, abilities, children_data))   
-                result = forgeborn.save()             
-                #result = self.database.upsert('Forgeborn', {'id': id} , data=forgeborn.to_data())                  
+                forgeborn = CardLibrary.Forgeborn(CardLibrary.ForgebornData(id, title, abilities))   
+                result = forgeborn.save()                             
         
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:
@@ -61,9 +59,8 @@ class UniversalLibrary:
                             'attack': attack,
                             'health': health
                         }
-                                                 
-                #Collection = InterfaceCollection(entityName)
-                children_data = {}
+                                                                 
+                interfaceNames = []
                 vrange = ''
                 
                 read_synergies = False
@@ -88,18 +85,19 @@ class UniversalLibrary:
                                         value = 0
                                     
                             if int(value) > 0:                                                                
-                                    interface_data = InterfaceData(tag, value, vrange)                                    
-                                    ISyn = Interface(interface_data)
-                                    ISyn.save()
-                                    #Add the class and module name to the children_data dictionary
-                                    class_name = ISyn.__class__.__name__
-                                    module_name = ISyn.__module__
-                                    children_data[tag] = ISyn.getClassPath()
+                                    interface_data = InterfaceData(tag, value, vrange)
+                                    Interface(interface_data).save()
+                                    #ISyn.save()
+                                    ##Add the class and module name to the children_data dictionary
+                                    #class_name = ISyn.__class__.__name__
+                                    #module_name = ISyn.__module__
+                                    interfaceNames.append(tag) 
+                                    #children_data[tag] = ISyn.getClassPath()
                 
                 #interfaceCollection_data = Collection.to_data()
                 
-                entity_data = Card_Library.EntityData(entityName, faction, attributes, abilities, vrange, children_data)               
-                entity = Card_Library.Entity(entity_data)
+                entity_data = CardLibrary.EntityData(entityName, faction, attributes, abilities, vrange, interfaceNames)
+                entity = CardLibrary.Entity(entity_data)
                 #self.entities.append(Entity(name, faction, attributes, abilities, Collection))
                 result = entity.save()
                 #result = self.database.upsert('Entity', {'name': entity.name}, data=entity.to_data())
@@ -112,13 +110,13 @@ class UniversalLibrary:
         if cardType:
             query['attributes.cardType'] = cardType 
         entity_data = self.database.find_one('Entities', query)
-        return Card_Library.Entity.from_data(entity_data)
+        return CardLibrary.Entity.from_data(entity_data)
 
     def get_forgeborn(self, id):
         query = {'id': id}
         forgeborn = self.database.find_one('Forgeborns',query)
         if forgeborn:
-            return Card_Library.Forgeborn.from_data(forgeborn)
+            return CardLibrary.Forgeborn.from_data(forgeborn)
         else:
             print(f"Forgeborn {id} could not be found")
         return None
@@ -128,7 +126,7 @@ class UniversalLibrary:
             data = json.load(f)            
         return self.load_decks_from_data(data)
 
-    def load_decks_from_data(self, decks_data: List[Dict]) -> Tuple[List[Card_Library.Deck], List[Dict]]:
+    def load_decks_from_data(self, decks_data: List[Dict]) -> Tuple[List[CardLibrary.Deck], List[Dict]]:
 
         decks = []
         incomplete_data = []
@@ -174,13 +172,13 @@ class UniversalLibrary:
                 incomplete_data.append(deck_data)
                 continue
 
-            deck = Card_Library.Deck(deck_data['name'], forgeborn, deck_data['faction'], cards)
+            deck = CardLibrary.Deck(deck_data['name'], forgeborn, deck_data['faction'], cards)
             decks.append(deck)
             
         return decks, incomplete_data
 
         
-    def load_fusions(self, fusions_data: List[Dict]) -> Tuple[List[Card_Library.Fusion], List[Dict]]:
+    def load_fusions(self, fusions_data: List[Dict]) -> Tuple[List[CardLibrary.Fusion], List[Dict]]:
         fusions = []
         incomplete_fusionsdata = []
 
@@ -188,7 +186,7 @@ class UniversalLibrary:
                 decks, incomplete_decksdata = self.load_decks_from_data(fusion_data['myDecks'])
                 name = fusion_data['name'] if 'name' in fusion_data else ""
                 if decks:
-                    fusion = Card_Library.Fusion(decks, name)
+                    fusion = CardLibrary.Fusion(decks, name)
                     fusions.append(fusion)
                 if incomplete_decksdata:
                    incomplete_fusionsdata.append(
@@ -207,7 +205,7 @@ class UniversalLibrary:
             for key, value in card_data_additional.items():                
                 setattr(entity_data, key, value)
             #return Card(card_entity)
-            return Card_Library.Entity.from_data(entity_data)
+            return CardLibrary.Entity.from_data(entity_data)
 
         # If not found, try with decreasing title length
         parts = card_title.split(' ')
@@ -225,7 +223,7 @@ class UniversalLibrary:
                     elif value:
                         setattr(entity_data, key, value)  # Set the new value directly
                 
-                return Card_Library.Entity.from_data(entity_data), Card_Library.Entity.from_data(modifier_entity)
+                return CardLibrary.Entity.from_data(entity_data), CardLibrary.Entity.from_data(modifier_entity)
         return None
                 
     def __str__(self):

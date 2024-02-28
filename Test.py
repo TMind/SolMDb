@@ -1,6 +1,6 @@
 from Synergy import SynergyTemplate, Synergy
 from Interface import Interface, InterfaceCollection
-from Card_Library import Entity, Card
+from CardLibrary import Entity, Card
 from UniversalLibrary import UniversalLibrary
 import GlobalVariables
 import os

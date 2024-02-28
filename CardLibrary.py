@@ -9,43 +9,43 @@ class EntityData:
     attributes: dict = field(default_factory=dict)
     abilities: dict = field(default_factory=dict)
     range : str = "" 
+    interfaceNames: list = field(default_factory=list)
     children_data: dict = field(default_factory=dict)
     
 class Entity(DatabaseObject):
     def __init__(self, data: EntityData):        
         super().__init__(data)
         self._id = self.name
-        
+        if self.interfaceNames:
+            self.data.children_data = {interfaceName: 'Interface.Interface' for interfaceName in self.interfaceNames}
     
 @dataclass
 class ForgebornData:
     id: str = ''
     name: str   = ''
     abilities: list = field(default_factory=list)
-    children_data: dict = field(default_factory=dict)    
+    children_data: dict = field(default_factory=dict)
 
 class Forgeborn(DatabaseObject):
     def __init__(self, data: ForgebornData):        
         super().__init__(data)
-        self._id = self.id         
+        self._id = self.id       
+        if self.abilities:
+            self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in self.abilities}  
             
     def __str__(self):
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.entity_names.items()])
         return f"Forgeborn Name: {self.name}\nAbilities:\n{abilities_str}\n"
     
-    def get_collection_names(self):
-        return self.entity_names
-
 @dataclass
 class CardData():
     title   : str   = ''
-    faction : str   = ''
+    faction : str   = ''    
     cardType: str   = ''
-    cardSubType: str    =''
+    cardSubType: str    =''    
     attack  : dict  =field(default_factory=dict)
-    health  : dict  =field(default_factory=dict)
-    #entity_names : list = field(default_factory=list)    
-    children_data: dict = field(default_factory=dict)
+    health  : dict  =field(default_factory=dict)   
+    children_data: dict = field(default_factory=dict) 
 
 class Card(DatabaseObject):
 
@@ -56,7 +56,7 @@ class Card(DatabaseObject):
         if self.data is not None:
             entityNames = self.get_entity_names_from_title(self.title)   
             if entityNames:
-                self.data.children_data = {entityName: 'Card_Library.Entity' for entityName in entityNames}
+                self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in entityNames}
                     
         # self.above_stat = None
         # def aggregate_attribute(attribute_name):
@@ -102,8 +102,11 @@ class DeckData:
     forgebornId : str
     faction     : str    
     cardIds     : list  # Card ids from Net API
-    cards       : dict       
-    children_data: dict = field(default_factory=dict)           
+    cards       : dict           
+    cardSetName: str   = ''
+    cardSetId: str   = ''
+    cardSetNo: str   = ''
+    children_data: dict = field(default_factory=dict)
 
 class Deck(DatabaseObject):
     
@@ -111,59 +114,57 @@ class Deck(DatabaseObject):
         super().__init__(data)         
         self._id = self.name  
         if self.data and self.cardIds: 
-            self.data.children_data = {cardId: 'Card_Library.Card' for cardId in self.cardIds}
-    
-    def get_collection_names(self):
-        return self.cards
+            self.data.children_data = {cardId: 'CardLibrary.Card' for cardId in self.cardIds}    
 
 
 @dataclass
 class FusionData:
-    name: str
-    forgeborn_options: list
-    fused_abilities: list
+    name: str = ''    
+    myDecks: list = field(default_factory=list)
+    currentForgebornId: str = ''
+    id: str = ''
+    deckRank: str = ''
+    CreatedAt: str = ''        
+    tags: list = field(default_factory=list)
     children_data: dict = field(default_factory=dict)
 
-class Fusion(Deck):
-    def __init__(self, decks, name=None):
-        if len(decks) == 1:            
-            super().__init__(DeckData(decks[0].name, decks[0].forgebornId, decks[0].faction, decks[0].cardIds, decks[0].cards))
-            self.forgeborn_options = [decks[0].forgeborn]
-            self.decks = decks
-            return
-        
-        deck1, deck2 = decks[0], decks[1]
-        
+class Fusion(DatabaseObject):
+    def __init__(self, data=None):
 
-        if deck1.faction == deck2.faction:
-            #raise ValueError("Cannot fuse decks of the same faction")
-            return None
-
+        super().__init__(data) 
+        self._id = self.name
+        if self.data:
+            if self.data.myDecks:
+                self.data.children_data = {deck_data['name']: 'CardLibrary.Deck' for deck_data in self.data.myDecks}
+                if self.data.currentForgebornId:
+                    self.data.children_data.update({self.currentForgebornId: 'CardLibrary.Forgeborn'})
+                else:
+                    self.data.currentForgebornId = self.data.myDecks[0]['forgeborn']['id']
+        
         # Default Values 
-        fusion_name = "_".join([deck.name for deck in decks])        
+        #fusion_name = "_".join([deck.name for deck in decks])        
         # Name and faction for the fusion
 
-        # Sort the deck names alphabetically and then join them with an underscore
-        self.fused_name = name or "_".join(sorted([deck.name for deck in decks]))
+        # Sort the deck names alph1_".join(sorted([deck.name for deck in decks]))
         # Generate the fused faction name        
-        self.fused_faction = "|".join([deck.faction for deck in decks]) 
-        fused_cards = {**deck1.cards, **deck2.cards}
-        fused_card_ids = deck1.cardIds + deck2.cardIds
+        #self.fused_faction = "|".join([deck.faction for deck in decks]) 
+        #fused_cards = {**deck1.cards, **deck2.cards}
+        #fused_card_ids = deck1.cardIds + deck2.cardIds
         
         # Additional properties specific to Fusion
-        self.deck1 = deck1
-        self.deck2 = deck2
-        self.forgeborn_options = self.inspire_forgeborn(deck1.forgeborn, deck2.forgeborn)
-        self.fused_abilities = [ability for forgeborn in self.forgeborn_options for ability in forgeborn.abilities]
+        #self.deck1 = deck1
+        #self.deck2 = deck2
+        #self.forgeborn_options = self.inspire_forgeborn(deck1.forgeborn, deck2.forgeborn)
+        #self.fused_abilities = [ability for forgeborn in self.forgeborn_options for ability in forgeborn.abilities]
         
 
         # Choosing a default forgeborn (frosm deck1 for simplicity)
         # Note: Here we're assuming that a 'forgeborn' variable exists in the 'Deck' class
-        self.active_forgeborn = self.forgeborn_options[0]
+        #self.active_forgeborn = self.forgeborn_options[0]
 
         # Call the Deck's constructor and exchange fused abilities 
-        super().__init__(DeckData(name or fusion_name, self.active_forgeborn, self.fused_faction,fused_card_ids, fused_cards))
-        self.abilities = self.fused_abilities
+        #super().__init__(DeckData(name or fusion_name, self.active_forgeborn, self.fused_faction,fused_card_ids, fused_cards))
+        #self.abilities = self.fused_abilities
         
     def inspire_forgeborn(self, forgeborn1, forgeborn2):
         new_forgeborns = []

@@ -4,7 +4,7 @@ from more_itertools import value_chain
 from MongoDB.DatabaseManager import DatabaseObject
 from dataclasses import dataclass, field
 from Synergy import SynergyTemplate
-from Card_Library import Entity, Deck, Card
+from CardLibrary import Entity, Deck, Card
 
 class InterfaceCollection:
     def __init__(self, name):
@@ -450,7 +450,7 @@ class Synergy(DatabaseObject):
     def get_collection_names(self):
         return self
     
-Card_Library.py : 
+CardLibrary.py : 
 
 from MongoDB.DatabaseManager import DatabaseObject
 from copy import copy

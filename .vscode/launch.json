@@ -25,9 +25,9 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "--username", "tmind",
+                "--username", "namrog",
               //  "--filter", "K:Robot > 3 | F=Nekrium",
-                "--eval", "tmind",
+                "--eval", "namrog",
               // "--offline", "1"
             ]
         },

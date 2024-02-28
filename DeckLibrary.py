@@ -1,44 +1,61 @@
-from Card_Library import Fusion, Deck, Card
+from CardLibrary import Forgeborn, Fusion, FusionData, Deck, Card
 from tqdm import tqdm 
 from itertools import combinations
 from multiprocessing import Pool, cpu_count
 
 
 class DeckLibrary:
-    def __init__(self, decks_data):        
+    def __init__(self, decks_data, fusions_data):        
         self.decks = {}        
-        self.Decks = 'Decks'        
-        self.Fusions = 'Fusions'
+        self.fusions = {}        
         
         for deck_data in decks_data:
             deck = Deck.from_data(deck_data) 
-            #deck.children_data = {cardId : 'Card_Library.Card' for cardId in deck.cardIds}            
+            if deck.children_data:
+                deck.children_data.update({deck.forgebornId : 'CardLibrary.Forgeborn'})            
             deck.save()
             for index, card in deck.cards.items():                      
                 myCard = Card.from_data(card)
                 id = deck.cardIds[int(index)-1]
                 myCard._id = id
                 myCard.save()
-            deckHash = deck.hash_children()
-            print(deckHash)
+            #deckHash = deck.hash_children()
+            #print(deckHash)
+        
+        for fusion_data in fusions_data:
+            fusion = Fusion.from_data(fusion_data)
+            # if fusion.children_data:
+            #     if fusion.data.currentForgebornId == '':
+            #         fusion.data.currentForgebornId = fusion.myDecks[0]['forgeborn']['id']                
+            #     fusion.children_data.update({fusion.data.currentForgebornId : 'CardLibrary.Forgeborn'})                                
+            fusion.save()
+            #fusionHash = fusion.hash_children()
+            #print(fusionHash)
+        
+        self.make_fusions()
                          
-    def make_fusions(self, fusion_limit=None):
-        total_decks = len(self.decks)
-        if total_decks == 0:
-            return 0            
-       
-#        Prepare the arguments for the fusion_task
-        args = [(deck1, deck2) for deck1, deck2 in combinations(self.decks.values(), 2)]
-
-        with Pool(processes=cpu_count()) as pool:
-            try:
-                for fusion in pool.imap_unordered(create_fusion, args):
-                    if fusion:
-                        write_queue.put((fusion.name, fusion))                        
-            except KeyboardInterrupt:
-                print("Interrupted! Terminating processes...")
-                pool.terminate()
-                pool.join()
+    def make_fusions(self):
+                
+        myItem = Deck(None)                        
+        myItems = myItem.db_manager.find('Deck', {})
+                
+        
+        deck_combinations = list(combinations(myItems, 2))
+        progress_bar = tqdm(total=len(deck_combinations), desc="Creating Fusions", mininterval=0.1, colour='BLUE')
+        for deck_combination in deck_combinations:
+            deck1, deck2 = deck_combination
+            if deck1['faction'] != deck2['faction']:
+                fusionName = f"{deck1['name']}_{deck2['name']}"                     
+                fusionId = fusionName
+                fusionDecks =  [deck1, deck2] 
+                fusionBorn = deck1['forgebornId']
+                fusionData = FusionData(fusionName, fusionDecks, fusionBorn, fusionId) 
+                fusion = Fusion(fusionData)
+                if fusion:
+                    fusion.save()
+            progress_bar.update(1)
+        progress_bar.close()
+        
 
     def update(self, objects, limit=None):        
         total_updates = len(objects)

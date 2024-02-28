@@ -18,44 +18,37 @@ def main(args):
     GlobalVariables.username = args.username or 'Default'
 
     synergy_template = SynergyTemplate()    
-    #dbm = MongoDBManager(args.username)
+    
     ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
 
     #Read Entities and Forgeborns from Files into Database
     myUCL = UniversalLibrary(args.username, *ucl_paths)
-    #myUCL = cache_manager.load_or_create('CardLib', lambda: UniversalLibrary(*cache_manager.get_dependencies('CardLib')))
     
-    SelectionType = 'Collection'
-    if args.id:
-        if not args.username:
-            SelectionType = 'Deck' if args.type == 'deck' else 'Fusion' if args.type == 'fuseddeck' else 'Collection'
-
-    #DeckCollection = DeckLibrary([])
+        
     net_decks = []
-
-    #if args.offline or SelectionType == 'Collection':
-    #    DeckCollection = cache_manager.load_or_create('DeckLib', lambda: DeckLibrary([]))
 
     if not args.offline:
         myApi = NetApi(myUCL)
+                
         net_decks = get_net_decks(args, myApi)
+        
+        args.id = ''
+        args.type = 'fuseddeck'
+        net_fusions = get_net_decks(args, myApi)
 
     col_filter = get_col_filter(args)
     #DeckCollection.filter(col_filter) if col_filter else None
 
-    DeckCollection = DeckLibrary(net_decks)
-    #if DeckCollection.update(net_decks) and SelectionType == 'Collection':
-    #    cache_manager.save_object_to_cache("DeckLib", DeckCollection)
+    DeckCollection = DeckLibrary(net_decks, net_fusions)
 
-    eval_filename, egraphs, local_graphs = evaluate_fusions(args, DeckCollection)
+    #eval_filename, egraphs, local_graphs = evaluate_fusions(args, DeckCollection)
 
-    evaluate_single_decks(DeckCollection, eval_filename, egraphs, local_graphs, args)
+    #evaluate_single_decks(DeckCollection, eval_filename, egraphs, local_graphs, args)
 
 def get_net_decks(args, myApi):
     if args.id:
         urls = args.id.split('\n')
-        pattern = r"\/([^\/]+)$"
-        net_decks = []
+        pattern = r"\/([^\/]+)$"        
         net_data  = []
         for url in urls:
             match = re.search(pattern, url)
@@ -67,8 +60,7 @@ def get_net_decks(args, myApi):
                     username=args.username,
                     filename=args.filename
                 )
-                net_data  += url_data
-                #dbm.upsert('Request',{'url': url},data=net_data)
+                net_data  += url_data                
         return net_data
     else:
         net_data = myApi.request_decks(

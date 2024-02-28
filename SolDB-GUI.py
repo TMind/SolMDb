@@ -3,7 +3,7 @@ import platform
 if platform.system() != 'Windows':
 	from curses.ascii import NUL
 #from DeckLibrary import DeckLibrary
-#from Card_Library import Deck, UniversalCardLibrary
+#from CardLibrary import Deck, UniversalCardLibrary
 #from NetApi import NetApi
 #import Evaluation as ev
 #from CacheManager import CacheManager

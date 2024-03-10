@@ -28,11 +28,17 @@ class MongoDB:
         collection = self.get_collection(collection_name)
         return collection.find_one(query)
 
-    def find(self, collection_name: str, query: dict = None):
+    def find(self, collection_name: str, query: dict = None, projection: dict = None):
         collection = self.get_collection(collection_name)
         if query is None:
             query = {}
-        return collection.find(query)
+        return collection.find(query, projection)
+
+    from pymongo import UpdateOne, InsertOne, DeleteOne
+
+    def bulk_write(self, collection_name: str, operations: list):
+        collection = self.get_collection(collection_name)
+        return collection.bulk_write(operations)
 
     def update_one(self, collection_name: str, query: dict, update_data: dict):
         collection = self.get_collection(collection_name)

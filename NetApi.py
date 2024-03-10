@@ -32,33 +32,26 @@ class NetApi:
         pageData = response.json()
 
         lastPK = ""
-        all_decks = pageData['Items']        
-        # Create progress bar         
-        progress_bar = None
-        if not 'Total' in pageData:            
-            total = pageData['Count']
-        else:
-            total = pageData['Total']
-        
-        progress_bar = tqdm(total=total, initial=pageData['Count'] ,desc="Fetching Data", colour='YELLOW') 
-
-        while 'LastEvaluatedKey' in pageData and lastPK != pageData['LastEvaluatedKey']['PK']:
-            lastPK = pageData['LastEvaluatedKey']['PK']            
-            lastSK = pageData['LastEvaluatedKey']['SK']            
-            params.update({"exclusiveStartKeyPK" : lastPK , 'exclusiveStartKeySK' : lastSK})
-            response = requests.get(endpoint, params=params)
-            pageData = response.json()
-            if 'error' in pageData:
-                print(f"Error in response: {pageData['error']}")
-                return []
-            all_decks.extend(pageData['Items'])
+        all_decks = pageData['Items']                        
+        total = pageData['Count']
+                
+        with tqdm(total=total, initial=pageData['Count'], desc="Fetching Data", colour='YELLOW') as pbar:
+            while 'LastEvaluatedKey' in pageData and lastPK != pageData['LastEvaluatedKey']['PK']:
+                lastPK = pageData['LastEvaluatedKey']['PK']            
+                lastSK = pageData['LastEvaluatedKey']['SK']            
+                params.update({"exclusiveStartKeyPK" : lastPK , 'exclusiveStartKeySK' : lastSK})
+                response = requests.get(endpoint, params=params)
+                pageData = response.json()
+                if 'error' in pageData:
+                    print(f"Error in response: {pageData['error']}")
+                    return []
+                all_decks.extend(pageData['Items'])
+                            
+                records_fetched = pageData['Count']                
+                if pbar.n + records_fetched > pbar.total:
+                    pbar.total += records_fetched
+                pbar.update(records_fetched)
                         
-            records_fetched = pageData['Count']
-            progress_bar.update(records_fetched)
-                    
-        #end pagination code        
-        progress_bar.close() if progress_bar else None
-
         if 'error' in pageData:
             print(f"Error in response: {pageData['error']}")
             return []

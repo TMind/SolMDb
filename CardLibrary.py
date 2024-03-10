@@ -120,8 +120,9 @@ class Deck(DatabaseObject):
 @dataclass
 class FusionData:
     name: str = ''    
-    myDecks: list = field(default_factory=list)
+    myDecks: list = field(default_factory=list)    
     currentForgebornId: str = ''
+    ForgebornIds: list = field(default_factory=list)
     id: str = ''
     deckRank: str = ''
     CreatedAt: str = ''        
@@ -135,11 +136,15 @@ class Fusion(DatabaseObject):
         self._id = self.name
         if self.data:
             if self.data.myDecks:
-                self.data.children_data = {deck_data['name']: 'CardLibrary.Deck' for deck_data in self.data.myDecks}
-                if self.data.currentForgebornId:
-                    self.data.children_data.update({self.currentForgebornId: 'CardLibrary.Forgeborn'})
+                #Check if myDecks contains only strings or objects 
+                if isinstance(self.data.myDecks[0], str):
+                    self.data.children_data = {deckName : 'CardLibrary.Deck' for deckName in self.data.myDecks}
                 else:
+                    self.data.children_data = {deck_data['name']: 'CardLibrary.Deck' for deck_data in self.data.myDecks}
+                
+                if not self.data.currentForgebornId:                                    
                     self.data.currentForgebornId = self.data.myDecks[0]['forgeborn']['id']
+                self.data.children_data.update({self.currentForgebornId: 'CardLibrary.Forgeborn'})
         
         # Default Values 
         #fusion_name = "_".join([deck.name for deck in decks])        

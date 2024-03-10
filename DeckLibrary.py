@@ -1,91 +1,102 @@
+#from ast import Global
 from CardLibrary import Forgeborn, Fusion, FusionData, Deck, Card
+from MongoDB.DatabaseManager import DatabaseManager
 from tqdm import tqdm 
-from itertools import combinations
-from multiprocessing import Pool, cpu_count
-
+from MultiProcess import MultiProcess
+from tqdm import tqdm
+import GlobalVariables
 
 class DeckLibrary:
-    def __init__(self, decks_data, fusions_data):        
-        self.decks = {}        
-        self.fusions = {}        
+    def __init__(self, decks_data, fusions_data):                
+        self.dbmgr = DatabaseManager(GlobalVariables.username)
+        self.new_decks = []
+        self.online_fusions = []
         
-        for deck_data in decks_data:
-            deck = Deck.from_data(deck_data) 
-            if deck.children_data:
-                deck.children_data.update({deck.forgebornId : 'CardLibrary.Forgeborn'})            
-            deck.save()
-            for index, card in deck.cards.items():                      
-                myCard = Card.from_data(card)
-                id = deck.cardIds[int(index)-1]
-                myCard._id = id
-                myCard.save()
-            #deckHash = deck.hash_children()
-            #print(deckHash)
+
+        deckCursor = self.dbmgr.find('Deck', {})
+        deckNames = [deck['name'] for deck in deckCursor]
+
+        with tqdm(total=self.dbmgr.count_documents('Deck'), desc="Loading Decks",mininterval=0.1, colour='BLUE') as pbar:
+            for deckData in decks_data:
+                deckName = deckData['name']
+                if deckName not in deckNames:                    
+                    self.new_decks.append(deckData)    
+                    new_deck = Deck.from_data(deckData)
+                    if new_deck.children_data:
+                        new_deck.children_data.update({new_deck.forgebornId : 'CardLibrary.Forgeborn'})
+                    new_deck.save()            
+                    for index, card in new_deck.cards.items():                      
+                        myCard = Card.from_data(card)
+                        id = new_deck.cardIds[int(index)-1]
+                        myCard._id = id
+                        myCard.save()
+                pbar.update(1)
         
-        for fusion_data in fusions_data:
-            fusion = Fusion.from_data(fusion_data)
-            # if fusion.children_data:
-            #     if fusion.data.currentForgebornId == '':
-            #         fusion.data.currentForgebornId = fusion.myDecks[0]['forgeborn']['id']                
-            #     fusion.children_data.update({fusion.data.currentForgebornId : 'CardLibrary.Forgeborn'})                                
-            fusion.save()
-            #fusionHash = fusion.hash_children()
-            #print(fusionHash)
-        
+        with tqdm(total=len(fusions_data), desc="Saving Fusions",mininterval=0.1, colour='YELLOW') as pbar:
+            for fusion_data in fusions_data:
+                decks = fusion_data['myDecks']            
+                fusionDeckNames = []
+                if isinstance(decks[0], str):
+                    fusionDeckNames = [deckName for deckName in decks]
+                else:
+                    fusionDeckNames = [deck['name'] for deck in decks]
+                                
+                fusion = Fusion.from_data(fusion_data)            
+                fusion.save()           
+                self.online_fusions.append(fusion_data)
+                pbar.update(1)
+
         self.make_fusions()
                          
     def make_fusions(self):
-                
-        myItem = Deck(None)                        
-        myItems = myItem.db_manager.find('Deck', {})
-                
-        
-        deck_combinations = list(combinations(myItems, 2))
-        progress_bar = tqdm(total=len(deck_combinations), desc="Creating Fusions", mininterval=0.1, colour='BLUE')
-        for deck_combination in deck_combinations:
-            deck1, deck2 = deck_combination
-            if deck1['faction'] != deck2['faction']:
-                fusionName = f"{deck1['name']}_{deck2['name']}"                     
-                fusionId = fusionName
-                fusionDecks =  [deck1, deck2] 
-                fusionBorn = deck1['forgebornId']
-                fusionData = FusionData(fusionName, fusionDecks, fusionBorn, fusionId) 
-                fusion = Fusion(fusionData)
-                if fusion:
-                    fusion.save()
-            progress_bar.update(1)
-        progress_bar.close()
-        
+        # Get all deckNames from the database
+        deckCursor = self.dbmgr.find('Deck', {})
+        allDeckData = {deck['name']: deck for deck in deckCursor}
+        allDeckNames = list(allDeckData.keys())
 
-    def update(self, objects, limit=None):        
-        total_updates = len(objects)
-        #if total_updates == 0 : return 
-        progress_bar = tqdm(total=total_updates, desc="Updating Library",mininterval=0.1, colour='MAGENTA')
+        # Combine allDeckNames in pairs with new_decks only, not with themselves
+        newDeckNames = [deck['name'] for deck in self.new_decks]
+    
+        # Pair newDeckNames with allDeckNames but not with itself
+        newCombinations = [(newDeck, allDeck) for newDeck in newDeckNames for allDeck in allDeckNames if newDeck != allDeck]
+        newCombinationsSets = [set(combination) for combination in newCombinations]
 
-        num = 0
-        for obj in objects:
-            self.decks[obj.name] = obj
-            progress_bar.update(1)
-        progress_bar.close()
+        # Replace newCombinationNames with the actual decks
+        deckCombinationData = []
+        for combination in newCombinationsSets:
+            deckCombinationData.append([allDeckData[deckName] for deckName in combination])
 
-        self.make_fusions(limit)
-        return num 
+        # Create new fusions with the newCombinations
+        if deckCombinationData:
+            multi_process = MultiProcess(create_fusion, deckCombinationData, GlobalVariables.username)
+            multi_process.run()
+           
 
-    def filter(self, Filter):       
-        self.database['Deck']   = Filter.apply(self.database['Deck'])
-        self.database['Fusion'] = Filter.apply(self.database['Fusion'])
+from pymongo import UpdateOne
 
-    def to_json(self):
-        return {
-            'decks': [deck.to_json() for deck in self.database['Deck'].values()],
-            'fusions': [fusion.to_json() for fusion in self.database['Fusion'].values()]         
-        }
+def create_fusion(dataChunks):
+    operations = []
+    dbmgr = None 
+    
+    dataChunk , additional_data = dataChunks
 
-def create_fusion(decks):    
-    deck1, deck2 = decks
-    fusion = None
-    if deck1.faction != deck2.faction:
-        fusion = Fusion(decks)
-    return fusion
+    for decks in dataChunk:
+        GlobalVariables.username = additional_data
+        if not dbmgr:
+            dbmgr = DatabaseManager(GlobalVariables.username)
+        deck1, deck2 = decks
 
+        if deck1['faction'] != deck2['faction']:
+            fusionName = f"{deck1['name']}_{deck2['name']}"                     
+            fusionId = fusionName
+            fusionDeckNames =  [deck1['name'], deck2['name']] 
+            fusionBornIds = [deck1['forgebornId'], deck2['forgebornId']]            
+            fusionObject = Fusion(FusionData(fusionName, fusionDeckNames, deck1['forgebornId'] ,fusionBornIds, fusionId) )
+            fusionData = fusionObject.to_data()
 
+            operations.append(UpdateOne({'_id': fusionId}, {'$set': fusionData}, upsert=True))
+
+    if operations and dbmgr:
+        dbmgr.bulk_write('Fusion', operations)
+    
+    return len(operations)

@@ -48,7 +48,10 @@ class DatabaseObject:
             if data_class.__name__ in ['EntityData', 'ForgebornData', 'CardData','InterfaceData','SynergyData']:
                 self.db_name = 'local'
             else:
-                self.db_name = GlobalVariables.username or 'user_specific'
+                if GlobalVariables.username: 
+                    self.db_name = GlobalVariables.username 
+                else:
+                    self.db_name ='user_specific'
             
             # Initialize the db_manager for this instance
             self._db_manager = DatabaseManager(self.db_name)
@@ -67,11 +70,13 @@ class DatabaseObject:
         else:
             self.data = None
 
-        if data_class.__name__ in ['EntityData', 'ForgebornData', 'CardData']:
+        if data_class.__name__ in ['EntityData', 'ForgebornData', 'CardData', 'InterfaceData', 'SynergyData']:
             self.db_name = 'local'
         else:
-            self.db_name = GlobalVariables.username or 'user_specific'
-
+            if GlobalVariables.username: 
+                self.db_name = GlobalVariables.username 
+            else:
+                self.db_name ='user_specific'
         if self.db_manager:
                 self.db_manager.set_database_name(self.db_name)
 

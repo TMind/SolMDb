@@ -371,7 +371,12 @@ class UniversalCardLibrary:
         
         for deck_data in decks_data:            
             try:
-                forgebornId = deck_data['forgebornId'][1:]
+                forgebornId = None
+                if 'forgebornId' in deck_data:
+                    forgebornId = deck_data['forgebornId']
+                else:
+                    forgeborn = deck_data['forgeborn']
+                    forgebornId = forgeborn['id']
                 forgebornId = forgebornId.replace('0','2')
                 forgebornKey = [key for key in self.forgeborn if forgebornId in key]
                 forgeborn = self.forgeborn[forgebornKey[0]]

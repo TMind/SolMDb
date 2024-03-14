@@ -81,11 +81,11 @@ class NetApi:
                 fusion_decks = []                
                 for incomplete_deckdata in incomplete_fusiondata['myDecks']:
                     print(f"Requesting further data: {incomplete_deckdata['id']}")
-                    deckdata = self.make_request(id=incomplete_deckdata['id'])    
+                    deckdata = self.make_request(id=incomplete_deckdata['id'],type='deck',username=self.params['username'])    
                     deck_loaded, incomplete_deckdata_loaded = self.ucl.load_decks_from_data(deckdata)                                        
                     fusion_decks.extend(deck_loaded)
                 if fusion_decks:
-                    fusions.append(Fusion(incomplete_fusiondata['name'], fusion_decks))                                                    
+                    fusions.append(Fusion(fusion_decks, incomplete_fusiondata['name']))                                                    
             return fusions
         else:
             decks, incompletes = self.ucl.load_decks_from_data(decks_data)

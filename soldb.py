@@ -40,7 +40,7 @@ def main(args):
     col_filter = get_col_filter(args)
     #DeckCollection.filter(col_filter) if col_filter else None
 
-    DeckCollection = DeckLibrary(net_decks, net_fusions)
+    DeckCollection = DeckLibrary(net_decks, net_fusions, args.mode)
 
     #eval_filename, egraphs, local_graphs = evaluate_fusions(args, DeckCollection)
 
@@ -217,6 +217,7 @@ if __name__ == "__main__":
     parser.add_argument("--filename",  default=None,  help="Offline Deck Database Name")
     parser.add_argument("--synergies", default=None, help="CSV Filename for synergy lookup")    
     parser.add_argument("--offline", default=None, help="Offline use only")    
+    parser.add_argument("--mode", default='insert', help="Mode: insert, update, refresh")    
 
     # Arguments for Evaluation
     

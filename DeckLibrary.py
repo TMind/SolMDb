@@ -7,14 +7,15 @@ from tqdm import tqdm
 import GlobalVariables
 
 class DeckLibrary:
-    def __init__(self, decks_data, fusions_data):                
+    def __init__(self, decks_data, fusions_data, mode):                
         self.dbmgr = DatabaseManager(GlobalVariables.username)
         self.new_decks = []
         self.online_fusions = []
         
-
-        deckCursor = self.dbmgr.find('Deck', {})
-        deckNames = [deck['name'] for deck in deckCursor]
+        deckNames = []
+        if not mode == 'update':
+            deckCursor = self.dbmgr.find('Deck', {})
+            deckNames = [deck['name'] for deck in deckCursor]
 
         with tqdm(total=self.dbmgr.count_documents('Deck'), desc="Loading Decks",mininterval=0.1, colour='BLUE') as pbar:
             for deckData in decks_data:
@@ -93,6 +94,8 @@ def create_fusion(dataChunks):
             fusionBornIds = [deck1['forgebornId'], deck2['forgebornId']]            
             fusionObject = Fusion(FusionData(fusionName, fusionDeckNames, deck1['forgebornId'] ,fusionBornIds, fusionId) )
             fusionData = fusionObject.to_data()
+            fusionHash = fusionObject.hash_children()
+            fusionData['hash'] = fusionHash
 
             operations.append(UpdateOne({'_id': fusionId}, {'$set': fusionData}, upsert=True))
 

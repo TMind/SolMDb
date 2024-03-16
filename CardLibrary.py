@@ -39,7 +39,7 @@ class Forgeborn(DatabaseObject):
     
 @dataclass
 class CardData():
-    title   : str   = ''
+    name   : str   = ''
     faction : str   = ''    
     cardType: str   = ''
     cardSubType: str    =''    
@@ -54,7 +54,7 @@ class Card(DatabaseObject):
         #self._id = self.title
         
         if self.data is not None:
-            entityNames = self.get_entity_names_from_title(self.title)   
+            entityNames = self.get_entity_names_from_title(self.name)   
             if entityNames:
                 self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in entityNames}
                     
@@ -75,26 +75,26 @@ class Card(DatabaseObject):
         #         self.above_stat[stat][level] = stats[level] >= 3 * ( level + 1 )
 
 
-    def get_entity_names_from_title(self, card_title):        
-        if not card_title or card_title == '': return None
+    def get_entity_names_from_title(self, card_name):        
+        if not card_name or card_name == '': return None
 
         # First try with full title        
-        card_entity_data = self.db_manager.get_record_by_name('Entity', card_title)        
+        card_entity_data = self.db_manager.get_record_by_name('Entity', card_name)        
         if card_entity_data:          
             return [card_entity_data['name']]
 
         # If not found, try with decreasing title length
-        parts = card_title.split(' ')
+        parts = card_name.split(' ')
         for i in range(1, len(parts)):
             modifier_title = ' '.join(parts[:i])
-            card_title = ' '.join(parts[i:])
+            card_name = ' '.join(parts[i:])
             modifier_entity_data = self.db_manager.get_record_by_name('Entity', modifier_title)
-            card_entity_data = self.db_manager.get_record_by_name('Entity', card_title)
+            card_entity_data = self.db_manager.get_record_by_name('Entity', card_name)
             if modifier_entity_data and card_entity_data:
                 return [entity_name for entity_name in [modifier_entity_data['name'], card_entity_data['name']]]
     
         # If no entities found, return card_title
-        return [card_title]
+        return [card_name]
 
 @dataclass
 class DeckData:    

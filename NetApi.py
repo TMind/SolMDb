@@ -97,11 +97,4 @@ class NetApi:
         decks_data = self.make_request(id, type, username)
         decks = self.handle_response(decks_data, type)
 
-        if filename:
-            deck_data = [deck.to_json() for deck in decks]
-            filepath = f"data/{filename}.json"
-            with open(filepath, "w") as f:
-                json.dump(deck_data, f)
-                print(f"Dumped deck data to: {filepath}")
-
         return decks

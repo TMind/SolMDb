@@ -257,7 +257,8 @@ def cache_init(args):
     if args.username:
         deck_library_name += f"_{args.username}"
         eval_graphs_name  += f"_{args.username}"
-        args.eval         += f"_{args.username}"
+        if args.eval :
+            args.eval         += f"_{args.username}"
 
     if args.filename:
         deck_library_name = f"{args.filename}_library"

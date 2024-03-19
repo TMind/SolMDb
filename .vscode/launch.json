@@ -15,7 +15,12 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
+            "args": [
+                "--username", "tmind",
+              //  "--filter", "K:Robot > 3 | F=Nekrium",
+                "--eval", "tmind"             
+            ]
         },
         {
             "name": "Python: UCL",

@@ -1,5 +1,4 @@
 from more_itertools import value_chain
-from MongoDB.DatabaseManager import DatabaseObject
 from dataclasses import dataclass, field
 from Synergy import SynergyTemplate
 from CardLibrary import Entity, Deck, Card
@@ -259,6 +258,7 @@ class InterfaceData:
     children_data: dict = field(default_factory=dict)
     #synergyNames: list = field(default_factory=list)    
 
+from MongoDB.DatabaseManager import DatabaseObject
 class Interface(DatabaseObject):
     def __init__(self, data: InterfaceData):
         # Initialize the base class first if it does important setup

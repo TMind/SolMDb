@@ -22,11 +22,10 @@ class NetApi:
     def make_request(self, id="", type="deck", username="TMind"):
         params = {            
             "inclPvE": "true",
-            "username": "TMind"
+            "username": username
         }        
         endpoint = f"{self.base_url}/{type}/app?{id}"
-        
-        params.update({"username" : username})
+                
         print(f"Requesting Data from Website: {','.join([username,type,id])}")
         response = requests.get(endpoint, params=params)        
         pageData = response.json()

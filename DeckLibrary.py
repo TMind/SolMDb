@@ -1,6 +1,5 @@
-#from ast import Global
-from CardLibrary import Forgeborn, Fusion, FusionData, Deck, Card
 from MongoDB.DatabaseManager import DatabaseManager
+from CardLibrary import  Fusion, FusionData, Deck, Card
 from tqdm import tqdm 
 from MultiProcess import MultiProcess
 from tqdm import tqdm

@@ -1,8 +1,6 @@
 import importlib
-from math import e
-
-from traitlets import default
 from MongoDB.MongoDB import MongoDB
+from MyGraph import MyGraph
 import GlobalVariables
 from dataclasses import dataclass, fields, asdict
 from typing import Any, Dict
@@ -207,5 +205,52 @@ class DatabaseObject:
                     
         return myHash
 
+    
+        
+    def create_graph_children(self, G=None, parent=None):        
+        if G is None:
+            G = MyGraph(self)
+            parent = self
 
+        if self.children_data:
+            for child_name, full_class_path in self.children_data.items():
+                color = 'blue'
+                # Assume full_class_path is in the format "module_name.ClassName"
+                if '.' not in full_class_path:
+                    print(f"No Module found: {child_name} {full_class_path}")
+                    return full_class_path                  
+
+                module_name, class_name = full_class_path.rsplit('.', 1)  # Split on last dot
+                   
+                try:
+                    module = importlib.import_module(module_name)
+                    cls = getattr(module, class_name)
+                except (ModuleNotFoundError, AttributeError) as e:
+                    print(f"Error loading {full_class_path}: {e}")
+                    continue
+     
+                if class_name == 'Synergy': 
+                    child_object = cls.load(child_name)
+                    G.add_node(child_object, color='red')
+                    G.add_edge(parent, child_object)  
+                    return G                  
+
+                # Assuming lookup is a class method that returns an instance or None
+                child_object = cls.lookup(child_name)
+            
+                if child_object:
+                    # Add the child_object as a node and connect it to the parent
+                    if class_name == 'Card':  color = 'green'
+                    else : color = '#97c2fc'
+                    G.add_node(child_object, color=color)
+                    G.add_edge(parent, child_object)  # Connect the child_object to its parent
+
+                    # Recursively create the graph for the child_object
+                    child_object.create_graph_children(G, child_object)  # Pass the child_object as the new parent
+
+        return G
+
+
+   
+            
         

@@ -40,6 +40,7 @@ class Forgeborn(DatabaseObject):
 @dataclass
 class CardData():
     name   : str   = ''
+    title  : str   = ''
     faction : str   = ''    
     cardType: str   = ''
     cardSubType: str    =''    
@@ -51,9 +52,11 @@ class Card(DatabaseObject):
 
     def __init__(self, data: CardData):                 
         super().__init__(data)
-        #self._id = self.title
-        
+                
         if self.data is not None:
+            if self.data.name :  self.data.title = data.name 
+            else:                self.data.name = data.title            
+
             entityNames = self.get_entity_names_from_title(self.name)   
             if entityNames:
                 self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in entityNames}
@@ -107,6 +110,7 @@ class DeckData:
     cardSetId: str   = ''
     cardSetNo: str   = ''
     children_data: dict = field(default_factory=dict)
+    graph: dict = field(default_factory=dict)
 
 class Deck(DatabaseObject):
     
@@ -128,6 +132,7 @@ class FusionData:
     CreatedAt: str = ''        
     tags: list = field(default_factory=list)
     children_data: dict = field(default_factory=dict)
+    graph: dict = field(default_factory=dict)
 
 class Fusion(DatabaseObject):
     def __init__(self, data=None):

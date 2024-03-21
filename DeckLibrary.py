@@ -73,6 +73,7 @@ class DeckLibrary:
            
 
 from pymongo import UpdateOne
+import networkx as nx
 
 def create_fusion(dataChunks):
     operations = []
@@ -92,9 +93,11 @@ def create_fusion(dataChunks):
             fusionDeckNames =  [deck1['name'], deck2['name']] 
             fusionBornIds = [deck1['forgebornId'], deck2['forgebornId']]            
             fusionObject = Fusion(FusionData(fusionName, fusionDeckNames, deck1['forgebornId'] ,fusionBornIds, fusionId) )
-            fusionData = fusionObject.to_data()
-            fusionHash = fusionObject.hash_children()
-            fusionData['hash'] = fusionHash
+            fusionData = fusionObject.to_data()  
+            fusionGraph = fusionObject.create_graph_children()                      
+            # Convert the graph to a dictionary
+            fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G)            
+            fusionData['graph'] = fusionGraphDict
 
             operations.append(UpdateOne({'_id': fusionId}, {'$set': fusionData}, upsert=True))
 

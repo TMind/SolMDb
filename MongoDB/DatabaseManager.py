@@ -233,21 +233,46 @@ class DatabaseObject:
                     child_object = cls.load(child_name)
                     G.add_node(child_object, color='red')
                     G.add_edge(parent, child_object)  
-                    return G                  
+                    nodeId = G.get_nodeId(child_object)
+                    G.G.nodes[nodeId]['shape'] = 'diamond'
+                    return G                                              
 
                 # Assuming lookup is a class method that returns an instance or None
                 child_object = cls.lookup(child_name)
             
                 if child_object:
-                    # Add the child_object as a node and connect it to the parent
-                    if class_name == 'Card':  color = 'green'
+
+                    if class_name == 'Entity':
+                        child_object.create_graph_children(G, parent)
+                        return G
+                
+                    # Add the child_object as a node and connect it to the parent                    
+                    if class_name == 'Card':     color = 'blue'
+                    elif class_name == 'Fusion': color = 'purple'
+                    elif class_name == 'Deck':   color = 'orange'                    
                     else : color = '#97c2fc'
-                    G.add_node(child_object, color=color)
+                    
+                    #incoming = 0
+                    if G.G.has_node(child_object):
+                        MyNode = G.G.nodes[G.get_nodeId(child_object)]                    
+                        MyNode.setdefault('incoming', 0)
+                        MyNode['incoming'] += 1
+                        #incoming = MyNode['incoming']
+                    
+                    G.add_node(child_object, color=color, title=class_name)
                     G.add_edge(parent, child_object)  # Connect the child_object to its parent
+                    MyNode = G.G.nodes[G.get_nodeId(child_object)]                    
+                    MyNode.setdefault('incoming', 0)
+                    MyNode['incoming'] += 1
+                    
+                    if class_name == 'Interface':                                                
+                        MyNode['shape'] = 'circle'
+
+                    #print(f"Adding {G.get_nodeId(parent)} -> {G.get_nodeId(child_object)} \n")
 
                     # Recursively create the graph for the child_object
-                    child_object.create_graph_children(G, child_object)  # Pass the child_object as the new parent
-
+                    child_object.create_graph_children(G, child_object)  # Pass the child_object as the new parent                    
+                    
         return G
 
 

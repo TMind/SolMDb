@@ -255,8 +255,9 @@ class InterfaceData:
     tag:  str       = ''
     value: any      = 0
     ranges: str     = ''
+    types: list       = field(default_factory=list)
     children_data: dict = field(default_factory=dict)
-    #synergyNames: list = field(default_factory=list)    
+    
 
 from MongoDB.DatabaseManager import DatabaseObject
 class Interface(DatabaseObject):
@@ -265,14 +266,29 @@ class Interface(DatabaseObject):
         super().__init__(data)
         
         # Then do the specific initialization for Interface
-        if data : self._initialize_types_and_synergies()            
+        self._initialize_types_and_synergies()            
 
     def _initialize_types_and_synergies(self):
         synergy_template = SynergyTemplate()        
         if self.data:
             self._id = self.tag
             self.data.children_data = { synergy.name: 'Synergy.Synergy' for synergy in synergy_template.get_synergies_by_tag(self.tag) }
-                    
+            self.data.types = self.get_tag_types(self.data.children_data.keys())
+    def get_tag_types(self, synergies):
+        types = list()
+        synergy_template = SynergyTemplate()
+
+        for synergy in synergies:
+            input_tags = synergy_template.get_input_tags_by_synergy(synergy)
+            output_tags = synergy_template.get_output_tags_by_synergy(synergy)
+
+            if self.tag in input_tags and 'I' not in types: 
+                types.append('I')
+            if self.tag in output_tags and 'O' not in types:
+                types.append('O') 
+
+        return types
+
     def get_synergies_by_type(self, type):
         return [synergyName for synergyName in self.children_data.keys() if self.has_tag_of_type(synergyName, type)]
 

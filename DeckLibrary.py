@@ -1,3 +1,4 @@
+from MyGraph import MyGraph
 from MongoDB.DatabaseManager import DatabaseManager
 from CardLibrary import  Fusion, FusionData, Deck, Card
 from tqdm import tqdm 
@@ -94,9 +95,10 @@ def create_fusion(dataChunks):
             fusionBornIds = [deck1['forgebornId'], deck2['forgebornId']]            
             fusionObject = Fusion(FusionData(fusionName, fusionDeckNames, deck1['forgebornId'] ,fusionBornIds, fusionId) )
             fusionData = fusionObject.to_data()  
-            fusionGraph = fusionObject.create_graph_children()                      
+            fusionGraph = MyGraph()  
+            fusionGraph.create_graph_children(fusionObject)
             # Convert the graph to a dictionary
-            fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G)            
+            fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G)
             fusionData['graph'] = fusionGraphDict
 
             operations.append(UpdateOne({'_id': fusionId}, {'$set': fusionData}, upsert=True))

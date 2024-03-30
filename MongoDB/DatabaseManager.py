@@ -1,10 +1,9 @@
 import importlib
 from MongoDB.MongoDB import MongoDB
-from MyGraph import MyGraph
+#from MyGraph import MyGraph
 import GlobalVariables
 from dataclasses import dataclass, fields, asdict
 from typing import Any, Dict
-
 
 class DatabaseManager:
     _instances = {}
@@ -204,84 +203,68 @@ class DatabaseObject:
                     myHash.setdefault(class_name, {})[child_name] = child_object.hash_children()
                     
         return myHash
-        
-    def create_graph_children(self, G=None, parent=None, currentType=None):        
-        if G is None:
-            G = MyGraph(self)
-            parent = self
 
-        def get_class_from_path(full_class_path):
-            if '.' not in full_class_path:
-                print(f"No Module found: {full_class_path}")
-                return None, None
+    # def create_graph_children(self, G=None, parent=None, currentType=None):        
+    #     if G is None:
+    #         G = MyGraph(self)
+    #         parent = self
 
-            module_name, class_name = full_class_path.rsplit('.', 1)  # Split on last dot
-
-            try:
-                module = importlib.import_module(module_name)
-                cls = getattr(module, class_name)
-                return cls, class_name
-            except (ModuleNotFoundError, AttributeError) as e:
-                print(f"Error loading {full_class_path}: {e}")
-                return None, None
-
-        if self.children_data:
-            for child_name, full_class_path in self.children_data.items():
-                color = '#97c2fc'
-                # Assume full_class_path is in the format "module_name.ClassName"
+    #     if self.children_data:
+    #         for child_name, full_class_path in self.children_data.items():
+    #             color = '#97c2fc'
+    #             # Assume full_class_path is in the format "module_name.ClassName"
                 
-                cls , class_name = get_class_from_path(full_class_path)
-                if not cls or not class_name: continue
+    #             cls , class_name = DatabaseObject.get_class_from_path(full_class_path)
+    #             if not cls or not class_name: continue
 
-                if class_name == 'Synergy': 
-                    # Change child_object appearance
-                    child_object = cls.load(child_name)
-                    G.add_node(child_object, color='greenyellow')
-                    G.add_edge(parent, child_object)  
-                    nodeId = G.get_nodeId(child_object)
-                    G.G.nodes[nodeId]['shape'] = 'diamond'
+    #             if class_name == 'Synergy': 
+    #                 # Change child_object appearance
+    #                 child_object = cls.load(child_name)
+    #                 G.add_node(child_object, color='greenyellow')
+    #                 G.add_edge(parent, child_object)  
+    #                 nodeId = G.get_nodeId(child_object)
+    #                 G.G.nodes[nodeId]['shape'] = 'diamond'
 
-                    return G                                              
+    #                 return G                                              
 
-                # Assuming lookup is a class method that returns an instance or None
-                child_object = cls.lookup(child_name)
+    #             # Assuming lookup is a class method that returns an instance or None
+    #             child_object = cls.lookup(child_name)
             
-                if child_object:
+    #             if child_object:
 
-                    if class_name == 'Entity' and currentType == 'Card' :
-                        child_object.create_graph_children(G, parent, currentType)
-                        return G
+    #                 if class_name == 'Entity' and currentType == 'Card' :
+    #                     child_object.create_graph_children(G, parent, currentType)
+    #                     return G
 
-                    if class_name == 'Interface':             
-                        #color = 0x0
-                        #MyNode['shape'] = 'circle'
-                        if 'O' in child_object.types:
-                            color = "gainsboro" #color | 0xcc00
-                        if 'I' in child_object.types: 
-                            color = "gold" #color | 0xcc0000
+    #                 if class_name == 'Interface':             
+    #                     if 'O' in child_object.types:
+    #                         color = "gainsboro" #color | 0xcc00
+    #                     if 'I' in child_object.types: 
+    #                         color = "gold" #color | 0xcc0000
                         
-                    # Add the child_object as a node and connect it to the parent                    
-                    elif class_name == 'Card':     color = 'skyblue'
-                    elif class_name == 'Fusion': color = 'violet'
-                    elif class_name == 'Deck':   color = 'cornflowerblue'                    
-                    else : color = '#97c2fc'
+    #                 # Add the child_object as a node and connect it to the parent                    
+    #                 elif class_name == 'Card':     color = 'skyblue'
+    #                 elif class_name == 'Fusion': color = 'violet'
+    #                 elif class_name == 'Deck':   color = 'cornflowerblue'                                            
+    #                 else : color = '#97c2fc'
                     
-                    # Add child_object to Graph 
-                    G.add_node(child_object, color=color, title=class_name)
-                    G.add_edge(parent, child_object)  # Connect the child_object to its parent
+    #                 # Add child_object to Graph 
+    #                 G.add_node(child_object, color=color, title=class_name)
+    #                 if not currentType in ['Deck', 'Fusion', 'Forgeborn']:
+    #                     G.add_edge(parent, child_object)  # Connect the child_object to its parent
 
-                    MyNode = G.G.nodes[G.get_nodeId(child_object)]                
+    #                 MyNode = G.G.nodes[G.get_nodeId(child_object)]                
 
-                    # Add parent to child's parents list
-                    MyNode.setdefault('parents', [])
-                    MyNode['parents'].append(G.get_nodeId(parent))
+    #                 # Add parent to child's parents list
+    #                 MyNode.setdefault('parents', [])
+    #                 MyNode['parents'].append(G.get_nodeId(parent))
 
-                    #print(f"Adding {G.get_nodeId(parent)} -> {G.get_nodeId(child_object)} \n")
+    #                 #print(f"Adding {G.get_nodeId(parent)} -> {G.get_nodeId(child_object)} \n")
 
-                    # Recursively create the graph for the child_object
-                    child_object.create_graph_children(G, child_object, class_name)  # Pass the child_object as the new parent                    
+    #                 # Recursively create the graph for the child_object
+    #                 child_object.create_graph_children(G, child_object, class_name)  # Pass the child_object as the new parent                    
                     
-        return G
+    #     return G
 
 
    

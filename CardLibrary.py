@@ -1,3 +1,4 @@
+from itertools import count
 from MongoDB.DatabaseManager import DatabaseObject
 from copy import copy
 from dataclasses import dataclass, field
@@ -110,6 +111,7 @@ class DeckData:
     cardSetId: str   = ''
     cardSetNo: str   = ''
     children_data: dict = field(default_factory=dict)
+    stats: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)
 
 class Deck(DatabaseObject):
@@ -118,7 +120,55 @@ class Deck(DatabaseObject):
         super().__init__(data)         
         self._id = self.name  
         if self.data and self.cardIds: 
-            self.data.children_data = {cardId: 'CardLibrary.Card' for cardId in self.cardIds}    
+            self.data.children_data = {cardId: 'CardLibrary.Card' for cardId in self.cardIds}
+            self.calculate_stats()
+            self.calculate_averages()
+
+
+    def calculate_stats(self):
+        #Calculate the amount of creature types and the number of spells
+        stats = {'set': self.cardSetName, 'card_types' : {}, 'average_stats' : {}}
+        card_types = {}
+        for card_id, card in self.data.cards.items():            
+            card_type = card['cardType']
+            if card_type not in card_types:
+                card_types[card_type] = {'count': 1}
+            else:
+                card_types[card_type]['count'] += 1
+                        
+            if 'cardSubType' in card:
+                card_sub_types = card['cardSubType'].split(' ')
+                for card_sub_type in card_sub_types:
+                    if card_sub_type not in card_types[card_type]:
+                        card_types[card_type][card_sub_type] = 1
+                    else:
+                        card_types[card_type][card_sub_type] += 1        
+        if not self.data.stats :
+            self.data.stats = {}
+        
+        self.data.stats['card_types'] = card_types
+
+            
+    def calculate_averages(self):
+        if self.data.cards is None:
+            return
+
+        # Calculate the amount of creature types and their average stats per level
+        stats = {'count' : 0, 'creature_types' : {}, 'average_stats' : {}}
+        creature_count = 0        
+        creature_average_stats = {'attack' : {'1' : 0.0 , '2' : 0.0, '3' : 0.0} , 'health' : {'1' : 0.0 , '2' : 0.0, '3' : 0.0}}
+        for card_id, card in self.data.cards.items():
+            if card['cardType'] == 'Creature':
+                creature_count += 1                                
+                for level in card['levels']:                    
+                    creature_average_stats['attack'][str(level)] += card['levels'][level]['attack']
+                    creature_average_stats['health'][str(level)] += card['levels'][level]['health']
+
+        for type in creature_average_stats:
+            for level in range(3):
+                creature_average_stats[type][str(level+1)] = float(creature_average_stats[type][str(level+1)] / creature_count)
+                        
+        self.data.stats['creature_averages'] = creature_average_stats        
 
 
 @dataclass

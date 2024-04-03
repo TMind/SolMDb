@@ -1,4 +1,5 @@
-from setuptools import setup
+from setuptools import setup, find_packages  
+
 import sys
 
 #mac - virtualenv then python setup.py py2app

@@ -9,7 +9,6 @@ from Graph import MyGraph
 import argparse
 from tqdm import tqdm 
 import os, time, re
-from appdirs import user_data_dir
 from pathlib import Path
 from multiprocessing import Pool, cpu_count,Event
 

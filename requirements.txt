@@ -3,3 +3,4 @@ Pillow==9.5.0
 pymongo==4.6.0
 networkx==3.2.1
 infomap==2.7.1
+numpy==1.24.3

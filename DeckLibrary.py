@@ -16,7 +16,7 @@ class DeckLibrary:
                     if fusion_name not in self.library['Fusion']:
                         fusion = Fusion(fusion_name, [deck1, deck2])
                         if fusion.fused is not None:
-                            print(f"+ {fusion_name}")
+                            #print(f"+ {fusion_name}")
                             self.library['Fusion'][fusion_name] = fusion
 
     def update(self, objects):

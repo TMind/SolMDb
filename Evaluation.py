@@ -1,6 +1,4 @@
 from collections import defaultdict
-
-from more_itertools import value_chain
 from Synergy import SynergyTemplate
 import networkx as nx
 #import infomap

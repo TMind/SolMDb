@@ -15,7 +15,7 @@ if sys.platform == "win32":
       author='gchristian',
       author_email='na',
       license='',
-      packages=['SolDB'],
+      packages=find_packages(),
       zip_safe=False,
       install_requires=[
           'graph','argparse','wxPython','requests'
@@ -53,7 +53,7 @@ else:
       author='gchristian',
       author_email='na',
       license='',
-      packages=find_packages()      
+      packages=find_packages(), 
       zip_safe=False,
       install_requires=[
           'graph','argparse','wxPython','requests'

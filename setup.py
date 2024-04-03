@@ -57,6 +57,6 @@ else:
       packages=find_packages(), 
       zip_safe=False,
       install_requires=[
-          'graph','argparse','wxPython','requests'
+          'argparse','wxPython','requests'
       ],
       include_package_data=True)

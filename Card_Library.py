@@ -93,7 +93,7 @@ class Deck:
                 inspired_abilities[5]     = inspired_abilities[level]
                 inspired_abilities[level] = other.forgeborn.abilities[level]                
                 inspired_abilities[5].name = f"{level}{inspired_abilities[5].name}"
-                print(f"Setting Ability {level} with {other.forgeborn.abilities[level]} from {other.faction}")
+                #print(f"Setting Ability {level} with {other.forgeborn.abilities[level]} from {other.faction}")
             forgeborn = Forgeborn(forgeborn.id, forgeborn.name, inspired_abilities)
                 
         faction = self.faction + '|' + other.faction                 

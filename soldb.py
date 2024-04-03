@@ -292,9 +292,7 @@ def process_fusion(args):
     time.sleep(0.001)
     return FusionGraph
 
-if __name__ == "__main__":
-
-    
+def parse_arguments(arguments) :
     # Create an argument parser
     parser = argparse.ArgumentParser(description="Script description")
 
@@ -317,10 +315,17 @@ if __name__ == "__main__":
     parser.add_argument("--graph", action="store_true",  help="Create Graph '.gefx'")
     parser.add_argument("--filter", default=None, help="Filter by card names. Syntax: \"<cardname>+'<card name>'-<cardname>\" + = AND, - = OR ")
     parser.add_argument("--select_pairs", action="store_true", help="Select top pairs")
+
+    # Parse the command-line arguments
+
+    args = parser.parse_args(arguments)
+    return args
+
+
+if __name__ == "__main__":    
     
     # Parse the command-line arguments
-    args = parser.parse_args()
-
+    args = parse_arguments()
     main(args)
 
 

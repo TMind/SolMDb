@@ -1,4 +1,6 @@
 from itertools import count
+
+from numpy import cross
 from MongoDB.DatabaseManager import DatabaseObject
 from copy import copy
 from dataclasses import dataclass, field
@@ -21,16 +23,18 @@ class Entity(DatabaseObject):
             self.data.children_data = {interfaceName: 'Interface.Interface' for interfaceName in self.interfaceNames}
     
 @dataclass
-class ForgebornData:
+class ForgebornData:    
     id: str = ''
     name: str   = ''
-    abilities: list = field(default_factory=list)
+    abilities: list = field(default_factory=list)    
     children_data: dict = field(default_factory=dict)
+    _id: str = ''
+    
 
 class Forgeborn(DatabaseObject):
     def __init__(self, data: ForgebornData):        
         super().__init__(data)
-        self._id = self.id       
+        self.data._id = self.id       
         if self.abilities:
             self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in self.abilities}  
             
@@ -45,6 +49,13 @@ class CardData():
     faction : str   = ''    
     cardType: str   = ''
     cardSubType: str    =''    
+    betrayer: bool = False
+    sortValue: str = ''
+    crossFaction: str = ''
+    cardSetId: str = ''
+    _id: str = ''
+    rarity: str = ''
+    levels: dict = field(default_factory=dict)
     attack  : dict  =field(default_factory=dict)
     health  : dict  =field(default_factory=dict)   
     children_data: dict = field(default_factory=dict) 
@@ -110,6 +121,7 @@ class DeckData:
     cardSetName: str   = ''
     cardSetId: str   = ''
     cardSetNo: str   = ''
+    registeredDate: str = ''
     children_data: dict = field(default_factory=dict)
     stats: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)
@@ -198,7 +210,7 @@ class Fusion(DatabaseObject):
                     self.data.children_data = {deck_data['name']: 'CardLibrary.Deck' for deck_data in self.data.myDecks}
                 
                 if not self.data.currentForgebornId:                                    
-                    self.data.currentForgebornId = self.data.myDecks[0]['forgeborn']['id']
+                    self.data.currentForgebornId = self.data.myDecks[0]['forgeborn']['_id']
                 self.data.children_data.update({self.currentForgebornId: 'CardLibrary.Forgeborn'})
         
         # Default Values 

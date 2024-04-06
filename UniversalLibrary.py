@@ -2,6 +2,7 @@ from dataclasses import asdict
 import CardLibrary
 #from CardLibrary import EntityData, Entity, Forgeborn, Deck, ForgebornData, Fusion, Card
 from Interface import InterfaceCollection, Interface, InterfaceData
+from pymongo.operations import UpdateOne
 from MongoDB.DatabaseManager import DatabaseManager
 from typing import Tuple, List, Dict
 import csv, json, re
@@ -11,20 +12,27 @@ class UniversalLibrary:
     entities = []
 
     def __init__(self, username, sff_path, fb_path, syn_path):        
-        self.database = DatabaseManager('local') 
+        self.database = DatabaseManager('common') 
+        # Check if the database is empty and fill it with the data from the csv files            
+        numFB = self.database.count_documents('Forgeborn')
+        numEnt = self.database.count_documents('Entity')
+
+        if numFB <= 0 :
+            self.database.ensure_unique_index('Forgeborn', 'id')
+            self._read_forgeborn_from_csv(fb_path)
         
-        self.database.ensure_unique_index('Entity', 'name')        
-        self.database.ensure_unique_index('Forgeborn', 'id')
-        self._read_entities_from_csv(sff_path)        
-        self._read_forgeborn_from_csv(fb_path)        
+        if numEnt <= 0:
+            self.database.ensure_unique_index('Entity', 'name')        
+            self._read_entities_from_csv(sff_path)
+        
 
     def _read_forgeborn_from_csv(self, csv_path):
-        forgeborn = {}
+        forgeborn_list = []
         with open(csv_path, 'r') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=',')
             for row in reader:
-                id   = row['id']
-                id   = id.replace('0', '2')                
+                id = row['id']
+                id = id.replace('0', '2')                
                 re.sub(r'^a', 's', id)
                 title =  row['Forgeborn']                                 
                 abilities = []
@@ -35,9 +43,18 @@ class UniversalLibrary:
                     name = f"{level}{name}"
                     abilities.append(name)
 
-                #Add the class and module name to the children_data dictionary                
-                forgeborn = CardLibrary.Forgeborn(CardLibrary.ForgebornData(id, title, abilities))   
-                result = forgeborn.save()                             
+                # Add the class and module name to the forgeborn_list
+                forgeborn = CardLibrary.Forgeborn(CardLibrary.ForgebornData(id, title, abilities))                       
+                forgeborn_list.append(forgeborn.to_data())
+
+        # Insert the forgeborn_list into the database        
+        self.database.bulk_write('Forgeborn', [
+            UpdateOne(
+                {'_id': forgeborn['_id']}, 
+                {'$setOnInsert': forgeborn}, 
+                upsert=True
+            ) for forgeborn in forgeborn_list
+        ])              
         
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:

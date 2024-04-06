@@ -17,6 +17,9 @@ import GlobalVariables
 def main(args):    
     GlobalVariables.username = args.username or 'Default'
 
+    uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
+    myDB = DatabaseManager(GlobalVariables.username, uri=uri)
+
     synergy_template = SynergyTemplate()    
     
     ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]

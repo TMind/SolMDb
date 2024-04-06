@@ -12,42 +12,62 @@ class DeckLibrary:
         self.new_decks = []
         self.online_fusions = []
         
-        deckNames = []
-        if not mode == 'update':
-            deckCursor = self.dbmgr.find('Deck', {})
-            deckNames = [deck['name'] for deck in deckCursor]
+        if decks_data:
+            deckNames = []
+            if not mode == 'update':
+                #db_name = self.dbmgr.get_current_db_name()
+                deckCursor = self.dbmgr.find('Deck', {}, {'name': 1})
+                #for deck in deckCursor:
+                #    deckNames.append(deck['name'])
+                deckNames = [deck['name'] for deck in deckCursor]
+                                    
+            cardList = self.dbmgr.find('Card', {})        
+            cardIds = [card['_id'] for card in cardList]
 
-        with tqdm(total=self.dbmgr.count_documents('Deck'), desc="Loading Decks",mininterval=0.1, colour='BLUE') as pbar:
-            for deckData in decks_data:
-                deckName = deckData['name']
-                if deckName not in deckNames:                    
-                    self.new_decks.append(deckData)    
-                    new_deck = Deck.from_data(deckData)
-                    if new_deck.children_data:
-                        new_deck.children_data.update({new_deck.forgebornId : 'CardLibrary.Forgeborn'})
-                    new_deck.save()            
-                    for index, card in new_deck.cards.items():                      
-                        myCard = Card.from_data(card)
-                        id = new_deck.cardIds[int(index)-1]
-                        myCard._id = id
-                        myCard.save()
-                pbar.update(1)
-        
-        with tqdm(total=len(fusions_data), desc="Saving Fusions",mininterval=0.1, colour='YELLOW') as pbar:
-            for fusion_data in fusions_data:
-                decks = fusion_data['myDecks']            
-                fusionDeckNames = []
-                if isinstance(decks[0], str):
-                    fusionDeckNames = [deckName for deckName in decks]
-                else:
-                    fusionDeckNames = [deck['name'] for deck in decks]
-                                
-                fusion = Fusion.from_data(fusion_data)            
-                fusion.save()           
-                self.online_fusions.append(fusion_data)
-                pbar.update(1)
-
-        self.make_fusions()
+            length = len(decks_data) #self.dbmgr.count_documents('Deck')
+            with tqdm(total=length, desc="Saving Decks",mininterval=0.1, colour='BLUE') as pbar:
+                deckDataList = []
+                cardDataList = []
+                for deckData in decks_data:
+                    deckName = deckData['name']
+                    if deckName not in deckNames:                    
+                        self.new_decks.append(deckData)    
+                        new_deck = Deck.from_data(deckData)
+                        if new_deck.children_data:
+                            new_deck.children_data.update({new_deck.forgebornId : 'CardLibrary.Forgeborn'})
+                        deckDataList.append(new_deck.to_data())
+                        
+                        # Save all cards that are not already in the database
+                        for index, card in new_deck.cards.items():
+                            id = new_deck.cardIds[int(index)-1]                                                
+                            if id not in cardList:
+                                myCard = Card.from_data(card)                                                                                
+                                myCard.data._id = id                            
+                                cardDataList.append(myCard.to_data())
+                    pbar.update(1)
+                
+                if deckDataList:
+                    self.dbmgr.insert_many('Deck', deckDataList)                
+                if cardDataList:                                                   
+                    # Remove duplicate entries but keep the first one in the list
+                    seen = set()
+                    cardDataList = [x for x in cardDataList if not (x['_id'] in seen or seen.add(x['_id']))]                                    
+                    self.dbmgr.insert_many('Card', cardDataList)
+    
+        if fusions_data:
+            with tqdm(total=len(fusions_data), desc="Saving Fusions",mininterval=0.1, colour='YELLOW') as pbar:
+                for fusion_data in fusions_data:
+                    decks = fusion_data['myDecks']            
+                    fusionDeckNames = []
+                    if isinstance(decks[0], str):
+                        fusionDeckNames = [deckName for deckName in decks]
+                    else:
+                        fusionDeckNames = [deck['name'] for deck in decks]
+                                    
+                    fusion = Fusion.from_data(fusion_data)            
+                    fusion.save()           
+                    self.online_fusions.append(fusion_data)
+                    pbar.update(1)
                          
     def make_fusions(self):
         # Get all deckNames from the database
@@ -73,7 +93,7 @@ class DeckLibrary:
             multi_process.run()
            
 
-from pymongo import UpdateOne
+from pymongo.operations import UpdateOne
 import networkx as nx
 
 def create_fusion(dataChunks):

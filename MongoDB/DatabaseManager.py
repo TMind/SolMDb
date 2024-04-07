@@ -1,6 +1,4 @@
 import importlib
-
-from pytest import param
 from MongoDB.MongoDB import MongoDB
 #from MyGraph import MyGraph
 import GlobalVariables

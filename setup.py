@@ -1,4 +1,5 @@
-from setuptools import setup
+from setuptools import setup, find_packages  
+
 import sys
 
 #mac - virtualenv then python setup.py py2app
@@ -15,10 +16,10 @@ if sys.platform == "win32":
       author='gchristian',
       author_email='na',
       license='',
-      packages=['SolDB'],
+      packages=find_packages(),
       zip_safe=False,
       install_requires=[
-          'graph','argparse','wxPython','requests'
+          'argparse','wxPython','requests'
       ],
       include_package_data=True)
 elif sys.platform == 'darwin':
@@ -53,9 +54,9 @@ else:
       author='gchristian',
       author_email='na',
       license='',
-      packages=['SolDB'],
+      packages=find_packages(), 
       zip_safe=False,
       install_requires=[
-          'graph','argparse','wxPython','requests'
+          'argparse','wxPython','requests'
       ],
       include_package_data=True)

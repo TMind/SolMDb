@@ -1,35 +1,12 @@
 MONGODB_VERSION=$(cat .mongo_version)
 MONGODB_PATH=${CONDA_DIR}/mongodb-$MONGODB_VERSION
 MONGODB_BASE=mongodb-linux-x86_64
-
 MONGO_DBPATH=${MONGODB_PATH}/data/db
-
+MONGODB_FILE=${MONGODB_BASE}-${MONGODB_VERSION}
 echo "Download mongo db installer..."
-#https://fastdl.mongodb.org/linux/${MONGODB_BASE}-4.0.16.tgz
-wget -q https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${MONGODB_VERSION}.tgz
-
+wget -q https://fastdl.mongodb.org/linux/${MONGODB_FILE}.tgz
 echo "Install mongodb..."
-tar -xvf ${MONGODB_BASE}-${MONGODB_VERSION}.tgz >/dev/null 
-rm ${MONGODB_BASE}-${MONGODB_VERSION}.tgz
-mv ${MONGODB_BASE}-${MONGODB_VERSION} ${MONGODB_PATH}
-
+tar -xvf ${MONGODB_FILE}.tgz
+rm ${MONGODB_FILE}.tgz
+mv ${MONGODB_FILE} ${MONGODB_PATH}
 mkdir -p $MONGO_DBPATH
-
-#Start the db and seed it
-echo "Start mongo db so we can see it..."
-${MONGODB_PATH}/bin/mongod --dbpath $MONGO_DBPATH &
-
-echo "Seed mongo db..."
-DB_NAME=test_database
-COLLECTION_NAME=stuff
-DATA_FILE=init_db/mongo/seed.json
-
-${MONGODB_PATH}/bin/mongoimport --db $DB_NAME --collection $COLLECTION_NAME --file $DATA_FILE
-
-#We can also use mongorestore, eg with commands of the form:
-#${MONGODB_PATH}/bin/mongorestore --drop --db $DBNAME $DATA_FILE
-echo "Tidy up mongo seed data..."
-rm init_db/mongo/seed.json
-
-#Cleanly shutdown the mongo server
-${MONGODB_PATH}/bin/mongod --shutdown --dbpath $MONGO_DBPATH

@@ -1,4 +1,5 @@
 curl
 telnet
 nmap
-ping
+net-tools
+iproute2

@@ -14,18 +14,20 @@ from Filter import Filter
 
 from soldb import main, parse_arguments
 from IPython.display import display
+
 import logging
 from Synergy import SynergyTemplate
+import pandas as pd
 
 
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
 logging.basicConfig(level=logging.INFO)
-GlobalVariables.username = 'tmind'
+GlobalVariables.username = 'enterUsernameHere'
 #uri = "mongodb://localhost:27017"
 uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
-myDB = DatabaseManager(GlobalVariables.username, uri=uri)
+myDB = DatabaseManager(GlobalVariables.username)
 
 synergy_template = SynergyTemplate()    
 
@@ -34,6 +36,16 @@ ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'
 #Read Entities and Forgeborns from Files into Database
 myUCL = UniversalLibrary(GlobalVariables.username, *ucl_paths)
 deckCollection = None
+
+# Widget Variables
+factionToggles = []
+dropdowns = []
+factionNames = ['Alloyin', 'Nekrium', 'Tempys', 'Uterra']
+types = ['Decks', 'Fusions', 'Entities', 'Forgeborns']
+    
+out = widgets.Output()
+out_df = widgets.Output()
+
 
 def get_net_decks(args, myApi):
     if args.id:
@@ -114,7 +126,7 @@ def graphToNet(graph, size=10):
 def create_faction_toggle(faction_names, initial_style='info'):
     faction_toggle = widgets.ToggleButtons(
         options=faction_names,
-        description='Faction:',
+        description='',
         disabled=False,
         button_style=initial_style,
         tooltips=['Description of slow', 'Description of regular', 'Description of fast'],
@@ -129,6 +141,9 @@ def create_faction_toggle(faction_names, initial_style='info'):
             faction_toggle.button_style = 'danger'
         elif change['new'] == 'Uterra':
             faction_toggle.button_style = 'success'
+
+        # Force a redraw of the widget
+        faction_toggle.layout = widgets.Layout()
 
     faction_toggle.observe(update_button_style, 'value')
 
@@ -158,10 +173,17 @@ def button_reload(button, value):
         myUCL._read_entities_from_csv(os.path.join('csv', 'sff.csv'))
     elif value == 'Forgeborns':
         myUCL._read_forgeborn_from_csv(os.path.join('csv', 'forgeborn.csv'))
+    
+    # Call refresh function for dropdowns
+    on_username_change({'new': GlobalVariables.username})
 
-def button_on_click(button, dropdown1, dropdown2, out):
-    myDeckA = Deck.lookup(dropdown1.value)
-    myDeckB = Deck.lookup(dropdown2.value)
+def button_show_graph(button):
+    myDecks = []
+    for dropdown in dropdowns:
+        myDecks.append(Deck.lookup(dropdown.value))
+    
+    myDeckA = myDecks[0]
+    myDeckB = myDecks[1]
 
     if myDeckA and myDeckB:
         fusionName = f"{myDeckA.name}_{myDeckB.name}"
@@ -185,22 +207,18 @@ def button_on_click(button, dropdown1, dropdown2, out):
                 net = graphToNet(myGraph.G)
                 display(net.show(f"{deck.name}.html"))
 
-def on_username_change(change, factionToggle1, dropdown1, factionToggle2, dropdown2):
-    logging.info('on_username_change started')
-    start_time = time.time()
 
+#def on_username_change(change, factionToggle1, dropdown1, factionToggle2, dropdown2):    
+def on_username_change(change):    
     new_username = change['new']
     if new_username:  # Check that the username is not empty
         #print(f"Changing username -> {new_username}")
         GlobalVariables.username = new_username
         myDB.set_database_name(GlobalVariables.username)
-        update_items(factionToggle1, dropdown1)
-        update_items(factionToggle2, dropdown2)
+        for factionToggle, dropdown in zip(factionToggles, dropdowns):
+            update_items(factionToggle, dropdown)            
     else:
         print("Username cannot be an empty string")
-    
-    end_time = time.time()
-    logging.info('on_username_change finished, took %s seconds', end_time - start_time)
 
 def display_graph(deck, out):
     myGraph = MyGraph()
@@ -218,7 +236,7 @@ def update_items(faction_toggle, dropdown):
     deckNames = [deck['name'] for deck in deckCursor]
     dropdown.options = deckNames        
 
-def create_widgets(name, factionNames) :
+def create_widgets() :
     factionToggle = create_faction_toggle(factionNames)
     dropdown = widgets.Dropdown()
     update_items(factionToggle, dropdown)
@@ -227,12 +245,17 @@ def create_widgets(name, factionNames) :
 
 def create_database_list_widget(username):
     db_names = myDB.mdb.client.list_database_names()
-    db_names = [db for db in db_names if db not in ['local', 'admin', 'common']]
-    db_list = widgets.Combobox(
+    db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
+    db_list = widgets.RadioButtons(
         options=db_names,
         description='Databases:',
         disabled=False
     )
+    # Set the username to the value of the selected database
+    GlobalVariables.username = db_list.value
+    myDB.set_database_name(GlobalVariables.username)
+    # Also set the value of the username widget
+    username.value = GlobalVariables.username
 
     def on_db_list_change(change):    
         username.value = change['new']
@@ -241,21 +264,52 @@ def create_database_list_widget(username):
 
     return db_list
 
+def display_deck_stats(deck_name):
+    deck = myDB.find_one('Deck', {'name': deck_name})
+    print(f"Deck has been changed: {deck_name}")
+    if deck:
+        print(f"Deck has been found: {deck_name}")
+        stats = deck.get('stats', {})
+        #df = pd.DataFrame.from_dict(stats, orient='index', columns=['Value'])
+        # Convert the 'card_types' sub-dictionary into a DataFrame
+        card_types_df = pd.DataFrame.from_dict(stats['card_types'], orient='index')
+
+        # Convert the 'creature_averages' sub-dictionary into a DataFrame
+        creature_averages_df = pd.DataFrame.from_dict({k: v for k, v in stats['creature_averages'].items()}, orient='index')
+
+        # Replace NaN values with an empty string
+        card_types_df = card_types_df.fillna('')
+        creature_averages_df = creature_averages_df.fillna('')
+
+        # Create a lable for the Deck Stats
+        deck_stats_label = widgets.Label(value=f"Deck Stats for '{deck_name}':")
+
+        # Display the DataFrames
+        with out_df:
+          out_df.clear_output()
+          display(deck_stats_label)
+          display(card_types_df)
+          display(creature_averages_df)
+    else:
+        print(f"Deck '{deck_name}' not found in the database.")
+
+# Define a function to be called when the dropdown value changes
+def on_deck_change(change):
+    if change['type'] == 'change' and change['name'] == 'value':
+        display_deck_stats(change['new'])
+        print(f"Deck has been changed: {change['new']}")
 
 def create_interface():
 
-    factionNames = ['Alloyin', 'Nekrium', 'Tempys', 'Uterra']
-    types = ['Decks', 'Fusions', 'Entities', 'Forgeborns']
-        
-    out = widgets.Output()
-
-    
-    factionToggle1, dropdown1 = create_widgets('First', factionNames)       
-    factionToggle2, dropdown2 = create_widgets('Second', factionNames)       
+    for i in range(2):            
+        factionToggle, dropdown = create_widgets()
+        factionToggles.append(factionToggle)
+        dropdowns.append(dropdown)
+        dropdown.observe(on_deck_change)
 
     # Button to create network graph
     button_graph = widgets.Button(description="Show Graph")
-    button_graph.on_click(lambda button: button_on_click(button, dropdown1, dropdown2, out))
+    button_graph.on_click(lambda button: button_show_graph(button))
 
     # Toggle buttons to select load items
     loadToggle = widgets.ToggleButtons(
@@ -266,14 +320,21 @@ def create_interface():
         tooltips=['Decks from the website', 'Fusions from the website', 'Entities from the Collection Manager Sheet sff.csv', 'Forgeborns from the forgeborns.csv', 'Synergies from the Synergys.csv'])
 
     # Button to load decks / fusions / forgborns 
-    button_load = widgets.Button(description="Load Decks" )
+    button_load = widgets.Button(description="Load" )
     button_load.on_click(lambda button: button_reload(button, loadToggle.value))
 
     username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
-    username.observe(lambda change: on_username_change(change, factionToggle1, dropdown1, factionToggle2, dropdown2), 'value')
+    username.observe(lambda change: on_username_change(change), 'value')
 
     db_list = create_database_list_widget(username)
+    db_list_box = widgets.HBox([db_list, out_df])
+    
+   # Create a list of HBoxes of factionToggles, Labels, and dropdowns
+    toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
 
-    display(username, db_list, loadToggle, button_load, factionToggle1, dropdown1, factionToggle2, dropdown2, button_graph)
+    # Create a VBox to arrange the HBoxes vertically
+    toggle_box = widgets.VBox([username, db_list_box, loadToggle, button_load, *toggle_dropdown_pairs, button_graph])
+
+    display(toggle_box)        
     display(out)    
 

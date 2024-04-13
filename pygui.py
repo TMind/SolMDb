@@ -18,6 +18,7 @@ from IPython.display import display
 import logging
 from Synergy import SynergyTemplate
 import pandas as pd
+import qgrid
 
 
 # Define Variables
@@ -42,6 +43,8 @@ factionToggles = []
 dropdowns = []
 factionNames = ['Alloyin', 'Nekrium', 'Tempys', 'Uterra']
 types = ['Decks', 'Fusions', 'Entities', 'Forgeborns']
+username = None
+db_list = None 
     
 out = widgets.Output()
 out_df = widgets.Output()
@@ -150,6 +153,7 @@ def create_faction_toggle(faction_names, initial_style='info'):
     return faction_toggle
 
 def button_reload(button, value):
+    global db_list
     print(f"Reloading {value}")
     if value == 'Decks':
         arguments = ["--username" , GlobalVariables.username, 
@@ -174,8 +178,15 @@ def button_reload(button, value):
     elif value == 'Forgeborns':
         myUCL._read_forgeborn_from_csv(os.path.join('csv', 'forgeborn.csv'))
     
+    # Refresh db_list widget
+    db_names = myDB.mdb.client.list_database_names()
+    db_list.options = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
+    db_list.value = GlobalVariables.username
+
     # Call refresh function for dropdowns
     on_username_change({'new': GlobalVariables.username})
+
+    
 
 def button_show_graph(button):
     myDecks = []
@@ -243,7 +254,8 @@ def create_widgets() :
     factionToggle.observe(lambda change: update_items(factionToggle, dropdown), 'value')
     return factionToggle, dropdown
 
-def create_database_list_widget(username):
+def create_database_list_widget():
+    global username
     db_names = myDB.mdb.client.list_database_names()
     db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
     db_list = widgets.RadioButtons(
@@ -252,7 +264,8 @@ def create_database_list_widget(username):
         disabled=False
     )
     # Set the username to the value of the selected database
-    GlobalVariables.username = db_list.value
+    
+    GlobalVariables.username = db_list.value or 'user'
     myDB.set_database_name(GlobalVariables.username)
     # Also set the value of the username widget
     username.value = GlobalVariables.username
@@ -266,11 +279,10 @@ def create_database_list_widget(username):
 
 def display_deck_stats(deck_name):
     deck = myDB.find_one('Deck', {'name': deck_name})
-    print(f"Deck has been changed: {deck_name}")
+    #print(f"Deck has been changed: {deck_name}")
     if deck:
-        print(f"Deck has been found: {deck_name}")
+        #print(f"Deck has been found: {deck_name}")
         stats = deck.get('stats', {})
-        #df = pd.DataFrame.from_dict(stats, orient='index', columns=['Value'])
         # Convert the 'card_types' sub-dictionary into a DataFrame
         card_types_df = pd.DataFrame.from_dict(stats['card_types'], orient='index')
 
@@ -284,12 +296,12 @@ def display_deck_stats(deck_name):
         # Create a lable for the Deck Stats
         deck_stats_label = widgets.Label(value=f"Deck Stats for '{deck_name}':")
 
-        # Display the DataFrames
+        # Display the DataFrames using qgrid
         with out_df:
-          out_df.clear_output()
-          display(deck_stats_label)
-          display(card_types_df)
-          display(creature_averages_df)
+            out_df.clear_output()
+            display(deck_stats_label)
+            qgrid.show_grid(card_types_df)
+            qgrid.show_grid(creature_averages_df)
     else:
         print(f"Deck '{deck_name}' not found in the database.")
 
@@ -297,10 +309,10 @@ def display_deck_stats(deck_name):
 def on_deck_change(change):
     if change['type'] == 'change' and change['name'] == 'value':
         display_deck_stats(change['new'])
-        print(f"Deck has been changed: {change['new']}")
+        #print(f"Deck has been changed: {change['new']}")
 
 def create_interface():
-
+    global db_list, username
     for i in range(2):            
         factionToggle, dropdown = create_widgets()
         factionToggles.append(factionToggle)
@@ -319,15 +331,18 @@ def create_interface():
         button_style='', # 'success', 'info', 'warning', 'danger' or ''
         tooltips=['Decks from the website', 'Fusions from the website', 'Entities from the Collection Manager Sheet sff.csv', 'Forgeborns from the forgeborns.csv', 'Synergies from the Synergys.csv'])
 
-    # Button to load decks / fusions / forgborns 
-    button_load = widgets.Button(description="Load" )
-    button_load.on_click(lambda button: button_reload(button, loadToggle.value))
 
     username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
     username.observe(lambda change: on_username_change(change), 'value')
 
-    db_list = create_database_list_widget(username)
+    db_list = create_database_list_widget()
     db_list_box = widgets.HBox([db_list, out_df])
+
+    # Button to load decks / fusions / forgborns 
+    button_load = widgets.Button(description="Load" )
+    button_load.on_click(lambda button: button_reload(button, loadToggle.value))
+
+ 
     
    # Create a list of HBoxes of factionToggles, Labels, and dropdowns
     toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]

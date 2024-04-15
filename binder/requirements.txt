@@ -6,3 +6,4 @@ Pillow
 scipy
 tqdm
 jupyter-server-proxy
+requests

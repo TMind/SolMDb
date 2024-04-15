@@ -299,9 +299,12 @@ def display_deck_stats(deck_name):
         # Display the DataFrames using qgrid
         with out_df:
             out_df.clear_output()
-            display(deck_stats_label)
-            qgrid.show_grid(card_types_df)
-            qgrid.show_grid(creature_averages_df)
+            display(deck_stats_label)            
+            display(card_types_df)            
+            for df in [card_types_df, creature_averages_df]:
+                qgrid_widget = qgrid.show_grid(df)            
+                display(qgrid_widget)
+            
     else:
         print(f"Deck '{deck_name}' not found in the database.")
 

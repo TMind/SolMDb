@@ -12,3 +12,6 @@ txt/
 gui/*
 build/*
 dist/*
+myenv/*
+.ipynb_checkpoints/*
+lib/*

@@ -8,3 +8,4 @@ tqdm
 jupyter-server-proxy
 requests
 pandas
+qgridnext

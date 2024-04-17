@@ -88,6 +88,14 @@ def get_col_filter(args):
             'K': ('composition', dict, None),
         }
         return Filter(query, attribute_map)
+
+def collection_to_df(collection_name):
+    #Get the collection from the database and turn it into a pandas dataframe
+    db_name = GlobalVariables.username
+    myDB.set_database_name(db_name)
+    df = pd.DataFrame(list(myDB.find(collection_name)))
+    return df
+
 def load_decks(args):
     net_decks = []
     net_fusions = []
@@ -227,7 +235,31 @@ def on_username_change(change):
         GlobalVariables.username = new_username
         myDB.set_database_name(GlobalVariables.username)
         for factionToggle, dropdown in zip(factionToggles, dropdowns):
-            update_items(factionToggle, dropdown)            
+            update_items(factionToggle, dropdown)                            
+        with out_df:
+            out_df.clear_output()
+            df = collection_to_df('Deck')
+            # Get all Decks from the database
+            deck_cursor = myDB.find('Deck', {}, {'stats': 1})
+            df_decks = pd.DataFrame(list(deck_cursor))
+            
+            # Create a DataFrame from the 'stats' sub-dictionary
+            df_decks_stats = pd.DataFrame()
+            for deck in deck_cursor:
+                if 'stats' in deck:
+                    # Add the 'stats' sub-dictionary to the DataFrame                    
+                    df_deck_stats = pd.DataFrame(list(deck['stats']))
+                    # Add df_deck_stats to the df_decks DataFrame
+                    df_decks_stats.append(df_deck_stats, ignore_index=True)            
+
+            qgrid_df_DeckStats = qgrid.show_grid(df_decks_stats, show_toolbar=True)            
+            display(qgrid_df_DeckStats)
+            
+            df_filtered = df[[ 'registeredDate', 'name', 'cardSetName', 'faction', 'forgebornId']]            
+            # Merge the filtered dataframe with the deck stats dataframe
+            merged_df = df_filtered.merge(df_decks_stats, left_index=True, right_index=True)
+            qgrid_df = qgrid.show_grid(df_filtered, show_toolbar=True)            
+            display(qgrid_df)
     else:
         print("Username cannot be an empty string")
 

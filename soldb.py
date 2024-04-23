@@ -206,20 +206,21 @@ def main(args):
             progress_bar.update(1)            
         progress_bar.close()
 
-        #Print Graph relations in file / gefx 
-        total_graphs  = len(egraphs) 
-        progress_bar = tqdm(total=total_graphs, desc="Printing Fusion Graphs",mininterval=0.1, colour='YELLOW')
-        for name, myGraph in egraphs.items():            
-            myGraph.print_graph(eval_filename)
+        if args.graph:
+            #Print Graph relations in file / gefx 
+            total_graphs  = len(egraphs) 
+            progress_bar = tqdm(total=total_graphs, desc="Printing Fusion Graphs",mininterval=0.1, colour='YELLOW')
+            for name, myGraph in egraphs.items():            
+                myGraph.print_graph(eval_filename)
 
-            if args.graph:
-                eval_path = Path(eval_filename)
-                gefxFolder = os.path.join(eval_path.parent.absolute(),"gefx")
-                Path(gefxFolder).mkdir(parents=True, exist_ok=True)
+                if args.graph:
+                    eval_path = Path(eval_filename)
+                    gefxFolder = os.path.join(eval_path.parent.absolute(),"gefx")
+                    Path(gefxFolder).mkdir(parents=True, exist_ok=True)
 
-                myGraph.write_gexf_file(gefxFolder, name.replace('|', '_'))
-            progress_bar.update(1)
-        progress_bar.close()
+                    myGraph.write_gexf_file(gefxFolder, name.replace('|', '_'))
+                progress_bar.update(1)
+            progress_bar.close()
         
         if eval_filename:     
             ev.export_csv(eval_filename + '_interfaction_only', egraphs, True)
@@ -257,7 +258,8 @@ def cache_init(args):
     if args.username:
         deck_library_name += f"_{args.username}"
         eval_graphs_name  += f"_{args.username}"
-        args.eval         += f"_{args.username}"
+        if args.eval and args.eval is not True:
+            args.eval         += f"_{args.username}"
 
     if args.filename:
         deck_library_name = f"{args.filename}_library"

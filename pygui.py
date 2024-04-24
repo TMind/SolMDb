@@ -29,6 +29,7 @@ GlobalVariables.username = 'enterUsernameHere'
 #uri = "mongodb://localhost:27017"
 uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
 myDB = DatabaseManager(GlobalVariables.username)
+commonDB = DatabaseManager('common')
 
 synergy_template = SynergyTemplate()    
 
@@ -95,6 +96,64 @@ def collection_to_df(collection_name):
     myDB.set_database_name(db_name)
     df = pd.DataFrame(list(myDB.find(collection_name)))
     return df
+
+
+def create_deck_dataframe():
+
+    # Get all Decks from the database
+    deck_cursor = myDB.find('Deck', {})
+    df_decks = pd.DataFrame(list(deck_cursor))
+    df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'cardSetNo', 'faction', 'forgebornId']].copy()
+
+    additional_columns = ['A1', 'A2', 'A3', 'H1', 'H2', 'H3']
+    for column in additional_columns:
+        df_decks_filtered.loc[:,column] = 0.0
+
+    df_decks_filtered.set_index('name', inplace=True)
+
+    # Create a DataFrame from the 'stats' sub-dictionary
+
+    for deck in myDB.find('Deck', {}):
+        if 'stats' in deck:
+            
+            stats = deck.get('stats', {})
+            # Convert the 'card_types' sub-dictionary into a DataFrame
+            card_types_df = pd.DataFrame.from_dict(stats['card_types'], orient='index')
+            creature_averages_df = pd.DataFrame.from_dict(stats['creature_averages'], orient='index')
+            
+            # Flatten the 'creature_averages' sub-dictionaries into a single-row DataFrame
+            # Convert the dictionary into a DataFrame
+            attack_dict = stats['creature_averages']['attack']
+            attack_df = pd.DataFrame([attack_dict], columns=attack_dict.keys())
+            attack_df.columns = ['A1', 'A2', 'A3']
+
+            defense_dict = stats['creature_averages']['health']
+            defense_df = pd.DataFrame([defense_dict], columns=defense_dict.keys())
+            defense_df.columns = ['H1', 'H2', 'H3']
+            
+            # Combine the attack and defense DataFrames into a single DataFrame
+            deck_stats_df = pd.concat([attack_df, defense_df], axis=1)
+            deck_stats_df['name'] = deck['name']
+            
+            # Round each value in the DataFrame
+            deck_stats_df = deck_stats_df.round(2)
+                                            
+            # Set the common column as the index in both dataframes
+            deck_stats_df.set_index('name', inplace=True)
+
+            # Update the corresponding row in df_decks_filtered with the stats from deck_stats_df
+            df_decks_filtered.update(deck_stats_df)
+
+        # Replace forgebornId with the forgeborn name from the database     
+        forgeborn = commonDB.find('Forgeborn', {'_id': deck['forgebornId']})
+        
+        if forgeborn:        
+            df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn[0]['name']
+        
+    # Reset the index in df_decks_filtered
+    df_decks_filtered.reset_index(inplace=True)
+    return df_decks_filtered
+
 
 def load_decks(args):
     net_decks = []
@@ -238,27 +297,23 @@ def on_username_change(change):
             update_items(factionToggle, dropdown)                            
         with out_df:
             out_df.clear_output()
-            df = collection_to_df('Deck')
-            # Get all Decks from the database
-            deck_cursor = myDB.find('Deck', {}, {'stats': 1})
-            df_decks = pd.DataFrame(list(deck_cursor))
             
-            # Create a DataFrame from the 'stats' sub-dictionary
-            df_decks_stats = pd.DataFrame()
-            for deck in deck_cursor:
-                if 'stats' in deck:
-                    # Add the 'stats' sub-dictionary to the DataFrame                    
-                    df_deck_stats = pd.DataFrame(list(deck['stats']))
-                    # Add df_deck_stats to the df_decks DataFrame
-                    df_decks_stats.append(df_deck_stats, ignore_index=True)            
+            deck_df = create_deck_dataframe()
+            
+            col_options =           { 'width': 50, }
+            col_defs = {        
+                'name':             { 'width': 250, },
+                'registeredDate':   { 'width': 200, },
+                'cardSetNo':        { 'width': 50,  },
+                'faction':          { 'width': 100,  },
+                'forgebornId':      { 'width': 100,  },
+            }
 
-            qgrid_df_DeckStats = qgrid.show_grid(df_decks_stats, show_toolbar=True)            
-            display(qgrid_df_DeckStats)
-            
-            df_filtered = df[[ 'registeredDate', 'name', 'cardSetName', 'faction', 'forgebornId']]            
-            # Merge the filtered dataframe with the deck stats dataframe
-            merged_df = df_filtered.merge(df_decks_stats, left_index=True, right_index=True)
-            qgrid_df = qgrid.show_grid(df_filtered, show_toolbar=True)            
+            qgrid_df = qgrid.show_grid(deck_df,
+                                    column_options=col_options,
+                                    column_definitions=col_defs,
+                                    grid_options={'forceFitColumns': False},
+                                    show_toolbar=True)
             display(qgrid_df)
     else:
         print("Username cannot be an empty string")
@@ -377,7 +432,7 @@ def create_interface():
     button_load = widgets.Button(description="Load" )
     button_load.on_click(lambda button: button_reload(button, loadToggle.value))
 
- 
+    deck_df = create_deck_dataframe()
     
    # Create a list of HBoxes of factionToggles, Labels, and dropdowns
     toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]

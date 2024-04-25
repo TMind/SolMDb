@@ -1,4 +1,5 @@
 import os, time, re
+from arrow import get
 import ipywidgets as widgets
 from pyvis.network import Network
 import networkx as nx
@@ -20,14 +21,15 @@ from Synergy import SynergyTemplate
 import pandas as pd
 import qgrid
 
+import icecream as ic
 
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
 logging.basicConfig(level=logging.INFO)
 GlobalVariables.username = 'enterUsernameHere'
-#uri = "mongodb://localhost:27017"
-uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
+uri = "mongodb://localhost:27017"
+#uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
 myDB = DatabaseManager(GlobalVariables.username)
 commonDB = DatabaseManager('common')
 
@@ -46,7 +48,8 @@ factionNames = ['Alloyin', 'Nekrium', 'Tempys', 'Uterra']
 types = ['Decks', 'Fusions', 'Entities', 'Forgeborns']
 username = None
 db_list = None 
-    
+card_title_widget = None 
+
 out = widgets.Output()
 out_df = widgets.Output()
 
@@ -98,12 +101,25 @@ def collection_to_df(collection_name):
     return df
 
 
-def create_deck_dataframe():
+def create_deck_stats_dataframe():
+    global card_title_widget
+
+    def get_card_title(card_id):
+        card = myDB.find_one('Card', {'_id': card_id})
+        return card['title'] if card else None
+
+    def get_forgeborn_name(forgeborn_id):
+        forgeborn = commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
+        return forgeborn['name'] if forgeborn else None
+
+    def filter_by_card_title(df, title):
+        return df[df['cardTitles'].apply(lambda titles: title in titles)]
 
     # Get all Decks from the database
     deck_cursor = myDB.find('Deck', {})
     df_decks = pd.DataFrame(list(deck_cursor))
     df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'cardSetNo', 'faction', 'forgebornId']].copy()
+    df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(lambda card_ids: [get_card_title(card_id) for card_id in card_ids])
 
     additional_columns = ['A1', 'A2', 'A3', 'H1', 'H2', 'H3']
     for column in additional_columns:
@@ -145,11 +161,20 @@ def create_deck_dataframe():
             df_decks_filtered.update(deck_stats_df)
 
         # Replace forgebornId with the forgeborn name from the database     
-        forgeborn = commonDB.find('Forgeborn', {'_id': deck['forgebornId']})
+        forgeborn_name = get_forgeborn_name(deck['forgebornId'])
+        #forgeborn = commonDB.find('Forgeborn', {'_id': deck['forgebornId']})
         
-        if forgeborn:        
-            df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn[0]['name']
-        
+        if forgeborn_name:        
+            df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_name
+
+    if card_title_widget and card_title_widget.value != '-':
+        df_filter = filter_by_card_title(df_decks_filtered, card_title_widget.value)
+        if not df_filter.empty:
+            df_decks_filtered = df_filter    
+
+    # Add the cardTitles back to the DataFrame
+    #df_decks_filtered['cardTitles'] = cardTitles
+
     # Reset the index in df_decks_filtered
     df_decks_filtered.reset_index(inplace=True)
     return df_decks_filtered
@@ -252,9 +277,6 @@ def button_reload(button, value):
 
     # Call refresh function for dropdowns
     on_username_change({'new': GlobalVariables.username})
-
-    
-
 def button_show_graph(button):
     myDecks = []
     for dropdown in dropdowns:
@@ -285,38 +307,43 @@ def button_show_graph(button):
                 net = graphToNet(myGraph.G)
                 display(net.show(f"{deck.name}.html"))
 
-
-#def on_username_change(change, factionToggle1, dropdown1, factionToggle2, dropdown2):    
 def on_username_change(change):    
     new_username = change['new']
-    if new_username:  # Check that the username is not empty
-        #print(f"Changing username -> {new_username}")
+    if new_username:  
         GlobalVariables.username = new_username
         myDB.set_database_name(GlobalVariables.username)
         for factionToggle, dropdown in zip(factionToggles, dropdowns):
             update_items(factionToggle, dropdown)                            
-        with out_df:
-            out_df.clear_output()
-            
-            deck_df = create_deck_dataframe()
-            
-            col_options =           { 'width': 50, }
-            col_defs = {        
-                'name':             { 'width': 250, },
-                'registeredDate':   { 'width': 200, },
-                'cardSetNo':        { 'width': 50,  },
-                'faction':          { 'width': 100,  },
-                'forgebornId':      { 'width': 100,  },
-            }
-
-            qgrid_df = qgrid.show_grid(deck_df,
-                                    column_options=col_options,
-                                    column_definitions=col_defs,
-                                    grid_options={'forceFitColumns': False},
-                                    show_toolbar=True)
-            display(qgrid_df)
+        display_deck_dataframe(change)
     else:
         print("Username cannot be an empty string")
+
+def display_deck_dataframe(change):
+    if change['new']:
+        with out_df:
+            out_df.clear_output()
+            deck_df = create_deck_stats_dataframe()
+            qgrid_widget = create_qgrid_stats_dataframe(deck_df)
+            display(qgrid_widget)
+
+def create_qgrid_stats_dataframe(dataframe):
+
+    col_options =           { 'width': 50, }
+    col_defs = {        
+        'name':             { 'width': 250, },
+        'registeredDate':   { 'width': 200, },
+        'cardSetNo':        { 'width': 50,  },
+        'faction':          { 'width': 100,  },
+        'forgebornId':      { 'width': 100,  },
+        'cardTitles':       { 'width': 200,  },
+    }
+
+    qgrid_df = qgrid.show_grid(dataframe,
+                            column_options=col_options,
+                            column_definitions=col_defs,
+                            grid_options={'forceFitColumns': False},
+                            show_toolbar=True)
+    return qgrid_df
 
 def display_graph(deck, out):
     myGraph = MyGraph()
@@ -364,6 +391,19 @@ def create_database_list_widget():
 
     return db_list
 
+def create_card_title_widget(username):
+    myDB.set_database_name(username)
+    all_card_titles = myDB.distinct('Card', 'title')
+    all_card_titles = ['-'] + all_card_titles 
+    card_title_widget = widgets.Combobox(
+        options=all_card_titles,
+        description='Card Title:',
+        ensure_option=False,
+        layout=widgets.Layout(width="200px"),
+        value='-'
+    )
+    return card_title_widget
+
 def display_deck_stats(deck_name):
     deck = myDB.find_one('Deck', {'name': deck_name})
     #print(f"Deck has been changed: {deck_name}")
@@ -402,7 +442,7 @@ def on_deck_change(change):
         #print(f"Deck has been changed: {change['new']}")
 
 def create_interface():
-    global db_list, username
+    global db_list, username, card_title_widget
     for i in range(2):            
         factionToggle, dropdown = create_widgets()
         factionToggles.append(factionToggle)
@@ -428,11 +468,12 @@ def create_interface():
     db_list = create_database_list_widget()
     db_list_box = widgets.HBox([db_list, out_df])
 
+    card_title_widget = create_card_title_widget(GlobalVariables.username)
+    card_title_widget.observe(display_deck_dataframe, 'value')
+    
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description="Load" )
     button_load.on_click(lambda button: button_reload(button, loadToggle.value))
-
-    deck_df = create_deck_dataframe()
     
    # Create a list of HBoxes of factionToggles, Labels, and dropdowns
     toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
@@ -440,6 +481,8 @@ def create_interface():
     # Create a VBox to arrange the HBoxes vertically
     toggle_box = widgets.VBox([username, db_list_box, loadToggle, button_load, *toggle_dropdown_pairs, button_graph])
 
+    display(card_title_widget)
+    display_deck_dataframe({'new': GlobalVariables.username})
     display(toggle_box)        
     display(out)    
 

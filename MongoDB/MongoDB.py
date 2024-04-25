@@ -25,6 +25,10 @@ class MongoDB:
         collection = self.get_collection(collection_name)
         collection.create_index([(field, 1)], unique=True)
 
+    def distinct(self, collection_name: str, field: str):
+        collection = self.get_collection(collection_name)
+        return collection.distinct(field)
+
     def insert(self, collection_name: str, data: dict):
         collection = self.get_collection(collection_name)
         return collection.insert_one(data).inserted_id

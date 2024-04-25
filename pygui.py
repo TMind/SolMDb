@@ -54,6 +54,7 @@ out = widgets.Output()
 out_df = widgets.Output()
 
 
+# Network Operations
 def fetch_network_decks(args, myApi):
     if args.id:
         urls = args.id.split('\n')
@@ -79,7 +80,19 @@ def fetch_network_decks(args, myApi):
             filename=args.filename
         )
         return net_data
+def load_deck_data(args):
+    net_decks = []
+    net_fusions = []
 
+    myApi = NetApi(myUCL)                    
+    net_results = fetch_network_decks(args, myApi)            
+        
+    if args.type == 'deck':     net_decks = net_results
+    elif args.type == 'fuseddeck': net_fusions = net_results
+        
+    deckCollection = DeckLibrary(net_decks, net_fusions, args.mode)
+
+# Data Handling and Transformation 
 def generate_deck_statistics_dataframe():
     global card_title_widget
 
@@ -158,45 +171,7 @@ def generate_deck_statistics_dataframe():
     df_decks_filtered.reset_index(inplace=True)
     return df_decks_filtered
 
-
-def load_deck_data(args):
-    net_decks = []
-    net_fusions = []
-
-    myApi = NetApi(myUCL)                    
-    net_results = fetch_network_decks(args, myApi)            
-        
-    if args.type == 'deck':     net_decks = net_results
-    elif args.type == 'fuseddeck': net_fusions = net_results
-        
-    col_filter = get_col_filter(args)    
-    deckCollection = DeckLibrary(net_decks, net_fusions, args.mode)
-
-def visualize_network_graph(graph, size=10):
-    # Modify the labels of the nodes to include the length of the parents list
-    degree_centrality = nx.degree_centrality(graph)
-    betweenness_centrality = nx.betweenness_centrality(graph)
-    #partition = nx.community.label_propagation_communities(graph)
-
-    metric = betweenness_centrality
-
-    for node, value in metric.items() :
-        decimal = value * size * 1000
-        graph.nodes[node]['value'] = decimal
-        graph.nodes[node]['label'] = node
-
-    for node, data in graph.nodes(data=True):
-        num_parents = len(data.get('parents', []))        
-        graph.nodes[node]['label'] += f"[{num_parents}]"
-        
-    net = Network(notebook=True, directed=True, height="1500px", width="2000px", cdn_resources='in_line')    
-    net.from_nx(graph)
-    net.force_atlas_2based()
-    net.show_buttons()
-    print("Displaying Graph!")
-    #display(net.show('graph.html'))
-    return net
-
+# User Interface Management
 def create_faction_selection_toggle(faction_names, initial_style='info'):
     faction_toggle = widgets.ToggleButtons(
         options=faction_names,
@@ -222,7 +197,77 @@ def create_faction_selection_toggle(faction_names, initial_style='info'):
     faction_toggle.observe(update_button_style, 'value')
 
     return faction_toggle
+def create_deck_grid_view(dataframe):
 
+    col_options =           { 'width': 50, }
+    col_defs = {        
+        'name':             { 'width': 250, },
+        'registeredDate':   { 'width': 200, },
+        'cardSetNo':        { 'width': 50,  },
+        'faction':          { 'width': 100,  },
+        'forgebornId':      { 'width': 100,  },
+        'cardTitles':       { 'width': 200,  },
+    }
+
+    qgrid_df = qgrid.show_grid(dataframe,
+                            column_options=col_options,
+                            column_definitions=col_defs,
+                            grid_options={'forceFitColumns': False},
+                            show_toolbar=False)
+    return qgrid_df
+def initialize_widgets() :
+    factionToggle = create_faction_selection_toggle(factionNames)
+    dropdown = widgets.Dropdown()
+    refresh_dropdown_options(factionToggle, dropdown)
+    factionToggle.observe(lambda change: refresh_dropdown_options(factionToggle, dropdown), 'value')
+    return factionToggle, dropdown
+def create_database_selection_widget():
+    global username
+    db_names = myDB.mdb.client.list_database_names()
+    db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
+    db_list = widgets.RadioButtons(
+        options=db_names,
+        description='Databases:',
+        disabled=False
+    )
+    # Set the username to the value of the selected database
+    
+    GlobalVariables.username = db_list.value or 'user'
+    myDB.set_database_name(GlobalVariables.username)
+    # Also set the value of the username widget
+    username.value = GlobalVariables.username
+
+    def on_db_list_change(change):    
+        username.value = change['new']
+
+    db_list.observe(on_db_list_change, 'value')
+
+    return db_list
+def initialize_card_title_dropdown(username):
+    myDB.set_database_name(username)
+    all_card_titles = myDB.distinct('Card', 'title')
+    all_card_titles = ['-'] + all_card_titles 
+    card_title_widget = widgets.Dropdown(
+        options=all_card_titles,
+        description='Card Title:',
+        ensure_option=False,
+        layout=widgets.Layout(width="200px"),
+        value='-'
+    )
+    return card_title_widget
+
+# Event Handling
+def handle_username_change(change):    
+    global card_title_widget
+    new_username = change['new']
+    if new_username:  
+        GlobalVariables.username = new_username
+        myDB.set_database_name(GlobalVariables.username)
+        for factionToggle, dropdown in zip(factionToggles, dropdowns):
+            refresh_dropdown_options(factionToggle, dropdown)
+        update_decks_display(change)
+    else:
+        print("Username cannot be an empty string")
 def reload_data_on_click(button, value):
     global db_list
     print(f"Reloading {value}")
@@ -285,19 +330,6 @@ def display_graph_on_click(button):
                 myGraph.create_graph_children(deck)
                 net = visualize_network_graph(myGraph.G)
                 display(net.show(f"{deck.name}.html"))
-
-def handle_username_change(change):    
-    global card_title_widget
-    new_username = change['new']
-    if new_username:  
-        GlobalVariables.username = new_username
-        myDB.set_database_name(GlobalVariables.username)
-        for factionToggle, dropdown in zip(factionToggles, dropdowns):
-            refresh_dropdown_options(factionToggle, dropdown)
-        update_decks_display(change)
-    else:
-        print("Username cannot be an empty string")
-
 def update_decks_display(change):
     if change['new']:
         with out_df:
@@ -305,34 +337,6 @@ def update_decks_display(change):
             deck_df = generate_deck_statistics_dataframe()
             qgrid_widget = create_deck_grid_view(deck_df)
             display(qgrid_widget)
-
-def create_deck_grid_view(dataframe):
-
-    col_options =           { 'width': 50, }
-    col_defs = {        
-        'name':             { 'width': 250, },
-        'registeredDate':   { 'width': 200, },
-        'cardSetNo':        { 'width': 50,  },
-        'faction':          { 'width': 100,  },
-        'forgebornId':      { 'width': 100,  },
-        'cardTitles':       { 'width': 200,  },
-    }
-
-    qgrid_df = qgrid.show_grid(dataframe,
-                            column_options=col_options,
-                            column_definitions=col_defs,
-                            grid_options={'forceFitColumns': False},
-                            show_toolbar=False)
-    return qgrid_df
-
-def show_deck_graph(deck, out):
-    myGraph = MyGraph()
-    myGraph.create_graph_children(deck)
-    net = visualize_network_graph(myGraph.G)
-    with out:
-        out.clear_output() 
-        display(net.show(f"{deck.name}.html"))
-
 def refresh_dropdown_options(faction_toggle, dropdown):
     #print(f"Updating items for {faction_toggle.value} , username = {GlobalVariables.username}")
     myDB.set_database_name(GlobalVariables.username)    
@@ -341,49 +345,40 @@ def refresh_dropdown_options(faction_toggle, dropdown):
     deckNames = [deck['name'] for deck in deckCursor]
     dropdown.options = deckNames        
 
-def initialize_widgets() :
-    factionToggle = create_faction_selection_toggle(factionNames)
-    dropdown = widgets.Dropdown()
-    refresh_dropdown_options(factionToggle, dropdown)
-    factionToggle.observe(lambda change: refresh_dropdown_options(factionToggle, dropdown), 'value')
-    return factionToggle, dropdown
+# Visualization
+def visualize_network_graph(graph, size=10):
+    # Modify the labels of the nodes to include the length of the parents list
+    degree_centrality = nx.degree_centrality(graph)
+    betweenness_centrality = nx.betweenness_centrality(graph)
+    #partition = nx.community.label_propagation_communities(graph)
 
-def create_database_selection_widget():
-    global username
-    db_names = myDB.mdb.client.list_database_names()
-    db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
-    db_list = widgets.RadioButtons(
-        options=db_names,
-        description='Databases:',
-        disabled=False
-    )
-    # Set the username to the value of the selected database
-    
-    GlobalVariables.username = db_list.value or 'user'
-    myDB.set_database_name(GlobalVariables.username)
-    # Also set the value of the username widget
-    username.value = GlobalVariables.username
+    metric = betweenness_centrality
 
-    def on_db_list_change(change):    
-        username.value = change['new']
+    for node, value in metric.items() :
+        decimal = value * size * 1000
+        graph.nodes[node]['value'] = decimal
+        graph.nodes[node]['label'] = node
 
-    db_list.observe(on_db_list_change, 'value')
+    for node, data in graph.nodes(data=True):
+        num_parents = len(data.get('parents', []))        
+        graph.nodes[node]['label'] += f"[{num_parents}]"
+        
+    net = Network(notebook=True, directed=True, height="1500px", width="2000px", cdn_resources='in_line')    
+    net.from_nx(graph)
+    net.force_atlas_2based()
+    net.show_buttons()
+    print("Displaying Graph!")
+    #display(net.show('graph.html'))
+    return net
+def show_deck_graph(deck, out):
+    myGraph = MyGraph()
+    myGraph.create_graph_children(deck)
+    net = visualize_network_graph(myGraph.G)
+    with out:
+        out.clear_output() 
+        display(net.show(f"{deck.name}.html"))
 
-    return db_list
-
-def initialize_card_title_dropdown(username):
-    myDB.set_database_name(username)
-    all_card_titles = myDB.distinct('Card', 'title')
-    all_card_titles = ['-'] + all_card_titles 
-    card_title_widget = widgets.Dropdown(
-        options=all_card_titles,
-        description='Card Title:',
-        ensure_option=False,
-        layout=widgets.Layout(width="200px"),
-        value='-'
-    )
-    return card_title_widget
-
+# Setup and Initialization
 def setup_interface():
     global db_list, username, card_title_widget
     for i in range(2):            

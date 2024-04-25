@@ -1,6 +1,7 @@
 import os, time, re
 from arrow import get
 import ipywidgets as widgets
+from networkx import combinatorial_embedding_to_pos
 from pyvis.network import Network
 import networkx as nx
 
@@ -21,7 +22,9 @@ from Synergy import SynergyTemplate
 import pandas as pd
 import qgrid
 
-import icecream as ic
+from icecream import ic
+
+#ic.disable()
 
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
@@ -48,7 +51,7 @@ factionNames = ['Alloyin', 'Nekrium', 'Tempys', 'Uterra']
 types = ['Decks', 'Fusions', 'Entities', 'Forgeborns']
 username = None
 db_list = None 
-card_title_widget = None 
+cardTypes_names_widget = {}
 
 out = widgets.Output()
 out_df = widgets.Output()
@@ -94,25 +97,39 @@ def load_deck_data(args):
 
 # Data Handling and Transformation 
 def generate_deck_statistics_dataframe():
-    global card_title_widget
+    global cardTypes_names_widget
 
     def get_card_title(card_id):
         card = myDB.find_one('Card', {'_id': card_id})
-        return card['title'] if card else None
+        if card: 
+            if 'title' in card:
+                return card['title']
+            elif 'name' in card:
+                return card['name']
+            else:
+                print(f"Card {card_id} has no title/name")
+                return ''
+        else:
+            print(f"Card {card_id} not found")
+            return ''
 
     def get_forgeborn_name(forgeborn_id):
         forgeborn = commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
         return forgeborn['name'] if forgeborn else None
 
-    def filter_by_card_title(df, title):
-        return df[df['cardTitles'].apply(lambda titles: title in titles)]
+    def get_card_titles(card_ids):
+        card_titles = []
+        for card_id in card_ids:
+            card_title = get_card_title(card_id)
+            card_titles.append(card_title)
+        return card_titles
 
     # Get all Decks from the database
     deck_cursor = myDB.find('Deck', {})
     df_decks = pd.DataFrame(list(deck_cursor))
     df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'cardSetNo', 'faction', 'forgebornId']].copy()
-    df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(lambda card_ids: [get_card_title(card_id) for card_id in card_ids])
-
+    df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
+    
     additional_columns = ['A1', 'A2', 'A3', 'H1', 'H2', 'H3']
     for column in additional_columns:
         df_decks_filtered.loc[:,column] = 0.0
@@ -153,19 +170,41 @@ def generate_deck_statistics_dataframe():
             df_decks_filtered.update(deck_stats_df)
 
         # Replace forgebornId with the forgeborn name from the database     
-        forgeborn_name = get_forgeborn_name(deck['forgebornId'])
-        #forgeborn = commonDB.find('Forgeborn', {'_id': deck['forgebornId']})
+        forgeborn_name = get_forgeborn_name(deck['forgebornId'])        
         
         if forgeborn_name:        
             df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_name
 
-    if card_title_widget and card_title_widget.value != '-':
-        df_filter = filter_by_card_title(df_decks_filtered, card_title_widget.value)
-        if not df_filter.empty:
-            df_decks_filtered = df_filter    
+    def check_substring_in_titles(titles, substring):
+        if titles:
+            for title in titles:
+                if title:                    
+                    if substring in title:
+                        return True
+                    #print(f"{substring} not in {titles}")        
+                else:
+                    print(f"Title is empty")
+        else:
+            print(f"Titles is empty")
+        return False
+        
+    def filter_by_substring(df, substring): 
+        if substring == '':      return df
+        else:
+            theDF = df['cardTitles'] 
+            myDF = theDF.apply(check_substring_in_titles, substring=substring)
+            ret_df = df[myDF]
+        return ret_df
 
-    # Add the cardTitles back to the DataFrame
-    #df_decks_filtered['cardTitles'] = cardTitles
+    df_filtered = df_decks_filtered
+    for dropdown in cardTypes_names_widget.values():   
+        if not df_filtered.empty:         
+            df_filtered = filter_by_substring(df_filtered, dropdown.value)   
+            #ic(df_filtered)     
+        else:
+            print("Dataframe is empty")            
+
+    df_decks_filtered = df_filtered
 
     # Reset the index in df_decks_filtered
     df_decks_filtered.reset_index(inplace=True)
@@ -215,12 +254,14 @@ def create_deck_grid_view(dataframe):
                             grid_options={'forceFitColumns': False},
                             show_toolbar=False)
     return qgrid_df
+
 def initialize_widgets() :
     factionToggle = create_faction_selection_toggle(factionNames)
     dropdown = widgets.Dropdown()
     refresh_dropdown_options(factionToggle, dropdown)
     factionToggle.observe(lambda change: refresh_dropdown_options(factionToggle, dropdown), 'value')
     return factionToggle, dropdown
+
 def create_database_selection_widget():
     global username
     db_names = myDB.mdb.client.list_database_names()
@@ -243,18 +284,26 @@ def create_database_selection_widget():
     db_list.observe(on_db_list_change, 'value')
 
     return db_list
-def initialize_card_title_dropdown(username):
-    myDB.set_database_name(username)
-    all_card_titles = myDB.distinct('Card', 'title')
-    all_card_titles = ['-'] + all_card_titles 
-    card_title_widget = widgets.Dropdown(
-        options=all_card_titles,
-        description='Card Title:',
+def initialize_cardType_names_dropdown(cardTypes):
+    cardType_entities_names = []
+    for cardType in cardTypes.split(' '):        
+        cardType_entities  = commonDB.find('Entity', {"attributes.cardType": cardType})       
+        cardType_entities_names = cardType_entities_names + [cardType_entity['name'] for cardType_entity in cardType_entities]    
+        #ic(cardType_entities_names)
+        
+    cardType_entities_names = [''] + cardType_entities_names
+    
+    #Sort cardType_entities_names
+    cardType_entities_names.sort()
+
+    cardType_name_widget = widgets.Dropdown(
+        options=cardType_entities_names,
+        description='',
         ensure_option=False,
         layout=widgets.Layout(width="200px"),
-        value='-'
+        value=''
     )
-    return card_title_widget
+    return cardType_name_widget
 
 # Event Handling
 def handle_username_change(change):    
@@ -268,6 +317,7 @@ def handle_username_change(change):
         update_decks_display(change)
     else:
         print("Username cannot be an empty string")
+
 def reload_data_on_click(button, value):
     global db_list
     print(f"Reloading {value}")
@@ -330,6 +380,7 @@ def display_graph_on_click(button):
                 myGraph.create_graph_children(deck)
                 net = visualize_network_graph(myGraph.G)
                 display(net.show(f"{deck.name}.html"))
+
 def update_decks_display(change):
     if change['new']:
         with out_df:
@@ -337,6 +388,7 @@ def update_decks_display(change):
             deck_df = generate_deck_statistics_dataframe()
             qgrid_widget = create_deck_grid_view(deck_df)
             display(qgrid_widget)
+
 def refresh_dropdown_options(faction_toggle, dropdown):
     #print(f"Updating items for {faction_toggle.value} , username = {GlobalVariables.username}")
     myDB.set_database_name(GlobalVariables.username)    
@@ -406,9 +458,35 @@ def setup_interface():
     db_list = create_database_selection_widget()
     db_list_box = widgets.VBox([db_list, out_df])
 
-    card_title_widget = initialize_card_title_dropdown(GlobalVariables.username)
-    card_title_widget.observe(update_decks_display, 'value')
-    
+    # Initialize two empty lists to hold the labels and widgets
+    label_items = []
+    widget_items = []
+
+    for cardTypes in ['Modifier', 'Creature Spell' ] :
+        cardType_names_widget = initialize_cardType_names_dropdown(cardTypes)
+        cardType_names_widget.observe(update_decks_display, 'value')
+        cardTypes_names_widget[cardTypes] = cardType_names_widget
+        
+        # Create a label for the widget with the same layout
+        label = widgets.Label(value=f'{cardTypes} Names:', layout=cardType_names_widget.layout)
+
+        # Add the label to the label_items list and the widget to the widget_items list
+        label_items.append(label)
+        widget_items.append(cardType_names_widget)
+
+    # Combine the label_items and widget_items lists
+    grid_items = label_items + widget_items
+
+    # Create HBoxes for the labels and widgets
+    label_box = widgets.HBox(label_items)
+    widget_box = widgets.HBox(widget_items)
+
+    # Create a VBox to arrange the HBoxes vertically
+    grid = widgets.VBox([label_box, widget_box])
+
+    # Display the GridBox
+    display(grid)
+
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description="Load" )
     button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
@@ -418,8 +496,7 @@ def setup_interface():
 
     # Create a VBox to arrange the HBoxes vertically
     toggle_box = widgets.VBox([username, db_list_box, loadToggle, button_load, *toggle_dropdown_pairs, button_graph])
-
-    display(card_title_widget)
+    
     update_decks_display({'new': GlobalVariables.username})
     display(toggle_box)        
     display(out)    

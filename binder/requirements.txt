@@ -9,3 +9,4 @@ jupyter-server-proxy
 requests
 pandas
 qgridnext
+icecream

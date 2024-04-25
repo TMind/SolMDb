@@ -308,12 +308,13 @@ def button_show_graph(button):
                 display(net.show(f"{deck.name}.html"))
 
 def on_username_change(change):    
+    global card_title_widget
     new_username = change['new']
     if new_username:  
         GlobalVariables.username = new_username
         myDB.set_database_name(GlobalVariables.username)
         for factionToggle, dropdown in zip(factionToggles, dropdowns):
-            update_items(factionToggle, dropdown)                            
+            update_items(factionToggle, dropdown)
         display_deck_dataframe(change)
     else:
         print("Username cannot be an empty string")
@@ -342,7 +343,7 @@ def create_qgrid_stats_dataframe(dataframe):
                             column_options=col_options,
                             column_definitions=col_defs,
                             grid_options={'forceFitColumns': False},
-                            show_toolbar=True)
+                            show_toolbar=False)
     return qgrid_df
 
 def display_graph(deck, out):
@@ -395,7 +396,7 @@ def create_card_title_widget(username):
     myDB.set_database_name(username)
     all_card_titles = myDB.distinct('Card', 'title')
     all_card_titles = ['-'] + all_card_titles 
-    card_title_widget = widgets.Combobox(
+    card_title_widget = widgets.Dropdown(
         options=all_card_titles,
         description='Card Title:',
         ensure_option=False,
@@ -466,7 +467,7 @@ def create_interface():
     username.observe(lambda change: on_username_change(change), 'value')
 
     db_list = create_database_list_widget()
-    db_list_box = widgets.HBox([db_list, out_df])
+    db_list_box = widgets.VBox([db_list, out_df])
 
     card_title_widget = create_card_title_widget(GlobalVariables.username)
     card_title_widget.observe(display_deck_dataframe, 'value')
@@ -475,7 +476,7 @@ def create_interface():
     button_load = widgets.Button(description="Load" )
     button_load.on_click(lambda button: button_reload(button, loadToggle.value))
     
-   # Create a list of HBoxes of factionToggles, Labels, and dropdowns
+    # Create a list of HBoxes of factionToggles, Labels, and dropdowns
     toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
 
     # Create a VBox to arrange the HBoxes vertically

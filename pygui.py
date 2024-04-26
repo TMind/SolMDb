@@ -29,7 +29,6 @@ from icecream import ic
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
-logging.basicConfig(level=logging.INFO)
 GlobalVariables.username = 'enterUsernameHere'
 uri = "mongodb://localhost:27017"
 #uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"

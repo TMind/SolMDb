@@ -117,6 +117,10 @@ def generate_deck_statistics_dataframe():
         forgeborn = commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
         return forgeborn['name'] if forgeborn else None
 
+    def get_forgeborn_abilities(forgeborn_id):
+        forgeborn = commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
+        return forgeborn['abilities'] if forgeborn else None
+
     def get_card_titles(card_ids):
         card_titles = []
         for card_id in card_ids:
@@ -125,26 +129,49 @@ def generate_deck_statistics_dataframe():
         return card_titles
 
     # Get all Decks from the database
-    deck_cursor = myDB.find('Deck', {})
-    df_decks = pd.DataFrame(list(deck_cursor))
-    df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'cardSetNo', 'faction', 'forgebornId']].copy()
-    df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
-    
-    additional_columns = ['A1', 'A2', 'A3', 'H1', 'H2', 'H3']
-    for column in additional_columns:
-        df_decks_filtered.loc[:,column] = 0.0
+    try:
+        deck_cursor = myDB.find('Deck', {})        
+        df_decks = pd.DataFrame(list(deck_cursor))
+        df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'cardSetNo', 'faction', 'forgebornId']].copy()
+        df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
+    except:
+        print("Error reading decks from the database. Try reloading the data.")
+        return pd.DataFrame()
 
+    # Add additional columns to the DataFrame -> FB
+    additional_columns_fb = ['FB1', 'FB2', 'FB3']
+    for column in additional_columns_fb:
+        df_decks_filtered.loc[:,column] = ''
+
+    # Add additional columns to the DataFrame -> Stats
+    additional_columns_stats = ['A1', 'A2', 'A3', 'H1', 'H2', 'H3']
+    for column in additional_columns_stats:
+        df_decks_filtered.loc[:,column] = 0.0
+            
     df_decks_filtered.set_index('name', inplace=True)
 
-    # Create a DataFrame from the 'stats' sub-dictionary
+    # Create a DataFrame from the fb_abilities sub-dictionary
+    for deck in myDB.find('Deck', {}):
+        if 'forgebornId' in deck:
+            forgeborn_id = deck['forgebornId']
+            forgeborn_abilities = get_forgeborn_abilities(forgeborn_id)
+            if forgeborn_abilities:
+                for i in range(len(forgeborn_abilities)):
+                    df_decks_filtered.loc[deck['name'], f'FB{i+1}'] = forgeborn_abilities[i]
 
+            # Replace forgebornId with the forgeborn name from the database     
+            forgeborn_name = get_forgeborn_name(forgeborn_id) 
+            if forgeborn_name:
+                df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_name
+                
+    # Create a DataFrame from the 'stats' sub-dictionary
     for deck in myDB.find('Deck', {}):
         if 'stats' in deck:
             
             stats = deck.get('stats', {})
             # Convert the 'card_types' sub-dictionary into a DataFrame
-            card_types_df = pd.DataFrame.from_dict(stats['card_types'], orient='index')
-            creature_averages_df = pd.DataFrame.from_dict(stats['creature_averages'], orient='index')
+            #card_types_df = pd.DataFrame.from_dict(stats['card_types'], orient='index')
+            #creature_averages_df = pd.DataFrame.from_dict(stats['creature_averages'], orient='index')
             
             # Flatten the 'creature_averages' sub-dictionaries into a single-row DataFrame
             # Convert the dictionary into a DataFrame
@@ -168,12 +195,6 @@ def generate_deck_statistics_dataframe():
 
             # Update the corresponding row in df_decks_filtered with the stats from deck_stats_df
             df_decks_filtered.update(deck_stats_df)
-
-        # Replace forgebornId with the forgeborn name from the database     
-        forgeborn_name = get_forgeborn_name(deck['forgebornId'])        
-        
-        if forgeborn_name:        
-            df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_name
 
     def check_substring_in_titles(titles, substring):
         if titles:
@@ -246,6 +267,9 @@ def create_deck_grid_view(dataframe):
         'faction':          { 'width': 100,  },
         'forgebornId':      { 'width': 100,  },
         'cardTitles':       { 'width': 200,  },
+        'FB1':              { 'width': 150,  },
+        'FB2':              { 'width': 150,  },
+        'FB3':              { 'width': 150,  },
     }
 
     qgrid_df = qgrid.show_grid(dataframe,
@@ -258,8 +282,8 @@ def create_deck_grid_view(dataframe):
 def initialize_widgets() :
     factionToggle = create_faction_selection_toggle(factionNames)
     dropdown = widgets.Dropdown()
-    refresh_dropdown_options(factionToggle, dropdown)
-    factionToggle.observe(lambda change: refresh_dropdown_options(factionToggle, dropdown), 'value')
+    refresh_faction_deck_options(factionToggle, dropdown)
+    factionToggle.observe(lambda change: refresh_faction_deck_options(factionToggle, dropdown), 'value')
     return factionToggle, dropdown
 
 def create_database_selection_widget():
@@ -284,9 +308,9 @@ def create_database_selection_widget():
     db_list.observe(on_db_list_change, 'value')
 
     return db_list
-def initialize_cardType_names_dropdown(cardTypes):
+def create_cardType_names_dropdown(cardTypes):
     cardType_entities_names = []
-    for cardType in cardTypes.split(' '):        
+    for cardType in cardTypes.split('/'):        
         cardType_entities  = commonDB.find('Entity', {"attributes.cardType": cardType})       
         cardType_entities_names = cardType_entities_names + [cardType_entity['name'] for cardType_entity in cardType_entities]    
         #ic(cardType_entities_names)
@@ -313,8 +337,8 @@ def handle_username_change(change):
         GlobalVariables.username = new_username
         myDB.set_database_name(GlobalVariables.username)
         for factionToggle, dropdown in zip(factionToggles, dropdowns):
-            refresh_dropdown_options(factionToggle, dropdown)
-        update_decks_display(change)
+            refresh_faction_deck_options(factionToggle, dropdown)
+        update_decks_display(change)          
     else:
         print("Username cannot be an empty string")
 
@@ -382,15 +406,15 @@ def display_graph_on_click(button):
                 display(net.show(f"{deck.name}.html"))
 
 def update_decks_display(change):
-    if change['new']:
+    if change['new'] or change['new'] == '':
         with out_df:
             out_df.clear_output()
             deck_df = generate_deck_statistics_dataframe()
-            qgrid_widget = create_deck_grid_view(deck_df)
-            display(qgrid_widget)
+            if not deck_df.empty:
+                qgrid_widget = create_deck_grid_view(deck_df)
+                display(qgrid_widget)
 
-def refresh_dropdown_options(faction_toggle, dropdown):
-    #print(f"Updating items for {faction_toggle.value} , username = {GlobalVariables.username}")
+def refresh_faction_deck_options(faction_toggle, dropdown):    
     myDB.set_database_name(GlobalVariables.username)    
     deckCursor = myDB.find('Deck', { 'faction' : faction_toggle.value })
     deckNames = []    
@@ -462,8 +486,8 @@ def setup_interface():
     label_items = []
     widget_items = []
 
-    for cardTypes in ['Modifier', 'Creature Spell' ] :
-        cardType_names_widget = initialize_cardType_names_dropdown(cardTypes)
+    for cardTypes in ['Modifier', 'Creature/Spell' ] :
+        cardType_names_widget = create_cardType_names_dropdown(cardTypes)
         cardType_names_widget.observe(update_decks_display, 'value')
         cardTypes_names_widget[cardTypes] = cardType_names_widget
         

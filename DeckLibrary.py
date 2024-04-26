@@ -12,25 +12,21 @@ class DeckLibrary:
         self.new_decks = []
         self.online_fusions = []
         
-        if decks_data:
-            deckNames = []
-            if not mode == 'update':
-                #db_name = self.dbmgr.get_current_db_name()
-                deckCursor = self.dbmgr.find('Deck', {}, {'name': 1})
-                #for deck in deckCursor:
-                #    deckNames.append(deck['name'])
-                deckNames = [deck['name'] for deck in deckCursor]
+        if decks_data:            
+            deckCursor = self.dbmgr.find('Deck', {}, {'name': 1})                
+            deckNamesDatabase = [deck['name'] for deck in deckCursor]
                                     
-            cardList = self.dbmgr.find('Card', {})        
-            cardIds = [card['_id'] for card in cardList]
+            cardListDatabase = self.dbmgr.find('Card', {})        
+            cardIdsDatabase = [card['_id'] for card in cardListDatabase]
 
-            length = len(decks_data) #self.dbmgr.count_documents('Deck')
+            length = len(decks_data) 
             with tqdm(total=length, desc="Saving Decks",mininterval=0.1, colour='BLUE') as pbar:
                 deckDataList = []
                 cardDataList = []
                 for deckData in decks_data:
                     deckName = deckData['name']
-                    if deckName not in deckNames:                    
+                    # Save only new decks
+                    if deckName not in deckNamesDatabase:                         
                         self.new_decks.append(deckData)    
                         new_deck = Deck.from_data(deckData)
                         if new_deck.children_data:
@@ -40,7 +36,7 @@ class DeckLibrary:
                         # Save all cards that are not already in the database
                         for index, card in new_deck.cards.items():
                             id = new_deck.cardIds[int(index)-1]                                                
-                            if id not in cardList:
+                            if id not in cardIdsDatabase:
                                 myCard = Card.from_data(card)                                                                                
                                 myCard.data._id = id                            
                                 cardDataList.append(myCard.to_data())

@@ -94,6 +94,31 @@ def load_deck_data(args):
         
     deckCollection = DeckLibrary(net_decks, net_fusions, args.mode)
 
+def generate_synergy_statistics_dataframe(deck_df):
+    global synergy_template
+    #Start with an empty dataframe
+    synergy_df = pd.DataFrame()
+
+    #Get the tags from the synergy_template
+    input_tags = list(synergy_template.get_input_tags())
+    output_tags = list(synergy_template.get_output_tags())
+
+    tags = input_tags + output_tags
+
+    synergy_df['tag'] = tags
+
+    # Now add columns for each deck from the statistics dataframe 
+    decklist = deck_df['name']
+
+    # Create a DataFrame with column names as keys and 0 as values
+    new_columns_df = pd.DataFrame(columns=decklist, index=synergy_df.index).fillna(0)
+    # Assuming `df` is your DataFrame and `column` is the name of the column you want to downcast
+    #synergy_df[column] = df[column].fillna(0).astype(int)
+    # Concatenate the original DataFrame with the new columns DataFrame
+    synergy_df = pd.concat([synergy_df, new_columns_df], axis=1)
+
+    return synergy_df
+
 # Data Handling and Transformation 
 def generate_deck_statistics_dataframe():
     global cardTypes_names_widget
@@ -256,6 +281,28 @@ def create_faction_selection_toggle(faction_names, initial_style='info'):
     faction_toggle.observe(update_button_style, 'value')
 
     return faction_toggle
+
+def create_syn_grid_view(dataframe):
+
+    col_options =   { 
+                        'width': 50, 
+                        'maxVisibleColumns': 5,
+                        'defaultColumnWidth' : 550,
+                    }
+    col_defs = {        
+        'name':             { 'width': 250, },
+        'tag':              { 'width': 150, },
+        'index':            { 'width': 50,  },
+    }
+
+    qgrid_df = qgrid.show_grid(dataframe,
+                            column_options=col_options,
+                            column_definitions=col_defs,
+                            grid_options={'forceFitColumns': False},
+                            show_toolbar=False)
+    return qgrid_df
+
+
 def create_deck_grid_view(dataframe):
 
     col_options =           { 'width': 50, }
@@ -346,9 +393,7 @@ def reload_data_on_click(button, value):
     print(f"Reloading {value}")
     if value == 'Decks':
         arguments = ["--username" , GlobalVariables.username, 
-                    "--mode", 'update' ]
-                        #"--filter", "C~Biologist" 
-                        #"--type", "fuseddeck"  
+                    "--mode", 'update' ]                        
         print(f"Loading Decks with arguments {arguments}")
         args = parse_arguments(arguments)
         load_deck_data(args)    
@@ -356,9 +401,7 @@ def reload_data_on_click(button, value):
         arguments = ["--username" , GlobalVariables.username, 
                     "--mode", 'update',
                      "--type", 'fuseddeck'
-                     ]
-                        #"--filter", "C~Biologist" 
-                        #"--type", "fuseddeck"  
+                     ]                        
         print(f"Loading Fusions with arguments {arguments}")
         args = parse_arguments(arguments)
         load_deck_data(args)
@@ -374,6 +417,7 @@ def reload_data_on_click(button, value):
 
     # Call refresh function for dropdowns
     handle_username_change({'new': GlobalVariables.username})
+
 def display_graph_on_click(button):
     myDecks = []
     for dropdown in dropdowns:
@@ -409,9 +453,15 @@ def update_decks_display(change):
         with out_df:
             out_df.clear_output()
             deck_df = generate_deck_statistics_dataframe()
+            syn_df  = generate_synergy_statistics_dataframe(deck_df)
+            
             if not deck_df.empty:
                 qgrid_widget = create_deck_grid_view(deck_df)
-                display(qgrid_widget)
+                display(qgrid_widget)            
+
+            if not syn_df.empty:
+                            qgrid_widget = create_syn_grid_view(syn_df)
+                            display(qgrid_widget)            
 
 def refresh_faction_deck_options(faction_toggle, dropdown):    
     myDB.set_database_name(GlobalVariables.username)    
@@ -481,6 +531,27 @@ def setup_interface():
     db_list = create_database_selection_widget()
     db_list_box = widgets.VBox([db_list, out_df])
 
+
+    # Display the GridBox
+    grid_filter = create_filter_widgets()
+    display(grid_filter)
+
+    # Button to load decks / fusions / forgborns 
+    button_load = widgets.Button(description="Load" )
+    button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
+    
+    # Create a list of HBoxes of factionToggles, Labels, and dropdowns
+    toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
+
+    # Create a VBox to arrange the HBoxes vertically
+    toggle_box = widgets.VBox([username, db_list_box, loadToggle, button_load, *toggle_dropdown_pairs, button_graph])
+    
+    if GlobalVariables.username != 'user': update_decks_display({'new': GlobalVariables.username})
+    display(toggle_box)        
+    display(out) 
+
+def create_filter_widgets():
+
     # Initialize two empty lists to hold the labels and widgets
     label_items = []
     widget_items = []
@@ -506,21 +577,5 @@ def setup_interface():
 
     # Create a VBox to arrange the HBoxes vertically
     grid = widgets.VBox([label_box, widget_box])
-
-    # Display the GridBox
-    display(grid)
-
-    # Button to load decks / fusions / forgborns 
-    button_load = widgets.Button(description="Load" )
-    button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
-    
-    # Create a list of HBoxes of factionToggles, Labels, and dropdowns
-    toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
-
-    # Create a VBox to arrange the HBoxes vertically
-    toggle_box = widgets.VBox([username, db_list_box, loadToggle, button_load, *toggle_dropdown_pairs, button_graph])
-    
-    update_decks_display({'new': GlobalVariables.username})
-    display(toggle_box)        
-    display(out)    
+    return grid   
 

@@ -269,10 +269,6 @@ def handle_debug_toggle(change):
 def handle_username_change(change):    
     global cardTypes_names_widget
 
-    # Check if card_title_widget has been initialized
-    if cardTypes_names_widget is None:
-        print("card_title_widget is not initialized yet")
-
     new_username = change['new']
     if new_username:  
         GlobalVariables.username = new_username
@@ -362,14 +358,25 @@ def update_decks_display(change):
 def update_filter_widget(change=None):
     global cardTypes_names_widget
     
-    if change:                
+    # Get values of both widgets
+    widget_values = {cardTypesString: cardType_widget.value for cardTypesString, cardType_widget in cardTypes_names_widget.items()}
+
+    if not change or all(value == '' for value in widget_values.values()):    
+        # If no change is passed or both values are '' , update both widgets
+        for cardTypesString, cardType_widget in cardTypes_names_widget.items():
+            if cardType_widget:
+                new_options = []
+                for cardType in cardTypesString.split('/'):
+                    new_options = new_options + get_cardType_entity_names(cardType)                
+                cardType_widget.options = [''] + new_options
+    else:
         # If a change is passed, update the other widget
         changed_widget = change['owner']  
         if change['new'] == '':             
-            # Get the value of the other widget ‚
+            # Get the value of the other widget from the already fetched values
             for cardTypesString, cardType_widget in cardTypes_names_widget.items():
                 if cardType_widget and cardType_widget != changed_widget:                    
-                    change['new'] = cardType_widget.value
+                    change['new'] = widget_values[cardTypesString]
                     change['owner'] = cardType_widget                        
             update_filter_widget(change)            
         else:
@@ -379,15 +386,8 @@ def update_filter_widget(change=None):
                     for cardType in cardTypesString.split('/'):
                         new_options = new_options + get_cardType_entity_names(cardType)           
                     new_options = filter_options(change['new'], new_options)  # Filter the options                         
-                    cardType_widget.options = [''] + new_options
-    else:
-        # If no change is passed, update both widgets
-        for cardTypesString, cardType_widget in cardTypes_names_widget.items():
-            if cardType_widget:
-                new_options = []
-                for cardType in cardTypesString.split('/'):
-                    new_options = new_options + get_cardType_entity_names(cardType)                
-                cardType_widget.options = [''] + new_options
+                    cardType_widget.options = [''] + new_options    
+    
 
 def filter_options(value, options):
     # First get all card names from the database
@@ -402,7 +402,7 @@ def filter_options(value, options):
     
     # That should leave us with the options that are a substring of any card name and contain the value as a substring
     
-    print(f"Filtered options for {value}: {filtered_options}")
+    #print(f"Filtered options for {value}: {filtered_options}")
     return filtered_options
     
 
@@ -580,7 +580,7 @@ def create_cardType_names_dropdown(cardTypes):
 
 def get_cardType_entity_names(cardType):
 
-    print(f"Getting entity names for {cardType}")
+    #print(f"Getting entity names for {cardType}")
 
     cardType_entities  = commonDB.find('Entity', {"attributes.cardType": cardType})       
     cardType_entities_names = [cardType_entity['name'] for cardType_entity in cardType_entities]    
@@ -609,7 +609,7 @@ def get_cardType_entity_names(cardType):
     #Sort cardType_entities_names
     cardType_entities_names.sort()
 
-    print(f"Entity names for {cardType}: {cardType_entities_names}")
+    #print(f"Entity names for {cardType}: {cardType_entities_names}")
     return cardType_entities_names
 
 def create_filter_widgets():
@@ -621,7 +621,7 @@ def create_filter_widgets():
 
     for cardTypesString in ['Modifier', 'Creature/Spell' ] :
         cardType_names_widget = create_cardType_names_dropdown(cardTypesString)        
-        print(f"Adding {cardTypesString} widget")
+        #print(f"Adding {cardTypesString} widget")
         cardTypes_names_widget[cardTypesString] = cardType_names_widget
         cardType_names_widget.observe(update_decks_display, 'value')
         cardType_names_widget.observe(update_filter_widget, names='value')

@@ -108,14 +108,15 @@ def generate_synergy_statistics_dataframe(deck_df):
     synergy_df['tag'] = tags
 
     # Now add columns for each deck from the statistics dataframe 
-    decklist = deck_df['name']
+    if 'name' in deck_df.columns:
+        decklist = deck_df['name']
 
-    # Create a DataFrame with column names as keys and 0 as values
-    new_columns_df = pd.DataFrame(0, columns=decklist, index=synergy_df.index, dtype=float)    
-    # Assuming `df` is your DataFrame and `column` is the name of the column you want to downcast
-    #synergy_df[column] = df[column].fillna(0).astype(int)
-    # Concatenate the original DataFrame with the new columns DataFrame
-    synergy_df = pd.concat([synergy_df, new_columns_df], axis=1)
+        # Create a DataFrame with column names as keys and 0 as values
+        new_columns_df = pd.DataFrame(0, columns=decklist, index=synergy_df.index, dtype=float)    
+        # Assuming `df` is your DataFrame and `column` is the name of the column you want to downcast
+        #synergy_df[column] = df[column].fillna(0).astype(int)
+        # Concatenate the original DataFrame with the new columns DataFrame
+        synergy_df = pd.concat([synergy_df, new_columns_df], axis=1)
 
     return synergy_df
 

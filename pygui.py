@@ -17,14 +17,12 @@ from Filter import Filter
 from soldb import main, parse_arguments
 from IPython.display import display
 
-import logging
 from Synergy import SynergyTemplate
 import pandas as pd
 import qgrid
 
 from icecream import ic
-
-#ic.disable()
+ic.disable()
 
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
@@ -55,8 +53,10 @@ cardTypes_names_widget = {}
 out = widgets.Output()
 out_df = widgets.Output()
 
+######################
+# Network Operations #
+######################
 
-# Network Operations
 def fetch_network_decks(args, myApi):
     if args.id:
         urls = args.id.split('\n')
@@ -111,7 +111,7 @@ def generate_synergy_statistics_dataframe(deck_df):
     decklist = deck_df['name']
 
     # Create a DataFrame with column names as keys and 0 as values
-    new_columns_df = pd.DataFrame(columns=decklist, index=synergy_df.index).fillna(0)
+    new_columns_df = pd.DataFrame(0, columns=decklist, index=synergy_df.index, dtype=float)    
     # Assuming `df` is your DataFrame and `column` is the name of the column you want to downcast
     #synergy_df[column] = df[column].fillna(0).astype(int)
     # Concatenate the original DataFrame with the new columns DataFrame
@@ -245,7 +245,7 @@ def generate_deck_statistics_dataframe():
     for dropdown in cardTypes_names_widget.values():   
         if not df_filtered.empty:         
             df_filtered = filter_by_substring(df_filtered, dropdown.value)   
-            #ic(df_filtered)     
+            ic(df_filtered)     
         else:
             print("Dataframe is empty")            
 
@@ -255,135 +255,31 @@ def generate_deck_statistics_dataframe():
     df_decks_filtered.reset_index(inplace=True)
     return df_decks_filtered
 
-# User Interface Management
-def create_faction_selection_toggle(faction_names, initial_style='info'):
-    faction_toggle = widgets.ToggleButtons(
-        options=faction_names,
-        description='',
-        disabled=False,
-        button_style=initial_style,
-        tooltips=['Description of slow', 'Description of regular', 'Description of fast'],
-    )
+##################
+# Event Handling #
+##################
 
-    def update_button_style(change):
-        if change['new'] == 'Alloyin':
-            faction_toggle.button_style = 'info'
-        elif change['new'] == 'Nekrium':
-            faction_toggle.button_style = 'warning'
-        elif change['new'] == 'Tempys':
-            faction_toggle.button_style = 'danger'
-        elif change['new'] == 'Uterra':
-            faction_toggle.button_style = 'success'
+# Function to handle changes to the checkbox
+def handle_debug_toggle(change):
+    if change.new:
+        ic.enable()
+    else:
+        ic.disable()
 
-        # Force a redraw of the widget
-        faction_toggle.layout = widgets.Layout()
-
-    faction_toggle.observe(update_button_style, 'value')
-
-    return faction_toggle
-
-def create_syn_grid_view(dataframe):
-
-    col_options =   { 
-                        'width': 50, 
-                        'maxVisibleColumns': 5,
-                        'defaultColumnWidth' : 550,
-                    }
-    col_defs = {        
-        'name':             { 'width': 250, },
-        'tag':              { 'width': 150, },
-        'index':            { 'width': 50,  },
-    }
-
-    qgrid_df = qgrid.show_grid(dataframe,
-                            column_options=col_options,
-                            column_definitions=col_defs,
-                            grid_options={'forceFitColumns': False},
-                            show_toolbar=False)
-    return qgrid_df
-
-
-def create_deck_grid_view(dataframe):
-
-    col_options =           { 'width': 50, }
-    col_defs = {        
-        'name':             { 'width': 250, },
-        'registeredDate':   { 'width': 200, },
-        'cardSetNo':        { 'width': 50,  },
-        'faction':          { 'width': 100,  },
-        'forgebornId':      { 'width': 100,  },
-        'cardTitles':       { 'width': 200,  },
-        'FB1':              { 'width': 150,  },
-        'FB2':              { 'width': 150,  },
-        'FB3':              { 'width': 150,  },
-    }
-
-    qgrid_df = qgrid.show_grid(dataframe,
-                            column_options=col_options,
-                            column_definitions=col_defs,
-                            grid_options={'forceFitColumns': False},
-                            show_toolbar=False)
-    return qgrid_df
-
-def initialize_widgets() :
-    factionToggle = create_faction_selection_toggle(factionNames)
-    dropdown = widgets.Dropdown()
-    refresh_faction_deck_options(factionToggle, dropdown)
-    factionToggle.observe(lambda change: refresh_faction_deck_options(factionToggle, dropdown), 'value')
-    return factionToggle, dropdown
-
-def create_database_selection_widget():
-    global username
-    db_names = myDB.mdb.client.list_database_names()
-    db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
-    db_list = widgets.RadioButtons(
-        options=db_names,
-        description='Databases:',
-        disabled=False
-    )
-    # Set the username to the value of the selected database
-    
-    GlobalVariables.username = db_list.value or 'user'
-    myDB.set_database_name(GlobalVariables.username)
-    # Also set the value of the username widget
-    username.value = GlobalVariables.username
-
-    def on_db_list_change(change):    
-        username.value = change['new']
-
-    db_list.observe(on_db_list_change, 'value')
-
-    return db_list
-def create_cardType_names_dropdown(cardTypes):
-    cardType_entities_names = []
-    for cardType in cardTypes.split('/'):        
-        cardType_entities  = commonDB.find('Entity', {"attributes.cardType": cardType})       
-        cardType_entities_names = cardType_entities_names + [cardType_entity['name'] for cardType_entity in cardType_entities]    
-        #ic(cardType_entities_names)
-        
-    cardType_entities_names = [''] + cardType_entities_names
-    
-    #Sort cardType_entities_names
-    cardType_entities_names.sort()
-
-    cardType_name_widget = widgets.Dropdown(
-        options=cardType_entities_names,
-        description='',
-        ensure_option=False,
-        layout=widgets.Layout(width="200px"),
-        value=''
-    )
-    return cardType_name_widget
-
-# Event Handling
 def handle_username_change(change):    
-    global card_title_widget
+    global cardTypes_names_widget
+
+    # Check if card_title_widget has been initialized
+    if cardTypes_names_widget is None:
+        print("card_title_widget is not initialized yet")
+
     new_username = change['new']
     if new_username:  
         GlobalVariables.username = new_username
         myDB.set_database_name(GlobalVariables.username)
         for factionToggle, dropdown in zip(factionToggles, dropdowns):
             refresh_faction_deck_options(factionToggle, dropdown)
+        update_filter_widget()    
         update_decks_display(change)          
     else:
         print("Username cannot be an empty string")
@@ -463,6 +359,54 @@ def update_decks_display(change):
                             qgrid_widget = create_syn_grid_view(syn_df)
                             display(qgrid_widget)            
 
+def update_filter_widget(change=None):
+    global cardTypes_names_widget
+    
+    if change:                
+        # If a change is passed, update the other widget
+        changed_widget = change['owner']  
+        if change['new'] == '':             
+            # Get the value of the other widget ‚
+            for cardTypesString, cardType_widget in cardTypes_names_widget.items():
+                if cardType_widget and cardType_widget != changed_widget:                    
+                    change['new'] = cardType_widget.value
+                    change['owner'] = cardType_widget                        
+            update_filter_widget(change)            
+        else:
+            for cardTypesString, cardType_widget in cardTypes_names_widget.items():
+                if cardType_widget and cardType_widget != changed_widget and cardType_widget.value == '':                
+                    new_options = []
+                    for cardType in cardTypesString.split('/'):
+                        new_options = new_options + get_cardType_entity_names(cardType)           
+                    new_options = filter_options(change['new'], new_options)  # Filter the options                         
+                    cardType_widget.options = [''] + new_options
+    else:
+        # If no change is passed, update both widgets
+        for cardTypesString, cardType_widget in cardTypes_names_widget.items():
+            if cardType_widget:
+                new_options = []
+                for cardType in cardTypesString.split('/'):
+                    new_options = new_options + get_cardType_entity_names(cardType)                
+                cardType_widget.options = [''] + new_options
+
+def filter_options(value, options):
+    # First get all card names from the database
+    cards = myDB.find('Card', {})
+    cardNames = [card['name'] for card in cards]
+
+    # Filter all cardnames where value is a substring of 
+    filtered_cardNames = [cardName for cardName in cardNames if value in cardName]
+
+    # Filter all filtered_options that are a substring of any card name
+    filtered_options = [option for option in options if any(option in cardName for cardName in filtered_cardNames)]
+    
+    # That should leave us with the options that are a substring of any card name and contain the value as a substring
+    
+    print(f"Filtered options for {value}: {filtered_options}")
+    return filtered_options
+    
+
+
 def refresh_faction_deck_options(faction_toggle, dropdown):    
     myDB.set_database_name(GlobalVariables.username)    
     deckCursor = myDB.find('Deck', { 'faction' : faction_toggle.value })
@@ -495,6 +439,7 @@ def visualize_network_graph(graph, size=10):
     print("Displaying Graph!")
     #display(net.show('graph.html'))
     return net
+
 def show_deck_graph(deck, out):
     myGraph = MyGraph()
     myGraph.create_graph_children(deck)
@@ -503,7 +448,209 @@ def show_deck_graph(deck, out):
         out.clear_output() 
         display(net.show(f"{deck.name}.html"))
 
-# Setup and Initialization
+#############################
+# User Interface Management #
+#############################
+
+def create_debug_toggle():
+    debug_toggle = widgets.ToggleButton(
+        value=False,
+        description='Debug',
+        disabled=False,
+        button_style='info', # 'success', 'info', 'warning', 'danger' or ''
+        tooltip='Enable or disable debugging',
+        icon='check'
+    )
+    debug_toggle.observe(handle_debug_toggle, 'value')
+    return debug_toggle
+
+def create_faction_selection_toggle(faction_names, initial_style='info'):
+    faction_toggle = widgets.ToggleButtons(
+        options=faction_names,
+        description='',
+        disabled=False,
+        button_style=initial_style,
+        tooltips=['Description of slow', 'Description of regular', 'Description of fast'],
+    )
+
+    def update_button_style(change):
+        if change['new'] == 'Alloyin':
+            faction_toggle.button_style = 'info'
+        elif change['new'] == 'Nekrium':
+            faction_toggle.button_style = 'warning'
+        elif change['new'] == 'Tempys':
+            faction_toggle.button_style = 'danger'
+        elif change['new'] == 'Uterra':
+            faction_toggle.button_style = 'success'
+
+        # Force a redraw of the widget
+        faction_toggle.layout = widgets.Layout()
+
+    faction_toggle.observe(update_button_style, 'value')
+
+    return faction_toggle
+
+def create_syn_grid_view(dataframe):
+
+    col_options =   {                                                 
+                        'defaultColumnWidth' : 700,
+                    }
+    col_defs = {                
+        'tag':              { 'width': 175, },
+        'index':            { 'width': 50,  },
+    }
+
+    qgrid_df = qgrid.show_grid(dataframe,
+                            column_options=col_options,
+                            column_definitions=col_defs,
+                            grid_options={'forceFitColumns': False},
+                            show_toolbar=False)
+    return qgrid_df
+
+
+def create_deck_grid_view(dataframe):
+
+    col_options =           { 'width': 50, }
+    col_defs = {        
+        'name':             { 'width': 250, },
+        'registeredDate':   { 'width': 200, },
+        'cardSetNo':        { 'width': 50,  },
+        'faction':          { 'width': 100,  },
+        'forgebornId':      { 'width': 100,  },
+        'cardTitles':       { 'width': 200,  },
+        'FB1':              { 'width': 150,  },
+        'FB2':              { 'width': 150,  },
+        'FB3':              { 'width': 150,  },
+    }
+
+    qgrid_df = qgrid.show_grid(dataframe,
+                            column_options=col_options,
+                            column_definitions=col_defs,
+                            grid_options={'forceFitColumns': False},
+                            show_toolbar=False)
+    return qgrid_df
+
+def initialize_widgets() :
+    factionToggle = create_faction_selection_toggle(factionNames)
+    dropdown = widgets.Dropdown()
+    refresh_faction_deck_options(factionToggle, dropdown)
+    factionToggle.observe(lambda change: refresh_faction_deck_options(factionToggle, dropdown), 'value')
+    return factionToggle, dropdown
+
+def create_database_selection_widget():
+    global username
+    db_names = myDB.mdb.client.list_database_names()
+    db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
+    db_list = widgets.RadioButtons(
+        options=db_names,
+        description='Databases:',
+        disabled=False
+    )
+    # Set the username to the value of the selected database
+    
+    GlobalVariables.username = db_list.value or 'user'
+    myDB.set_database_name(GlobalVariables.username)
+    # Also set the value of the username widget
+    if username:
+        username.value = GlobalVariables.username
+
+    def on_db_list_change(change):    
+        if username:
+            username.value = change['new']
+
+    db_list.observe(on_db_list_change, 'value')
+
+    return db_list
+
+def create_cardType_names_dropdown(cardTypes):
+    cardType_entity_names = []
+    for cardType in cardTypes.split('/'):
+        cardType_entity_names = cardType_entity_names + get_cardType_entity_names(cardType)
+
+    cardType_entity_names = [''] + cardType_entity_names 
+
+    cardType_name_widget = widgets.Dropdown(
+        options=cardType_entity_names,
+        description='',
+        ensure_option=False,
+        layout=widgets.Layout(width="200px"),
+        value=''
+    )
+    return cardType_name_widget
+
+def get_cardType_entity_names(cardType):
+
+    print(f"Getting entity names for {cardType}")
+
+    cardType_entities  = commonDB.find('Entity', {"attributes.cardType": cardType})       
+    cardType_entities_names = [cardType_entity['name'] for cardType_entity in cardType_entities]    
+    ic(cardType_entities_names)
+
+    # Get cardnames from the database
+    def get_card_title(card):
+        if card: 
+            if 'title' in card:
+                return card['title']
+            elif 'name' in card:
+                return card['name']
+            else:
+                print(f"Card {card} has no title/name")
+                return ''
+        else:
+            print(f"Card {card} not found")
+            return ''
+
+    cards = myDB.find('Card', {})
+    cardNames = [get_card_title(card) for card in cards]
+
+    # Filter all strings where the entity name is a substring of any card name
+    cardType_entities_names = [cardType_entity for cardType_entity in cardType_entities_names if any(cardType_entity in cardName for cardName in cardNames)]
+
+    #Sort cardType_entities_names
+    cardType_entities_names.sort()
+
+    print(f"Entity names for {cardType}: {cardType_entities_names}")
+    return cardType_entities_names
+
+def create_filter_widgets():
+    global cardTypes_names_widget
+
+    # Initialize two empty lists to hold the labels and widgets
+    label_items = []
+    widget_items = []
+
+    for cardTypesString in ['Modifier', 'Creature/Spell' ] :
+        cardType_names_widget = create_cardType_names_dropdown(cardTypesString)        
+        print(f"Adding {cardTypesString} widget")
+        cardTypes_names_widget[cardTypesString] = cardType_names_widget
+        cardType_names_widget.observe(update_decks_display, 'value')
+        cardType_names_widget.observe(update_filter_widget, names='value')
+        
+        # Create a label for the widget with the same layout
+        label = widgets.Label(value=f'{cardTypesString} Names:', layout=cardType_names_widget.layout)
+
+        # Add the label to the label_items list and the widget to the widget_items list
+        label_items.append(label)
+        widget_items.append(cardType_names_widget)
+
+    # Combine the label_items and widget_items lists
+    grid_items = label_items + widget_items
+
+    # Create HBoxes for the labels and widgets
+    label_box = widgets.HBox(label_items)
+    widget_box = widgets.HBox(widget_items)
+    
+    # Create a caption for the grid with bold text
+    caption = widgets.HTML(value='<b>Filter:</b>')
+
+    # Create a VBox to arrange the caption, labels, and widgets vertically
+    grid = widgets.VBox([caption, label_box, widget_box])
+    return grid
+
+############################
+# Setup and Initialization #
+############################
+
 def setup_interface():
     global db_list, username, card_title_widget
     for i in range(2):            
@@ -524,18 +671,17 @@ def setup_interface():
         button_style='', # 'success', 'info', 'warning', 'danger' or ''
         tooltips=['Decks from the website', 'Fusions from the website', 'Entities from the Collection Manager Sheet sff.csv', 'Forgeborns from the forgeborns.csv', 'Synergies from the Synergys.csv'])
 
-
+    # Text widget to enter the username
     username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
     username.observe(lambda change: handle_username_change(change), 'value')
 
+    # Database selection widget
     db_list = create_database_selection_widget()
-    db_list_box = widgets.VBox([db_list, out_df])
+    #db_list_box = widgets.VBox([db_list])
 
-
-    # Display the GridBox
+    # Filter widget
     grid_filter = create_filter_widgets()
-    display(grid_filter)
-
+ 
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description="Load" )
     button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
@@ -543,39 +689,19 @@ def setup_interface():
     # Create a list of HBoxes of factionToggles, Labels, and dropdowns
     toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
 
-    # Create a VBox to arrange the HBoxes vertically
-    toggle_box = widgets.VBox([username, db_list_box, loadToggle, button_load, *toggle_dropdown_pairs, button_graph])
-    
+    # Create a Checkbox widget to toggle debugging
+    debug_toggle = widgets.Checkbox(value=False, description='Debugging', disabled=False)    
+    debug_toggle.observe(handle_debug_toggle, 'value')
+
+    # Toggle Box 
+    toggle_box = widgets.VBox([loadToggle,  button_load, username, db_list, grid_filter, debug_toggle])    
+
     if GlobalVariables.username != 'user': update_decks_display({'new': GlobalVariables.username})
-    display(toggle_box)        
-    display(out) 
 
-def create_filter_widgets():
+    # Display the widgets    
+    display(toggle_box)            
+    display(out, out_df) 
+    display(*toggle_dropdown_pairs, button_graph)
 
-    # Initialize two empty lists to hold the labels and widgets
-    label_items = []
-    widget_items = []
 
-    for cardTypes in ['Modifier', 'Creature/Spell' ] :
-        cardType_names_widget = create_cardType_names_dropdown(cardTypes)
-        cardType_names_widget.observe(update_decks_display, 'value')
-        cardTypes_names_widget[cardTypes] = cardType_names_widget
-        
-        # Create a label for the widget with the same layout
-        label = widgets.Label(value=f'{cardTypes} Names:', layout=cardType_names_widget.layout)
-
-        # Add the label to the label_items list and the widget to the widget_items list
-        label_items.append(label)
-        widget_items.append(cardType_names_widget)
-
-    # Combine the label_items and widget_items lists
-    grid_items = label_items + widget_items
-
-    # Create HBoxes for the labels and widgets
-    label_box = widgets.HBox(label_items)
-    widget_box = widgets.HBox(widget_items)
-
-    # Create a VBox to arrange the HBoxes vertically
-    grid = widgets.VBox([label_box, widget_box])
-    return grid   
 

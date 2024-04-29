@@ -24,6 +24,10 @@ import qgrid
 from icecream import ic
 ic.disable()
 
+# Enable qgrid to automatically display all DataFrame and Series instances
+qgrid.enable(dataframe=True, series=True)
+
+
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
@@ -120,6 +124,57 @@ def generate_synergy_statistics_dataframe(deck_df):
 
     return synergy_df
 
+def generate_cardType_count_dataframe(existing_df=None):
+    # Get the cardTypes from the stats array in the database
+    deck_cursor = myDB.find('Deck', {})        
+    df_decks = pd.DataFrame(list(deck_cursor)) 
+
+    # Initialize a list to accumulate the DataFrames for each deck
+    all_decks_list = []
+
+    for deck in myDB.find('Deck', {}):
+        if 'stats' in deck:
+            stats = deck.get('stats', {})
+            card_types = stats.get('card_types', {})                        
+            cardType_df = pd.DataFrame(card_types['Creature'], index=[deck['name']])          
+
+            # Append cardType_df to all_decks_list
+            all_decks_list.append(cardType_df)
+
+    # Concatenate all the DataFrames in all_decks_list, keeping the original index
+    all_decks_df = pd.concat(all_decks_list)
+
+    # Filter all_decks_df to only include rows that exist in existing_df
+    if existing_df is not None:
+        all_decks_df = all_decks_df[all_decks_df.index.isin(existing_df.index)]        
+
+    # Replace NaN values with 0 and convert to integer
+    all_decks_df = all_decks_df.fillna(0).astype(int)
+    
+    # Drop columns where all values in specific rows are 0 or less
+    all_decks_df = all_decks_df.loc[:, ~(all_decks_df <= 0).all(axis=0)]
+
+    # Reorder the columns by their total, highest first
+    all_decks_df = all_decks_df[all_decks_df.sum().sort_values(ascending=False).index]
+
+    # Convert the DataFrame to strings, replacing '0' with ''
+    all_decks_df = all_decks_df.astype(str).replace('0', '')
+
+    # Define column widths
+    column_options = { 
+        'forceFitColumns': False,
+    }
+
+    column_definitions = {
+        'index': {'width': 550},
+        'count': {'width': 50},
+        # Add more columns as needed
+    }
+
+    # Display the DataFrame with qgrid
+    qgrid_widget = qgrid.show_grid(all_decks_df, column_definitions=column_definitions, column_options=column_options, show_toolbar=False)
+    return qgrid_widget
+
 # Data Handling and Transformation 
 def generate_deck_statistics_dataframe():
     global cardTypes_names_widget
@@ -163,6 +218,14 @@ def generate_deck_statistics_dataframe():
         print("Error reading decks from the database. Try reloading the data.")
         return pd.DataFrame()
 
+    # For column 'cardSetNo' replace the number 99 with 0 
+    df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].replace(99, 0)
+
+    # Add additional columns to the DataFrame -> Count
+    additional_columns_count = ['Creatures', 'Spells']
+    for column in additional_columns_count:
+        df_decks_filtered.loc[:,column] = 0
+
     # Add additional columns to the DataFrame -> FB
     additional_columns_fb = ['FB1', 'FB2', 'FB3']
     for column in additional_columns_fb:
@@ -192,14 +255,15 @@ def generate_deck_statistics_dataframe():
     # Create a DataFrame from the 'stats' sub-dictionary
     for deck in myDB.find('Deck', {}):
         if 'stats' in deck:
-            
             stats = deck.get('stats', {})
-            # Convert the 'card_types' sub-dictionary into a DataFrame
-            #card_types_df = pd.DataFrame.from_dict(stats['card_types'], orient='index')
-            #creature_averages_df = pd.DataFrame.from_dict(stats['creature_averages'], orient='index')
-            
+
+            # Create a DataFrame with the 'Creatures' and 'Spells' columns
+            creature_count = stats['card_types']['Creature']['count']
+            spell_count = stats['card_types']['Spell']['count']
+            card_type_count_dict = {'Creatures': creature_count, 'Spells': spell_count}
+            card_type_count_df = pd.DataFrame([card_type_count_dict], columns=card_type_count_dict.keys())
+
             # Flatten the 'creature_averages' sub-dictionaries into a single-row DataFrame
-            # Convert the dictionary into a DataFrame
             attack_dict = stats['creature_averages']['attack']
             attack_df = pd.DataFrame([attack_dict], columns=attack_dict.keys())
             attack_df.columns = ['A1', 'A2', 'A3']
@@ -207,15 +271,20 @@ def generate_deck_statistics_dataframe():
             defense_dict = stats['creature_averages']['health']
             defense_df = pd.DataFrame([defense_dict], columns=defense_dict.keys())
             defense_df.columns = ['H1', 'H2', 'H3']
-            
-            # Combine the attack and defense DataFrames into a single DataFrame
-            deck_stats_df = pd.concat([attack_df, defense_df], axis=1)
-            deck_stats_df['name'] = deck['name']
-            
+
+            # Combine the new DataFrame with the attack and defense DataFrames
+            deck_stats_df = pd.concat([card_type_count_df, attack_df, defense_df], axis=1)
+
             # Round each value in the DataFrame
             deck_stats_df = deck_stats_df.round(2)
-                                            
-            # Set the common column as the index in both dataframes
+
+            # Set the 'name' index for deck_stats_df
+            deck_stats_df['name'] = deck['name']
+
+            # Print out the columns of df_decks_filtered for debugging
+            ic(df_decks_filtered.columns)
+
+            # Set the common column as the index in both dataframes            
             deck_stats_df.set_index('name', inplace=True)
 
             # Update the corresponding row in df_decks_filtered with the stats from deck_stats_df
@@ -253,7 +322,7 @@ def generate_deck_statistics_dataframe():
     df_decks_filtered = df_filtered
 
     # Reset the index in df_decks_filtered
-    df_decks_filtered.reset_index(inplace=True)
+    #df_decks_filtered.reset_index(inplace=True)
     return df_decks_filtered
 
 ##################
@@ -347,14 +416,19 @@ def update_decks_display(change):
             out_df.clear_output()
             deck_df = generate_deck_statistics_dataframe()
             syn_df  = generate_synergy_statistics_dataframe(deck_df)
+            count_df = generate_cardType_count_dataframe(deck_df)
             
             if not deck_df.empty:
                 qgrid_widget = create_deck_grid_view(deck_df)
                 display(qgrid_widget)            
 
+            if count_df:
+                qgrid_widget = count_df
+                display(qgrid_widget)
+
             if not syn_df.empty:
-                            qgrid_widget = create_syn_grid_view(syn_df)
-                            display(qgrid_widget)            
+                qgrid_widget = create_syn_grid_view(syn_df)
+                display(qgrid_widget)            
 
 def update_filter_widget(change=None):
     global cardTypes_names_widget

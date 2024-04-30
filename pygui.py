@@ -141,8 +141,11 @@ def generate_cardType_count_dataframe(existing_df=None):
             # Append cardType_df to all_decks_list
             all_decks_list.append(cardType_df)
 
-    # Concatenate all the DataFrames in all_decks_list, keeping the original index
-    all_decks_df = pd.concat(all_decks_list)
+    # Concatenate all the DataFrames in all_decks_list, keeping the original index    
+    if all_decks_list : 
+        all_decks_df = pd.concat(all_decks_list)
+    else:
+        all_decks_df = pd.DataFrame()
 
     # Filter all_decks_df to only include rows that exist in existing_df
     if existing_df is not None:

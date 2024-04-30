@@ -332,6 +332,39 @@ def generate_deck_statistics_dataframe():
 # Event Handling #
 ##################
 
+
+def synchronize_viewport_range():
+    # Create sample DataFrames  
+    data1 = {'A': [1, 2, 3, 4, 5], 'B': [6, 7, 8, 9, 10]}  
+    data2 = {'A': [11, 12, 13, 14, 15], 'B': [16, 17, 18, 19, 20]}  
+    index = ['row1', 'row2', 'row3', 'row4', 'row5']  
+    
+    df1 = pd.DataFrame(data1, index=index)  
+    df2 = pd.DataFrame(data2, index=index)  
+    
+    # Display the DataFrames using qgrid  
+    qgrid_widget1 = qgrid.show_grid(df1, show_toolbar=True)  
+    qgrid_widget2 = qgrid.show_grid(df2, show_toolbar=True)  
+    
+    # Define a function to synchronize the viewport ranges of the index column  
+    def synchronize_viewport_range(widget, event, data):  
+        if widget == qgrid_widget1:  
+            common_index = set(qgrid_widget1.get_changed_df().index) & set(qgrid_widget2.get_changed_df().index)  
+            qgrid_widget1._df_viewport = (list(common_index), qgrid_widget1._df_viewport[1])  
+            qgrid_widget2._df_viewport = (list(common_index), qgrid_widget2._df_viewport[1])  
+        else:  
+            common_index = set(qgrid_widget1.get_changed_df().index) & set(qgrid_widget2.get_changed_df().index)  
+            qgrid_widget1._df_viewport = (list(common_index), qgrid_widget1._df_viewport[1])  
+            qgrid_widget2._df_viewport = (list(common_index), qgrid_widget2._df_viewport[1])  
+    
+    # Attach the synchronization function to the viewport_range event of both qgrid widgets  
+    qgrid_widget1.on('_df_viewport', synchronize_viewport_range)  
+    qgrid_widget2.on('_df_viewport', synchronize_viewport_range)  
+    
+    # Display the qgrid widgets  
+    widgets.VBox([qgrid_widget1, qgrid_widget2])  
+
+
 # Function to handle changes to the checkbox
 def handle_debug_toggle(change):
     if change.new:

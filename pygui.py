@@ -64,6 +64,41 @@ global_df = None
 out = widgets.Output()
 out_df = widgets.Output()
 
+# Widget original options for qgrid
+qg_syn_options = {
+    'col_options' :   { 'defaultColumnWidth' : 700}, 
+    'col_defs' : {                
+        'tag':              { 'width': 175, },
+        'name':            { 'width': 50,  },
+    },
+    'grid_options' : { 'forceFitColumns': False, }        
+}
+
+
+qg_deck_options = {
+    'col_options' :           { 'width': 50, } ,
+    'col_defs' : {        
+        'name':             { 'width': 250, },
+        'registeredDate':   { 'width': 200, },
+        'cardSetNo':        { 'width': 50,  },
+        'faction':          { 'width': 100,  },
+        'forgebornId':      { 'width': 100,  },
+        'cardTitles':       { 'width': 200,  },
+        'FB1':              { 'width': 150,  },
+        'FB2':              { 'width': 150,  },
+        'FB3':              { 'width': 150,  },
+    }
+}
+
+qg_count_options = {    
+    'col_options' :   { },
+    'col_defs' : {                
+      #  'name': {'width': 250},
+        'faction': {'width': 75},
+        'count': {'width': 50},
+    }    
+}
+
 ######################
 # Network Operations #
 ######################
@@ -143,7 +178,7 @@ def generate_cardType_count_dataframe(existing_df=None):
         if 'stats' in deck:
             stats = deck.get('stats', {})
             card_types = stats.get('card_types', {})                        
-            cardType_df = pd.DataFrame(card_types['Creature'], index=[deck['name']])          
+            cardType_df = pd.DataFrame(card_types['Creature'], index=[deck['name']])
             
             # Add 'faction' column to cardType_df
             cardType_df['faction'] = deck.get('faction', 'None')  # Replace 'Unknown' with a default value if 'faction' is not in deck
@@ -155,19 +190,23 @@ def generate_cardType_count_dataframe(existing_df=None):
     if all_decks_list : 
         all_decks_df = pd.concat(all_decks_list)
     else:
+        print("No decks found in the database")
         all_decks_df = pd.DataFrame()
 
     # Filter all_decks_df to only include rows that exist in existing_df
     if existing_df is not None:
         all_decks_df = all_decks_df[all_decks_df.index.isin(existing_df.index)]        
 
+    #all_decks_df.reset_index(inplace=True)            
+
     # Separate the 'faction' column from the rest of the DataFrame
     if 'faction' in all_decks_df.columns:
         faction_df = all_decks_df['faction']
+        #all_decks_df = all_decks_df.drop(columns=['faction'])
     else:
         faction_df = pd.Series()
 
-    # Create a new DataFrame that only includes numeric columns
+    # Select only the numeric columns
     numeric_df = all_decks_df.select_dtypes(include='number')
 
     # Replace NaN values with 0 and convert to integer for only numeric columns
@@ -177,15 +216,28 @@ def generate_cardType_count_dataframe(existing_df=None):
     numeric_df = numeric_df.loc[:, ~(numeric_df <= 0).all(axis=0)]
 
     # Reorder the columns by their total, highest first
-    numeric_df = numeric_df[numeric_df.sum().sort_values(ascending=False).index]
+    numeric_df = numeric_df.reindex(numeric_df.sum().sort_values(ascending=False).index, axis=1)
 
     # Convert the DataFrame to strings, replacing '0' with ''
     numeric_df = numeric_df.astype(str).replace('0', '')
 
-    # Insert the 'faction' column at the second position (index 1)
-    numeric_df.insert(0, 'faction', faction_df)
+    # Make the index a row in the DataFrame with the name 'name'
+    # numeric_df.insert(0, 'name',numeric_df.index)
 
+    # Reset the index and create a new column with the old index
+    # numeric_df.reset_index(inplace=True)
+
+    # Rename the new column to 'name'
+    # numeric_df.rename(columns={'index': 'name'}, inplace=True)
+
+    # Insert the 'faction' column to the second position
+    numeric_df.insert(1, 'faction', faction_df)
+
+    #display(numeric_df)
     return numeric_df
+    
+    #return all_decks_df
+
 # Data Handling and Transformation 
 def generate_deck_statistics_dataframe():
     global cardTypes_names_widget
@@ -374,98 +426,73 @@ def get_dataframe_apply_index_filter(source, target):
 
 # Function to check if any value in the column is not an empty string with regards to the changed_df of the qgrid widget
 def check_column_values(column, changed_df):
-    # Check if any value in the column is not an empty string
-    result = changed_df[column].ne('').any()
-    #Print all rows that contain values other than empty strings in the column
-    if result:
-        print(f"Column {column} contains non-empty strings")
-        print(changed_df[changed_df[column].ne('')].index) 
-    return result
-
+    # Check if the column exists in the DataFrame
+    if column in changed_df.columns:
+        # Check if any value in the column is not an empty string
+        result = changed_df[column].ne('').any()
+        # Print all rows that contain values other than empty strings in the column
+        #if result:
+            #print(changed_df[changed_df[column].ne('')])
+        return result
+    else:
+        print(f"Column '{column}' does not exist in the DataFrame.")
+        return False
 # Goal of this function :
 # 1. Update the column definitions of the qgrid widget to set the width of each column to 0 if all values in the column are empty strings
 #    Where to get the original column definitions from? global_df[id(qgrid_widget)]
 #    Where to get the current column definitions from? qgrid_widget.column_definitions
 
 def update_visible_columns(qgrid_widget):
-    global global_df 
-    # Get the DataFrame from the qgrid widget
-    original_df = global_df[id(qgrid_widget)].copy() if global_df else pd.DataFrame()
-    print(f"Setting column visibility for")
+    global global_df
+    # Ensure original DataFrame is retained without alterations
+    original_df = global_df[id(qgrid_widget)].copy() if id(qgrid_widget) in global_df else pd.DataFrame()
+
+    print("Setting column visibility for")
     print(original_df.columns)
-    # Get the current column definitions
-    qg_column_defs = qgrid_widget.column_definitions    
-    original_column_definitions = qgrid_widget_options[id(qgrid_widget)]['col_defs'].copy() if id(qgrid_widget) in qgrid_widget_options else {}
-    print(f"Original Column Definitions : {original_column_definitions}")
-    print(f"Current  Column Definitions : {qg_column_defs}")
+
+    # Access the current and original column definitions
+    qg_column_defs = qgrid_widget.column_definitions.copy()
+    original_column_definitions = qgrid_widget_options.get(id(qgrid_widget), {}).get('col_defs', {}).copy()
+
+    print("Original Column Definitions:", original_column_definitions)
+    print("Current Column Definitions:", qg_column_defs)
+
     # Lists to store the columns with 0 width and non-0 width
     zero_width_columns = []
     non_zero_width_columns = []
-    # Iterate over the columns of the changed DataFrame    
+
+    # Analyze changed DataFrame for updates
     changed_df = qgrid_widget.get_changed_df()
-    for column in changed_df.columns:
-        #print(f"Checking column {column}")
-        # Check if any value in the column is not an empty string
-        
-        if check_column_values(column, changed_df):         
-            # Column contains non-empty strings, so we set its width to its original value
-            try:
-                #print(f"Setting width for {column} to original value")
+    print(f"Columns : {changed_df.columns}")
+    for column in changed_df.columns:  # Iterate over a copy of the keys
+        # Check if column values are not just empty strings
+        if check_column_values(column, changed_df):
+            # Restore original column width if possible
+            if column in original_column_definitions:
+                qg_column_defs[column].update(original_column_definitions[column])
+            else:
                 if column in qg_column_defs:
-                    qg_column_defs[column] = {key: value for key, value in original_column_definitions[column].items()}  
-                    non_zero_width_columns.append(column)
-                    #print(f"Column {column} updated to {col_defs[column]}")      
-                #else:                                        
-                    #print(f"Column {column} not found in column definitions")       
-                                         
-            except Exception as e:
-                print(f"Error setting width for {column} to original value: {e}")
+                    print(f"Original settings for {column} not found, removing from current settings.")
+                    del qg_column_defs[column]  # Remove the column from the current definitions
+            non_zero_width_columns.append(column)
         else:
-            # Column only contains empty strings, so we set its width to value
-            value = 0
-            try:                
-                #print(f"Setting width for {column} to {value}")
-                if column in qg_column_defs:
-                    qg_column_defs[column]['width'] = value
-                    qg_column_defs[column]['maxWidth'] = value
-                    qg_column_defs[column]['minWidth'] = value                    
-                else:
-                    qg_column_defs[column] = {'width' :value , 'maxWidth': value, 'minWidth': value}                
-                zero_width_columns.append(column)
-            except Exception as e:
-                print(f"Error setting width for {column} to {value}: {e}")
-    # Update the column definitions in the qgrid widget
-    # qgrid_widget.column_definitions = col_defs
-    # Force a refresh of the Qgrid widget by reassigning the DataFrame
-    qgrid_widget.df = changed_df
-    # Print the columns with 0 width and non-0 width
-    print(f"Columns with 0 width: {zero_width_columns}")
-    print(f"Columns with non-0 width: {non_zero_width_columns}")
+            # Set column width to 0 if all values are empty
+            zero_width_columns.append(column)
+            qg_column_defs[column] = {'width': 0, 'minWidth': 0, 'maxWidth': 0}
+
+    # Assign the updated definitions back to the widget (if necessary)
+    qgrid_widget.column_definitions = qg_column_defs
+
+    # Print summary of adjustments
+    print("Columns with 0 width:", zero_width_columns)
+    print("Columns with non-0 width:", non_zero_width_columns)
     print("Finished setting column visibility")
-
-
-def reset_column_widths(original_widths, qgrid_widget):
-    # Get the current column definitions
-    col_defs = qgrid_widget.column_definitions
-    # Iterate over the original widths
-    for column, original_width in original_widths.items():
-        try:
-            print(f"Resetting width for {column} to original value")
-            if column in col_defs:
-                # Reset the width of the column to its original value
-                col_defs[column]['width'] = original_width
-                # Remove the maxWidth and minWidth keys from the column definitions
-                if 'maxWidth' in col_defs[column]:
-                    col_defs[column].pop('maxWidth')     
-                if 'minWidth' in col_defs[column]:
-                    col_defs[column].pop('minWidth')
-        except Exception as e:
-            print(f"Error resetting width for {column} to original value: {e}")
-    # Update the column definitions in the qgrid widget
-    qgrid_widget.column_definitions = col_defs
-    # Force a refresh of the Qgrid widget by reassigning the DataFrame
-    qgrid_widget.df = qgrid_widget.get_changed_df()
-    print("Finished resetting column visibility")
+    
+    # Optionally, refresh the widget display if significant changes were made
+    changed_df.reset_index(inplace=True)
+    qgrid_widget.column_definitions['index'] = {'width' : 250 }
+    qgrid_widget.df = changed_df
+    #display(changed_df)
 
 # Function to handle changes to the checkbox
 def handle_debug_toggle(change):
@@ -565,6 +592,16 @@ def update_decks_display(change):
             global_df[id(qgrid_count_data)] = generate_cardType_count_dataframe(global_df[id(qgrid_deck_data)])
             global_df[id(qgrid_syn_data)] = generate_synergy_statistics_dataframe(global_df[id(qgrid_deck_data)])
 
+            # Assign the new DataFrame to the qgrid widgets
+            if qgrid_deck_data:
+                qgrid_deck_data.df = global_df[id(qgrid_deck_data)]
+
+            if qgrid_count_data:
+                qgrid_count_data.df = global_df[id(qgrid_count_data)]
+
+            #if qgrid_syn_data:
+            #    qgrid_syn_data.df = global_df[id(qgrid_syn_data)]
+
         global_deck_df = global_df[id(qgrid_deck_data)]
         global_count_df = global_df[id(qgrid_count_data)]
         global_syn_df = global_df[id(qgrid_syn_data)]
@@ -576,12 +613,12 @@ def update_decks_display(change):
         if qgrid_deck_data:
             qgrid_deck_data.df = deck_df_filtered
 
-        if qgrid_count_data:                                    
+        if qgrid_count_data:                  
             on_filter_changed(qgrid_count_data)            
             ic(qgrid_count_data.df)
 
-        if qgrid_syn_data:
-            qgrid_syn_data.df =  generate_synergy_statistics_dataframe(deck_df_filtered)
+        #if qgrid_syn_data:
+        #    qgrid_syn_data.df =  generate_synergy_statistics_dataframe(deck_df_filtered)
 
         
 
@@ -720,40 +757,6 @@ def create_faction_selection_toggle(faction_names, initial_style='info'):
 
     return faction_toggle
 
-qg_syn_options = {
-    'col_options' :   { 'defaultColumnWidth' : 700}, 
-    'col_defs' : {                
-        'tag':              { 'width': 175, },
-        'index':            { 'width': 50,  },
-    },
-    'grid_options' : { 'forceFitColumns': False, }        
-}
-
-
-qg_deck_options = {
-    'col_options' :           { 'width': 50, } ,
-    'col_defs' : {        
-        'name':             { 'width': 250, },
-        'registeredDate':   { 'width': 200, },
-        'cardSetNo':        { 'width': 50,  },
-        'faction':          { 'width': 100,  },
-        'forgebornId':      { 'width': 100,  },
-        'cardTitles':       { 'width': 200,  },
-        'FB1':              { 'width': 150,  },
-        'FB2':              { 'width': 150,  },
-        'FB3':              { 'width': 150,  },
-    }
-}
-
-qg_count_options = {    
-    'col_options' :   { },
-    'col_defs' : {                
-        'index': {'width': 250},
-        'faction': {'width': 75},
-        'count': {'width': 50},
-    }    
-}
-
 def create_qgrid_view_options(qg_options):
     global qgrid_widget_options
     qg = qgrid.show_grid(pd.DataFrame(), 
@@ -887,7 +890,10 @@ def create_filter_widgets():
 ############################
 
 def setup_interface():
-    global db_list, username, button_load, card_title_widget, qgrid_deck_data, qgrid_count_data, qgrid_syn_data
+    global db_list, username, button_load, card_title_widget, \
+        qgrid_deck_data, qgrid_count_data, qgrid_syn_data,    \
+        qg_deck_options, qg_count_options, qg_syn_options, out
+    
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
         factionToggles.append(factionToggle)

@@ -76,7 +76,7 @@ qg_syn_options = {
 
 
 qg_deck_options = {
-    'col_options' :           { 'width': 50, } ,
+    'col_options' :         { 'width': 50, } ,
     'col_defs' : {        
         'name':             { 'width': 250, },
         'registeredDate':   { 'width': 200, },
@@ -91,7 +91,7 @@ qg_deck_options = {
 }
 
 qg_count_options = {    
-    'col_options' :   { },
+    'col_options' :         { 'width': 85, } ,
     'col_defs' : {                
       #  'name': {'width': 250},
         'faction': {'width': 75},
@@ -221,17 +221,8 @@ def generate_cardType_count_dataframe(existing_df=None):
     # Convert the DataFrame to strings, replacing '0' with ''
     numeric_df = numeric_df.astype(str).replace('0', '')
 
-    # Make the index a row in the DataFrame with the name 'name'
-    # numeric_df.insert(0, 'name',numeric_df.index)
-
-    # Reset the index and create a new column with the old index
-    # numeric_df.reset_index(inplace=True)
-
-    # Rename the new column to 'name'
-    # numeric_df.rename(columns={'index': 'name'}, inplace=True)
-
     # Insert the 'faction' column to the second position
-    numeric_df.insert(1, 'faction', faction_df)
+    numeric_df.insert(0, 'faction', faction_df)
 
     #display(numeric_df)
     return numeric_df
@@ -264,12 +255,21 @@ def generate_deck_statistics_dataframe():
         forgeborn = commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
         return forgeborn['abilities'] if forgeborn else None
 
+    # def get_card_titles(card_ids):
+    #     card_titles = []
+    #     for card_id in card_ids:
+    #         card_title = get_card_title(card_id)
+    #         card_titles.append(card_title)
+    #     return card_titles
+
     def get_card_titles(card_ids):
         card_titles = []
         for card_id in card_ids:
             card_title = get_card_title(card_id)
-            card_titles.append(card_title)
-        return card_titles
+            if card_title:  # Check if card_title is not empty
+                card_titles.append(card_title)
+        # Join the list of titles into a single string separated by commas
+        return ', '.join(card_titles)
 
     # Get all Decks from the database
     try:
@@ -360,34 +360,31 @@ def apply_cardname_filter_to_deck_dataframe(df_decks):
     global cardTypes_names_widget
     
     def check_substring_in_titles(titles, substring):
-        if titles:
-            for title in titles:
-                if title:                    
-                    if substring in title:
-                        return True
-                else:
-                    print(f"Title is empty")
+        # Directly check if the substring is in the titles string
+        if titles:  # Ensure titles string is not None or empty
+            return substring in titles
         else:
-            print(f"Titles is empty")
-        return False
+            print("Titles is empty")
+            return False
         
-    def filter_by_substring(df, substring): 
-        if substring == '':      
+    def filter_by_substring(df, substring):
+        if substring == '':  # If no filter is applied, return the DataFrame as is
             return df
         else:
-            theDF = df['cardTitles'] 
-            myDF = theDF.apply(check_substring_in_titles, substring=substring)
-            ret_df = df[myDF]
-        return ret_df
+            # Apply the substring check directly on the 'cardTitles' column
+            filtered_indices = df['cardTitles'].apply(check_substring_in_titles, substring=substring)
+            return df[filtered_indices]
 
     df_filtered = df_decks
-    for dropdown in cardTypes_names_widget.values():   
-        if not df_filtered.empty:         
-            df_filtered = filter_by_substring(df_filtered, dropdown.value)   
+    for dropdown in cardTypes_names_widget.values():
+        if not df_filtered.empty:
+            df_filtered = filter_by_substring(df_filtered, dropdown.value)
         else:
-            print("Dataframe is empty")            
+            print("Dataframe is empty")
+            break  # Exit the loop if the DataFrame becomes empty after filtering
 
     return df_filtered
+
 
 
 ##################
@@ -447,15 +444,15 @@ def update_visible_columns(qgrid_widget):
     # Ensure original DataFrame is retained without alterations
     original_df = global_df[id(qgrid_widget)].copy() if id(qgrid_widget) in global_df else pd.DataFrame()
 
-    print("Setting column visibility for")
-    print(original_df.columns)
+    #print("Setting column visibility for")
+    #print(original_df.columns)
 
     # Access the current and original column definitions
     qg_column_defs = qgrid_widget.column_definitions.copy()
     original_column_definitions = qgrid_widget_options.get(id(qgrid_widget), {}).get('col_defs', {}).copy()
 
-    print("Original Column Definitions:", original_column_definitions)
-    print("Current Column Definitions:", qg_column_defs)
+    #print("Original Column Definitions:", original_column_definitions)
+    #print("Current Column Definitions:", qg_column_defs)
 
     # Lists to store the columns with 0 width and non-0 width
     zero_width_columns = []
@@ -463,30 +460,20 @@ def update_visible_columns(qgrid_widget):
 
     # Analyze changed DataFrame for updates
     changed_df = qgrid_widget.get_changed_df()
-    print(f"Columns : {changed_df.columns}")
-    for column in changed_df.columns:  # Iterate over a copy of the keys
+    #print(f"Columns : {changed_df.columns}")
+    for column in changed_df.columns:  
         # Check if column values are not just empty strings
-        if check_column_values(column, changed_df):
-            # Restore original column width if possible
-            if column in original_column_definitions:
-                qg_column_defs[column].update(original_column_definitions[column])
-            else:
-                if column in qg_column_defs:
-                    print(f"Original settings for {column} not found, removing from current settings.")
-                    del qg_column_defs[column]  # Remove the column from the current definitions
-            non_zero_width_columns.append(column)
-        else:
-            # Set column width to 0 if all values are empty
+        if not check_column_values(column, changed_df):
             zero_width_columns.append(column)
-            qg_column_defs[column] = {'width': 0, 'minWidth': 0, 'maxWidth': 0}
+            changed_df.drop(column, axis=1, inplace=True)
 
     # Assign the updated definitions back to the widget (if necessary)
-    qgrid_widget.column_definitions = qg_column_defs
+    #qgrid_widget.column_definitions = qg_column_defs
 
     # Print summary of adjustments
-    print("Columns with 0 width:", zero_width_columns)
-    print("Columns with non-0 width:", non_zero_width_columns)
-    print("Finished setting column visibility")
+    #print("Columns with 0 width:", zero_width_columns)
+    #print("Columns with non-0 width:", non_zero_width_columns)
+    #print("Finished setting column visibility")
     
     # Optionally, refresh the widget display if significant changes were made
     changed_df.reset_index(inplace=True)
@@ -612,6 +599,16 @@ def update_decks_display(change):
 
         if qgrid_deck_data:
             qgrid_deck_data.df = deck_df_filtered
+            # qgrid_deck_data._handle_qgrid_msg_helper({
+            #     'field': "cardTitles",
+            #     'filter_info': {
+            #         'field': "cardTitles",
+            #         'max': change['new'][1],
+            #         'min': change['new'][0],
+            #         'type': "slider"
+            #     },
+            #     'type': "filter_changed"
+            # })
 
         if qgrid_count_data:                  
             on_filter_changed(qgrid_count_data)            
@@ -917,10 +914,15 @@ def setup_interface():
     qgrid_deck_data = create_qgrid_view_options(qg_deck_options)
     qgrid_count_data = create_qgrid_view_options(qg_count_options)
     qgrid_syn_data  = create_qgrid_view_options(qg_syn_options)
-    
+
+    def on_filter_dropdown_shown(event, column):
+        print(f"Filter dropdown shown for column: {column}")
+
+    qgrid_deck_data.on('filter_dropdown_shown', on_filter_dropdown_shown)  
 
     # Attach the event handler to each qgrid widget
-    qgrid_deck_data.on('filter_changed', on_filter_changed)    
+    qgrid_deck_data.on('filter_changed', on_filter_changed) 
+    qgrid_deck_data.on('filter_dropdown_shown', on_filter_dropdown_shown)   
     
     # Text widget to enter the username
     username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)

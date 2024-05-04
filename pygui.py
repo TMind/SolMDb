@@ -103,7 +103,7 @@ qg_count_options = {
 qg_deck_options = {
     'col_options' :         { 'width': 50, } ,
     'col_defs' : {                   
-        'name':             { 'width': 150, },     
+        'name':             { 'width': 250, },     
         'rarity':           { 'width': 125,  },        
         'cardType':         { 'width': 90,  },
         'cardSubType':      { 'width': 110,  },
@@ -186,16 +186,14 @@ def generate_deck_content_dataframe(event, widget):
     #Get the selection from the deck widget
     desired_fields = ['name', 'cardType', 'cardSubType', 'rarity', 'levels']    
     if qgrid_coll_data:
-        all_decks_df = pd.DataFrame()
-        # {'name': 'selection_changed', 'old': [], 'new': [13], 'source': 'gui'}
+        header_df = pd.DataFrame()
+        all_decks_df = pd.DataFrame()        
         df_selected_rows = event['new']
         # Get the selected rows from the DataFrame based on the indices
-        deckList = qgrid_coll_data.df.iloc[df_selected_rows]
-        #df = qgrid_coll_data.get_selected_df()
-        #deckList = df.index
-        #deckList = ['The Reeves of Loss']                
-
-        for deckName in deckList.index:            
+        decks_df = qgrid_coll_data.df.iloc[df_selected_rows]        
+        deckList = decks_df.index
+        #deckList = ['The Reeves of Loss', 'The People of Bearing']                
+        for deckName in deckList:
             #print(f'DeckName: {deckName}')
             #Get the Deck from the Database 
             deck = myDB.find_one('Deck', {'name': deckName})
@@ -219,14 +217,19 @@ def generate_deck_content_dataframe(event, widget):
                                 card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
                                 card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
                         # Create a DataFrame from the remaining card fields
-                        card_df = pd.DataFrame([card])
-                        # Replace NaN values and 'NaN' strings with an empty string
-                        card_df = card_df.replace({np.nan: '', 'NaN': ''})
+                        card_df = pd.DataFrame([card])                        
                         card_dfs.append(card_df)  # Add full_card_df to the list
                 # Concatenate all card DataFrames along the rows axis
                 deck_df = pd.concat(card_dfs, ignore_index=True, axis=0)
+
+                # Create a header DataFrame with a single row containing the deck name
+                deckName_df = pd.DataFrame({'name': [deckName]})                
+                header_df = pd.concat([header_df, deckName_df], ignore_index=True, axis=0)                
                 all_decks_df = pd.concat([all_decks_df, deck_df], ignore_index=True, axis=0)
-    return all_decks_df
+                
+        # Concatenate the header DataFrame with the deck DataFrames
+        final_df = pd.concat([header_df, all_decks_df], ignore_index=True, axis=0)        
+    return final_df.fillna('')  
     
 
 def generate_cardType_count_dataframe(existing_df=None):
@@ -988,6 +991,7 @@ def setup_interface():
     # Attach the event handler to each qgrid widget
     qgrid_coll_data.on('filter_changed', coll_data_on_filter_changed) 
     qgrid_coll_data.on('selection_changed', coll_data_on_selection_changed)
+    qgrid_count_data.on('selection_changed', coll_data_on_selection_changed)
 
     # Text widget to enter the username
     username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
@@ -1016,8 +1020,8 @@ def setup_interface():
 
     # Display the widgets    
     display(toggle_box)  
-    display(qgrid_coll_data, qgrid_count_data) #,qgrid_syn_data)          
-    display(qgrid_deck_data)
+    display(qgrid_coll_data) #,qgrid_syn_data)          
+    display(widgets.HBox([ qgrid_count_data,qgrid_deck_data]))
     display(out)     
     #display(*toggle_dropdown_pairs, button_graph)
 

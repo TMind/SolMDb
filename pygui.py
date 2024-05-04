@@ -1,3 +1,4 @@
+from operator import ge
 import os, time, re
 import ipywidgets as widgets
 from pyvis.network import Network
@@ -54,15 +55,15 @@ button_load = None
 db_list = None 
 cardTypes_names_widget = {}
 
-qgrid_deck_data  = None
+qgrid_coll_data  = None
 qgrid_count_data = None
 qgrid_syn_data   = None
+qgrid_deck_data  = None
 
 qgrid_widget_options = {}
 global_df = None
 
 out = widgets.Output()
-out_df = widgets.Output()
 
 # Widget original options for qgrid
 qg_syn_options = {
@@ -75,7 +76,7 @@ qg_syn_options = {
 }
 
 
-qg_deck_options = {
+qg_coll_options = {
     'col_options' :         { 'width': 50, } ,
     'col_defs' : {        
         'name':             { 'width': 250, },
@@ -98,6 +99,17 @@ qg_count_options = {
         'count': {'width': 50},
     }    
 }
+
+qg_deck_options = {
+    'col_options' :         { 'width': 50, } ,
+    'col_defs' : {                   
+        'name':             { 'width': 150, },     
+        'rarity':           { 'width': 125,  },        
+        'cardType':         { 'width': 90,  },
+        'cardSubType':      { 'width': 110,  },
+    }
+}
+   
 
 ######################
 # Network Operations #
@@ -165,6 +177,57 @@ def generate_synergy_statistics_dataframe(deck_df):
         synergy_df = pd.concat([synergy_df, new_columns_df], axis=1)
 
     return synergy_df
+
+def generate_deck_content_dataframe(event, widget):
+    ic(generate_deck_content_dataframe, event, widget)
+    #print(f"Generating Deck Content DataFrame : {event}")
+    global qgrid_coll_data, qgrid_count_data, qgrid_deck_data
+
+    #Get the selection from the deck widget
+    desired_fields = ['name', 'cardType', 'cardSubType', 'rarity', 'levels']    
+    if qgrid_coll_data:
+        all_decks_df = pd.DataFrame()
+        # {'name': 'selection_changed', 'old': [], 'new': [13], 'source': 'gui'}
+        df_selected_rows = event['new']
+        # Get the selected rows from the DataFrame based on the indices
+        deckList = qgrid_coll_data.df.iloc[df_selected_rows]
+        #df = qgrid_coll_data.get_selected_df()
+        #deckList = df.index
+        #deckList = ['The Reeves of Loss']                
+
+        for deckName in deckList.index:            
+            #print(f'DeckName: {deckName}')
+            #Get the Deck from the Database 
+            deck = myDB.find_one('Deck', {'name': deckName})
+            if deck:
+                #print(f'Found deck: {deck}')
+                #Get the cardIds from the Deck
+                cardIds = deck['cardIds']
+                cardTitles = []
+                deck_df = pd.DataFrame([deck])  # Create a single row DataFrame from deck
+                card_dfs = []  # List to store DataFrames for each card
+                for cardId in cardIds:
+                    card = myDB.find_one('Card', {'_id': cardId})
+                    if card:
+                        #print(f"Found card: {card['_id']}")
+                        # Select only the desired fields from the card document
+                        card = {field: card[field] for field in desired_fields if field in card}
+                        # Flatten the 'levels' dictionary
+                        if 'levels' in card and card['levels']:
+                            levels = card.pop('levels')
+                            for level, level_data in levels.items():
+                                card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
+                                card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
+                        # Create a DataFrame from the remaining card fields
+                        card_df = pd.DataFrame([card])
+                        # Replace NaN values and 'NaN' strings with an empty string
+                        card_df = card_df.replace({np.nan: '', 'NaN': ''})
+                        card_dfs.append(card_df)  # Add full_card_df to the list
+                # Concatenate all card DataFrames along the rows axis
+                deck_df = pd.concat(card_dfs, ignore_index=True, axis=0)
+                all_decks_df = pd.concat([all_decks_df, deck_df], ignore_index=True, axis=0)
+    return all_decks_df
+    
 
 def generate_cardType_count_dataframe(existing_df=None):
     # Get the cardTypes from the stats array in the database
@@ -391,14 +454,20 @@ def apply_cardname_filter_to_deck_dataframe(df_decks):
 # Event Handling #
 ##################
 
-def on_filter_changed(widget):
+def coll_data_on_filter_changed(widget):
     update_visible_rows(widget)
     update_visible_columns(widget)
 
+def coll_data_on_selection_changed(event, widget):
+    global qgrid_deck_data
+    # Generate a DataFrame from the selected rows
+    if qgrid_deck_data:
+        qgrid_deck_data.df = generate_deck_content_dataframe(event, widget)
+    
 def update_visible_rows(widget):
     global global_df
     # Get the common index across all widgets
-    source_widget = qgrid_deck_data
+    source_widget = qgrid_coll_data
     target_widget = qgrid_count_data
 
     # Update the widget's DataFrame     
@@ -564,24 +633,24 @@ def display_graph_on_click(button):
 
 def update_decks_display(change):
     ic(update_decks_display, change)
-    global username, qgrid_deck_data, qgrid_count_data, qgrid_syn_data, global_df
+    global username, qgrid_coll_data, qgrid_count_data, qgrid_syn_data, global_df
 
     if global_df is None:
         global_df = {}
-        global_df[id(qgrid_deck_data)] = generate_deck_statistics_dataframe()
+        global_df[id(qgrid_coll_data)] = generate_deck_statistics_dataframe()
 
     if change['new'] or change['new'] == '':                       
 
         if change['owner'] == username:
         
             # Generate new DataFrame with new database             
-            global_df[id(qgrid_deck_data)] = generate_deck_statistics_dataframe()
-            global_df[id(qgrid_count_data)] = generate_cardType_count_dataframe(global_df[id(qgrid_deck_data)])
-            global_df[id(qgrid_syn_data)] = generate_synergy_statistics_dataframe(global_df[id(qgrid_deck_data)])
+            global_df[id(qgrid_coll_data)] = generate_deck_statistics_dataframe()
+            global_df[id(qgrid_count_data)] = generate_cardType_count_dataframe(global_df[id(qgrid_coll_data)])
+            global_df[id(qgrid_syn_data)] = generate_synergy_statistics_dataframe(global_df[id(qgrid_coll_data)])
 
             # Assign the new DataFrame to the qgrid widgets
-            if qgrid_deck_data:
-                qgrid_deck_data.df = global_df[id(qgrid_deck_data)]
+            if qgrid_coll_data:
+                qgrid_coll_data.df = global_df[id(qgrid_coll_data)]
 
             if qgrid_count_data:
                 qgrid_count_data.df = global_df[id(qgrid_count_data)]
@@ -589,7 +658,7 @@ def update_decks_display(change):
             #if qgrid_syn_data:
             #    qgrid_syn_data.df = global_df[id(qgrid_syn_data)]
 
-        global_deck_df = global_df[id(qgrid_deck_data)]
+        global_deck_df = global_df[id(qgrid_coll_data)]
         global_count_df = global_df[id(qgrid_count_data)]
         global_syn_df = global_df[id(qgrid_syn_data)]
 
@@ -597,8 +666,8 @@ def update_decks_display(change):
         # Apply Filter to the DataFrame                
         deck_df_filtered = apply_cardname_filter_to_deck_dataframe(global_deck_df)
 
-        if qgrid_deck_data:
-            qgrid_deck_data.df = deck_df_filtered
+        if qgrid_coll_data:
+            qgrid_coll_data.df = deck_df_filtered
             # qgrid_deck_data._handle_qgrid_msg_helper({
             #     'field': "cardTitles",
             #     'filter_info': {
@@ -611,7 +680,7 @@ def update_decks_display(change):
             # })
 
         if qgrid_count_data:                  
-            on_filter_changed(qgrid_count_data)            
+            coll_data_on_filter_changed(qgrid_count_data)            
             ic(qgrid_count_data.df)
 
         #if qgrid_syn_data:
@@ -888,8 +957,8 @@ def create_filter_widgets():
 
 def setup_interface():
     global db_list, username, button_load, card_title_widget, \
-        qgrid_deck_data, qgrid_count_data, qgrid_syn_data,    \
-        qg_deck_options, qg_count_options, qg_syn_options, out
+        qgrid_coll_data, qgrid_count_data, qgrid_syn_data, qgrid_deck_data,    \
+        qg_coll_options, qg_count_options, qg_syn_options, out
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
@@ -911,19 +980,15 @@ def setup_interface():
 
 
     # Create qgrid widgets for the deck data, count data, and synergy data
-    qgrid_deck_data = create_qgrid_view_options(qg_deck_options)
+    qgrid_coll_data = create_qgrid_view_options(qg_coll_options)
     qgrid_count_data = create_qgrid_view_options(qg_count_options)
     qgrid_syn_data  = create_qgrid_view_options(qg_syn_options)
-
-    def on_filter_dropdown_shown(event, column):
-        print(f"Filter dropdown shown for column: {column}")
-
-    qgrid_deck_data.on('filter_dropdown_shown', on_filter_dropdown_shown)  
+    qgrid_deck_data = create_qgrid_view_options(qg_deck_options)
 
     # Attach the event handler to each qgrid widget
-    qgrid_deck_data.on('filter_changed', on_filter_changed) 
-    qgrid_deck_data.on('filter_dropdown_shown', on_filter_dropdown_shown)   
-    
+    qgrid_coll_data.on('filter_changed', coll_data_on_filter_changed) 
+    qgrid_coll_data.on('selection_changed', coll_data_on_selection_changed)
+
     # Text widget to enter the username
     username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
     username.observe(lambda change: handle_username_change(change), 'value')
@@ -951,9 +1016,10 @@ def setup_interface():
 
     # Display the widgets    
     display(toggle_box)  
-    display(qgrid_deck_data, qgrid_count_data, qgrid_syn_data)          
+    display(qgrid_coll_data, qgrid_count_data) #,qgrid_syn_data)          
+    display(qgrid_deck_data)
     display(out)     
-    display(*toggle_dropdown_pairs, button_graph)
+    #display(*toggle_dropdown_pairs, button_graph)
 
 
 

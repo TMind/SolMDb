@@ -181,17 +181,18 @@ def generate_synergy_statistics_dataframe(deck_df):
 def generate_deck_content_dataframe(event, widget):
     ic(generate_deck_content_dataframe, event, widget)
     #print(f"Generating Deck Content DataFrame : {event}")
-    global qgrid_coll_data, qgrid_count_data, qgrid_deck_data
+    global qgrid_deck_data
 
     #Get the selection from the deck widget
     desired_fields = ['name', 'cardType', 'cardSubType', 'rarity', 'levels']    
-    if qgrid_coll_data:
+    if widget:
         header_df = pd.DataFrame()
         all_decks_df = pd.DataFrame()        
         df_selected_rows = event['new']
         # Get the selected rows from the DataFrame based on the indices
-        decks_df = qgrid_coll_data.df.iloc[df_selected_rows]        
-        deckList = decks_df.index
+        changed_df = widget.get_changed_df()
+        decks_df = changed_df.iloc[df_selected_rows]        
+        deckList = decks_df.index        
         #deckList = ['The Reeves of Loss', 'The People of Bearing']                
         for deckName in deckList:
             #print(f'DeckName: {deckName}')
@@ -292,8 +293,7 @@ def generate_cardType_count_dataframe(existing_df=None):
 
     #display(numeric_df)
     return numeric_df
-    
-    #return all_decks_df
+
 
 # Data Handling and Transformation 
 def generate_deck_statistics_dataframe():
@@ -513,23 +513,8 @@ def check_column_values(column, changed_df):
 
 def update_visible_columns(qgrid_widget):
     global global_df
-    # Ensure original DataFrame is retained without alterations
-    original_df = global_df[id(qgrid_widget)].copy() if id(qgrid_widget) in global_df else pd.DataFrame()
 
-    #print("Setting column visibility for")
-    #print(original_df.columns)
-
-    # Access the current and original column definitions
-    qg_column_defs = qgrid_widget.column_definitions.copy()
-    original_column_definitions = qgrid_widget_options.get(id(qgrid_widget), {}).get('col_defs', {}).copy()
-
-    #print("Original Column Definitions:", original_column_definitions)
-    #print("Current Column Definitions:", qg_column_defs)
-
-    # Lists to store the columns with 0 width and non-0 width
-    zero_width_columns = []
-    non_zero_width_columns = []
-
+    zero_width_columns = []   
     # Analyze changed DataFrame for updates
     changed_df = qgrid_widget.get_changed_df()
     #print(f"Columns : {changed_df.columns}")
@@ -538,20 +523,11 @@ def update_visible_columns(qgrid_widget):
         if not check_column_values(column, changed_df):
             zero_width_columns.append(column)
             changed_df.drop(column, axis=1, inplace=True)
-
-    # Assign the updated definitions back to the widget (if necessary)
-    #qgrid_widget.column_definitions = qg_column_defs
-
-    # Print summary of adjustments
-    #print("Columns with 0 width:", zero_width_columns)
-    #print("Columns with non-0 width:", non_zero_width_columns)
-    #print("Finished setting column visibility")
     
     # Optionally, refresh the widget display if significant changes were made
-    changed_df.reset_index(inplace=True)
+    #changed_df.reset_index(inplace=True)
     qgrid_widget.column_definitions['index'] = {'width' : 250 }
-    qgrid_widget.df = changed_df
-    #display(changed_df)
+    qgrid_widget.df = changed_df    
 
 # Function to handle changes to the checkbox
 def handle_debug_toggle(change):

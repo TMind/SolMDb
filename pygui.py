@@ -14,7 +14,7 @@ from MyGraph import MyGraph
 from NetApi import NetApi
 
 from soldb import parse_arguments
-from IPython.display import display
+from IPython.display import display, HTML
 
 from Synergy import SynergyTemplate
 import pandas as pd
@@ -59,6 +59,8 @@ qgrid_coll_data  = None
 qgrid_count_data = None
 qgrid_syn_data   = None
 qgrid_deck_data  = None
+
+update_function = None
 
 qgrid_widget_options = {}
 global_df = None
@@ -109,7 +111,32 @@ qg_deck_options = {
         'cardSubType':      { 'width': 110,  },
     }
 }
-   
+
+custom_css = """
+<style>
+/* Customizes the scrollbar within qgrid */
+.q-grid ::-webkit-scrollbar {
+    width: 5px;  /* Smaller width for vertical scrollbar */
+    height: 5px; /* Smaller height for horizontal scrollbar */
+}
+
+.q-grid ::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background: rgba(0,0,0,0.1); /* Light background for the track */
+}
+
+.q-grid ::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: rgba(128,128,128,0.8); /* Lighter gray color for the thumb */
+}
+
+.q-grid ::-webkit-scrollbar-thumb:hover {
+    background: rgba(90,90,90,0.8); /* Slightly darker gray on hover */
+}
+</style>
+"""
+display(HTML(custom_css))
+
 
 ######################
 # Network Operations #
@@ -184,7 +211,7 @@ def generate_deck_content_dataframe(event, widget):
     global qgrid_deck_data
 
     #Get the selection from the deck widget
-    desired_fields = ['name', 'cardType', 'cardSubType', 'rarity', 'levels']    
+    desired_fields = ['name', 'cardSubType', 'levels']    
     if widget:
         header_df = pd.DataFrame()
         all_decks_df = pd.DataFrame()        
@@ -222,7 +249,9 @@ def generate_deck_content_dataframe(event, widget):
                         card_dfs.append(card_df)  # Add full_card_df to the list
                 # Concatenate all card DataFrames along the rows axis
                 deck_df = pd.concat(card_dfs, ignore_index=True, axis=0)
-
+                # Replace empty values in the 'cardSubType' column with 'Spell'
+                if 'cardSubType' in deck_df.columns:
+                    deck_df['cardSubType'] = deck_df['cardSubType'].replace(['', 0], 'Spell')
                 # Create a header DataFrame with a single row containing the deck name
                 deckName_df = pd.DataFrame({'name': [deckName]})                
                 header_df = pd.concat([header_df, deckName_df], ignore_index=True, axis=0)                
@@ -612,7 +641,7 @@ def display_graph_on_click(button):
 
 def update_decks_display(change):
     ic(update_decks_display, change)
-    global username, qgrid_coll_data, qgrid_count_data, qgrid_syn_data, global_df
+    global username, qgrid_coll_data, qgrid_count_data, qgrid_syn_data, global_df, update_function
 
     if global_df is None:
         global_df = {}
@@ -647,16 +676,8 @@ def update_decks_display(change):
 
         if qgrid_coll_data:
             qgrid_coll_data.df = deck_df_filtered
-            # qgrid_deck_data._handle_qgrid_msg_helper({
-            #     'field': "cardTitles",
-            #     'filter_info': {
-            #         'field': "cardTitles",
-            #         'max': change['new'][1],
-            #         'min': change['new'][0],
-            #         'type': "slider"
-            #     },
-            #     'type': "filter_changed"
-            # })
+            #update_function(deck_df_filtered)
+            
 
         if qgrid_count_data:                  
             coll_data_on_filter_changed(qgrid_count_data)            
@@ -807,7 +828,9 @@ def create_qgrid_view_options(qg_options):
     qg = qgrid.show_grid(pd.DataFrame(), 
                         column_options=qg_options['col_options'],
                         column_definitions=qg_options['col_defs'],
-                        grid_options={'forceFitColumns': False},
+                        grid_options={'forceFitColumns': False,
+                                      'enableColumnReorder' : True,
+                                      },
                         show_toolbar=False)    
     # Store the options in the dictionary using the widget's ID as the key
     qgrid_widget_options[id(qg)] = qg_options
@@ -934,10 +957,37 @@ def create_filter_widgets():
 # Setup and Initialization #
 ############################
 
+def make_qgrid_interactive(qg):
+    # Define a container for checkboxes
+    checkboxes_container = widgets.HBox([])
+    display(checkboxes_container)  # Display checkboxes above or below the qgrid
+
+    def setup_checkboxes(df):
+        # Clear existing children
+        checkboxes_container.children = []
+        # Create and add new checkboxes for each column
+        for column in df.columns:
+            checkbox = widgets.Checkbox(value=True, description=column, disabled=False)
+            checkbox.observe(update_qgrid, names='value')
+            checkboxes_container.children += (checkbox,)
+
+    def update_qgrid(change):
+        # Filter DataFrame based on selected checkboxes
+        selected_columns = [cb.description for cb in checkboxes_container.children if cb.value]
+        new_df = qg.get_changed_df().loc[:, selected_columns]
+        qg.df = new_df
+
+    setup_checkboxes(qg.df)  # Initialize with the current DataFrame in qg
+
+    # Return the original qgrid object to retain its properties
+    return qg, setup_checkboxes
+
+
 def setup_interface():
     global db_list, username, button_load, card_title_widget, \
         qgrid_coll_data, qgrid_count_data, qgrid_syn_data, qgrid_deck_data,    \
-        qg_coll_options, qg_count_options, qg_syn_options, out
+        qg_coll_options, qg_count_options, qg_syn_options, out, \
+        update_function
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
@@ -960,6 +1010,13 @@ def setup_interface():
 
     # Create qgrid widgets for the deck data, count data, and synergy data
     qgrid_coll_data = create_qgrid_view_options(qg_coll_options)
+    qgrid_coll_data, update_function = make_qgrid_interactive(qgrid_coll_data)
+    #qgrid_coll_data.layout.border = '2px solid blue'
+    #qgrid_coll_data.layout.margin = '50px'
+    #qgrid_coll_data.layout.padding = '50px'
+    #qgrid_coll_data.layout.overflow_x = 'auto'
+
+    #qgrid_coll_data.layout.height = '30%'
     qgrid_count_data = create_qgrid_view_options(qg_count_options)
     qgrid_syn_data  = create_qgrid_view_options(qg_syn_options)
     qgrid_deck_data = create_qgrid_view_options(qg_deck_options)
@@ -997,7 +1054,8 @@ def setup_interface():
     # Display the widgets    
     display(toggle_box)  
     display(qgrid_coll_data) #,qgrid_syn_data)          
-    display(widgets.HBox([ qgrid_count_data,qgrid_deck_data]))
+    display(qgrid_count_data)
+    display(qgrid_deck_data)
     display(out)     
     #display(*toggle_dropdown_pairs, button_graph)
 

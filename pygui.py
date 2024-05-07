@@ -252,6 +252,7 @@ def generate_deck_content_dataframe(event, widget):
                 # Replace empty values in the 'cardSubType' column with 'Spell'
                 if 'cardSubType' in deck_df.columns:
                     deck_df['cardSubType'] = deck_df['cardSubType'].replace(['', '0', 0], 'Spell')
+                    deck_df['cardSubType'] = deck_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
                 # Create a header DataFrame with a single row containing the deck name
                 deckName_df = pd.DataFrame({'name': [deckName]})                
                 header_df = pd.concat([header_df, deckName_df], ignore_index=True, axis=0)                

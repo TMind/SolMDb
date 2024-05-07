@@ -203,7 +203,7 @@ def generate_synergy_statistics_dataframe(deck_df):
 
 def generate_deck_content_dataframe(event, widget):
     ic(generate_deck_content_dataframe, event, widget)
-    #print(f"Generating Deck Content DataFrame : {event}")
+    print(f"Generating Deck Content DataFrame : {event}")
 
     #Get the selection from the deck widget
     desired_fields = ['name', 'cardSubType', 'levels']    
@@ -658,7 +658,7 @@ def update_decks_display(change):
         print("Applying Filter to the DataFrame")       
         coll_df_filtered = apply_cardname_filter_to_dataframe(default_coll_df)
         qm.update_data('collection', coll_df_filtered)
-        #coll_data_on_filter_changed()                    
+        coll_data_on_filter_changed()                    
 
 def update_filter_widget(change=None):
     global cardTypes_names_widget
@@ -1009,6 +1009,8 @@ def setup_interface():
     qgrid_count_data = qm.add_grid('count', pd.DataFrame(), options = qg_count_options)    
     qgrid_deck_data  = qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options)
     
+    qm.on('collection', 'selection_changed', coll_data_on_selection_changed)
+
     # Text widget to enter the username
     username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
     username.observe(lambda change: handle_username_change(change), 'value')

@@ -1,5 +1,3 @@
-from multiprocessing import synchronize
-from os import sync
 import qgrid
 import pandas as pd
 import ipywidgets as widgets

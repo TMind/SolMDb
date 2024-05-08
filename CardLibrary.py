@@ -210,7 +210,7 @@ class Fusion(DatabaseObject):
                     self.data.children_data = {deck_data['name']: 'CardLibrary.Deck' for deck_data in self.data.myDecks}
                 
                 if not self.data.currentForgebornId:                                    
-                    self.data.currentForgebornId = self.data.myDecks[0]['forgeborn']['_id']
+                    self.data.currentForgebornId = self.data.myDecks[0]['forgeborn']['id']
                 self.data.children_data.update({self.currentForgebornId: 'CardLibrary.Forgeborn'})
         
         # Default Values 

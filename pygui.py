@@ -32,8 +32,8 @@ ic.disable()
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
 GlobalVariables.username = 'enterUsernameHere'
-#uri = "mongodb://localhost:27017"
-uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
+uri = "mongodb://localhost:27017"
+#uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
 myDB = DatabaseManager(GlobalVariables.username, uri=uri)
 commonDB = DatabaseManager('common')
 
@@ -58,6 +58,7 @@ cardTypes_names_widget = {}
 qm = QGridManager()
 
 qgrid_widget_options = {}
+filter_grid = None 
 global_df = None
 
 out = widgets.Output()
@@ -440,57 +441,71 @@ def generate_deck_statistics_dataframe():
 
     return df_decks_filtered
 
-
 def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
     def filter_by_substring(df, filter_row):
+ 
         def check_substring_in_titles(titles, substrings):
-            # Directly check if any of the substrings is in the titles string
-            if titles:  # Ensure titles string is not None or empty
-                return any(substring in titles for substring in substrings)
+            # Ensure titles string is not None or empty
+            if titles:
+                # Iterate over each combination of substrings
+                for substring in substrings:
+                    # Check if the complete string is in the titles
+                    if substring in titles:
+                        return True
             else:
                 print("Titles is empty")
-                return False
+            return False
 
-        def apply_filter(df, filter_type, logical_and=False):
-            if not filter_row[filter_type]:  # If no filter is applied, return the DataFrame as is
+        def apply_filter(df, filter_type):
+            # Initialize an empty list to store the boolean values
+            substring_check_results = []
+
+            # Get the substrings for the filter type
+            substrings = filter_row[filter_type].split(',') if filter_row[filter_type] else []
+            if not substrings:
                 return df
-            else:
-                # Apply the substring check directly on the 'cardTitles' column
-                filtered_indices = df['cardTitles'].apply(check_substring_in_titles, substrings=filter_row[filter_type])
-                if logical_and:
-                    return df[filtered_indices]
-                else:
-                    return df[df.index.isin(filtered_indices) | df.index.isin(df.index)]
 
+            # Iterate over the 'cardTitles' column
+            for title in df['cardTitles']:
+                # Apply the check_substring_in_titles function to each title
+                result = check_substring_in_titles(title, substrings=substrings)
+                substring_check_results.append(result)
+
+            # Convert the list to a pandas Series
+            substring_check_results = pd.Series(substring_check_results, index=df.index)
+
+            # Assign the results to filtered_indices
+            filtered_indices = substring_check_results
+            true_indices = filtered_indices[filtered_indices].index
+            print(f"True indices for filter: {list(true_indices)}")
+            return df[filtered_indices]
+                
         df_filtered = df
-        for filter_type in ['Modifier', 'Creature']:
-            if not df_filtered.empty:
-                df_filtered = apply_filter(df_filtered, filter_type, logical_and=True)
-            else:
-                print("Dataframe is empty")
-                break  # Exit the loop if the DataFrame becomes empty after filtering
-
-        if not df_filtered.empty:
-            df_filtered = apply_filter(df_filtered, 'Spell', logical_and=False)
+        # Apply the filters to the DataFrame
+        for filter_type in ['Modifier', 'Creature', 'Spell']:
+            df_filtered = apply_filter(df_filtered, filter_type)
 
         return df_filtered
 
     df_filtered = df_to_filter
     active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
 
+    print(f"Active filters: ")
+    display(active_filters)
+
     for _, filter_row in active_filters.iterrows():
-        if not df_filtered.empty:
-            df_filtered = filter_by_substring(df_filtered, filter_row)
-        else:
-            print("Dataframe is empty")
-            break  # Exit the loop if the DataFrame becomes empty after filtering
+        print(f"Applying filter: {filter_row}")
+        df_filtered = filter_by_substring(df_to_filter, filter_row)
+        if df_filtered.empty:
+            break
 
     return df_filtered
 
 # This function will filter the DataFrame df_to_filter based on the active filters in filter_df. 
 # For each active filter, it applies the filter to df_filtered using filter_by_substring. 
 # If df_filtered becomes empty after filtering, it breaks out of the loop. 
-# The function filter_by_substring applies the filters of type 'Modifier' and 'Creature' to df_filtered successively using apply_filter with logical_and=True. 
+# The function filter_by_substring applies the filters of type 'Modifier' and 'Creature' to df_filtered 
+# successively using apply_filter with logical_and=True. 
 # If df_filtered is not empty, it applies the filter of type 'Spell' to df_filtered using apply_filter with logical_and=False.
 
 ##################
@@ -678,10 +693,19 @@ def update_decks_display(change):
         default_coll_df = qm.get_default_data('collection')
 
         # Apply the filter from FilterGrid
-        for qgrid_id in ['collection', 'count']:
-            filter_df = filter_grid.qgrid_filter.get_changed_df()
-            filtered_df = apply_cardname_filter_to_dataframe(filter_df)
-            qm.update_data(qgrid_id, filtered_df)
+        
+        #print(f"Applying filter to collection")
+        if filter_grid:                                
+            #print(f"Filtering collection with filter_grid")
+            #print("Displaying default dataframe :")
+            display(default_coll_df)
+            filter_df = filter_grid.get_changed_df()
+            #print("Displaying filter_df")
+            display(filter_df)                                
+            filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
+            #print(f"Result after filtering:")
+            display(filtered_df)
+            qm.update_data('collection', filtered_df)
 
         # Apply other changes to the qgrid widgets ( like shrinking columns )
         coll_data_on_filter_changed()
@@ -961,7 +985,8 @@ class FilterGrid:
         # Create a qgrid widget for the data from the selection widgets
         qgrid_filter = qgrid.show_grid(self.df, grid_options={'forceFitColumns' : False} , column_definitions={'index' : {'width' : 50}} ,show_toolbar=True)    
         qgrid_filter.on('row_added', self.grid_filter_on_row_added)           
-        qgrid_filter.on('row_removed', self.grid_filter_on_row_removed)                
+        qgrid_filter.on('row_removed', self.grid_filter_on_row_removed)   
+        qgrid_filter.on('cell_edited', self.on_cell_edit)             
         return qgrid_filter
 
     @staticmethod
@@ -989,28 +1014,44 @@ class FilterGrid:
 
     def grid_filter_on_row_added(self, event, widget):  
         global out_debug
-        with out_debug if out_debug else nullcontext():
-            print(f"Row added at index {event['index']}")
-            new_row_index = event['index']
-            # Get the DataFrame from the qgrid widget
-            df = widget.get_changed_df()                   
-            print(f"Selection Box Children: {self.selection_box.children}")     
-            selected_values = [', '.join(widget.value) if isinstance(widget.value, (list, tuple)) else widget.value for widget in self.selection_box.children[:-1]]        
-            selected_values.append(self.selection_box.children[-1].value)  # Handle the Checkbox widget separately
-            print(f"Selected values: {selected_values}")        
-            for i, column in enumerate(df.columns):                                
-                df.loc[new_row_index, column] = selected_values[i]
+        #with out_debug if out_debug else nullcontext():
+        print(f"Row added at index {event['index']}")
+        new_row_index = event['index']
+        # Get the DataFrame from the qgrid widget
+        df = widget.get_changed_df()                   
+        print(f"Selection Box Children: {self.selection_box.children}")     
+        selected_values = [', '.join(widget.value) if isinstance(widget.value, (list, tuple)) else widget.value for widget in self.selection_box.children[:-1]]        
+        selected_values.append(self.selection_box.children[-1].value)  # Handle the Checkbox widget separately
+        print(f"Selected values: {selected_values}")        
+        for i, column in enumerate(df.columns):                                
+            df.loc[new_row_index, column] = selected_values[i]
 
-            # Update the DataFrame in the qgrid widget
-            widget.df = df
-            
-            if widget.df.loc[event['index'], 'Active']:
-                # Update the active rows
-                active_rows = widget.df[widget.df['Active'] == True]
-                print(f"Calling update_decks_display from grid_filter_on_row_added")                                
-                self.update_decks_display({'new': active_rows, 'old': None, 'owner': 'filter'})
+        # Update the DataFrame in the qgrid widget
+        widget.df = df
+        
+        if widget.df.loc[event['index'], 'Active']:            
+            print(f"Calling update_decks_display from grid_filter_on_row_added")                                
+            self.update_decks_display({'new': new_row_index, 'old': None, 'owner': 'filter'})
     
-    #TODO: Implement a function to update the active rows when the 'Active' checkbox is toggled
+    def on_cell_edit(self, event, widget):        
+        print(f"Old value: {event['old']} -> New value: {event['new']}")
+        row_index = event['index']
+        column_index = event['column']                        
+        # Set the value for the cell
+        widget.df.loc[row_index, column_index] = event['new']
+        print(f"Cell edited at row {row_index}, column {column_index}")
+        print(f"Final value in cell = {widget.df.loc[row_index, column_index]}")
+        
+        if widget.df.loc[row_index, 'Active']:
+            # Filter is active , so it needs to update the list
+            print(f"Calling update_decks_display from on_cell_edit")   
+            self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})        
+
+        elif column_index == 'Active':
+            # Filter is inactive , so it needs to update the list
+            print(f"Calling update_decks_display from on_cell_edit")   
+            self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})
+
 
     def create_selection_box(self):
         selection_items = []
@@ -1022,10 +1063,11 @@ class FilterGrid:
         selection_box = widgets.HBox(selection_items)
         return selection_box
     
-    def display(self):
-        # Create a VBox widget containing the qgrid_filter and the selection_box
-        display_box = widgets.VBox([self.selection_box, self.qgrid_filter])
-        return display_box
+    def get_changed_df(self):
+        return self.qgrid_filter.get_changed_df()
+
+    def get_widgets(self):        
+        return self.selection_box, self.qgrid_filter
 
 ############################
 # Setup and Initialization #
@@ -1033,7 +1075,7 @@ class FilterGrid:
 def setup_interface():
     global db_list, username, button_load, card_title_widget, \
         qg_coll_options, qg_count_options, qg_syn_options, \
-        out_qm, out, qm
+        filter_grid, out_qm, out, qm
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
@@ -1066,12 +1108,14 @@ def setup_interface():
 
     # Database selection widget
     db_list = create_database_selection_widget()
-    #db_list_box = widgets.VBox([db_list])
+    #db_list_box = widgets.VBox([db_list])    
 
     # Filter widgets
     grid_filter = create_filter_widgets()
-    filter_grid = FilterGrid(update_decks_display)
- 
+    filter_grid_object = FilterGrid(update_decks_display)
+    selection_grid, filter_grid = filter_grid_object.get_widgets()
+    filterBox = widgets.VBox([selection_grid, filter_grid])
+
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description="Load" )
     button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
@@ -1090,7 +1134,7 @@ def setup_interface():
     # Display the widgets    
     display(out_debug)
     display(toggle_box)  
-    display(filter_grid.display())
+    display(filterBox)
     display(out_qm)    
     display(out)     
     #display(*toggle_dropdown_pairs, button_graph)

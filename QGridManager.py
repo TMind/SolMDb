@@ -96,8 +96,8 @@ class QGridManager:
         """Update the data in a specified qgrid widget and adjust toggle grid accordingly."""
         grid_info = self.grids.get(identifier)
         if grid_info:
-            # Update the default DataFrame
-            grid_info['df_versions']['default'] = new_data.copy()
+            # Update the filterd DataFrame
+            grid_info['df_versions']['filtered'] = new_data.copy()
             # Update the main widget's DataFrame
             grid_info['main_widget'].df = new_data
             toggle_df = pd.DataFrame([True] * len(new_data.columns), index=new_data.columns, columns=['Visible']).T
@@ -191,5 +191,4 @@ class QGridManager:
         if grid_info and 'main_widget' in grid_info:
             grid_info['main_widget'].on(event_name, handler_func)
 
-
-
+    

@@ -442,79 +442,78 @@ def generate_deck_statistics_dataframe():
     return df_decks_filtered
 
 def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
-    with out_debug: 
-        def filter_by_substring(df, filter_row):       
-            def apply_filter(df, substrings):
-                substring_check_results = []
+    def filter_by_substring(df, filter_row):       
+        def apply_filter(df, substrings):
+            substring_check_results = []
 
-                if not substrings:
-                    return df
+            if not substrings:
+                return df
 
-                #print(f"Applying filter {substrings} to DataFrame")
-                #display(df)
-                # Iterate over the 'cardTitles' column
-                for title in df['cardTitles']:
-                    # Apply the check_substring_in_titles function to each title                
-                    result = any(substring in title for substring in substrings)
-                    substring_check_results.append(result)
+            #print(f"Applying filter {substrings} to DataFrame")
+            #display(df)
+            # Iterate over the 'cardTitles' column
+            for title in df['cardTitles']:
+                # Apply the check_substring_in_titles function to each title                
+                result = any(substring in title for substring in substrings)
+                substring_check_results.append(result)
 
-                # Convert the list to a pandas Series
-                substring_check_results = pd.Series(substring_check_results, index=df.index)
+            # Convert the list to a pandas Series
+            substring_check_results = pd.Series(substring_check_results, index=df.index)
 
-                # Assign the results to filtered_indices
-                filtered_indices = substring_check_results
-                true_indices = filtered_indices[filtered_indices].index
-                print(f"True indices for filter {substrings}: {list(true_indices)}")
+            # Assign the results to filtered_indices
+            filtered_indices = substring_check_results
+            true_indices = filtered_indices[filtered_indices].index
+            print(f"True indices for filter {substrings}: {list(true_indices)}")
 
-                current_filter_results = df[substring_check_results].copy()
+            current_filter_results = df[substring_check_results].copy()
 
-                return current_filter_results
+            return current_filter_results
 
-            # Define previous_filter_type here
-            previous_filter_type = 'Modifier'        
+        # Define previous_filter_type here
+        previous_filter_type = 'Modifier'        
 
-            # Apply the first filter outside the loop
-            substrings = re.split(r'\s*,\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
-            df_filtered = apply_filter(df, substrings)
+        # Apply the first filter outside the loop
+        substrings = re.split(r'\s*,\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
+        df_filtered = apply_filter(df, substrings)
 
-            print(type(df_filtered))
+        print(type(df_filtered))
 
-            # Apply the remaining filters in the loop
-            for i, filter_type in enumerate(['Creature', 'Spell'], start=1):
-                operator = filter_row[f'op{i}']
-                previous_substrings = substrings
-                substrings = re.split(r'\s*,\s*', filter_row[filter_type]) if filter_row[filter_type] else []
-                print(f"Substrings = '{substrings}'")
-                if operator == '+':
-                    #previous_substrings = re.split(r'\s*,\s*', filter_row[previous_filter_type]) if filter_row[previous_filter_type] else []
-                    substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
+        # Apply the remaining filters in the loop
+        for i, filter_type in enumerate(['Creature', 'Spell'], start=1):
+            operator = filter_row[f'op{i}']
+            previous_substrings = substrings
+            substrings = re.split(r'\s*,\s*', filter_row[filter_type]) if filter_row[filter_type] else []
+            print(f"Substrings = '{substrings}'")
+            if operator == '+':
+                #previous_substrings = re.split(r'\s*,\s*', filter_row[previous_filter_type]) if filter_row[previous_filter_type] else []
+                substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
 
-                # Apply the filter to the original DataFrame when the operator is 'OR'
-                df_to_filter = df if operator == 'OR' else df_filtered
-                current_filter_results = apply_filter(df_to_filter, substrings)
-                previous_filter_type = filter_type            
+            # Apply the filter to the original DataFrame when the operator is 'OR'
+            df_to_filter = df if operator == 'OR' else df_filtered
+            current_filter_results = apply_filter(df_to_filter, substrings)
+            previous_filter_type = filter_type            
 
-                # Handle the operator logic in the outer loop
-                if operator == 'AND':
-                    df_filtered = df_filtered[df_filtered.index.isin(current_filter_results.index)]
-                elif operator == 'OR':
-                    df_filtered = pd.concat([df_filtered, current_filter_results]).drop_duplicates()
-                else:
-                    df_filtered = current_filter_results
-
-            return df_filtered
-
-        df_filtered = df_to_filter
-        active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
-
-        print(f"Active filters: ")
-        display(active_filters)
-
-        for _, filter_row in active_filters.iterrows():
-            print(f"Applying filter: {filter_row}")
-            df_filtered = filter_by_substring(df_filtered, filter_row)
+            # Handle the operator logic in the outer loop
+            if operator == 'AND':
+                df_filtered = df_filtered[df_filtered.index.isin(current_filter_results.index)]
+            elif operator == 'OR':
+                df_filtered = pd.concat([df_filtered, current_filter_results]).drop_duplicates()
+            else:
+                df_filtered = current_filter_results
 
         return df_filtered
+
+    df_filtered = df_to_filter
+    active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
+
+    #print(f"Active filters: ")
+    #display(active_filters)
+
+    for _, filter_row in active_filters.iterrows():
+        #print(f"Applying filter: {filter_row}")
+        df_filtered = filter_by_substring(df_filtered, filter_row)
+
+    return df_filtered
 
 
 # This function will filter the DataFrame df_to_filter based on the active filters in filter_df. 
@@ -679,7 +678,7 @@ def display_graph_on_click(button):
 
 def update_decks_display(change):
     ic(update_decks_display, change)
-    print(f"Updating Decks Display : {change}")
+    #print(f"Updating Decks Display : {change}")
     global username, qm, filter_grid  # Assuming filter_grid is a global instance of FilterGrid
 
     default_coll_df = qm.get_default_data('collection')

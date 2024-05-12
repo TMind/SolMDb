@@ -435,7 +435,7 @@ def generate_deck_statistics_dataframe():
             # Update the corresponding row in df_decks_filtered with the stats from deck_stats_df
             df_decks_filtered.update(deck_stats_df)
 
-    return df_decks_filtered
+    return df_decks_filtered.reset_index()
 
 def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
     def filter_by_substring(df, filter_row):       
@@ -501,6 +501,9 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
                 df_filtered = current_filter_results
             else:
                 print(f"Operator '{operator}' not recognized")
+
+        # Make sure to reset the index after filtering to maintain consistency
+        df_filtered = df_filtered.reset_index()
 
         return df_filtered
 
@@ -748,7 +751,7 @@ def update_decks_display(change):
             qm.update_data('collection', filtered_df)
 
         # Apply other changes to the qgrid widgets ( like shrinking columns )
-        coll_data_on_filter_changed()
+        #coll_data_on_filter_changed()
 
     
 

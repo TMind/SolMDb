@@ -1,10 +1,14 @@
-import qgrid
+from ast import Global
 import datetime
-import pandas as pd
-import ipywidgets as widgets
 from IPython.display import display
 from icecream import ic
 
+# Modules used by both classes
+import qgrid
+import pandas as pd
+import ipywidgets as widgets
+
+import GlobalVariables as gv
 
 class QGridManager:
     EVENT_DF_STATUS_CHANGED = 'df_status_changed'
@@ -161,13 +165,13 @@ class QGridManager:
         grid_info = self.grids.get(identifier)
         if grid_info:
             # Update the filterd DataFrame
-            print(f'update_data() : Updating filtered data for {identifier}')
+            #print(f'update_data() : Updating filtered data for {identifier}')
             grid_info['df_versions']['filtered'] = new_data.copy()
             # Update the main widget's DataFrame
-            print(f'update_data() : Updating main grid for {identifier}' )
-            grid_info['main_widget'].df = new_data
+            #print(f'update_data() : Updating main grid for {identifier}' )
+            grid_info['main_widget'].df = new_data.copy()
             # Update the toggle widget , but keep the original setting 
-            print(f'update_data() : Updating toggle grid for {identifier}' )
+            #print(f'update_data() : Updating toggle grid for {identifier}' )
             self.update_toggle_df(new_data, identifier)
             # # Create a new DataFrame with the same structure as the new data            
             # new_toggle_df = pd.DataFrame({column: [True] for column in new_data.columns}, index=['Visible'])
@@ -208,12 +212,16 @@ class QGridManager:
             current_toggle_df = grid_info['toggle_widget'].get_changed_df()
             grid_info['toggle_widget'].df = new_toggle_df
 
-            # Iterate over the columns of the new_toggle_df
-            for column in new_toggle_df.columns:
-                if column in current_toggle_df.columns:
-                    # If the column exists in the current toggle_df, copy the value
+            # Iterate over the columns of the current_toggle_df
+            for column in current_toggle_df.columns:
+                if column in new_toggle_df.columns:
+                    # If the column exists in the new_toggle_df, copy the value
                     if 'Visible' in current_toggle_df.index:
-                        grid_info['toggle_widget'].edit_cell('Visible', column, current_toggle_df.loc['Visible', column])
+                        grid_info['toggle_widget'].edit_cell('Visible', column, current_toggle_df.loc['Visible', column])                            
+                else:
+                    # If the column does not exist in the new_toggle_df, add it with the value False
+                    new_toggle_df[column] = False
+                    grid_info['toggle_widget'].edit_cell('Visible', column, False)
 
     # Visibility of columns / Dropping columns
     def update_visible_columns(self, event, widget):
@@ -290,4 +298,200 @@ class QGridManager:
         if grid_info and 'main_widget' in grid_info:
             grid_info['main_widget'].on(event_name, handler_func)
 
+
+class FilterGrid:
+    def __init__(self, update_decks_display):
+        self.update_decks_display = update_decks_display
+        self.df = self.create_initial_dataframe()
+        self.qgrid_filter = self.create_filter_qgrid()
+        #selection_box, selection_widgets = self.create_selection_box()
+        self.selection_box, self.selection_widgets  = self.create_selection_box()
+        #self.selection_widgets = selection_widgets
+
+    def create_filter_qgrid(self):
+        # Create a qgrid widget for the data from the selection widgets
+        qgrid_filter = qgrid.show_grid(self.df, grid_options={'forceFitColumns' : False, 'minVisibleRows' : 4, 'maxVisibleRows':5, 'enableColumnReorder':False} , 
+                                       column_definitions={'index' : {'width' : 50}, 'op1' : {'width' : 50}, 'op2' : {'width' : 50}} ,
+                    
+                                       show_toolbar=True)    
+        qgrid_filter.layout = widgets.Layout(height='auto%')  
+        qgrid_filter.on('row_added', self.grid_filter_on_row_added)           
+        qgrid_filter.on('row_removed', self.grid_filter_on_row_removed)   
+        qgrid_filter.on('cell_edited', self.on_cell_edit)             
+        return qgrid_filter
+
+    @staticmethod
+    def create_initial_dataframe():
+        return pd.DataFrame({
+            'Modifier': [''],
+            'op1': [''],
+            'Creature': [''],
+            'op2': [''],
+            'Spell': [''], 
+            'Active': [False]
+        })
     
+    def grid_filter_on_row_removed(self, event, widget):        
+        # Check if index 0 is in the indices
+        if 0 in event['indices']:
+            df = self.create_initial_dataframe()
+            widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
+            # Remove index 0 from the indices
+            event['indices'].remove(0)
+    
+        # If there are any indices left, update the display
+        if event['indices']:
+            # Create the active rows DataFrame
+            active_rows = widget.df[widget.df['Active'] == True]
+            self.update_decks_display({'new': active_rows, 'old': None, 'owner': 'filter'})
+
+    def grid_filter_on_row_added(self, event, widget):          
+        print(f"Row added at index {event['index']}")
+        new_row_index = event['index']
+        df = widget.get_changed_df()                           
+        for column in df.columns:
+            if column == 'Active':
+                df.loc[new_row_index, column] = self.selection_widgets[column].value
+                print(f"Active value: {df.loc[new_row_index, column]}")
+            else:
+                df.loc[new_row_index, column] = ', '.join(self.selection_widgets[column].value) if isinstance(self.selection_widgets[column].value, (list, tuple)) else self.selection_widgets[column].value
+                print(f"Value for {column}: {df.loc[new_row_index, column]}")
+        widget.df = df
+        display(widget.df)
+        if widget.df.loc[new_row_index, 'Active']:            
+            print(f"Calling update_decks_display from grid_filter_on_row_added")                                
+            self.update_decks_display({'new': new_row_index, 'old': None, 'owner': 'filter'})
+    
+    def on_cell_edit(self, event, widget):        
+        #print(f"Old value: {event['old']} -> New value: {event['new']}")
+        row_index = event['index']
+        column_index = event['column']                        
+        # Set the value for the cell
+        widget.df.loc[row_index, column_index] = event['new']
+        #print(f"Cell edited at row {row_index}, column {column_index}")
+        #print(f"Final value in cell = {widget.df.loc[row_index, column_index]}")
+        
+        if widget.df.loc[row_index, 'Active']:
+            # Filter is active , so it needs to update the list
+            #print(f"Calling update_decks_display from on_cell_edit")   
+            self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})        
+
+        elif column_index == 'Active':
+            # Filter is inactive , so it needs to update the list
+            #print(f"Calling update_decks_display from on_cell_edit")   
+            self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})
+
+    def update_selection_content(self, change): 
+        if change['name'] == 'value' and change['new'] != change['old']:
+            print(f"Updating selection content {gv.username} = {change}")
+            for cardType in ['Modifier', 'Creature', 'Spell']:
+                print(f"Updating widget for {cardType}")
+                widget = self.selection_widgets[cardType]
+                widget.options = [''] + get_cardType_entity_names(cardType)
+
+    def create_cardType_names_selector(self, cardType):    
+        cardType_entity_names = [''] + get_cardType_entity_names(cardType)    
+        cardType_name_widget = widgets.SelectMultiple(
+            options=cardType_entity_names,
+            description='',        
+            #layout=widgets.Layout(width="200px"),
+            value=()
+        )
+        return cardType_name_widget
+
+    def create_selection_box(self):
+        selection_widgets = {}
+
+        # Selection Widgets 
+        label_widgets = {}
+        selection_items = {}
+        for cardTypesString in ['Modifier', 'Creature' , 'Spell']:        
+            widget = self.create_cardType_names_selector(cardTypesString)
+            if cardTypesString == 'Modifier':
+                label = widgets.Label(value='( ' + cardTypesString)
+            elif cardTypesString == 'Creature':
+                label = widgets.Label(value=cardTypesString + ' )')
+            else:
+                label = widgets.Label(value=cardTypesString)
+            selection_widgets[cardTypesString] = widget
+            label_widgets[cardTypesString] = label
+            selection_items[cardTypesString] = widgets.VBox([label, widget], layout=widgets.Layout(align_items='center'))
+            #selection_items.append(widgets.VBox([label, widget], layout=widgets.Layout(align_items='center')))
+
+        # Operator Widgets + Active Widget
+        operator1_widget = widgets.Dropdown(
+            options=['+', 'AND', 'OR', ''], 
+            description='', 
+            layout=widgets.Layout(width='60px'),  # Adjust the width as needed
+            value='OR'
+        )        
+        operator2_widget = widgets.Dropdown(
+            options=['AND', 'OR', ''], 
+            description='', 
+            layout=widgets.Layout(width='60px'),  # Adjust the width as needed
+            value='OR'
+        )
+        active_widget = widgets.Checkbox(value=True, description='Activated')        
+        
+        # Operator Labels + Active Label
+        operator1_label = widgets.Label(value='Operator')
+        operator2_label = widgets.Label(value='Operator')
+        active_label = widgets.Label(value='Active')
+
+        selection_widgets['op1'] = operator1_widget
+        selection_widgets['op2'] = operator2_widget
+        selection_widgets['Active'] = active_widget
+        #label_widgets['op1']= operator1_label
+        #label_widgets['op2'] = operator2_label
+        #label_widgets['Active'] = active_label
+        
+        selection_items['op1'] = widgets.VBox([operator1_label, operator1_widget], layout=widgets.Layout(align_items='center'))
+        selection_items['op2'] = widgets.VBox([operator2_label, operator2_widget], layout=widgets.Layout(align_items='center'))
+        selection_items['Active'] = widgets.VBox([active_label, active_widget], layout=widgets.Layout(align_items='center'))
+                        
+        selection_box = widgets.HBox([selection_items[name] for name in ['Modifier', 'op1', 'Creature', 'op2' ,'Spell', 'Active']])
+        
+        #selection_widgets_list = [selection_widgets[name] for name in ['Modifier', 'op1', 'Creature', 'op2' ,'Spell', 'Active']]
+        #label_widgets_list = [label_widgets[name] for name in ['Modifier', 'op1', 'Creature', 'op2' ,'Spell', 'Active']]
+        return selection_box, selection_widgets #, label_widgets_list
+    
+    def get_changed_df(self):
+        return self.qgrid_filter.get_changed_df()
+
+    def get_widgets(self):        
+        return self.selection_box, self.qgrid_filter
+    
+
+
+def get_cardType_entity_names(cardType):
+
+    #print(f"Getting entity names for {cardType}")
+    cardType_entities  = gv.commonDB.find('Entity', {"attributes.cardType": cardType})       
+    cardType_entities_names = [cardType_entity['name'] for cardType_entity in cardType_entities]    
+    ic(cardType_entities_names)
+
+    # Get cardnames from the database
+    def get_card_title(card):
+        if card: 
+            if 'title' in card:
+                return card['title']
+            elif 'name' in card:
+                return card['name']
+            else:
+                print(f"Card {card} has no title/name")
+                return ''
+        else:
+            print(f"Card {card} not found")
+            return ''
+
+    cards = gv.myDB.find('Card', {})
+    cardNames = [get_card_title(card) for card in cards]
+
+    # Filter all strings where the entity name is a substring of any card name
+    cardType_entities_names = [cardType_entity for cardType_entity in cardType_entities_names if any(cardType_entity in cardName for cardName in cardNames)]
+
+    #Sort cardType_entities_names
+    cardType_entities_names.sort()
+
+    #print(f"Entity names for {cardType}: {cardType_entities_names}")
+    return cardType_entities_names

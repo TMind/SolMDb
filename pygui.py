@@ -18,7 +18,7 @@ from IPython.display import display, HTML
 
 from Synergy import SynergyTemplate
 import pandas as pd
-from QGridManager import QGridManager
+from QGridManager import QGridManager, FilterGrid, get_cardType_entity_names
 
 from icecream import ic
 ic.disable()
@@ -31,14 +31,10 @@ ic.disable()
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
-GlobalVariables.username = 'enterUsernameHere'
-uri = "mongodb://localhost:27017"
-#uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
-myDB = DatabaseManager(GlobalVariables.username, uri=uri)
-commonDB = DatabaseManager('common')
+GlobalVariables.myDB = DatabaseManager(GlobalVariables.username, uri=GlobalVariables.uri)
+GlobalVariables.commonDB = DatabaseManager('common')
 
 synergy_template = SynergyTemplate()    
-
 ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
 
 #Read Entities and Forgeborns from Files into Database
@@ -205,7 +201,7 @@ def generate_synergy_statistics_dataframe(deck_df):
 
 def generate_deck_content_dataframe(event, widget):
     ic(generate_deck_content_dataframe, event, widget)
-    print(f"Generating Deck Content DataFrame : {event}")
+    #print(f"Generating Deck Content DataFrame : {event}")
 
     #Get the selection from the deck widget
     desired_fields = ['name', 'cardSubType', 'levels']    
@@ -221,7 +217,7 @@ def generate_deck_content_dataframe(event, widget):
         for deckName in deckList:
             #print(f'DeckName: {deckName}')
             #Get the Deck from the Database 
-            deck = myDB.find_one('Deck', {'name': deckName})
+            deck = GlobalVariables.myDB.find_one('Deck', {'name': deckName})
             if deck:
                 #print(f'Found deck: {deck}')
                 #Get the cardIds from the Deck
@@ -230,7 +226,7 @@ def generate_deck_content_dataframe(event, widget):
                 deck_df = pd.DataFrame([deck])  # Create a single row DataFrame from deck
                 card_dfs = []  # List to store DataFrames for each card
                 for cardId in cardIds:
-                    card = myDB.find_one('Card', {'_id': cardId})
+                    card = GlobalVariables.myDB.find_one('Card', {'_id': cardId})
                     if card:
                         #print(f"Found card: {card['_id']}")
                         # Select only the desired fields from the card document
@@ -262,13 +258,13 @@ def generate_deck_content_dataframe(event, widget):
 
 def generate_cardType_count_dataframe(existing_df=None):
     # Get the cardTypes from the stats array in the database
-    deck_cursor = myDB.find('Deck', {})        
+    deck_cursor = GlobalVariables.myDB.find('Deck', {})        
     df_decks = pd.DataFrame(list(deck_cursor)) 
 
     # Initialize a list to accumulate the DataFrames for each deck
     all_decks_list = []
 
-    for deck in myDB.find('Deck', {}):
+    for deck in GlobalVariables.myDB.find('Deck', {}):
         if 'stats' in deck:
             stats = deck.get('stats', {})
             card_types = stats.get('card_types', {})                        
@@ -327,7 +323,7 @@ def generate_deck_statistics_dataframe():
     global cardTypes_names_widget
 
     def get_card_title(card_id):
-        card = myDB.find_one('Card', {'_id': card_id})
+        card = GlobalVariables.myDB.find_one('Card', {'_id': card_id})
         if card: 
             if 'title' in card:
                 return card['title']
@@ -341,11 +337,11 @@ def generate_deck_statistics_dataframe():
             return ''
 
     def get_forgeborn_name(forgeborn_id):
-        forgeborn = commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
+        forgeborn = GlobalVariables.commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
         return forgeborn['name'] if forgeborn else None
 
     def get_forgeborn_abilities(forgeborn_id):
-        forgeborn = commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
+        forgeborn = GlobalVariables.commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
         return forgeborn['abilities'] if forgeborn else None
 
     def get_card_titles(card_ids):
@@ -359,7 +355,7 @@ def generate_deck_statistics_dataframe():
 
     # Get all Decks from the database
     try:
-        deck_cursor = myDB.find('Deck', {})        
+        deck_cursor = GlobalVariables.myDB.find('Deck', {})        
         df_decks = pd.DataFrame(list(deck_cursor))
         df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'cardSetNo', 'faction', 'forgebornId']].copy()
         df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
@@ -388,7 +384,7 @@ def generate_deck_statistics_dataframe():
     df_decks_filtered.set_index('name', inplace=True)
 
     # Create a DataFrame from the fb_abilities sub-dictionary
-    for deck in myDB.find('Deck', {}):
+    for deck in GlobalVariables.myDB.find('Deck', {}):
         if 'forgebornId' in deck:
             forgeborn_id = deck['forgebornId']
             forgeborn_abilities = get_forgeborn_abilities(forgeborn_id)
@@ -402,7 +398,7 @@ def generate_deck_statistics_dataframe():
                 df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_name
                 
     # Create a DataFrame from the 'stats' sub-dictionary
-    for deck in myDB.find('Deck', {}):
+    for deck in GlobalVariables.myDB.find('Deck', {}):
         if 'stats' in deck:
             stats = deck.get('stats', {})
 
@@ -607,13 +603,34 @@ def handle_debug_toggle(change):
     else:
         ic.disable()
 
-def handle_username_change(change):    
-    global cardTypes_names_widget
+def handle_db_list_change(change):
+    global username
 
+    if change['name'] == 'value' and change['old'] != change['new']:
+        new_username = change['new']
+
+    if new_username:
+        # Update the Global Username Variable
+        GlobalVariables.username = new_username
+        GlobalVariables.myDB.set_database_name(new_username)
+        
+        # Update Username Widget
+        username.value = new_username  # Reflect change in username widget
+        
+        # Update Interface for New Username
+        update_filter_widget()
+        update_decks_display(change)
+        
+    else:
+        print("Selected database name is empty or invalid.")
+
+
+def handle_username_change(change):    
+    global factionToggles, dropdowns
     new_username = change['new']
     if new_username:  
         GlobalVariables.username = new_username
-        myDB.set_database_name(GlobalVariables.username)
+        GlobalVariables.myDB.set_database_name(GlobalVariables.username)
         for factionToggle, dropdown in zip(factionToggles, dropdowns):
             refresh_faction_deck_options(factionToggle, dropdown)
         update_filter_widget()    
@@ -623,15 +640,18 @@ def handle_username_change(change):
 
 def reload_data_on_click(button, value):
     global db_list, username
+    username_value = username.value if username else GlobalVariables.username
+    GlobalVariables.username = username_value
+
     print(f"Reloading {value}")
     if value == 'Decks':
-        arguments = ["--username" , GlobalVariables.username, 
+        arguments = ["--username" , username_value, 
                     "--mode", 'update' ]                        
         print(f"Loading Decks with arguments {arguments}")
         args = parse_arguments(arguments)
         load_deck_data(args)    
     elif value == 'Fusions':
-        arguments = ["--username" , GlobalVariables.username, 
+        arguments = ["--username" , username_value, 
                     "--mode", 'update',
                      "--type", 'fuseddeck'
                      ]                        
@@ -644,12 +664,12 @@ def reload_data_on_click(button, value):
         myUCL._read_forgeborn_from_csv(os.path.join('csv', 'forgeborn.csv'))
     
     # Refresh db_list widget
-    db_names = myDB.mdb.client.list_database_names()
+    db_names = GlobalVariables.myDB.mdb.client.list_database_names()
     db_list.options = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
-    db_list.value = GlobalVariables.username
+    db_list.value = username_value
 
     # Call refresh function for dropdowns
-    handle_username_change({'new': GlobalVariables.username, 'owner': username})
+    #handle_username_change({'new': username_value, 'owner': db_list})
 
 def display_graph_on_click(button):
     myDecks = []
@@ -661,7 +681,7 @@ def display_graph_on_click(button):
 
     if myDeckA and myDeckB:
         fusionName = f"{myDeckA.name}_{myDeckB.name}"
-        fusionCursor = myDB.find('Fusion', {'name' : fusionName})
+        fusionCursor = GlobalVariables.myDB.find('Fusion', {'name' : fusionName})
         if fusionCursor: 
             for fusion in fusionCursor:
                 myFusion = Fusion.from_data(fusion)
@@ -683,18 +703,18 @@ def display_graph_on_click(button):
 
 def update_decks_display(change):
     ic(update_decks_display, change)
-    #print(f"Updating Decks Display : {change}")
-    global username, qm, filter_grid  # Assuming filter_grid is a global instance of FilterGrid
+    print(f"Updating Decks Display : {change}")
+    global db_list, qm, filter_grid  # Assuming filter_grid is a global instance of FilterGrid
 
     default_coll_df = qm.get_default_data('collection')
     if default_coll_df.empty:
         default_coll_df = generate_deck_statistics_dataframe()
         qm.set_default_data('collection', default_coll_df)
 
-    print(f"change['new']: {change.get('new')}")
+    #print(f"change = {change}")
     if change['new'] or change['new'] == '':                       
 
-        if change['owner'] == username:
+        if change['owner'] == db_list:
         
             # Generate new DataFrame with new database
             default_coll_df  = generate_deck_statistics_dataframe() 
@@ -768,7 +788,7 @@ def update_filter_widget(change=None):
 
 def filter_options(value, options):
     # First get all card names from the database
-    cards = myDB.find('Card', {})
+    cards = GlobalVariables.myDB.find('Card', {})
     cardNames = [card['name'] for card in cards]
 
     # Filter all cardnames where value is a substring of 
@@ -785,8 +805,8 @@ def filter_options(value, options):
 
 
 def refresh_faction_deck_options(faction_toggle, dropdown):    
-    myDB.set_database_name(GlobalVariables.username)    
-    deckCursor = myDB.find('Deck', { 'faction' : faction_toggle.value })
+    GlobalVariables.myDB.set_database_name(GlobalVariables.username)    
+    deckCursor = GlobalVariables.myDB.find('Deck', { 'faction' : faction_toggle.value })
     deckNames = []    
     deckNames = [deck['name'] for deck in deckCursor]
     dropdown.options = deckNames        
@@ -876,17 +896,18 @@ def initialize_widgets() :
 
 def create_database_selection_widget():
     global username
-    db_names = myDB.mdb.client.list_database_names()
+    db_names = GlobalVariables.myDB.mdb.client.list_database_names()
     db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
     db_list = widgets.RadioButtons(
-        options=db_names,
+        options= [''] + db_names ,
         description='Databases:',
-        disabled=False
+        disabled=False,
+        value=''
     )
     # Set the username to the value of the selected database
     
-    GlobalVariables.username = db_list.value or 'user'
-    myDB.set_database_name(GlobalVariables.username)
+    #GlobalVariables.username = db_list.value or 'user'
+    #GlobalVariables.myDB.set_database_name(GlobalVariables.username)
     # Also set the value of the username widget
     if username:
         username.value = GlobalVariables.username
@@ -894,6 +915,7 @@ def create_database_selection_widget():
     def on_db_list_change(change):    
         if username:
             username.value = change['new']
+    #        handle_username_change(change)
 
     db_list.observe(on_db_list_change, 'value')
 
@@ -916,51 +938,6 @@ def create_cardType_names_dropdown(cardTypes):
     return cardType_name_widget
 
 
-def create_cardType_names_selector(cardType):    
-    
-    cardType_entity_names = [''] + get_cardType_entity_names(cardType)    
-
-    cardType_name_widget = widgets.SelectMultiple(
-        options=cardType_entity_names,
-        description='',        
-        #layout=widgets.Layout(width="200px"),
-        value=()
-    )
-    return cardType_name_widget
-
-def get_cardType_entity_names(cardType):
-
-    #print(f"Getting entity names for {cardType}")
-
-    cardType_entities  = commonDB.find('Entity', {"attributes.cardType": cardType})       
-    cardType_entities_names = [cardType_entity['name'] for cardType_entity in cardType_entities]    
-    ic(cardType_entities_names)
-
-    # Get cardnames from the database
-    def get_card_title(card):
-        if card: 
-            if 'title' in card:
-                return card['title']
-            elif 'name' in card:
-                return card['name']
-            else:
-                print(f"Card {card} has no title/name")
-                return ''
-        else:
-            print(f"Card {card} not found")
-            return ''
-
-    cards = myDB.find('Card', {})
-    cardNames = [get_card_title(card) for card in cards]
-
-    # Filter all strings where the entity name is a substring of any card name
-    cardType_entities_names = [cardType_entity for cardType_entity in cardType_entities_names if any(cardType_entity in cardName for cardName in cardNames)]
-
-    #Sort cardType_entities_names
-    cardType_entities_names.sort()
-
-    #print(f"Entity names for {cardType}: {cardType_entities_names}")
-    return cardType_entities_names
 
 def create_filter_widgets():
     global cardTypes_names_widget
@@ -993,137 +970,6 @@ def create_filter_widgets():
     # Create a VBox to arrange the caption, labels, and widgets vertically
     grid = widgets.VBox([caption, label_box, dropdown_box])
     return grid
-
-class FilterGrid:
-    def __init__(self, update_decks_display):
-        self.update_decks_display = update_decks_display
-        self.df = self.create_initial_dataframe()
-        self.qgrid_filter = self.create_filter_qgrid()
-        selection_box, selection_widgets, label_widgets = self.create_selection_box()
-        self.selection_box = selection_box
-        self.selection_widgets = selection_widgets
-
-    def create_filter_qgrid(self):
-        # Create a qgrid widget for the data from the selection widgets
-        qgrid_filter = qgrid.show_grid(self.df, grid_options={'forceFitColumns' : False, 'minVisibleRows' : 4, 'maxVisibleRows':5, 'enableColumnReorder':False} , 
-                                       column_definitions={'index' : {'width' : 50}, 'op1' : {'width' : 50}, 'op2' : {'width' : 50}} ,
-                    
-                                       show_toolbar=True)    
-        qgrid_filter.layout = widgets.Layout(height='auto%')  
-        qgrid_filter.on('row_added', self.grid_filter_on_row_added)           
-        qgrid_filter.on('row_removed', self.grid_filter_on_row_removed)   
-        qgrid_filter.on('cell_edited', self.on_cell_edit)             
-        return qgrid_filter
-
-    @staticmethod
-    def create_initial_dataframe():
-        return pd.DataFrame({
-            'Modifier': [''],
-            'op1': [''],
-            'Creature': [''],
-            'op2': [''],
-            'Spell': [''], 
-            'Active': [False]
-        })
-    
-    def grid_filter_on_row_removed(self, event, widget):        
-        # Check if index 0 is in the indices
-        if 0 in event['indices']:
-            df = self.create_initial_dataframe()
-            widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
-            # Remove index 0 from the indices
-            event['indices'].remove(0)
-    
-        # If there are any indices left, update the display
-        if event['indices']:
-            # Create the active rows DataFrame
-            active_rows = widget.df[widget.df['Active'] == True]
-            self.update_decks_display({'new': active_rows, 'old': None, 'owner': 'filter'})
-
-    def grid_filter_on_row_added(self, event, widget):  
-        #print(f"Row added at index {event['index']}")
-        new_row_index = event['index']
-        df = widget.get_changed_df()                   
-        #print(f"Selection Widgets: {self.selection_widgets}")     
-        selected_values = [', '.join(widget.value) if isinstance(widget.value, (list, tuple)) else widget.value for widget in self.selection_widgets[:-1]]        
-        selected_values.append(self.selection_widgets[-1].value)  # Handle the Checkbox widget separately
-        #print(f"Selected values: {selected_values}")        
-        for i, column in enumerate(df.columns):                                
-            df.loc[new_row_index, column] = selected_values[i]
-        widget.df = df
-        if widget.df.loc[event['index'], 'Active']:            
-            #print(f"Calling update_decks_display from grid_filter_on_row_added")                                
-            self.update_decks_display({'new': new_row_index, 'old': None, 'owner': 'filter'})
-    
-    def on_cell_edit(self, event, widget):        
-        #print(f"Old value: {event['old']} -> New value: {event['new']}")
-        row_index = event['index']
-        column_index = event['column']                        
-        # Set the value for the cell
-        widget.df.loc[row_index, column_index] = event['new']
-        #print(f"Cell edited at row {row_index}, column {column_index}")
-        #print(f"Final value in cell = {widget.df.loc[row_index, column_index]}")
-        
-        if widget.df.loc[row_index, 'Active']:
-            # Filter is active , so it needs to update the list
-            #print(f"Calling update_decks_display from on_cell_edit")   
-            self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})        
-
-        elif column_index == 'Active':
-            # Filter is inactive , so it needs to update the list
-            #print(f"Calling update_decks_display from on_cell_edit")   
-            self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})
-
-
-    def create_selection_box(self):
-        selection_widgets = []
-        label_widgets = []
-        selection_items = []
-        for cardTypesString in ['Modifier', 'Creature' , 'Spell']:        
-            widget = create_cardType_names_selector(cardTypesString)
-            if cardTypesString == 'Modifier':
-                label = widgets.Label(value='( ' + cardTypesString)
-            elif cardTypesString == 'Creature':
-                label = widgets.Label(value=cardTypesString + ' )')
-            else:
-                label = widgets.Label(value=cardTypesString)
-            #label = widgets.Label(value=cardTypesString)
-            selection_widgets.append(widget)
-            label_widgets.append(label)
-            selection_items.append(widgets.VBox([label, widget], layout=widgets.Layout(align_items='center')))
-        operator1_widget = widgets.Dropdown(
-            options=['+', 'AND', 'OR', ''], 
-            description='', 
-            layout=widgets.Layout(width='60px'),  # Adjust the width as needed
-            value=''
-        )
-        operator1_label = widgets.Label(value='Operator')
-        operator2_widget = widgets.Dropdown(
-            options=['AND', 'OR', ''], 
-            description='', 
-            layout=widgets.Layout(width='60px'),  # Adjust the width as needed
-            value=''
-        )
-        operator2_label = widgets.Label(value='Operator')
-        selection_widgets.insert(1, operator1_widget)
-        selection_widgets.insert(3, operator2_widget)
-        label_widgets.insert(1, operator1_label)
-        label_widgets.insert(3, operator2_label)
-        selection_items.insert(1, widgets.VBox([operator1_label, operator1_widget], layout=widgets.Layout(align_items='center')))
-        selection_items.insert(3, widgets.VBox([operator2_label, operator2_widget], layout=widgets.Layout(align_items='center')))
-        active_widget = widgets.Checkbox(value=True, description='Activated')
-        active_label = widgets.Label(value='Active')
-        selection_widgets.append(active_widget)
-        label_widgets.append(active_label)
-        selection_items.append(widgets.VBox([active_label, active_widget], layout=widgets.Layout(align_items='center')))
-        selection_box = widgets.HBox(selection_items)
-        return selection_box, selection_widgets, label_widgets
-    
-    def get_changed_df(self):
-        return self.qgrid_filter.get_changed_df()
-
-    def get_widgets(self):        
-        return self.selection_box, self.qgrid_filter
 
 ############################
 # Setup and Initialization #
@@ -1158,26 +1004,28 @@ def setup_interface():
     qgrid_deck_data  = qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options)
     
     qm.on('collection', 'selection_changed', coll_data_on_selection_changed)
-
     # Status Box for Dataframes 
-    df_status_widget = widgets.Textarea(value='', description='DataFrame Status:', disabled=True, layout=widgets.Layout(width='50%', height='200px'))
-    def update_df_status(identifier, df_status):
-        df_status_widget.value = json.dumps(df_status, default=str, indent=4)
+    #df_status_widget = widgets.Textarea(value='', description='DataFrame Status:', disabled=True, layout=widgets.Layout(width='50%', height='200px'))
+    #def update_df_status(identifier, df_status):
+    #    df_status_widget.value = json.dumps(df_status, default=str, indent=4)
 
-    qm.register_callback('df_status_changed', update_df_status, identifier='collection')
+    #qm.register_callback('df_status_changed', update_df_status, identifier='collection')
 
     # Text widget to enter the username
     username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
-    username.observe(lambda change: handle_username_change(change), 'value')
+    #username.observe(lambda change: handle_username_change(change), 'value')
 
     # Database selection widget
     db_list = create_database_selection_widget()
+    db_list.observe(handle_db_list_change, names='value')
 
     # Filter widgets
     grid_filter = create_filter_widgets()
     filter_grid_object = FilterGrid(update_decks_display)
     selection_grid, filter_grid = filter_grid_object.get_widgets()
     filterBox = widgets.VBox([selection_grid, filter_grid])
+
+    db_list.observe(filter_grid_object.update_selection_content)
 
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description="Load" )
@@ -1196,7 +1044,7 @@ def setup_interface():
     # Display the widgets    
     display(out_debug)
     display(toggle_box) 
-    display(df_status_widget) 
+    #display(df_status_widget) 
     display(filterBox)
     display(out_qm)    
     display(out)     

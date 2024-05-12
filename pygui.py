@@ -469,14 +469,11 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
 
             return current_filter_results
 
-        # Define previous_filter_type here
-        previous_filter_type = 'Modifier'        
-
         # Apply the first filter outside the loop
+        df_filtered = pd.DataFrame()
         substrings = re.split(r'\s*,\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
-        df_filtered = apply_filter(df, substrings)
-
-        print(type(df_filtered))
+        if substrings:
+            df_filtered = apply_filter(df, substrings)
 
         # Apply the remaining filters in the loop
         for i, filter_type in enumerate(['Creature', 'Spell'], start=1):
@@ -487,7 +484,6 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
             if operator == '+':                
                 substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
             
-
             # If previous_substrings is empty
             if not previous_substrings:
                 pass
@@ -497,8 +493,8 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
                 substrings = previous_substrings
                 continue
 
+            # Apply the filter to the DataFrame
             current_filter_results = apply_filter(df, substrings)
-            previous_filter_type = filter_type            
 
             # Handle the operator logic in the outer loop
             if operator == 'AND':

@@ -484,22 +484,31 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
             previous_substrings = substrings
             substrings = re.split(r'\s*,\s*', filter_row[filter_type]) if filter_row[filter_type] else []
             print(f"Substrings = '{substrings}'")
-            if operator == '+':
-                #previous_substrings = re.split(r'\s*,\s*', filter_row[previous_filter_type]) if filter_row[previous_filter_type] else []
+            if operator == '+':                
                 substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
+            
 
-            # Apply the filter to the original DataFrame when the operator is 'OR'
-            df_to_filter = df if operator == 'OR' else df_filtered
-            current_filter_results = apply_filter(df_to_filter, substrings)
+            # If previous_substrings is empty
+            if not previous_substrings:
+                pass
+
+            # If substrings is empty, skip this iteration
+            if not substrings:
+                substrings = previous_substrings
+                continue
+
+            current_filter_results = apply_filter(df, substrings)
             previous_filter_type = filter_type            
 
             # Handle the operator logic in the outer loop
             if operator == 'AND':
                 df_filtered = df_filtered[df_filtered.index.isin(current_filter_results.index)]
-            elif operator == 'OR':
+            elif operator == 'OR' :
                 df_filtered = pd.concat([df_filtered, current_filter_results]).drop_duplicates()
-            else:
+            elif operator == '+' or operator == '':
                 df_filtered = current_filter_results
+            else:
+                print(f"Operator '{operator}' not recognized")
 
         return df_filtered
 
@@ -711,15 +720,15 @@ def update_decks_display(change):
         
         #print(f"Applying filter to collection")
         if filter_grid:                                
-            print(f"Filtering collection with filter_grid")
+            #print(f"Filtering collection with filter_grid")
             #print("Displaying default dataframe :")
             #display(default_coll_df)
             filter_df = filter_grid.get_changed_df()
-            print("Displaying filter_df")
-            display(filter_df)                                
+            #print("Displaying filter_df")
+            #display(filter_df)                                
             filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
-            print(f"Result after filtering:")
-            display(filtered_df)
+            #print(f"Result after filtering:")
+            #display(filtered_df)
             qm.update_data('collection', filtered_df)
 
         # Apply other changes to the qgrid widgets ( like shrinking columns )
@@ -994,11 +1003,17 @@ class FilterGrid:
         self.update_decks_display = update_decks_display
         self.df = self.create_initial_dataframe()
         self.qgrid_filter = self.create_filter_qgrid()
-        self.selection_box = self.create_selection_box()
+        selection_box, selection_widgets, label_widgets = self.create_selection_box()
+        self.selection_box = selection_box
+        self.selection_widgets = selection_widgets
 
     def create_filter_qgrid(self):
         # Create a qgrid widget for the data from the selection widgets
-        qgrid_filter = qgrid.show_grid(self.df, grid_options={'forceFitColumns' : False} , column_definitions={'index' : {'width' : 50}, 'op1' : {'width' : 50}, 'op2' : {'width' : 50}} ,show_toolbar=True)    
+        qgrid_filter = qgrid.show_grid(self.df, grid_options={'forceFitColumns' : False, 'minVisibleRows' : 4, 'maxVisibleRows':5, 'enableColumnReorder':False} , 
+                                       column_definitions={'index' : {'width' : 50}, 'op1' : {'width' : 50}, 'op2' : {'width' : 50}} ,
+                    
+                                       show_toolbar=True)    
+        qgrid_filter.layout = widgets.Layout(height='auto%')  
         qgrid_filter.on('row_added', self.grid_filter_on_row_added)           
         qgrid_filter.on('row_removed', self.grid_filter_on_row_removed)   
         qgrid_filter.on('cell_edited', self.on_cell_edit)             
@@ -1030,69 +1045,84 @@ class FilterGrid:
             self.update_decks_display({'new': active_rows, 'old': None, 'owner': 'filter'})
 
     def grid_filter_on_row_added(self, event, widget):  
-        global out_debug
-        #with out_debug if out_debug else nullcontext():
-        print(f"Row added at index {event['index']}")
+        #print(f"Row added at index {event['index']}")
         new_row_index = event['index']
-        # Get the DataFrame from the qgrid widget
         df = widget.get_changed_df()                   
-        print(f"Selection Box Children: {self.selection_box.children}")     
-        selected_values = [', '.join(widget.value) if isinstance(widget.value, (list, tuple)) else widget.value for widget in self.selection_box.children[:-1]]        
-        selected_values.append(self.selection_box.children[-1].value)  # Handle the Checkbox widget separately
-        print(f"Selected values: {selected_values}")        
+        #print(f"Selection Widgets: {self.selection_widgets}")     
+        selected_values = [', '.join(widget.value) if isinstance(widget.value, (list, tuple)) else widget.value for widget in self.selection_widgets[:-1]]        
+        selected_values.append(self.selection_widgets[-1].value)  # Handle the Checkbox widget separately
+        #print(f"Selected values: {selected_values}")        
         for i, column in enumerate(df.columns):                                
             df.loc[new_row_index, column] = selected_values[i]
-
-        # Update the DataFrame in the qgrid widget
         widget.df = df
-        
         if widget.df.loc[event['index'], 'Active']:            
-            print(f"Calling update_decks_display from grid_filter_on_row_added")                                
+            #print(f"Calling update_decks_display from grid_filter_on_row_added")                                
             self.update_decks_display({'new': new_row_index, 'old': None, 'owner': 'filter'})
     
     def on_cell_edit(self, event, widget):        
-        print(f"Old value: {event['old']} -> New value: {event['new']}")
+        #print(f"Old value: {event['old']} -> New value: {event['new']}")
         row_index = event['index']
         column_index = event['column']                        
         # Set the value for the cell
         widget.df.loc[row_index, column_index] = event['new']
-        print(f"Cell edited at row {row_index}, column {column_index}")
-        print(f"Final value in cell = {widget.df.loc[row_index, column_index]}")
+        #print(f"Cell edited at row {row_index}, column {column_index}")
+        #print(f"Final value in cell = {widget.df.loc[row_index, column_index]}")
         
         if widget.df.loc[row_index, 'Active']:
             # Filter is active , so it needs to update the list
-            print(f"Calling update_decks_display from on_cell_edit")   
+            #print(f"Calling update_decks_display from on_cell_edit")   
             self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})        
 
         elif column_index == 'Active':
             # Filter is inactive , so it needs to update the list
-            print(f"Calling update_decks_display from on_cell_edit")   
+            #print(f"Calling update_decks_display from on_cell_edit")   
             self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})
 
 
     def create_selection_box(self):
+        selection_widgets = []
+        label_widgets = []
         selection_items = []
         for cardTypesString in ['Modifier', 'Creature' , 'Spell']:        
-            widget = create_cardType_names_selector(cardTypesString)            
-            selection_items.append(widget)
+            widget = create_cardType_names_selector(cardTypesString)
+            if cardTypesString == 'Modifier':
+                label = widgets.Label(value='( ' + cardTypesString)
+            elif cardTypesString == 'Creature':
+                label = widgets.Label(value=cardTypesString + ' )')
+            else:
+                label = widgets.Label(value=cardTypesString)
+            #label = widgets.Label(value=cardTypesString)
+            selection_widgets.append(widget)
+            label_widgets.append(label)
+            selection_items.append(widgets.VBox([label, widget], layout=widgets.Layout(align_items='center')))
         operator1_widget = widgets.Dropdown(
             options=['+', 'AND', 'OR', ''], 
             description='', 
             layout=widgets.Layout(width='60px'),  # Adjust the width as needed
-            value='+'
+            value=''
         )
+        operator1_label = widgets.Label(value='Operator')
         operator2_widget = widgets.Dropdown(
             options=['AND', 'OR', ''], 
             description='', 
             layout=widgets.Layout(width='60px'),  # Adjust the width as needed
             value=''
         )
-        selection_items.insert(1, operator1_widget)
-        selection_items.insert(3, operator2_widget)
+        operator2_label = widgets.Label(value='Operator')
+        selection_widgets.insert(1, operator1_widget)
+        selection_widgets.insert(3, operator2_widget)
+        label_widgets.insert(1, operator1_label)
+        label_widgets.insert(3, operator2_label)
+        selection_items.insert(1, widgets.VBox([operator1_label, operator1_widget], layout=widgets.Layout(align_items='center')))
+        selection_items.insert(3, widgets.VBox([operator2_label, operator2_widget], layout=widgets.Layout(align_items='center')))
         active_widget = widgets.Checkbox(value=True, description='Activated')
-        selection_items.append(active_widget)
+        active_label = widgets.Label(value='Active')
+        selection_widgets.append(active_widget)
+        label_widgets.append(active_label)
+        selection_items.append(widgets.VBox([active_label, active_widget], layout=widgets.Layout(align_items='center')))
         selection_box = widgets.HBox(selection_items)
-        return selection_box
+        return selection_box, selection_widgets, label_widgets
+    
     def get_changed_df(self):
         return self.qgrid_filter.get_changed_df()
 
@@ -1102,6 +1132,7 @@ class FilterGrid:
 ############################
 # Setup and Initialization #
 ############################
+import json
 def setup_interface():
     global db_list, username, button_load, card_title_widget, \
         qg_coll_options, qg_count_options, qg_syn_options, \
@@ -1132,13 +1163,19 @@ def setup_interface():
     
     qm.on('collection', 'selection_changed', coll_data_on_selection_changed)
 
+    # Status Box for Dataframes 
+    df_status_widget = widgets.Textarea(value='', description='DataFrame Status:', disabled=True, layout=widgets.Layout(width='50%', height='200px'))
+    def update_df_status(identifier, df_status):
+        df_status_widget.value = json.dumps(df_status, default=str, indent=4)
+
+    qm.register_callback('df_status_changed', update_df_status, identifier='collection')
+
     # Text widget to enter the username
     username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
     username.observe(lambda change: handle_username_change(change), 'value')
 
     # Database selection widget
     db_list = create_database_selection_widget()
-    #db_list_box = widgets.VBox([db_list])    
 
     # Filter widgets
     grid_filter = create_filter_widgets()
@@ -1160,10 +1197,10 @@ def setup_interface():
     # Toggle Box 
     toggle_box = widgets.VBox([loadToggle,  button_load, username, db_list, grid_filter, debug_toggle])    
 
-
     # Display the widgets    
     display(out_debug)
-    display(toggle_box)  
+    display(toggle_box) 
+    display(df_status_widget) 
     display(filterBox)
     display(out_qm)    
     display(out)     

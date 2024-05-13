@@ -72,13 +72,7 @@ class QGridManager:
                     grid_widget.df = grid_info['df_versions']['filtered'][visible_columns].copy()
                 else:
                     grid_widget.df = grid_info['df_versions']['default'][visible_columns].copy()
-                    
-            #print(f'on_toggle_change() : Updating main grid for {identifier}' )
-            #display(grid_widget.df)
 
-            # Update the target widgets
-            # This is wrong, the dataframe shall not be changed , only adjusted 
-            #self.synchronize_widgets(identifier)
 
             # Set Status of Change 
             grid_info['df_status']['current'] = 'filtered'
@@ -173,24 +167,11 @@ class QGridManager:
             # Update the toggle widget , but keep the original setting 
             #print(f'update_data() : Updating toggle grid for {identifier}' )
             self.update_toggle_df(new_data, identifier)
-            # # Create a new DataFrame with the same structure as the new data            
-            # new_toggle_df = pd.DataFrame({column: [True] for column in new_data.columns}, index=['Visible'])
-            # # Get the current toggle_df
-            # current_toggle_df = grid_info['toggle_widget'].get_changed_df()
-            # grid_info['toggle_widget'].df = new_toggle_df
-
-            # # Iterate over the columns of the new_toggle_df
-            # for column in new_toggle_df.columns:
-            #     #print(f'toogle_df: Checking column {column}')
-            #     if column in current_toggle_df.columns:
-            #         #print(f'toogle_df: Column {column} exists : {current_toggle_df[column]}')
-            #         # If the column exists in the current toggle_df, copy the value
-            #         if 'Visible' in current_toggle_df.index:
-            #             grid_info['toggle_widget'].edit_cell('Visible', column, current_toggle_df.loc['Visible', column])                 
 
             grid_info['df_status']['current'] = 'filtered'
             grid_info['df_status']['last_set']['filtered'] = datetime.datetime.now()
             self.trigger(self.EVENT_DF_STATUS_CHANGED, identifier, grid_info['df_status'])
+            self.synchronize_widgets(identifier)
             
 
     def update_toggle_df(self, df, identifier):
@@ -284,7 +265,7 @@ class QGridManager:
 
             # Set the filtered DataFrame as the DataFrame of the dependent widget
             dependent_widget = self.grids[dependent_identifier]['main_widget']
-            dependent_widget.df = filtered_df
+            dependent_widget.df = filtered_df.copy()
 
             # Update the 'filtered' version of the DataFrame
             self.grids[dependent_identifier]['df_versions']['filtered'] = filtered_df.copy()

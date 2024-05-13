@@ -625,18 +625,18 @@ def handle_db_list_change(change):
         print("Selected database name is empty or invalid.")
 
 
-def handle_username_change(change):    
-    global factionToggles, dropdowns
-    new_username = change['new']
-    if new_username:  
-        GlobalVariables.username = new_username
-        GlobalVariables.myDB.set_database_name(GlobalVariables.username)
-        for factionToggle, dropdown in zip(factionToggles, dropdowns):
-            refresh_faction_deck_options(factionToggle, dropdown)
-        update_filter_widget()    
-        update_decks_display(change)          
-    else:
-        print("Username cannot be an empty string")
+# def handle_username_change(change):    
+#     global factionToggles, dropdowns
+#     new_username = change['new']
+#     if new_username:  
+#         GlobalVariables.username = new_username
+#         GlobalVariables.myDB.set_database_name(GlobalVariables.username)
+#         for factionToggle, dropdown in zip(factionToggles, dropdowns):
+#             refresh_faction_deck_options(factionToggle, dropdown)
+#         update_filter_widget()    
+#         update_decks_display(change)          
+#     else:
+#         print("Username cannot be an empty string")
 
 def reload_data_on_click(button, value):
     global db_list, username
@@ -915,7 +915,6 @@ def create_database_selection_widget():
     def on_db_list_change(change):    
         if username:
             username.value = change['new']
-    #        handle_username_change(change)
 
     db_list.observe(on_db_list_change, 'value')
 
@@ -1013,7 +1012,6 @@ def setup_interface():
 
     # Text widget to enter the username
     username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
-    #username.observe(lambda change: handle_username_change(change), 'value')
 
     # Database selection widget
     db_list = create_database_selection_widget()

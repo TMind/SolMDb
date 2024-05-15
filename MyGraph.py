@@ -20,6 +20,7 @@ def get_class_from_path(full_class_path):
 class MyGraph:
     def __init__(self):
         self.G      = nx.DiGraph()
+        self.node_data = {}
         #self.G.add_node(self.get_nodeId(self.object), color='purple')  # Use the name of the object as the node ID
         
     def add_node(self, child_object, **attributes):
@@ -130,6 +131,7 @@ class MyGraph:
 
         child_object = cls.lookup(child_name)
         if child_object:
+
             color = self.get_color_based_on_child_type(childType, child_object)
             self.add_child_to_graph(root, db_object, parent_object, child_object, color)
             self.create_graph_children(child_object, parent_object=db_object, root=root)
@@ -152,6 +154,17 @@ class MyGraph:
         root.add_node(child_object, **node_attributes)
         root.add_edge(db_object, child_object)  
         self.add_parent_to_child(root, db_object, child_object)
+
+        # Add this line to store the child_object in the node_data attribute
+        node_id = self.get_nodeId(child_object)
+
+        for input_tag in child_object.input_tags:
+            self.node_data.setdefault(input_tag, {}).setdefault('input', [])
+            self.node_data[input_tag]['input'].append(node_id)
+
+        for output_tag in child_object.output_tags:
+            self.node_data.setdefault(output_tag, {}).setdefault('output', [])
+            self.node_data[output_tag]['output'].append(node_id)        
 
     def get_color_based_on_child_type(self, childType, child_object):
         """

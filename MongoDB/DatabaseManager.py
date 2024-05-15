@@ -105,7 +105,7 @@ class DatabaseObject:
 
     @classmethod
     def _get_class_db_manager(cls):
-        db_name = 'local' if cls.__name__ in ['Entity', 'Forgeborn', 'Card', 'Interface', 'Synergy'] else GlobalVariables.username or 'user_specific'
+        db_name = 'common' if cls.__name__ in ['Entity', 'Forgeborn', 'Interface', 'Synergy'] else GlobalVariables.username or 'user_specific'
         return DatabaseManager(db_name)
 
 

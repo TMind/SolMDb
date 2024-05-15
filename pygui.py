@@ -51,8 +51,6 @@ button_load = None
 db_list = None 
 cardTypes_names_widget = {}
 
-qm = QGridManager()
-
 qgrid_widget_options = {}
 filter_grid = None 
 global_df = None
@@ -60,6 +58,8 @@ global_df = None
 out = widgets.Output()
 out_qm = widgets.Output()
 out_debug = widgets.Output()
+
+qm = QGridManager(out_qm)
 
 # Widget original options for qgrid
 qg_syn_options = {
@@ -257,19 +257,55 @@ def generate_deck_content_dataframe(event, widget):
     
 
 def generate_cardType_count_dataframe(existing_df=None):
-    # Get the cardTypes from the stats array in the database
-    deck_cursor = GlobalVariables.myDB.find('Deck', {})        
-    df_decks = pd.DataFrame(list(deck_cursor)) 
-
     # Initialize a list to accumulate the DataFrames for each deck
     all_decks_list = []
 
+    # Get interface ids from the database 
+    interface_ids = GlobalVariables.commonDB.find('Interface', {})
+    interface_ids = [interface['_id'] for interface in interface_ids]
+    #print(f"Interface IDs: {interface_ids}")
+
+    # Create a DataFrame with only the 'interface_ids' column and no records
+    
+    
+
+    # Get the cardTypes from the stats array in the database
     for deck in GlobalVariables.myDB.find('Deck', {}):
+
+        deckName = deck['name']
+        myDeck = Deck.load(deckName)
+        myGraph = MyGraph()
+        myGraph.create_graph_children(myDeck)
+
+        interface_ids_df = pd.DataFrame(columns=['interface_ids'], index=[deckName])
+
+        interface_ids = {}
+        for interface_id in myGraph.node_data:
+            #print(f"Tag: {interface_id}")
+            #print(f"Node Data: {myGraph.node_data[interface_id]}")
+            
+            if 'input' in myGraph.node_data[interface_id]:
+                interface_length = len(myGraph.node_data[interface_id]['input'])
+            elif 'output' in myGraph.node_data[interface_id]:
+                interface_length = len(myGraph.node_data[interface_id]['output'])
+
+            interface_ids[interface_id] = interface_length
+
+        # Add a new row to the interface_ids_df DataFrame with the index of deckName and the column of interface_id
+        interface_ids_df = pd.DataFrame(interface_ids, index=[deckName])
+
+        #display(interface_ids_df)
         if 'stats' in deck:
             stats = deck.get('stats', {})
             card_types = stats.get('card_types', {})                        
-            cardType_df = pd.DataFrame(card_types['Creature'], index=[deck['name']])
+            cardType_df = pd.DataFrame(card_types['Creature'], index=[deckName])
             
+            # Combine interface_ids_df and cardType_df
+            #cardType_df = cardType_df.combine_first(interface_ids_df)
+
+            # Sort the columns by their names
+            #cardType_df = cardType_df.sort_index(axis=1)
+
             # Add 'faction' column to cardType_df
             cardType_df['faction'] = deck.get('faction', 'None')  # Replace 'Unknown' with a default value if 'faction' is not in deck
 
@@ -279,6 +315,7 @@ def generate_cardType_count_dataframe(existing_df=None):
     # Concatenate all the DataFrames in all_decks_list, keeping the original index    
     if all_decks_list : 
         all_decks_df = pd.concat(all_decks_list)
+        all_decks_df.sort_index(axis=1, inplace=True)
     else:
         print("No decks found in the database")
         all_decks_df = pd.DataFrame()
@@ -286,8 +323,6 @@ def generate_cardType_count_dataframe(existing_df=None):
     # Filter all_decks_df to only include rows that exist in existing_df
     if existing_df is not None:
         all_decks_df = all_decks_df[all_decks_df.index.isin(existing_df.index)]        
-
-    #all_decks_df.reset_index(inplace=True)            
 
     # Separate the 'faction' column from the rest of the DataFrame
     if 'faction' in all_decks_df.columns:
@@ -306,7 +341,7 @@ def generate_cardType_count_dataframe(existing_df=None):
     numeric_df = numeric_df.loc[:, ~(numeric_df <= 0).all(axis=0)]
 
     # Reorder the columns by their total, highest first
-    numeric_df = numeric_df.reindex(numeric_df.sum().sort_values(ascending=False).index, axis=1)
+    #numeric_df = numeric_df.reindex(numeric_df.sum().sort_values(ascending=False).index, axis=1)
 
     # Convert the DataFrame to strings, replacing '0' with ''
     numeric_df = numeric_df.astype(str).replace('0', '')
@@ -351,7 +386,7 @@ def generate_deck_statistics_dataframe():
             if card_title:  # Check if card_title is not empty
                 card_titles.append(card_title)
         # Join the list of titles into a single string separated by commas
-        return ', '.join(card_titles)
+        return ', '.join(sorted(card_titles))
 
     # Get all Decks from the database
     try:
@@ -535,7 +570,8 @@ def coll_data_on_filter_changed():
 def coll_data_on_selection_changed(event, widget):
     global qm
     # Generate a DataFrame from the selected rows
-    qm.update_data('deck', generate_deck_content_dataframe(event, widget))
+    #qm.update_data('deck', generate_deck_content_dataframe(event, widget))
+    #TODO: Update deck grid with the selected rows
     
 def update_visible_rows_on_count():
     global qm
@@ -545,7 +581,8 @@ def update_visible_rows_on_count():
     # Update the widget's DataFrame     
     df = qm.get_default_data('count')
     source_df = source_qgrid.get_changed_df()
-    qm.update_data('count', get_dataframe_apply_index_filter(source = source_df, target = df))
+    #qm.update_data('count', get_dataframe_apply_index_filter(source = source_df, target = df))
+    #TODO: Update count grid visible rows
     
 def get_dataframe_apply_index_filter(source, target):
     # Initialize a list to store the filtered rows
@@ -624,20 +661,6 @@ def handle_db_list_change(change):
     else:
         print("Selected database name is empty or invalid.")
 
-
-# def handle_username_change(change):    
-#     global factionToggles, dropdowns
-#     new_username = change['new']
-#     if new_username:  
-#         GlobalVariables.username = new_username
-#         GlobalVariables.myDB.set_database_name(GlobalVariables.username)
-#         for factionToggle, dropdown in zip(factionToggles, dropdowns):
-#             refresh_faction_deck_options(factionToggle, dropdown)
-#         update_filter_widget()    
-#         update_decks_display(change)          
-#     else:
-#         print("Username cannot be an empty string")
-
 def reload_data_on_click(button, value):
     global db_list, username
     username_value = username.value if username else GlobalVariables.username
@@ -711,23 +734,21 @@ def update_decks_display(change):
         default_coll_df = generate_deck_statistics_dataframe()
         qm.set_default_data('collection', default_coll_df)
 
-    #print(f"change = {change}")
     if change['new'] or change['new'] == '':                       
-
         if change['owner'] == db_list:
-        
             # Generate new DataFrame with new database
-            default_coll_df  = generate_deck_statistics_dataframe() 
+            default_coll_df = generate_deck_statistics_dataframe() 
             default_count_df = generate_cardType_count_dataframe(default_coll_df)            
-            
-            qm.set_default_data('collection', default_coll_df)
-            qm.set_default_data('count', default_count_df)
+
+            # Replace the data in the qgrid widgets
+            qm.replace_grid('collection', default_coll_df)
+            qm.replace_grid('count', default_count_df)
         
-            # Update the data in the qgrid widgets
-            out_qm.clear_output()
-            with out_qm:    
-                for name in ['collection', 'count', 'deck']:
-                    qm.display_grid_with_controls(name)
+            # Update the display
+            #out_qm.clear_output()
+            #with out_qm:    
+            #    for name in ['collection', 'count', 'deck']:                    
+            #        qm.display_grid_with_controls(name)
 
         
         default_coll_df = qm.get_default_data('collection')
@@ -745,7 +766,16 @@ def update_decks_display(change):
             filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
             #print(f"Result after filtering:")
             #display(filtered_df)
-            qm.update_data('collection', filtered_df)
+            #qm.update_data('collection', filtered_df)
+            qm.replace_grid('collection', filtered_df)
+         
+
+        # Display all the grids in the main output
+        #with out_qm:
+        #    clear_output(wait=True)
+        #    for name in ['collection', 'count', 'deck']:
+        #        print(f"Displaying grid: {name}")
+        #        qm.display_grid(name)
 
         # Apply other changes to the qgrid widgets ( like shrinking columns )
         #coll_data_on_filter_changed()
@@ -998,9 +1028,9 @@ def setup_interface():
 
 
     # Create qgrid widgets for the deck data, count data, and synergy data    
-    qgrid_coll_data  = qm.add_grid('collection', pd.DataFrame(), options = qg_coll_options, dependent_identifiers=['count'])
-    qgrid_count_data = qm.add_grid('count', pd.DataFrame(), options = qg_count_options)    
-    qgrid_deck_data  = qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options)
+    qm.add_grid('collection', pd.DataFrame(), options = qg_coll_options, dependent_identifiers=['count'])
+    qm.add_grid('count', pd.DataFrame(), options = qg_count_options)    
+    qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options)
     
     qm.on('collection', 'selection_changed', coll_data_on_selection_changed)
     # Status Box for Dataframes 
@@ -1043,9 +1073,10 @@ def setup_interface():
     display(out_debug)
     display(toggle_box) 
     #display(df_status_widget) 
-    display(filterBox)
+    display(filterBox)    
     display(out_qm)    
-    display(out)     
+    #display(button_graph)
+    display(out)         
     #display(*toggle_dropdown_pairs, button_graph)
 
 

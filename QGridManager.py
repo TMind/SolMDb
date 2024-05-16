@@ -23,8 +23,11 @@ class QGridManager:
         self.grids = {}
         self.callbacks = {}
         self.relationships = {}
-        self.outputs = {}
+        self.outputs = {'debug' : widgets.Output()}  
         self.main_output = main_output        
+        display(self.outputs['debug'])
+        with self.outputs['debug']:
+            print("QGridManager::__init__()::Debug output widget initialized.")
 
     def register_callback(self, event_name, callback, identifier=None):
         """
@@ -92,21 +95,27 @@ class QGridManager:
         self.relationships[identifier] = dependent_identifiers
         self.outputs[identifier] = output
 
-        #print(f"Grid {identifier} added successfully.")
-        # Ensure the new grid's output is displayed
-        #self.display_grid(identifier)
-
+        # Set up the grid events
+        self._setup_grid_events(identifier, grid_widget, toggle_grid)
+        
         # Display the output widget in the main output
         #print(f"add_grid()::Appending Output on main_output for grid: {identifier}")
         self.main_output.append_display_data(output)
 
     def replace_grid(self, identifier, new_df):
-        print(f"replace_grid() called for identifier: {identifier}")
+        #print(f"replace_grid() called for identifier: {identifier}")
         grid_info = self.grids.get(identifier)
         output = self.outputs.get(identifier)        
 
         if grid_info and output:
             print("replace_grid()::Updating grid:", identifier)
+
+            # Close the old widgets and turn off their event handlers
+            grid_info['main_widget'].off('filter_changed', None)
+            grid_info['toggle_widget'].off('cell_edited', None)
+            grid_info['main_widget'].close()
+            grid_info['toggle_widget'].close()
+
             new_main_grid = qgrid.show_grid(
                 new_df,
                 column_options=grid_info['grid_options'].get('col_options', {}),
@@ -115,32 +124,32 @@ class QGridManager:
                 show_toolbar=False
             )
 
-            new_toggle_df = pd.DataFrame([[True] * len(new_df.columns)], columns=new_df.columns)
+            new_toggle_df = pd.DataFrame([True] * len(new_df.columns), index=new_df.columns, columns=['Visible']).T
             new_toggle_grid = qgrid.show_grid(new_toggle_df, show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False})
             new_toggle_grid.layout = widgets.Layout(height='65px')
 
             grid_info['main_widget'] = new_main_grid
             grid_info['toggle_widget'] = new_toggle_grid
-            grid_info['df_versions']['default'] = new_df.copy()
-            grid_info['df_versions']['filtered'] = pd.DataFrame()
-            grid_info['df_versions']['changed'] = pd.DataFrame()
+            grid_info['df_versions']['filtered'] = new_df.copy()
+            grid_info['df_versions']['changed'] = new_df.copy()
             grid_info['df_status']['current'] = 'default'
             grid_info['df_status']['last_set']['default'] = datetime.now()
 
             #print(f"replace_grid()::New main grid: ...")  # Debug info
             #print(f"replace_grid()::New toggle grid: ...")  # Debug info
-
-            self.display_grid(identifier)
-#        else:           
-            #print(f"replace_grid()::Grid identifier {identifier} or output widget not found.")
+            self._setup_grid_events(identifier, new_main_grid, new_toggle_grid)
+            self.display_grid(identifier)            
+            self.synchronize_widgets(identifier)
+            
 
     def display_grid(self, identifier):
         output = self.outputs.get(identifier)
         grid_info = self.grids.get(identifier)
         if grid_info and output:
-            #print(f"display_grid()::Displaying grid for identifier: {identifier}")
+            print(f"display_grid()::Displaying grid for identifier: {identifier}")
+            print(grid_info['main_widget'].df.head())
             with output:
-                #print(f"display_grid()::Displaying grid for identifier: {identifier}")
+                print(f"display_grid()::Displaying grid for identifier: {identifier}")
                 clear_output(wait=True)
                 display(widgets.VBox([grid_info['toggle_widget'], grid_info['main_widget']]))
         else:
@@ -187,19 +196,24 @@ class QGridManager:
         """
         grid_info = self.grids.get(identifier)
         if grid_info:
-            new_toggle_df = pd.DataFrame({col: [True] for col in df.columns}, index=['Visible'])
-            current_toggle_df = grid_info['toggle_widget'].get_changed_df()
-            grid_info['toggle_widget'].df = new_toggle_df
-            for column in current_toggle_df.columns:
-                if column in new_toggle_df.columns:
+            #new_toggle_df = pd.DataFrame({col: [True] for col in df.columns}, index=['Visible'])
+            
+            old_toggle_df = grid_info['toggle_widget'].get_changed_df()
+            
+            for column in old_toggle_df.columns:
+                if column in df.columns:
                     # Check if the value in the cell needs to be updated
-                    if current_toggle_df.loc['Visible', column] != new_toggle_df.loc['Visible', column]:
-                        grid_info['toggle_widget'].edit_cell('Visible', column, current_toggle_df.loc['Visible', column])
+                    if old_toggle_df.loc['Visible', column] != df.loc['Visible', column]:
+                        print(f"update_toggle_df()::Editing cell for column: {column} with value {df.loc['Visible', column]}")
+                        grid_info['toggle_widget'].edit_cell('Visible', column, df.loc['Visible', column])
                 else:
-                    new_toggle_df[column] = False
+                    print(f"update_toggle_df()::Adding column: {column} to toggle grid with value False")
+                    grid_info['toggle_widget'].df[column] = False
                     # Check if the value in the cell needs to be updated
                     if False != grid_info['toggle_widget'].get_changed_df().loc['Visible', column]:
+                        print(f"update_toggle_df()::Editing cell for column: {column} with value False")
                         grid_info['toggle_widget'].edit_cell('Visible', column, False)
+
 
     def update_visible_columns(self, event, widget):
         """
@@ -228,13 +242,17 @@ class QGridManager:
         """
         master_widget = self.grids[master_identifier]['main_widget']
         master_df = master_widget.get_changed_df()
+        print(f"synchronize_widgets()::Master widget: {master_identifier}")
         for dependent_identifier in self.relationships[master_identifier]:
+            print(f"synchronize_widgets()::Synchronizing dependent widget: {dependent_identifier}")
             dependent_df = self.grids[dependent_identifier]['df_versions']['default']
-            filtered_df = dependent_df[dependent_df.index.isin(master_df.index)]
-            dependent_widget = self.grids[dependent_identifier]['main_widget']
-            dependent_widget.df = filtered_df
-            self.grids[dependent_identifier]['df_versions']['filtered'] = filtered_df
-            self.update_visible_columns(None, dependent_widget)
+            filtered_df = dependent_df[dependent_df.index.isin(master_df.index)]            
+            print(filtered_df.head())
+            self.replace_grid(dependent_identifier, filtered_df)
+            #dependent_widget = self.grids[dependent_identifier]['main_widget']
+            #dependent_widget.df = filtered_df
+            #self.grids[dependent_identifier]['df_versions']['filtered'] = filtered_df
+            #self.update_visible_columns(None, dependent_widget)
 
     def on(self, identifier, event_name, handler_func):
         """
@@ -250,43 +268,54 @@ class QGridManager:
             grid_info['main_widget'].on(event_name, handler_func)
 
     def _setup_grid_events(self, identifier, grid_widget, toggle_grid):
-        """
-        Sets up the necessary events for the grid widgets.
+        with self.outputs['debug']:
+            """
+            Sets up the necessary events for the grid widgets.
 
-        Args:
-            identifier (str): The grid identifier.
-            grid_widget (qgrid.QGridWidget): The main grid widget.
-            toggle_grid (qgrid.QGridWidget): The toggle grid widget.
-        """
-        def on_toggle_change(event, qgrid_widget):
-            toggled_df = toggle_grid.get_changed_df()
-            visible_columns = [col for col in toggled_df.columns if toggled_df.loc['Visible', col]]
+            Args:
+                identifier (str): The grid identifier.
+                grid_widget (qgrid.QGridWidget): The main grid widget.
+                toggle_grid (qgrid.QGridWidget): The toggle grid widget.
+            """
+            print(f"_setup_grid_events()::Setting up events for identifier: {identifier}")
             grid_info = self.grids[identifier]
-            if grid_info:
-                df_versions = grid_info['df_versions']
-            #     if not df_versions['changed'].empty:
-            #         grid_widget.df = df_versions['changed'][visible_columns].copy()
-                if not df_versions['filtered'].empty:
-                    grid_widget.df = df_versions['filtered'][visible_columns].copy()
-                else:
-                    grid_widget.df = df_versions['default'][visible_columns].copy()
 
-                grid_info['df_status']['current'] = 'filtered'
-                grid_info['df_status']['last_set']['filtered'] = datetime.now()
+            def on_toggle_change(event, qgrid_widget):
+                with self.outputs['debug']:
+                    print(f"on_toggle_change() called for identifier: {identifier}")
+                    toggled_df = toggle_grid.get_changed_df()
+                    visible_columns = [col for col in toggled_df.columns if toggled_df.loc['Visible', col]]
+
+                    df_versions = grid_info['df_versions']
+                    print(f"on_toggle_change()::visible_columns: {visible_columns}")
+                    
+                    #grid_widget.df = grid_widget.df[visible_columns]
+                    #print(f"on_toggle_change()::df: {grid_widget.df}")
+
+                    #if not df_versions['changed'].empty:
+                    #    grid_widget.df = df_versions['changed'][visible_columns].copy()
+                    if not df_versions['filtered'].empty:
+                        grid_widget.df = df_versions['filtered'][visible_columns].copy()
+                    else:
+                        grid_widget.df = df_versions['default'][visible_columns].copy()
+
+                    grid_info['df_status']['current'] = 'filtered'
+                    grid_info['df_status']['last_set']['filtered'] = datetime.now()
+                    self.trigger(self.EVENT_DF_STATUS_CHANGED, identifier, grid_info['df_status'])
+
+            def on_filter_change(event, qgrid_widget):
+                print(f"on_filter_change() called for identifier: {identifier}")
+                changed_df = grid_widget.get_changed_df()
+                self.grids[identifier]['df_versions']['changed'] = changed_df.copy()
+                self.update_toggle_df(changed_df, identifier)
+                grid_info = self.grids[identifier]
+                grid_info['df_status']['current'] = 'changed'
+                grid_info['df_status']['last_set']['changed'] = datetime.now()
                 self.trigger(self.EVENT_DF_STATUS_CHANGED, identifier, grid_info['df_status'])
 
-        def on_filter_change(event, qgrid_widget):
-            changed_df = grid_widget.get_changed_df()
-            self.grids[identifier]['df_versions']['changed'] = changed_df.copy()
-            self.update_toggle_df(changed_df, identifier)
-            grid_info = self.grids[identifier]
-            grid_info['df_status']['current'] = 'changed'
-            grid_info['df_status']['last_set']['changed'] = datetime.now()
-            self.trigger(self.EVENT_DF_STATUS_CHANGED, identifier, grid_info['df_status'])
-
-        toggle_grid.on('cell_edited', on_toggle_change)
-        grid_widget.on('filter_changed', on_filter_change)
-        grid_widget.on('filter_changed', self.update_visible_columns)
+            toggle_grid.on('cell_edited', on_toggle_change)
+            grid_widget.on('filter_changed', on_filter_change)
+            grid_widget.on('filter_changed', self.update_visible_columns)
 
 class FilterGrid:
     """
@@ -389,7 +418,8 @@ class FilterGrid:
         """
         row_index, column_index = event['index'], event['column']
         widget.df.loc[row_index, column_index] = event['new']
-        if widget.df.loc[row_index, 'Active']:
+        
+        if column_index == 'Active' or widget.df.loc[row_index, 'Active']:
             self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})
 
     def update_selection_content(self, change):

@@ -482,12 +482,9 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
 
             #print(f"Applying filter {substrings} to DataFrame")
             #display(df)
-            # Iterate over the 'cardTitles' column
-            for title in df['cardTitles']:
-                # Apply the check_substring_in_titles function to each title                
-                result = any(substring in title for substring in substrings)
-                substring_check_results.append(result)
-
+            # Iterate over the 'cardTitles' column            
+            substring_check_results = [any(substring in title for substring in substrings) for title in df['cardTitles']]
+            
             # Convert the list to a pandas Series
             substring_check_results = pd.Series(substring_check_results, index=df.index)
 
@@ -501,7 +498,7 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
             return current_filter_results
 
         # Apply the first filter outside the loop
-        df_filtered = pd.DataFrame()
+        df_filtered = df_to_filter
         substrings = re.split(r'\s*,\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
         if substrings:
             df_filtered = apply_filter(df, substrings)
@@ -515,9 +512,9 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
             if operator == '+':                
                 substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
             
-            # If previous_substrings is empty
+            # If previous_substrings is empty treat the operator as ''
             if not previous_substrings:
-                pass
+                operator = ''
 
             # If substrings is empty, skip this iteration
             if not substrings:
@@ -726,13 +723,17 @@ def display_graph_on_click(button):
 
 def update_decks_display(change):
     ic(update_decks_display, change)
-    print(f"Updating Decks Display : {change}")
+    #print(f"Updating Decks Display : {change}")
     global db_list, qm, filter_grid  # Assuming filter_grid is a global instance of FilterGrid
 
-    default_coll_df = qm.get_default_data('collection')
-    if default_coll_df.empty:
-        default_coll_df = generate_deck_statistics_dataframe()
-        qm.set_default_data('collection', default_coll_df)
+    for identifier in ['collection', 'count']:
+        default_df = qm.get_default_data(identifier)
+        if default_df.empty:
+            if identifier == 'collection':
+                default_df = generate_deck_statistics_dataframe()
+            elif identifier == 'count':
+                default_df = generate_cardType_count_dataframe()            
+            qm.set_default_data('collection', default_df)
 
     if change['new'] or change['new'] == '':                       
         if change['owner'] == db_list:
@@ -740,43 +741,21 @@ def update_decks_display(change):
             default_coll_df = generate_deck_statistics_dataframe() 
             default_count_df = generate_cardType_count_dataframe(default_coll_df)            
 
+            qm.set_default_data('collection', default_coll_df)
+            qm.set_default_data('count', default_count_df)
+
             # Replace the data in the qgrid widgets
             qm.replace_grid('collection', default_coll_df)
             qm.replace_grid('count', default_count_df)
         
-            # Update the display
-            #out_qm.clear_output()
-            #with out_qm:    
-            #    for name in ['collection', 'count', 'deck']:                    
-            #        qm.display_grid_with_controls(name)
-
-        
         default_coll_df = qm.get_default_data('collection')
 
-        # Apply the filter from FilterGrid
-        
-        #print(f"Applying filter to collection")
+        # Apply the filter from FilterGrid                
         if filter_grid:                                
-            #print(f"Filtering collection with filter_grid")
-            #print("Displaying default dataframe :")
-            #display(default_coll_df)
-            filter_df = filter_grid.get_changed_df()
-            #print("Displaying filter_df")
-            #display(filter_df)                                
+            filter_df = filter_grid.get_changed_df()                     
             filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
-            #print(f"Result after filtering:")
-            #display(filtered_df)
-            #qm.update_data('collection', filtered_df)
             qm.replace_grid('collection', filtered_df)
-         
-
-        # Display all the grids in the main output
-        #with out_qm:
-        #    clear_output(wait=True)
-        #    for name in ['collection', 'count', 'deck']:
-        #        print(f"Displaying grid: {name}")
-        #        qm.display_grid(name)
-
+        
         # Apply other changes to the qgrid widgets ( like shrinking columns )
         #coll_data_on_filter_changed()
 

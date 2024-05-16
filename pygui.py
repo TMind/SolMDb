@@ -567,8 +567,8 @@ def coll_data_on_filter_changed():
 def coll_data_on_selection_changed(event, widget):
     global qm
     # Generate a DataFrame from the selected rows
-    #qm.update_data('deck', generate_deck_content_dataframe(event, widget))
-    #TODO: Update deck grid with the selected rows
+    #print(f"Selection changed: {event}")
+    qm.replace_grid('deck', generate_deck_content_dataframe(event, widget))    
     
 def update_visible_rows_on_count():
     global qm
@@ -755,10 +755,6 @@ def update_decks_display(change):
             filter_df = filter_grid.get_changed_df()                     
             filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
             qm.replace_grid('collection', filtered_df)
-        
-        # Apply other changes to the qgrid widgets ( like shrinking columns )
-        #coll_data_on_filter_changed()
-
     
 
 def update_filter_widget(change=None):
@@ -1012,6 +1008,7 @@ def setup_interface():
     qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options)
     
     qm.on('collection', 'selection_changed', coll_data_on_selection_changed)
+    qm.on('count', 'selection_changed', coll_data_on_selection_changed)
     # Status Box for Dataframes 
     #df_status_widget = widgets.Textarea(value='', description='DataFrame Status:', disabled=True, layout=widgets.Layout(width='50%', height='200px'))
     #def update_df_status(identifier, df_status):

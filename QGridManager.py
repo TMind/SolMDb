@@ -161,12 +161,13 @@ class QGridManager:
             grid_info['toggle_widget'].close()
 
             new_main_grid = qgrid.show_grid(
-                new_df,
+                pd.DataFrame(),
                 column_options=grid_info['grid_options'].get('col_options', {}),
                 column_definitions=grid_info['grid_options'].get('col_defs', {}),
                 grid_options={'forceFitColumns': False, 'enableColumnReorder': True},
                 show_toolbar=False
             )
+            new_main_grid.df = new_df
 
             new_toggle_df = pd.DataFrame([True] * len(new_df.columns), index=new_df.columns, columns=['Visible']).T
             new_toggle_grid = qgrid.show_grid(new_toggle_df, show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False})
@@ -183,7 +184,11 @@ class QGridManager:
             self._setup_grid_events(identifier, new_main_grid, new_toggle_grid)
             self.display_grid(identifier)                        
             self.synchronize_widgets(identifier)
-            
+
+    def reset_dataframe(self, identifier):
+        grid_info = self.grids.get(identifier)
+        if grid_info:
+            grid_info['main_widget'].df = pd.DataFrame()
 
     def display_grid(self, identifier):
         output = self.outputs.get(identifier)

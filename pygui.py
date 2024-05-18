@@ -203,63 +203,79 @@ def generate_synergy_statistics_dataframe(deck_df):
 def generate_deck_content_dataframe(event, widget):
     ic(generate_deck_content_dataframe, event, widget)
     #print(f"Generating Deck Content DataFrame : {event}")
+    with out_debug:
+        print(f"DeckEvent: {event}")
 
-    #Get the selection from the deck widget
-    desired_fields = ['name', 'cardType', 'cardSubType', 'levels']    
-    if widget:
-        header_df = pd.DataFrame()
-        all_decks_df = pd.DataFrame()        
-        df_selected_rows = event['new']
-        # Get the selected rows from the DataFrame based on the indices
-        changed_df = widget.get_changed_df()
-        decks_df = changed_df.iloc[df_selected_rows]        
-        deckList = decks_df.index        
-        #deckList = ['The Reeves of Loss', 'The People of Bearing']                
-        for deckName in deckList:
-            #print(f'DeckName: {deckName}')
-            #Get the Deck from the Database 
-            deck = GlobalVariables.myDB.find_one('Deck', {'name': deckName})
-            if deck:
-                #print(f'Found deck: {deck}')
-                #Get the cardIds from the Deck
-                cardIds = deck['cardIds']
-                cardTitles = []
-                deck_df = pd.DataFrame([deck])  # Create a single row DataFrame from deck
-                card_dfs = []  # List to store DataFrames for each card
-                for cardId in cardIds:
-                    card = GlobalVariables.myDB.find_one('Card', {'_id': cardId})
-                    if card:
-                        #print(f"Found card: {card['_id']}")
-                        # Select only the desired fields from the card document
-                        card = {field: card[field] for field in desired_fields if field in card}
-                        
-                        # Flatten the 'levels' dictionary
-                        if 'levels' in card and card['levels']:
-                            levels = card.pop('levels')
-                            for level, level_data in levels.items():
-                                card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
-                                card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
-                        # Insert 'DeckName' at the beginning of the card dictionary
-                        card = {'DeckName': deckName, **card}
-                        
-                        # Create a DataFrame from the remaining card fields
-                        card_df = pd.DataFrame([card])                        
-                        card_dfs.append(card_df)  # Add full_card_df to the list
-                # Concatenate all card DataFrames along the rows axis
-                deck_df = pd.concat(card_dfs, ignore_index=True, axis=0)
-                # Replace empty values in the 'cardSubType' column with 'Spell'
-                if 'cardSubType' in deck_df.columns:
-                    deck_df['cardSubType'] = deck_df['cardSubType'].replace(['', '0', 0], 'Spell')
-                    deck_df['cardSubType'] = deck_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
-                # Create a header DataFrame with a single row containing the deck name
-                #deckName_df = pd.DataFrame({'name': [deckName]})                
-                #header_df = pd.concat([header_df, deckName_df], ignore_index=True, axis=0)                
-                all_decks_df = pd.concat([all_decks_df, deck_df], ignore_index=True, axis=0)
-                
-        # Concatenate the header DataFrame with the deck DataFrames
-        final_df = pd.concat([header_df, all_decks_df], ignore_index=True, axis=0)        
-    return final_df.fillna('')  
-    
+        #Get the selection from the deck widget
+        desired_fields = ['name', 'cardType', 'cardSubType', 'levels']    
+        if widget:
+            header_df = pd.DataFrame()
+            all_decks_df = pd.DataFrame()        
+            old_selection = set(event['old'])
+            new_selection = set(event['new'])
+            deselected_rows = old_selection - new_selection
+
+            # Get the selected rows from the DataFrame based on the indices
+            changed_df = widget.get_changed_df()
+            selectList = changed_df.iloc[list(new_selection)].index        
+            deselectList = changed_df.iloc[list(deselected_rows)].index
+            old_df = qm.grids['deck']['main_widget'].df
+            
+            # Get the unique values from the deckName column in old_df
+            unique_deckNames = []
+            if not old_df.empty:            
+                unique_deckNames = old_df['DeckName'].unique()
+        
+            # Add the deckList to the unique_deckNames and remove the deselectList
+            print(f"Select: {selectList} \nDeselect: {deselectList}")
+            union_set = set(unique_deckNames) | set(selectList)
+            deckList =  list(union_set - set(deselectList))            
+            #deckList = ['The Reeves of Loss', 'The People of Bearing']                
+            for deckName in deckList:
+                #print(f'DeckName: {deckName}')
+                #Get the Deck from the Database 
+                deck = GlobalVariables.myDB.find_one('Deck', {'name': deckName})
+                if deck:
+                    #print(f'Found deck: {deck}')
+                    #Get the cardIds from the Deck
+                    cardIds = deck['cardIds']
+                    cardTitles = []
+                    deck_df = pd.DataFrame([deck])  # Create a single row DataFrame from deck
+                    card_dfs = []  # List to store DataFrames for each card
+                    for cardId in cardIds:
+                        card = GlobalVariables.myDB.find_one('Card', {'_id': cardId})
+                        if card:
+                            #print(f"Found card: {card['_id']}")
+                            # Select only the desired fields from the card document
+                            card = {field: card[field] for field in desired_fields if field in card}
+                            
+                            # Flatten the 'levels' dictionary
+                            if 'levels' in card and card['levels']:
+                                levels = card.pop('levels')
+                                for level, level_data in levels.items():
+                                    card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
+                                    card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
+                            # Insert 'DeckName' at the beginning of the card dictionary
+                            card = {'DeckName': deckName, **card}
+                            
+                            # Create a DataFrame from the remaining card fields
+                            card_df = pd.DataFrame([card])                        
+                            card_dfs.append(card_df)  # Add full_card_df to the list
+                    # Concatenate all card DataFrames along the rows axis
+                    deck_df = pd.concat(card_dfs, ignore_index=True, axis=0)
+                    # Replace empty values in the 'cardSubType' column with 'Spell'
+                    if 'cardSubType' in deck_df.columns:
+                        deck_df['cardSubType'] = deck_df['cardSubType'].replace(['', '0', 0], 'Spell')
+                        deck_df['cardSubType'] = deck_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
+                    # Create a header DataFrame with a single row containing the deck name
+                    #deckName_df = pd.DataFrame({'name': [deckName]})                
+                    #header_df = pd.concat([header_df, deckName_df], ignore_index=True, axis=0)                
+                    all_decks_df = pd.concat([all_decks_df, deck_df], ignore_index=True, axis=0)
+                    
+            # Concatenate the header DataFrame with the deck DataFrames
+            final_df = pd.concat([header_df, all_decks_df], ignore_index=True, axis=0)        
+        return final_df.fillna('')  
+        
 
 def generate_cardType_count_dataframe(existing_df=None):
     # Initialize a list to accumulate the DataFrames for each deck
@@ -494,9 +510,9 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
             substring_check_results = pd.Series(substring_check_results, index=df.index)
 
             # Assign the results to filtered_indices
-            filtered_indices = substring_check_results
-            true_indices = filtered_indices[filtered_indices].index
-            print(f"True indices for filter {substrings}: {list(true_indices)}")
+            #filtered_indices = substring_check_results
+            #true_indices = filtered_indices[filtered_indices].index
+            #print(f"True indices for filter {substrings}: {list(true_indices)}")
 
             current_filter_results = df[substring_check_results].copy()
 
@@ -513,7 +529,7 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
             operator = filter_row[f'op{i}']
             previous_substrings = substrings
             substrings = re.split(r'\s*,\s*', filter_row[filter_type]) if filter_row[filter_type] else []
-            print(f"Substrings = '{substrings}'")
+            #print(f"Substrings = '{substrings}'")
             if operator == '+':                
                 substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
             
@@ -573,7 +589,8 @@ def coll_data_on_selection_changed(event, widget):
     global qm
     # Generate a DataFrame from the selected rows
     #print(f"Selection changed: {event}")
-    qm.replace_grid('deck', generate_deck_content_dataframe(event, widget))    
+    deck_df = generate_deck_content_dataframe(event, widget)    
+    qm.replace_grid('deck', deck_df)    
     
 def update_visible_rows_on_count():
     global qm
@@ -760,6 +777,7 @@ def update_decks_display(change):
             filter_df = filter_grid.get_changed_df()                     
             filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
             qm.replace_grid('collection', filtered_df)
+            qm.reset_dataframe('deck')
     
 
 def update_filter_widget(change=None):

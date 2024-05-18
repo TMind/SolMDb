@@ -313,17 +313,17 @@ class QGridManager:
 
         def on_toggle_change(event, qgrid_widget):
             #with self.outputs['debug']:
-            print(f"on_toggle_change() called for identifier: {identifier}")
+            #print(f"on_toggle_change() called for identifier: {identifier}")
             toggled_df = toggle_grid.get_changed_df()
-            print(f"on_toggle_change()::toggled_df: ...")
-            display(toggled_df)
+            #print(f"on_toggle_change()::toggled_df: ...")
+            #display(toggled_df)
             if 'Visible' in toggled_df.index:
                 visible_columns = [col for col in toggled_df.columns if toggled_df.loc['Visible', col]]
             else:
                 print("'Visible' index does not exist in toggled_df")
 
             df_versions = grid_info['df_versions']
-            print(f"on_toggle_change()::visible_columns: {visible_columns}")
+            #print(f"on_toggle_change()::visible_columns: {visible_columns}")
             
             #grid_widget.df = grid_widget.df[visible_columns]
             #print(f"on_toggle_change()::df: {grid_widget.df}")
@@ -340,7 +340,7 @@ class QGridManager:
             self.trigger(self.EVENT_DF_STATUS_CHANGED, identifier, grid_info['df_status'])
 
         def on_filter_change(event, qgrid_widget):
-            print(f"on_filter_change() called for identifier: {identifier}")
+            #print(f"on_filter_change() called for identifier: {identifier}")
             changed_df = grid_widget.get_changed_df()
             self.grids[identifier]['df_versions']['changed'] = changed_df.copy()
             self.update_visible_columns(event, grid_widget)

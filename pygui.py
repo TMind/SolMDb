@@ -591,6 +591,7 @@ def coll_data_on_selection_changed(event, widget):
     #print(f"Selection changed: {event}")
     deck_df = generate_deck_content_dataframe(event, widget)    
     qm.replace_grid('deck', deck_df)    
+    qm.set_default_data('deck', deck_df)
     
 def update_visible_rows_on_count():
     global qm

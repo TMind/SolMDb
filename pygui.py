@@ -99,7 +99,8 @@ qg_count_options = {
 qg_deck_options = {
     'col_options' :         { 'width': 50, } ,
     'col_defs' : {                   
-        'name':             { 'width': 250, },     
+        'DeckName':         { 'width': 250, }, 
+        'name':             { 'width': 200, },     
         'rarity':           { 'width': 125,  },        
         'cardType':         { 'width': 90,  },
         'cardSubType':      { 'width': 110,  },
@@ -204,7 +205,7 @@ def generate_deck_content_dataframe(event, widget):
     #print(f"Generating Deck Content DataFrame : {event}")
 
     #Get the selection from the deck widget
-    desired_fields = ['name', 'cardSubType', 'levels']    
+    desired_fields = ['name', 'cardType', 'cardSubType', 'levels']    
     if widget:
         header_df = pd.DataFrame()
         all_decks_df = pd.DataFrame()        
@@ -231,12 +232,16 @@ def generate_deck_content_dataframe(event, widget):
                         #print(f"Found card: {card['_id']}")
                         # Select only the desired fields from the card document
                         card = {field: card[field] for field in desired_fields if field in card}
+                        
                         # Flatten the 'levels' dictionary
                         if 'levels' in card and card['levels']:
                             levels = card.pop('levels')
                             for level, level_data in levels.items():
                                 card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
                                 card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
+                        # Insert 'DeckName' at the beginning of the card dictionary
+                        card = {'DeckName': deckName, **card}
+                        
                         # Create a DataFrame from the remaining card fields
                         card_df = pd.DataFrame([card])                        
                         card_dfs.append(card_df)  # Add full_card_df to the list
@@ -247,8 +252,8 @@ def generate_deck_content_dataframe(event, widget):
                     deck_df['cardSubType'] = deck_df['cardSubType'].replace(['', '0', 0], 'Spell')
                     deck_df['cardSubType'] = deck_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
                 # Create a header DataFrame with a single row containing the deck name
-                deckName_df = pd.DataFrame({'name': [deckName]})                
-                header_df = pd.concat([header_df, deckName_df], ignore_index=True, axis=0)                
+                #deckName_df = pd.DataFrame({'name': [deckName]})                
+                #header_df = pd.concat([header_df, deckName_df], ignore_index=True, axis=0)                
                 all_decks_df = pd.concat([all_decks_df, deck_df], ignore_index=True, axis=0)
                 
         # Concatenate the header DataFrame with the deck DataFrames

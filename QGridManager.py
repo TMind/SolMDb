@@ -147,7 +147,7 @@ class QGridManager:
         self.main_output.append_display_data(output)
 
     def replace_grid(self, identifier, new_df):
-        print(f"replace_grid() called for identifier: {identifier}")
+        #print(f"replace_grid() called for identifier: {identifier}")
         grid_info = self.grids.get(identifier)
         output = self.outputs.get(identifier)        
 
@@ -339,7 +339,8 @@ class QGridManager:
             changed_df = grid_widget.get_changed_df()
             self.grids[identifier]['df_versions']['changed'] = changed_df.copy()
             self.update_visible_columns(event, grid_widget)
-            self.update_toggle_df(changed_df, identifier)                
+            self.update_toggle_df(changed_df, identifier)  
+            self.synchronize_widgets(identifier)              
             grid_info = self.grids[identifier]
             grid_info['df_status']['current'] = 'changed'
             grid_info['df_status']['last_set']['changed'] = datetime.now()

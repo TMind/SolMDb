@@ -421,9 +421,12 @@ class FilterGrid:
             df = self.create_initial_dataframe()
             widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
             event['indices'].remove(0)
+        
         if event['indices']:
             active_rows = widget.df[widget.df['Active'] == True]
             self.update_decks_display({'new': active_rows, 'old': None, 'owner': 'filter'})
+        
+        
 
     def grid_filter_on_row_added(self, event, widget):
         """
@@ -444,6 +447,7 @@ class FilterGrid:
                 df.at[new_row_index, column] = ', '.join(self.selection_widgets[column].value)
         
         widget.df = df
+        
 
         if widget.df.loc[new_row_index, 'Active']:
             self.update_decks_display({'new': new_row_index, 'old': None, 'owner': 'filter'})
@@ -505,8 +509,8 @@ class FilterGrid:
             widget = self.create_cardType_names_selector(cardType)
             if cardType == 'Modifier':
                 label=widgets.Label(value='( Modifier')
-            elif cardType == 'Spell':
-                label=widgets.Label(value='Spell )')
+            elif cardType == 'Creature':
+                label=widgets.Label(value='Creature )')
             else:                
                 label = widgets.Label(value=f'{cardType}')
             selection_widgets[cardType] = widget

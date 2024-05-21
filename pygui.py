@@ -362,7 +362,7 @@ def generate_cardType_count_dataframe(existing_df=None):
     numeric_df = numeric_df.loc[:, ~(numeric_df <= 0).all(axis=0)]
 
     # Reorder the columns by their total, highest first
-    #numeric_df = numeric_df.reindex(numeric_df.sum().sort_values(ascending=False).index, axis=1)
+    numeric_df = numeric_df.reindex(numeric_df.sum().sort_values(ascending=False).index, axis=1)
 
     # Convert the DataFrame to strings, replacing '0' with ''
     numeric_df = numeric_df.astype(str).replace('0', '')
@@ -775,7 +775,8 @@ def update_decks_display(change):
 
         # Apply the filter from FilterGrid                
         if filter_grid:                                
-            filter_df = filter_grid.get_changed_df()                     
+            filter_df = filter_grid.get_changed_df()  
+            print(change['new']  )                   
             filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
             qm.replace_grid('collection', filtered_df)
             qm.reset_dataframe('deck')

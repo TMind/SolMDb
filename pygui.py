@@ -32,7 +32,7 @@ ic.disable()
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
 GlobalVariables.myDB = DatabaseManager(GlobalVariables.username, uri=GlobalVariables.uri)
-GlobalVariables.commonDB = DatabaseManager('common')
+GlobalVariables.commonDB = DatabaseManager('common', uri=GlobalVariables.uri)
 
 synergy_template = SynergyTemplate()    
 ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]

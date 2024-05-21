@@ -3,7 +3,8 @@ import CardLibrary
 #from CardLibrary import EntityData, Entity, Forgeborn, Deck, ForgebornData, Fusion, Card
 from Interface import InterfaceCollection, Interface, InterfaceData
 from pymongo.operations import UpdateOne
-from MongoDB.DatabaseManager import DatabaseManager
+#from MongoDB.DatabaseManager import DatabaseManager
+import GlobalVariables as gv
 from typing import Tuple, List, Dict
 import csv, json, re
 
@@ -12,7 +13,7 @@ class UniversalLibrary:
     entities = []
 
     def __init__(self, username, sff_path, fb_path, syn_path):        
-        self.database = DatabaseManager('common') 
+        self.database = gv.commonDB
         # Check if the database is empty and fill it with the data from the csv files            
         numFB = self.database.count_documents('Forgeborn')
         numEnt = self.database.count_documents('Entity')

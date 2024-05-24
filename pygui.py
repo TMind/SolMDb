@@ -1,9 +1,10 @@
+from enum import unique
 import os, time, re
 import ipywidgets as widgets
 from pyvis.network import Network
 import networkx as nx
 import numpy as np
-import qgrid
+#import qgrid
 
 import GlobalVariables
 from CardLibrary import Deck, FusionData, Fusion
@@ -18,7 +19,8 @@ from IPython.display import display, HTML
 
 from Synergy import SynergyTemplate
 import pandas as pd
-from QGridManager import QGridManager, FilterGrid, get_cardType_entity_names
+from QGridManager import FilterGrid, get_cardType_entity_names
+from GridManager import GridManager
 
 from icecream import ic
 ic.disable()
@@ -59,7 +61,7 @@ out = widgets.Output()
 out_qm = widgets.Output()
 out_debug = widgets.Output()
 
-qm = QGridManager(out_qm)
+qm = GridManager(out_qm)
 
 # Widget original options for qgrid
 qg_syn_options = {
@@ -219,12 +221,15 @@ def generate_deck_content_dataframe(event, widget):
             changed_df = widget.get_changed_df()
             selectList = changed_df.iloc[list(new_selection)].index        
             deselectList = changed_df.iloc[list(deselected_rows)].index
-            old_df = qm.grids['deck']['main_widget'].df
-            
-            # Get the unique values from the deckName column in old_df
-            unique_deckNames = []
-            if not old_df.empty:            
-                unique_deckNames = old_df['DeckName'].unique()
+            old_df = qm.get_grid_df('deck')
+                        
+            # Ensure old_df is not None before proceeding
+            if old_df is None:
+                print("No previous data found in the deck grid.")
+                unique_deckNames = []
+            else:
+                # Get the unique values from the deckName column in old_df
+                unique_deckNames = old_df.index.unique().tolist()
         
             # Add the deckList to the unique_deckNames and remove the deselectList
             print(f"Select: {selectList} \nDeselect: {deselectList}")
@@ -755,8 +760,8 @@ def update_decks_display(change):
             if identifier == 'collection':
                 default_df = generate_deck_statistics_dataframe()
             elif identifier == 'count':
-                default_df = generate_cardType_count_dataframe()            
-            qm.set_default_data('collection', default_df)
+                default_df = generate_cardType_count_dataframe()                        
+            qm.set_default_data(identifier, default_df)
 
     if change['new'] or change['new'] == '':                       
         if change['owner'] == db_list:
@@ -776,7 +781,7 @@ def update_decks_display(change):
         # Apply the filter from FilterGrid                
         if filter_grid:                                
             filter_df = filter_grid.get_changed_df()  
-            print(change['new']  )                   
+            #print(change['new']  )                   
             filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
             qm.replace_grid('collection', filtered_df)
             qm.reset_dataframe('deck')
@@ -1030,7 +1035,7 @@ def setup_interface():
     # Create qgrid widgets for the deck data, count data, and synergy data    
     qm.add_grid('collection', pd.DataFrame(), options = qg_coll_options, dependent_identifiers=['count'])
     qm.add_grid('count', pd.DataFrame(), options = qg_count_options)    
-    qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options)
+    qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options, grid_type='pandas')
     
     qm.on('collection', 'selection_changed', coll_data_on_selection_changed)
     qm.on('count', 'selection_changed', coll_data_on_selection_changed)

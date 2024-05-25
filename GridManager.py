@@ -52,6 +52,8 @@ class GridManager:
             grid.update_main_widget(new_df)
             self.display_grid(identifier)
             self.synchronize_widgets(identifier)
+            #if isinstance(grid, QGrid):
+            #    self.update_visible_columns(None, grid.main_widget)
 
     def display_grid(self, identifier):
             output = self.outputs.get(identifier)
@@ -89,6 +91,14 @@ class GridManager:
             return grid.df_versions['default']
         return None
 
+
+    def update_dataframe(self, identifier, new_df):
+        grid = self.grids.get(identifier)
+        if grid:
+            grid.update_main_widget(new_df)            
+            self.update_visible_columns(None, grid.main_widget) 
+
+
     def update_toggle_df(self, df, identifier):
         grid = self.grids.get(identifier)
         if grid:
@@ -103,12 +113,14 @@ class GridManager:
                         grid.toggle_widget.edit_cell('Visible', column, False)
 
     def update_visible_columns(self, event, widget):
-        zero_width_columns = [col for col in widget.get_changed_df().columns if not widget.get_changed_df()[col].ne('').any()]
+        current_df = widget.get_changed_df()        
+        zero_width_columns = [col for col in current_df.columns if not current_df[col].ne('').any()]        
         if zero_width_columns:
+            print(f"Zero width columns: {zero_width_columns}")
             for grid_id, grid_info in self.grids.items():
                 if grid_info.main_widget == widget:
-                    widget.df = widget.df.drop(columns=zero_width_columns, errors='ignore')
-                    self.update_toggle_df(widget.df, grid_id)
+                    widget.df = current_df.drop(columns=zero_width_columns, errors='ignore')                    
+                    self.update_toggle_df(current_df, grid_id)
 
     def synchronize_widgets(self, master_identifier):
         master_grid = self.grids[master_identifier]

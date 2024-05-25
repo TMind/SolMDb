@@ -29,13 +29,19 @@ class GridManager:
         self.outputs[identifier] = widgets.Output()
 
         self._setup_grid_events(identifier, grid)
-        print(f"GridManager::add_grid() - Grid {identifier} added. Appending to main_output.")
+        #print(f"GridManager::add_grid() - Grid {identifier} added. Appending to main_output.")
         self.main_output.append_display_data(self.outputs[identifier])
 
     def get_grid_df(self, identifier, version='default'):
         grid = self.grids.get(identifier)
         if grid:
-            return grid.df_versions.get(version)
+            version_passed = False
+            for v in ['changed', 'filtered', 'default']:
+                df = grid.df_versions.get(v)
+                if v == version:
+                    version_passed = True
+                if version_passed and df is not None and not df.empty:
+                    return df                        
         return None
 
     def replace_grid(self, identifier, new_df):
@@ -219,6 +225,18 @@ class BaseGrid:
     def update_main_widget(self, new_df):
         raise NotImplementedError("Subclasses should implement this method.")
 
+    def set_dataframe_version(self, version, df):
+        """
+        Set a DataFrame for a specific version.
+
+        Parameters:
+        version (str): The version key for the DataFrame.
+        df (pd.DataFrame): The DataFrame to set.
+        """
+        self.df_versions[version] = df
+        self.df_status['current'] = 'filtered'
+        self.df_status['last_set']['filtered'] = datetime.now()
+
     def reset_dataframe(self):
         self.df_versions['default'] = pd.DataFrame()
         self.update_main_widget(self.df_versions['default'])
@@ -236,16 +254,18 @@ class QGrid(BaseGrid):
 
     def update_main_widget(self, new_df):
         self.main_widget.df = new_df
-
+        self.set_dataframe_version('filtered', new_df)
+        
 
 class PandasGrid(BaseGrid):
     def create_main_widget(self, df):
         self.update_main_widget(df)
 
     def update_main_widget(self, new_df):
-        print("PandasGrid::update_main_widget() - Clearing Output")
+        #print("PandasGrid::update_main_widget() - Clearing Output")
         self.df_versions['default'] = new_df.copy()
+        self.set_dataframe_version('filtered', new_df)        
 
     def render_main_widget(self):
-        print("PandasGrid::render_main_widget() - Displaying DataFrame pure")
+        #print("PandasGrid::render_main_widget() - Displaying DataFrame pure")
         display(self.df_versions['default'])

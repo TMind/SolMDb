@@ -206,7 +206,7 @@ def generate_deck_content_dataframe(event, widget):
     ic(generate_deck_content_dataframe, event, widget)
     #print(f"Generating Deck Content DataFrame : {event}")
     with out_debug:
-        print(f"DeckEvent: {event}")
+        print(f"DeckEvent: {event}, Widget: {widget}")
 
         #Get the selection from the deck widget
         desired_fields = ['name', 'cardType', 'cardSubType', 'levels']    
@@ -221,23 +221,22 @@ def generate_deck_content_dataframe(event, widget):
             changed_df = widget.get_changed_df()
             selectList = changed_df.iloc[list(new_selection)].index        
             deselectList = changed_df.iloc[list(deselected_rows)].index
-            old_df = qm.get_grid_df('deck')
-                        
+            old_df = qm.get_grid_df('deck')            
             # Ensure old_df is not None before proceeding
             if old_df is None:
                 print("No previous data found in the deck grid.")
                 unique_deckNames = []
             else:
                 # Get the unique values from the deckName column in old_df
-                unique_deckNames = old_df.index.unique().tolist()
+                unique_deckNames = old_df['DeckName'].unique().tolist()
         
             # Add the deckList to the unique_deckNames and remove the deselectList
-            print(f"Select: {selectList} \nDeselect: {deselectList}")
+            print(f"Select: {selectList} \nDeselect: {deselectList}\nUnique: {unique_deckNames}")
             union_set = set(unique_deckNames) | set(selectList)
             deckList =  list(union_set - set(deselectList))            
             #deckList = ['The Reeves of Loss', 'The People of Bearing']                
             for deckName in deckList:
-                #print(f'DeckName: {deckName}')
+                print(f'DeckName: {deckName}')
                 #Get the Deck from the Database 
                 deck = GlobalVariables.myDB.find_one('Deck', {'name': deckName})
                 if deck:
@@ -263,9 +262,9 @@ def generate_deck_content_dataframe(event, widget):
                             # Insert 'DeckName' at the beginning of the card dictionary
                             card = {'DeckName': deckName, **card}
                             
-                            # Create a DataFrame from the remaining card fields
-                            card_df = pd.DataFrame([card])                        
-                            card_dfs.append(card_df)  # Add full_card_df to the list
+                            # Create a DataFrame from the remaining card fields                            
+                            card_dfs.append(pd.DataFrame([card]))  # Add full_card_df to the list
+
                     # Concatenate all card DataFrames along the rows axis
                     deck_df = pd.concat(card_dfs, ignore_index=True, axis=0)
                     # Replace empty values in the 'cardSubType' column with 'Spell'
@@ -287,14 +286,10 @@ def generate_cardType_count_dataframe(existing_df=None):
     all_decks_list = []
 
     # Get interface ids from the database 
-    interface_ids = GlobalVariables.commonDB.find('Interface', {})
-    interface_ids = [interface['_id'] for interface in interface_ids]
+    #interface_ids = GlobalVariables.commonDB.find('Interface', {})
+    #interface_ids = [interface['_id'] for interface in interface_ids]
     #print(f"Interface IDs: {interface_ids}")
-
-    # Create a DataFrame with only the 'interface_ids' column and no records
     
-    
-
     # Get the cardTypes from the stats array in the database
     for deck in GlobalVariables.myDB.find('Deck', {}):
 

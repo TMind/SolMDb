@@ -27,7 +27,7 @@ class NetApi:
             response = requests.get(endpoint, params=params)
             response.raise_for_status()  # Raise an exception for HTTP errors
             pageData = response.json()
-            print(f"Initial response data: {pageData}")
+            #print(f"Initial response data: {pageData}")
 
             lastPK = ""
             all_decks = pageData['Items']                        

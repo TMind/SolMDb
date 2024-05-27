@@ -48,7 +48,7 @@ factionToggles = []
 dropdowns = []
 factionNames = ['Alloyin', 'Nekrium', 'Tempys', 'Uterra']
 types = ['Decks', 'Fusions', 'Entities', 'Forgeborns']
-username = None
+username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
 button_load = None
 db_list = None 
 cardTypes_names_widget = {}
@@ -140,6 +140,7 @@ display(HTML(custom_css))
 ######################
 
 def fetch_network_decks(args, myApi):
+    print(f"Fetching Network Decks with args: {args}")
     if args.id:
         urls = args.id.split('\n')
         pattern = r"\/([^\/]+)$"        
@@ -164,6 +165,7 @@ def fetch_network_decks(args, myApi):
             filename=args.filename
         )
         return net_data
+    
 def load_deck_data(args):
     net_decks = []
     net_fusions = []
@@ -664,40 +666,43 @@ def handle_db_list_change(change):
     global username
 
     if change['name'] == 'value' and change['old'] != change['new']:
-        new_username = change['new']
+        new_username = change['new'] #or ""  # Ensure new_username is a string
 
-    if new_username:
-        # Update the Global Username Variable
-        GlobalVariables.username = new_username
-        GlobalVariables.myDB.set_database_name(new_username)
-        
-        # Update Username Widget
-        username.value = new_username  # Reflect change in username widget
-        
-        # Update Interface for New Username
-        update_filter_widget()
-        update_decks_display(change)
-        
-    else:
-        print("Selected database name is empty or invalid.")
+        if new_username:
+
+            # Update the Global Username Variable
+            GlobalVariables.username = new_username
+            GlobalVariables.myDB.set_database_name(new_username)
+
+            # Update Username Widget
+            username.value = new_username  # Reflect change in username widget
+
+            # Update Interface for New Username
+            update_filter_widget()
+            update_decks_display(change)
+        else:
+            print("No valid database selected.")
 
 def reload_data_on_click(button, value):
     global db_list, username
     username_value = username.value if username else GlobalVariables.username
     GlobalVariables.username = username_value
 
-    print(f"Reloading {value}")
+    if not db_list:
+        print("No database list found.")
+        return
+
+    print(f"Reloading {value} for username: {username_value}")
     if value == 'Decks':
-        arguments = ["--username" , username_value, 
-                    "--mode", 'update' ]                        
+        arguments = ["--username", username_value,
+                     "--mode", 'update']
         print(f"Loading Decks with arguments {arguments}")
         args = parse_arguments(arguments)
-        load_deck_data(args)    
+        load_deck_data(args)
     elif value == 'Fusions':
-        arguments = ["--username" , username_value, 
-                    "--mode", 'update',
-                     "--type", 'fuseddeck'
-                     ]                        
+        arguments = ["--username", username_value,
+                     "--mode", 'update',
+                     "--type", 'fuseddeck']
         print(f"Loading Fusions with arguments {arguments}")
         args = parse_arguments(arguments)
         load_deck_data(args)
@@ -705,11 +710,18 @@ def reload_data_on_click(button, value):
         myUCL._read_entities_from_csv(os.path.join('csv', 'sff.csv'))
     elif value == 'Forgeborns':
         myUCL._read_forgeborn_from_csv(os.path.join('csv', 'forgeborn.csv'))
-    
+
     # Refresh db_list widget
     db_names = GlobalVariables.myDB.mdb.client.list_database_names()
-    db_list.options = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
-    db_list.value = username_value
+    valid_db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
+
+    if valid_db_names:
+        db_list.options = valid_db_names
+        db_list.value = username_value if username_value in valid_db_names else valid_db_names[0]
+    else:
+        db_list.options = ['']
+        db_list.value = ''  # Set to an empty string if no valid databases
+
 
     # Call refresh function for dropdowns
     #handle_username_change({'new': username_value, 'owner': db_list})
@@ -1042,7 +1054,7 @@ def setup_interface():
     #qm.register_callback('df_status_changed', update_df_status, identifier='collection')
 
     # Text widget to enter the username
-    username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
+    #username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
 
     # Database selection widget
     db_list = create_database_selection_widget()

@@ -41,7 +41,7 @@ class NetApi:
                     response = requests.get(endpoint, params=params)
                     response.raise_for_status()
                     pageData = response.json()
-                    print(f"Page data: {pageData}")
+                    #print(f"Page data: {pageData}")
 
                     if 'error' in pageData:
                         print(f"Error in response: {pageData['error']}")
@@ -72,7 +72,7 @@ class NetApi:
         if id.startswith('Fused'):  
             type = 'fuseddeck'         
         decks_data = self.make_request(id, type, username)        
-        print(f"Fetched decks data: {decks_data}")
+        #print(f"Fetched decks data: {decks_data}")
         return decks_data
 
     def load_data(self, filename):

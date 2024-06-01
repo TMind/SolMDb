@@ -135,10 +135,11 @@ def export_csv(csvname, my_graphs, local_mode=False):
         range4 = ', '.join(max_graph_ranges[3:]) if len(max_graph_ranges) > 3 else ''
 
         ability = {}
-        for ability_name in MyGraph.fusion.forgeborn.abilities:
-            level = ability_name[0]
-            if "Inspire" in ability_name and ability.get(level): continue                
-            ability[level] = ability_name
+        for ability_id, ability_obj in MyGraph.fusion.forgeborn.abilities.items():
+            level = ability_id[-3]
+            #if "Inspire" in ability_obj.attributes['Name'] : 
+            #    print(f"Inspire found in {deckname1,deckname2}")
+            ability[level] = ability_obj.attributes['Name']
         
         row = {
             "deckname1": deckname1,

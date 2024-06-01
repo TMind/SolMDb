@@ -1,5 +1,8 @@
 # Fixed Version
+from operator import is_
 import csv, json, re
+
+from pandas import CategoricalDtype
 from Interface import Interface, InterfaceCollection
 from typing import List, Tuple, Dict
 from copy import copy
@@ -19,17 +22,57 @@ class Entity:
         #synergy_str = ", ".join([str(synergy) for synergy in self.targets.values()])
         return f"{self.name}"
 
+class ForgebornAbility :
+    def __init__(self, id, name, entity):
+        self.id = id
+        self.name = name
+        self.entity = entity 
 class Forgeborn:
-    def __init__(self, id, name, abilities):
+    def __init__(self, id, name):
         self.id = id 
         self.name = name
-        self.abilities = abilities        
-        self.ICollection = InterfaceCollection.from_forgeborn(self)
+        self.abilities = {}        
+        self.ICollection = {} #InterfaceCollection.from_forgeborn(self)
+
+    def add_ability(self, ability):
+        #ability_permutation = ability.id[-4:]   # c3a2
+        #ability_cycle = ability_permutation[1]
+        #ability_number = ability_permutation[3]
+        #ability_name = f"{ability_cycle}{ability.name}"
+
+        self.abilities[ability.id] = ability.entity        
+        self.create_interface_collection()
+
+    def get_permutation(self, forgeborn_id):
+        # Extract ability information from forgeborn_id
+        ability_ids = self._construct_ability_ids(forgeborn_id)
+        
+        # Create a new Forgeborn instance with a subset of abilities
+        new_forgeborn = Forgeborn(self.id, self.name)
+        new_forgeborn.abilities = {aid: self.abilities[aid] for aid in ability_ids if aid in self.abilities}
+        new_forgeborn.create_interface_collection()
+        return new_forgeborn
+
+    def _construct_ability_ids(self, forgeborn_id):
+        # Parse the forgeborn_id to get ability IDs
+        ability_prefix = self.id  # Assuming the prefix is the same as Forgeborn ID
+        ability_ids = []
+        ability_data = forgeborn_id[len(self.id):]  # Remove the Forgeborn ID part
+        
+        for i in range(0, len(ability_data)):
+            number = ability_data[i]
+            cycle = i+2
+            ability_id = f"{ability_prefix}-c{cycle}a{number}"
+            ability_ids.append(ability_id)
+        
+        return ability_ids
+
+    def create_interface_collection(self):
+        self.ICollection = InterfaceCollection.from_entities(self.name ,self.abilities.values())
 
     def __str__(self):
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
         return f"Forgeborn Name: {self.name}\nAbilities:\n{abilities_str}\n"
-
 
 class Card():
     def __init__(self, card, modifier=None): 
@@ -182,20 +225,28 @@ class Fusion(Deck):
         
         for original_forgeborn, other_forgeborn in [(forgeborn1, forgeborn2), (forgeborn2, forgeborn1)]:
             
-            inspire_abilities = [ability for ability in original_forgeborn.abilities if 'Inspire' in ability]
+            inspire_abilities = [ability for ability in original_forgeborn.abilities.values() if 'Inspire' in ability.attributes['Name']]
             
             if inspire_abilities:
                 new_abilities = original_forgeborn.abilities.copy()
                 
                 for inspire_ability in inspire_abilities:
-                    level = inspire_ability[0]
+                    level = inspire_ability.name[-3]
                     
                     for other_ability_name, other_ability in other_forgeborn.abilities.items():
-                        if other_ability_name[0].startswith(str(level)):
-                            new_abilities[other_ability_name] = other_ability
+                        if other_ability_name[-3].startswith(str(level)):
+                            # Remove the old ability that has the same level 
+                            ability_id_replace_name = next((ability_id for ability_id in new_abilities.keys() if ability_id[-3] == level), None)
+                            if ability_id_replace_name:
+                                new_abilities.pop(ability_id_replace_name)
+                            new_abilities[other_ability.name] = other_ability
                             break  # Assuming you only want the first match
-                    
-                new_forgeborn = Forgeborn(original_forgeborn.id, original_forgeborn.name, new_abilities)
+                new_forgeborn = Forgeborn(original_forgeborn.id, original_forgeborn.name)
+                for name, ability in new_abilities.items():
+                    id = name 
+                    name = ability.attributes['Name']
+                    new_forgeborn.add_ability(ForgebornAbility(id, name ,ability))
+                
             else:
                 new_forgeborn = original_forgeborn
             
@@ -252,87 +303,89 @@ class Fusion(Deck):
 
 
 class UniversalCardLibrary:
-
-    entities = []
-
+   
     def __init__(self, sff_path, fb_path, syn_path):        
-        self.entities  = self._read_entities_from_csv(sff_path)
-        self.forgeborn = self._read_forgeborn_from_csv(fb_path)
+        self.entities  = []
+        self.forgeborns = {}
+        self.unique_forgeborns = {}
+        self._read_entities_from_csv(sff_path)
 
-
-    def _read_forgeborn_from_csv(self, csv_path):
-        forgeborn = {}
-        with open(csv_path, 'r') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=',')
-            for row in reader:
-                id   = row['id']
-                id   = id.replace('0', '2')                
-                re.sub(r'^a', 's', id)
-                title =  row['Forgeborn']                                  
-                abilities = {}
-                for level in range(3):                    
-                    level += 2
-                    name = row[f"{level}name"] if row.get(f"{level}name") else ""
-                    text = row[f"{level}text"] if row.get(f"{level}text") else ""                 
-                    name = f"{level}{name}"   
-                    abilities[name] = self.search_entity(name,'Ability')
-                #print(f"Forgeborn:  [{id}] {title} {','.join(ability.name for ability in abilities.values())}")
-                forgeborn[id] = Forgeborn(id, title, abilities)
-        return forgeborn
-        
-
-    def _read_entities_from_csv(self, csv_path):   
+    def _read_entities_from_csv(self, csv_path):
         with open(csv_path, 'r') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=';')
-            for row in reader:    
-                keys = ['rarity', 'cardType', 'cardSubType', 'spliced', 'solbind']            
-                attributes = {k: row[k] for k in keys if k in row}
-                name = row['Name']
-                faction = row['faction']  
-                abilities = {}
-                
-                for ability in row.keys():
-                    if ability.endswith('text'):
-                        level = int(ability[0])
-                        attack = int(row[f"{level}attack"]) if row.get(f"{level}attack") else 0
-                        health = int(row[f"{level}health"]) if row.get(f"{level}health") else 0
-                        abilities[level] = {
-                            'text': row[ability],
-                            'attack': attack,
-                            'health': health
-                        }
-                                                 
-                Collection = InterfaceCollection(name)
-                
-                read_synergies = False
-                for key, value in row.items():
-                    if key == "3text":
-                        read_synergies = True   
-                    elif read_synergies:
-                        range   = None                # Default: Any                           
-                        if value is not None:                             
-                            if not value.isnumeric():
-                                if key == "Free":                                    
-                                    key = f"Free {value}"            
-                                    value = 1
-                                    
-                                else: 
-                                    range = value
-                                    if   value == '*':  value = 1                                        
-                                    elif value == '+':  value = 1
-                                    elif value == '.':  value = 0
-                                    else:
-                                        range = ''
-                                        value = 0
+            for row in reader:
+                self._process_row(row)
 
-                                    
-                            if int(value) > 0:                                                                    
-                                
-                                    ISyn = Interface(name, key=key, value=value, range=range)                                    
-                                    Collection.add(ISyn)
-                                                                    
-                self.entities.append(Entity(name, faction, attributes, abilities, Collection))
-        return self.entities
+    def _process_row(self, row):
+        keys = ['Name', 'rarity', 'cardType', 'cardSubType', 'spliced', 'solbind']
+        attributes = {k: row[k] for k in keys if k in row}
+        name = row['Name']
+        faction = row['faction']
+        abilities = {}
+
+        for key in row.keys():
+            if key.endswith('text'):
+                level = int(key[0])
+                attack = int(row[f"{level}attack"]) if row.get(f"{level}attack") else 0
+                health = int(row[f"{level}health"]) if row.get(f"{level}health") else 0
+                abilities[level] = {
+                    'text': row[key],
+                    'attack': attack,
+                    'health': health
+                }
+
+        Collection = InterfaceCollection(name)
+
+        read_synergies = False
+        for key, value in row.items():
+            if key == "3text":
+                read_synergies = True
+            elif read_synergies:
+                range = None  # Default: Any
+                if value is not None:
+                    if not value.isnumeric():
+                        if key == "Free":
+                            key = f"Free {value}"
+                            value = 1
+                        else:
+                            range = value
+                            if value == '*':
+                                value = 1
+                            elif value == '+':
+                                value = 1
+                            elif value == '.':
+                                value = 0
+                            else:
+                                range = ''
+                                value = 0
+
+                    if int(value) > 0:
+                        ISyn = Interface(name, key=key, value=value, range=range)
+                        Collection.add(ISyn)
+
+        is_forgeborn_ability = attributes['cardType'] == 'forgeborn-ability'
+        
+        entity = Entity(name if not is_forgeborn_ability else row['id'] , faction, attributes, abilities, Collection)
+        self.entities.append(entity)
+
+        # Process Forgeborn abilities
+        if is_forgeborn_ability:
+            ability = ForgebornAbility(row['id'], name, entity)
+            self._process_forgeborn_ability(ability)
+
+    def _process_forgeborn_ability(self, ability):
+        
+        forgeborn_id   = ability.id[0:-5]
+        forgeborn_name = forgeborn_id[5:]
+                
+        # Handle Forgeborn
+        # Create or update Forgeborn entry
+        if forgeborn_id not in self.unique_forgeborns:
+            self.unique_forgeborns[forgeborn_id] = Forgeborn(forgeborn_id, forgeborn_name)
+
+        # Add abilities to the Forgeborn
+        self.unique_forgeborns[forgeborn_id].add_ability(ability)        
+
 
     def search_entity(self,name, cardType=None):
         #print(f"Searching Entity: {name}")
@@ -344,8 +397,8 @@ class UniversalCardLibrary:
         return None
 
     def get_forgeborn(self, id):
-        if id in self.forgeborn:
-            return self.forgeborn[id]
+        if id in self.forgeborns:
+            return self.forgeborns[id]
         print(f"Forgeborn {id} could not be found")
         return None
 
@@ -378,8 +431,11 @@ class UniversalCardLibrary:
                     forgeborn = deck_data['forgeborn']
                     forgebornId = forgeborn['id']
                 forgebornId = forgebornId.replace('0','2')
-                forgebornKey = [key for key in self.forgeborn if forgebornId in key]
-                forgeborn = self.forgeborn[forgebornKey[0]]
+                # Get Forgeborn with permutation 
+                forgeborn_id = forgebornId[:-3] 
+                forgebornKey = [key for key in self.unique_forgeborns if forgeborn_id in key]
+                forgeborn_unique = self.unique_forgeborns[forgebornKey[0]]
+                forgeborn = forgeborn_unique.get_permutation(forgebornId)
             
 
             except Exception as e:
@@ -467,6 +523,7 @@ class UniversalCardLibrary:
                 return Card(card_entity, modifier_entity)
 
         # If no entities found, create a card with just the card title
+        print(f"Entity not found: {card_title}")
         return Card(Entity(name=card_title, cardType='Unknown'))
                 
     def __str__(self):

@@ -28,7 +28,7 @@ FREE MAGE;1;Free Mage;Mage;
 UPGRADE;1;Upgrade Synergy;Upgrade;
 REPLACE;1;Replace Profit;Replace Setup;
 SELFDAMAGE;1;Self Damage Payoff;Self Damage Activator;
-DESTRUCTION;1;SelfDestruction Activator;Destruction Synergy;
+DESTRUCTION;1;Destruction Activator;Destruction Synergy;
 DEPLOY;1;Reanimate Activator;Deploy;
 READY;1;Reanimate Activator;Activate;
 FORGEBORN;1;Forgeborn Synergy;Forgeborn Ability;

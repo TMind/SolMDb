@@ -4,20 +4,20 @@
 
         {
             "name": "Python: UCL Gui",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/SolDB-GUI.py",
             "console": "integratedTerminal",            
-            "justMyCode": True
+            "justMyCode": true
         },
         {
             "name": "Python: UCL",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "SolDB.py",
             "console": "integratedTerminal",
-            "justMyCode": True,
-            "args": ["--username","TMind", "--eval", "tmind"]
+            "justMyCode": true,
+            "args": ["--username","tmind", "--eval", "tmind"]
         },
     ]
 }

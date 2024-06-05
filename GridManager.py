@@ -3,6 +3,7 @@ import pandas as pd
 import qgrid
 import ipywidgets as widgets
 from IPython.display import display, clear_output
+import GlobalVariables as gv
 
 class GridManager:
     EVENT_DF_STATUS_CHANGED = 'df_status_changed'
@@ -281,3 +282,216 @@ class PandasGrid(BaseGrid):
     def render_main_widget(self):
         #print("PandasGrid::render_main_widget() - Displaying DataFrame pure")
         display(self.df_versions['default'])
+
+
+
+
+
+class FilterGrid:
+    """
+    Manages the grid for filtering data based on user-defined criteria.
+    """
+    def __init__(self, update_decks_display):
+        """
+        Initializes a new instance of the FilterGrid class.
+
+        Args:
+            update_decks_display (function): The function to call when the filter grid is updated.
+        """
+        self.update_decks_display = update_decks_display
+        self.df = self.create_initial_dataframe()
+        self.qgrid_filter = self.create_filter_qgrid()
+        self.selection_box, self.selection_widgets = self.create_selection_box()
+
+    def create_filter_qgrid(self):
+        """
+        Creates the filter qgrid.
+
+        Returns:
+            qgrid.QGridWidget: The qgrid widget for filtering.
+        """
+        qgrid_filter = qgrid.show_grid(
+            self.df,
+            grid_options={'forceFitColumns': False, 'minVisibleRows': 4, 'maxVisibleRows': 5, 'enableColumnReorder': False},
+            column_definitions={'index': {'width': 50}, 'op1': {'width': 50}, 'op2': {'width': 50}},
+            show_toolbar=True
+        )
+        qgrid_filter.layout = widgets.Layout(height='auto')
+        qgrid_filter.on('row_added', self.grid_filter_on_row_added)
+        qgrid_filter.on('row_removed', self.grid_filter_on_row_removed)
+        qgrid_filter.on('cell_edited', self.on_cell_edit)
+        return qgrid_filter
+
+    @staticmethod
+    def create_initial_dataframe():
+        """
+        Creates the initial dataframe for the filter grid.
+
+        Returns:
+            pandas.DataFrame: The initial dataframe.
+        """
+        return pd.DataFrame({
+            'Modifier': [''],
+            'op1': [''],
+            'Creature': [''],
+            'op2': [''],
+            'Spell': [''],
+            'Active': [False]
+        })
+
+    def grid_filter_on_row_removed(self, event, widget):
+        """
+        Handles the 'row_removed' event for the filter grid.
+
+        Args:
+            event (dict): The event data.
+            widget (qgrid.QGridWidget): The filter grid widget.
+        """
+        if 0 in event['indices']:
+            df = self.create_initial_dataframe()
+            widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
+            event['indices'].remove(0)
+        
+        if event['indices']:
+            active_rows = widget.df[widget.df['Active'] == True]
+            self.update_decks_display({'new': active_rows, 'old': None, 'owner': 'filter'})
+        
+        
+
+    def grid_filter_on_row_added(self, event, widget):
+        """
+        Handles the 'row_added' event for the filter grid.
+
+        Args:
+            event (dict): The event data.
+            widget (qgrid.QGridWidget): The filter grid widget.
+        """
+        new_row_index = event['index']
+        df = widget.get_changed_df()
+
+        # Set the values for each column in the new row
+        for column in df.columns:
+            if column in ['op1', 'op2', 'Active']:  # Directly use the value for these fields
+                df.at[new_row_index, column] = self.selection_widgets[column].value
+            else:  # Assume these are multi-select fields and join their values
+                df.at[new_row_index, column] = ', '.join(self.selection_widgets[column].value)
+        
+        widget.df = df
+        
+
+        if widget.df.loc[new_row_index, 'Active']:
+            self.update_decks_display({'new': new_row_index, 'old': None, 'owner': 'filter'})
+
+    def on_cell_edit(self, event, widget):
+        """
+        Handles the 'cell_edited' event for the filter grid.
+
+        Args:
+            event (dict): The event data.
+            widget (qgrid.QGridWidget): The filter grid widget.
+        """
+        row_index, column_index = event['index'], event['column']
+        widget.df.loc[row_index, column_index] = event['new']
+        
+        if column_index == 'Active' or widget.df.loc[row_index, 'Active']:
+            self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})
+
+    def update_selection_content(self, change):
+        """
+        Updates the selection content based on changes in the widget values.
+
+        Args:
+            change (dict): The change notification data.
+        """
+        if change['name'] == 'value' and change['new'] != change['old']:
+            for cardType in ['Modifier', 'Creature', 'Spell']:
+                widget = self.selection_widgets[cardType]
+                widget.options = [''] + get_cardType_entity_names(cardType)
+
+    def create_cardType_names_selector(self, cardType):
+        """
+        Creates a selector for the names of card types.
+
+        Args:
+            cardType (str): The type of card.
+
+        Returns:
+            ipywidgets.SelectMultiple: The selector widget.
+        """
+        cardType_entity_names = [''] + get_cardType_entity_names(cardType)
+        cardType_name_widget = widgets.SelectMultiple(
+            options=cardType_entity_names,
+            description='',
+            value=()
+        )
+        return cardType_name_widget
+
+    def create_selection_box(self):
+        """
+        Creates a selection box containing widgets for each card type.
+
+        Returns:
+            tuple: A tuple containing the selection box widget and a dictionary of individual selection widgets.
+        """
+        selection_widgets = {}
+        selection_items = {}
+        for cardType in ['Modifier', 'Creature', 'Spell']:
+            widget = self.create_cardType_names_selector(cardType)
+            if cardType == 'Modifier':
+                label=widgets.Label(value='( Modifier')
+            elif cardType == 'Creature':
+                label=widgets.Label(value='Creature )')
+            else:                
+                label = widgets.Label(value=f'{cardType}')
+            selection_widgets[cardType] = widget
+            selection_items[cardType] = widgets.VBox([label, widget], layout=widgets.Layout(align_items='center'))
+
+        operator_widgets = {
+            'op1': widgets.Dropdown(options=['+', 'AND', 'OR', ''], description='', layout=widgets.Layout(width='60px'), value=''),
+            'op2': widgets.Dropdown(options=['AND', 'OR', ''], description='', layout=widgets.Layout(width='60px'), value=''),
+            'Active': widgets.Checkbox(value=True, description='Activated')
+        }
+        for name, widget in operator_widgets.items():
+            label = widgets.Label(value='Operator' if 'op' in name else 'Active')
+            selection_widgets[name] = widget
+            selection_items[name] = widgets.VBox([label, widget], layout=widgets.Layout(align_items='center'))
+
+        selection_box = widgets.HBox([selection_items[name] for name in ['Modifier', 'op1', 'Creature', 'op2', 'Spell', 'Active']])
+        return selection_box, selection_widgets
+
+    def get_changed_df(self):
+        """
+        Returns the current DataFrame with any user changes.
+
+        Returns:
+            pandas.DataFrame: The changed dataframe.
+        """
+        return self.qgrid_filter.get_changed_df()
+
+    def get_widgets(self):
+        """
+        Returns the widgets associated with the filter grid.
+
+        Returns:
+            tuple: A tuple containing the selection box and the filter qgrid widget.
+        """
+        return self.selection_box, self.qgrid_filter
+
+
+def get_cardType_entity_names(cardType):
+    """
+    Retrieves the names of entities that match the specified card type.
+
+    Args:
+        cardType (str): The type of card.
+
+    Returns:
+        list: A list of entity names that match the card type.
+    """
+    cardType_entities = gv.commonDB.find('Entity', {"attributes.cardType": cardType})
+    cardType_entities_names = [entity['name'] for entity in cardType_entities]
+    cards = gv.myDB.find('Card', {})
+    cardNames = [card.get('title', card.get('name', '')) for card in cards]
+    cardType_entities_names = [name for name in cardType_entities_names if any(name in cardName for cardName in cardNames)]
+    cardType_entities_names.sort()
+    return cardType_entities_names

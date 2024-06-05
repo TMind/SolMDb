@@ -12,13 +12,14 @@ import os, time, re
 from pathlib import Path
 from multiprocessing import Pool, cpu_count,Event
 from MongoDB.DatabaseManager import DatabaseManager
-import GlobalVariables
+import GlobalVariables as gv
 
 def main(args):    
-    GlobalVariables.username = args.username or 'Default'
+    gv.username = args.username or 'Default'
 
     uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
-    myDB = DatabaseManager(GlobalVariables.username, uri=uri)
+    gv.myDB = DatabaseManager(gv.username, uri=gv.uri)
+    gv.commonDB = DatabaseManager('common', uri=gv.uri)
 
     synergy_template = SynergyTemplate()    
     

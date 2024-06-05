@@ -19,8 +19,7 @@ from IPython.display import display, HTML
 
 from Synergy import SynergyTemplate
 import pandas as pd
-from QGridManager import FilterGrid, get_cardType_entity_names
-from GridManager import GridManager
+from GridManager import GridManager, FilterGrid, get_cardType_entity_names
 
 from icecream import ic
 ic.disable()
@@ -99,13 +98,19 @@ qg_count_options = {
 }
 
 qg_deck_options = {
-    'col_options' :         { 'width': 50, } ,
+    'col_options' :         { 'width': 100, } ,
     'col_defs' : {                   
         'DeckName':         { 'width': 250, }, 
         'name':             { 'width': 200, },     
         'rarity':           { 'width': 125,  },        
         'cardType':         { 'width': 90,  },
         'cardSubType':      { 'width': 110,  },
+        'A1':               { 'width': 50,  },
+        'A2':               { 'width': 50,  },
+        'A3':               { 'width': 50,  },
+        'H1':               { 'width': 50,  },
+        'H2':               { 'width': 50,  },
+        'H3':               { 'width': 50,  }
     }
 }
 
@@ -212,9 +217,8 @@ def generate_deck_content_dataframe(event, widget):
 
         #Get the selection from the deck widget
         desired_fields = ['name', 'cardType', 'cardSubType', 'levels']    
-        if widget:
-            header_df = pd.DataFrame()
-            all_decks_df = pd.DataFrame()        
+        if widget:            
+            all_decks_df_list = []
             old_selection = set(event['old'])
             new_selection = set(event['new'])
             deselected_rows = old_selection - new_selection
@@ -237,6 +241,7 @@ def generate_deck_content_dataframe(event, widget):
             union_set = set(unique_deckNames) | set(selectList)
             deckList =  list(union_set - set(deselectList))            
             #deckList = ['The Reeves of Loss', 'The People of Bearing']                
+            card_dfs_list = []  # List to store DataFrames for each card
             for deckName in deckList:
                 print(f'DeckName: {deckName}')
                 #Get the Deck from the Database 
@@ -245,42 +250,51 @@ def generate_deck_content_dataframe(event, widget):
                     #print(f'Found deck: {deck}')
                     #Get the cardIds from the Deck
                     cardIds = deck['cardIds']
-                    cardTitles = []
-                    deck_df = pd.DataFrame([deck])  # Create a single row DataFrame from deck
-                    card_dfs = []  # List to store DataFrames for each card
+                    deck_df_list = pd.DataFrame([deck])  # Create a single row DataFrame from deck                    
                     for cardId in cardIds:
                         card = GlobalVariables.myDB.find_one('Card', {'_id': cardId})
                         if card:
-                            #print(f"Found card: {card['_id']}")
+                            fullCard = card 
                             # Select only the desired fields from the card document
                             card = {field: card[field] for field in desired_fields if field in card}
+
+                            # Add 'provides' and 'seeks' information
+                            providers = re.split(', |,', fullCard.get('provides', ''))
+                            seekers = re.split(', |,', fullCard.get('seeks', ''))
+
+                            # Create a dictionary with keys as item and values as True
+                            provides_dict = {item: ['provides'] for item in providers if item}
+                            seeks_dict = {item: ['seeks'] for item in seekers if item}
                             
+                            # Create a DataFrame from the dictionary
+                            #single_card_data_row = pd.DataFrame(card_dict, index=card['name'])
+
                             # Flatten the 'levels' dictionary
                             if 'levels' in card and card['levels']:
                                 levels = card.pop('levels')
                                 for level, level_data in levels.items():
                                     card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
                                     card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
-                            # Insert 'DeckName' at the beginning of the card dictionary
-                            card = {'DeckName': deckName, **card}
-                            
-                            # Create a DataFrame from the remaining card fields                            
-                            card_dfs.append(pd.DataFrame([card]))  # Add full_card_df to the list
 
-                    # Concatenate all card DataFrames along the rows axis
-                    deck_df = pd.concat(card_dfs, ignore_index=True, axis=0)
-                    # Replace empty values in the 'cardSubType' column with 'Spell'
-                    if 'cardSubType' in deck_df.columns:
-                        deck_df['cardSubType'] = deck_df['cardSubType'].replace(['', '0', 0], 'Spell')
-                        deck_df['cardSubType'] = deck_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
-                    # Create a header DataFrame with a single row containing the deck name
-                    #deckName_df = pd.DataFrame({'name': [deckName]})                
-                    #header_df = pd.concat([header_df, deckName_df], ignore_index=True, axis=0)                
-                    all_decks_df = pd.concat([all_decks_df, deck_df], ignore_index=True, axis=0)
+                            # Merge the dictionaries dictionaries
+                            card_dict = {**card, **provides_dict, **seeks_dict}
+                            
+                            # Insert 'DeckName' at the beginning of the card dictionary
+                            card = {'DeckName': deckName, **card_dict}
+
+                            # Create a DataFrame from the remaining card fields      
+                            card_df = pd.DataFrame([card])                                             
+                            card_dfs_list.append(card_df)  # Add full_card_df to the list                            
                     
             # Concatenate the header DataFrame with the deck DataFrames
-            final_df = pd.concat([header_df, all_decks_df], ignore_index=True, axis=0)        
-        return final_df.fillna('')  
+            final_df = pd.concat(card_dfs_list, ignore_index=True, axis=0)        
+
+            # Replace empty values in the 'cardSubType' column with 'Spell'
+            if 'cardSubType' in final_df.columns:
+                final_df['cardSubType'] = final_df['cardSubType'].replace(['', '0', 0], 'Spell')
+                final_df['cardSubType'] = final_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
+
+            return final_df.fillna('')
         
 
 def generate_cardType_count_dataframe(existing_df=None):
@@ -943,8 +957,8 @@ def create_database_selection_widget():
     db_list = widgets.RadioButtons(
         options= [''] + db_names ,
         description='Databases:',
-        disabled=False,
-        value=''
+        disabled=False
+        #value=''
     )
     # Set the username to the value of the selected database
     
@@ -1042,7 +1056,7 @@ def setup_interface():
     # Create qgrid widgets for the deck data, count data, and synergy data    
     qm.add_grid('collection', pd.DataFrame(), options = qg_coll_options, dependent_identifiers=['count'])
     qm.add_grid('count', pd.DataFrame(), options = qg_count_options)    
-    qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options, grid_type='pandas')
+    qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options) #, grid_type='pandas')
     
     qm.on('collection', 'selection_changed', coll_data_on_selection_changed)
     qm.on('count', 'selection_changed', coll_data_on_selection_changed)

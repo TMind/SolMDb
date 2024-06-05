@@ -55,6 +55,8 @@ class CardData():
     cardSetId: str = ''
     _id: str = ''
     rarity: str = ''
+    provides: str = ''
+    seeks: str = ''
     levels: dict = field(default_factory=dict)
     attack  : dict  =field(default_factory=dict)
     health  : dict  =field(default_factory=dict)   

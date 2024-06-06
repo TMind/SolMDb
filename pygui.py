@@ -429,7 +429,7 @@ def generate_deck_statistics_dataframe():
     try:
         deck_cursor = GlobalVariables.myDB.find('Deck', {})        
         df_decks = pd.DataFrame(list(deck_cursor))
-        df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'cardSetNo', 'faction', 'forgebornId']].copy()
+        df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId']].copy()
         df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
     except:
         print("Error reading decks from the database. Try reloading the data.")
@@ -437,6 +437,8 @@ def generate_deck_statistics_dataframe():
 
     # For column 'cardSetNo' replace the number 99 with 0 
     df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].replace(99, 0)
+    df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
+    df_decks_filtered['elo'] = df_decks_filtered['elo'].astype(float)
 
     # Add additional columns to the DataFrame -> Count
     additional_columns_count = ['Creatures', 'Spells']

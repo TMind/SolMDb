@@ -423,6 +423,8 @@ def generate_deck_statistics_dataframe():
 
     # For column 'cardSetNo' replace the number 99 with 0 
     df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].replace(99, 0)
+    df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
+    df_decks_filtered['elo'] = df_decks_filtered['elo'].astype(float)
 
     # Add additional columns to the DataFrame -> Count
     additional_columns_count = ['Creatures', 'Spells']

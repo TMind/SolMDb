@@ -415,7 +415,7 @@ def generate_deck_statistics_dataframe():
     try:
         deck_cursor = GlobalVariables.myDB.find('Deck', {})        
         df_decks = pd.DataFrame(list(deck_cursor))
-        df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'cardSetNo', 'faction', 'forgebornId']].copy()
+        df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId']].copy()
         df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
     except:
         print("Error reading decks from the database. Try reloading the data.")

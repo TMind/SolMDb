@@ -7,7 +7,7 @@ import numpy as np
 #import qgrid
 
 import GlobalVariables
-from CardLibrary import Deck, FusionData, Fusion
+from Card_Library import Deck, FusionData, Fusion
 from UniversalLibrary import UniversalLibrary
 from DeckLibrary import DeckLibrary
 from MongoDB.DatabaseManager import DatabaseManager

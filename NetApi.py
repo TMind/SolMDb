@@ -1,7 +1,7 @@
 import requests
 import json
 from UniversalLibrary import UniversalLibrary
-from CardLibrary import Fusion
+from Card_Library import Fusion
 from typing import List, Tuple, Dict
 from tqdm import tqdm
 

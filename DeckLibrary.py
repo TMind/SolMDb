@@ -1,6 +1,6 @@
 from MyGraph import MyGraph
 from MongoDB.DatabaseManager import DatabaseManager
-from CardLibrary import  Fusion, FusionData, Deck, Card
+from Card_Library import  Fusion, FusionData, Deck, Card
 from tqdm import tqdm 
 from MultiProcess import MultiProcess
 from tqdm import tqdm

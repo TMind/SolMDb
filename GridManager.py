@@ -30,8 +30,11 @@ class GridManager:
         self.outputs[identifier] = widgets.Output()
 
         self._setup_grid_events(identifier, grid)
-        #print(f"GridManager::add_grid() - Grid {identifier} added. Appending to main_output.")
+        with self.outputs['debug']:
+            print(f"GridManager::add_grid() - Grid {identifier} added. Appending to main_output.")        
+        self.outputs[identifier].append_display_data(grid.get_grid_box())            
         self.main_output.append_display_data(self.outputs[identifier])
+        
 
     def get_grid_df(self, identifier, version='default'):
         grid = self.grids.get(identifier)
@@ -46,13 +49,16 @@ class GridManager:
         return None
 
     def replace_grid(self, identifier, new_df):
+        print(f"GridManager::replace_grid() - Replacing grid {identifier} with new DataFrame")
         grid = self.grids.get(identifier)
-        output = self.outputs.get(identifier)
+        #output = self.outputs.get(identifier)
 
-        if grid and output:
+        if grid:
             grid.update_main_widget(new_df)
-            self.display_grid(identifier)
-            self.synchronize_widgets(identifier)
+            print(f"GridManager::replace_grid() - Calling display_grid for {identifier}")
+            #self.display_grid(identifier)
+            #self.display_registered_events()
+            #self.synchronize_widgets(identifier)
             #if isinstance(grid, QGrid):
             #    self.update_visible_columns(None, grid.main_widget)
 
@@ -60,20 +66,25 @@ class GridManager:
             output = self.outputs.get(identifier)
             grid = self.grids.get(identifier)
             if grid and output:
-                with output:
-                    clear_output(wait=True)
-                    if isinstance(grid, QGrid):
-                        #print(f"display_grid()::Rendering QGrid for {identifier}")
-                        display(widgets.VBox([grid.toggle_widget, grid.main_widget]))
-                    else:
-                        #print(f"display_grid()::Rendering PandasGrid for {identifier}")
-                        grid.render_main_widget()  # Render within the main widget context
+                print(f"before clear_output(wait=True): {identifier} {output}")
+                output.clear_output(wait=True)                
+                print(f"after clear_output(wait=True): {identifier} {output}")
+                if isinstance(grid, QGrid):
+                    print(f"display_grid()::Rendering QGrid for {identifier}")
+                    output.append_display_data(widgets.VBox([grid.toggle_widget, grid.main_widget]))
+    
+                else:
+                    #with self.outputs['debug']:
+                    print(f"display_grid()::Rendering PandasGrid for {identifier}")
+                    grid.render_main_widget()  # Render within the main widget context
             else:
-                print(f"display_grid()::Grid identifier {identifier} or output widget not found.")
+                with self.outputs['debug']:
+                    print(f"display_grid()::Grid identifier {identifier} or output widget not found.")
 
     def reset_dataframe(self, identifier):
         grid = self.grids.get(identifier)
         if grid:
+            print(f"GridManager::reset_dataframe() - Resetting DataFrame for {identifier}")
             grid.reset_dataframe()
 
     def set_default_data(self, identifier, new_data):
@@ -130,7 +141,8 @@ class GridManager:
             dependent_grid = self.grids[dependent_identifier]
             dependent_df = dependent_grid.df_versions['default']
             filtered_df = dependent_df[dependent_df.index.isin(master_df.index)]
-            self.replace_grid(dependent_identifier, filtered_df)
+            print(f"Synchronizing {dependent_identifier} with {master_identifier}")
+            #self.replace_grid(dependent_identifier, filtered_df)
 
     def _setup_grid_events(self, identifier, grid):
         def on_toggle_change(event, qgrid_widget):
@@ -197,6 +209,17 @@ class GridManager:
                     for callback in callbacks:
                         grid.main_widget.on(event_name, callback)
 
+    def display_registered_events(self):
+        print("Registered GridManager events:")
+        for identifier, events in self.callbacks.items():
+            for event_name, callbacks in events.items():
+                print(f"Identifier: {identifier}, Event: {event_name}, Callbacks: {len(callbacks)}")
+
+        print("\nRegistered QGrid events:")
+        for identifier, events in self.qgrid_callbacks.items():
+            for event_name, callbacks in events.items():
+                print(f"Identifier: {identifier}, Event: {event_name}, Callbacks: {len(callbacks)}")
+
     def trigger(self, event_name, *args, **kwargs):
         for identifier in self.callbacks:
             for callback in self.callbacks[identifier].get(event_name, []):
@@ -235,6 +258,9 @@ class BaseGrid:
         toggle_grid.layout = widgets.Layout(height='65px')
         return toggle_grid
 
+    def get_grid_box(self):
+        return widgets.VBox([self.toggle_widget, self.main_widget])
+
     def update_main_widget(self, new_df):
         raise NotImplementedError("Subclasses should implement this method.")
 
@@ -257,6 +283,7 @@ class BaseGrid:
 
 class QGrid(BaseGrid):
     def create_main_widget(self, df):
+        print("QGrid::create_main_widget() - Creating QGrid")
         self.main_widget = qgrid.show_grid(
             df,
             column_options=self.grid_options.get('col_options', {}),

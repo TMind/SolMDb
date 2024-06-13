@@ -56,7 +56,7 @@ qgrid_widget_options = {}
 filter_grid = None 
 global_df = None
 
-out = widgets.Output()
+out_main = widgets.Output()
 out_qm = widgets.Output()
 out_debug = widgets.Output()
 
@@ -606,7 +606,7 @@ def coll_data_on_filter_changed():
 def coll_data_on_selection_changed(event, widget):
     global qm
     # Generate a DataFrame from the selected rows
-    #print(f"Selection changed: {event}")
+    print(f"Selection changed: {event}")
     deck_df = generate_deck_content_dataframe(event, widget)    
     qm.replace_grid('deck', deck_df)    
     qm.set_default_data('deck', deck_df)
@@ -681,6 +681,8 @@ def handle_debug_toggle(change):
 def handle_db_list_change(change):
     global username
 
+    print(f"DB List Change: {change}")
+
     if change['name'] == 'value' and change['old'] != change['new']:
         new_username = change['new'] #or ""  # Ensure new_username is a string
 
@@ -724,8 +726,6 @@ def reload_data_on_click(button, value):
         load_deck_data(args)
     elif value == 'Entities':
         myUCL._read_entities_from_csv(os.path.join('csv', 'sff.csv'))
-    elif value == 'Forgeborns':
-        myUCL._read_forgeborn_from_csv(os.path.join('csv', 'forgeborn.csv'))
 
     # Refresh db_list widget
     db_names = GlobalVariables.myDB.mdb.client.list_database_names()
@@ -756,12 +756,12 @@ def display_graph_on_click(button):
         if fusionCursor: 
             for fusion in fusionCursor:
                 myFusion = Fusion.from_data(fusion)
-                show_deck_graph(myFusion, out)
+                show_deck_graph(myFusion, out_main)
         else:
             # Create a new fusion based on the decknames
             newFusionData = FusionData(name=fusionName, myDecks=[myDeckA, myDeckB],tags=['forged'] )
             newFusion = Fusion(newFusionData)
-            show_deck_graph(newFusion, out)
+            show_deck_graph(newFusion, out_main)
                 
     else: 
         for deck in [myDeckA , myDeckB] :
@@ -788,6 +788,7 @@ def update_decks_display(change):
 
     if change['new'] or change['new'] == '':                       
         if change['owner'] == db_list:
+            print(f"Updating Decks Display for widget db_list")
             # Generate new DataFrame with new database
             default_coll_df = generate_deck_statistics_dataframe() 
             default_count_df = generate_cardType_count_dataframe(default_coll_df)            
@@ -796,19 +797,24 @@ def update_decks_display(change):
             qm.set_default_data('count', default_count_df)
 
             # Replace the data in the qgrid widgets
+            print(f"Replacing Grid collection with default data")
             qm.replace_grid('collection', default_coll_df)
+            print(f"Replacing Grid count with default data")
             qm.replace_grid('count', default_count_df)
         
-        default_coll_df = qm.get_default_data('collection')
+        else:
+            print(f"Updating Decks Display with FilterGrid")
+            default_coll_df = qm.get_default_data('collection')
 
-        # Apply the filter from FilterGrid                
-        if filter_grid:                                
-            filter_df = filter_grid.get_changed_df()  
-            #print(change['new']  )                   
-            filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
-            qm.replace_grid('collection', filtered_df)
-            qm.reset_dataframe('deck')
-    
+            # Apply the filter from FilterGrid                
+            if filter_grid:                                
+                filter_df = filter_grid.get_changed_df()  
+                #print(change['new']  )                   
+                filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
+                print(f"Replacing Grid collection with filtered data")
+                qm.replace_grid('collection', filtered_df)
+                qm.reset_dataframe('deck')
+        
 
 def update_filter_widget(change=None):
     global cardTypes_names_widget
@@ -978,56 +984,6 @@ def create_database_selection_widget():
 
     return db_list
 
-def create_cardType_names_dropdown(cardTypes):
-    cardType_entity_names = []
-    for cardType in cardTypes.split('/'):
-        cardType_entity_names = cardType_entity_names + get_cardType_entity_names(cardType)
-
-    cardType_entity_names = [''] + cardType_entity_names 
-
-    cardType_name_widget = widgets.Dropdown(
-        options=cardType_entity_names,
-        description='',
-        ensure_option=False,
-        layout=widgets.Layout(width="200px"),
-        value=''
-    )
-    return cardType_name_widget
-
-
-
-def create_filter_widgets():
-    global cardTypes_names_widget
-
-    # Initialize two empty lists to hold the labels and widgets
-    label_items = []
-    dropdown_items = []    
-
-    for cardTypesString in ['Modifier', 'Creature/Spell' ] :
-        cardType_names_widget = create_cardType_names_dropdown(cardTypesString)        
-        #print(f"Adding {cardTypesString} widget")
-        cardTypes_names_widget[cardTypesString] = cardType_names_widget
-        cardType_names_widget.observe(update_decks_display, 'value')
-        cardType_names_widget.observe(update_filter_widget, names='value')
-        
-        # Create a label for the widget with the same layout
-        label = widgets.Label(value=f'{cardTypesString} Names:', layout=cardType_names_widget.layout)
-
-        # Add the label to the label_items list and the widget to the widget_items list
-        label_items.append(label)
-        dropdown_items.append(cardType_names_widget)
-    
-    # Create HBoxes for the labels and widgets
-    label_box = widgets.HBox(label_items)
-    dropdown_box = widgets.HBox(dropdown_items)    
-    
-    # Create a caption for the grid with bold text
-    caption = widgets.HTML(value='<b>Filter:</b>')
-
-    # Create a VBox to arrange the caption, labels, and widgets vertically
-    grid = widgets.VBox([caption, label_box, dropdown_box])
-    return grid
-
 ############################
 # Setup and Initialization #
 ############################
@@ -1035,7 +991,7 @@ import json
 def setup_interface():
     global db_list, username, button_load, card_title_widget, \
         qg_coll_options, qg_count_options, qg_syn_options, \
-        filter_grid, out_qm, out, qm
+        filter_grid, out_qm, out_main, qm
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
@@ -1077,11 +1033,11 @@ def setup_interface():
     db_list.observe(handle_db_list_change, names='value')
 
     # Filter widgets
-    grid_filter = create_filter_widgets()
     filter_grid_object = FilterGrid(update_decks_display)
     selection_grid, filter_grid = filter_grid_object.get_widgets()
     filterBox = widgets.VBox([selection_grid, filter_grid])
 
+    # Update the filter grid on db change
     db_list.observe(filter_grid_object.update_selection_content)
 
     # Button to load decks / fusions / forgborns 
@@ -1096,7 +1052,7 @@ def setup_interface():
     debug_toggle.observe(handle_debug_toggle, 'value')
 
     # Toggle Box 
-    toggle_box = widgets.VBox([loadToggle,  button_load, username, db_list, grid_filter, debug_toggle])    
+    toggle_box = widgets.VBox([loadToggle,  button_load, username, db_list, debug_toggle])    
 
     # Display the widgets    
     display(out_debug)
@@ -1105,7 +1061,7 @@ def setup_interface():
     display(filterBox)    
     display(out_qm)    
     #display(button_graph)
-    display(out)         
+    #display(out_main)         
     #display(*toggle_dropdown_pairs, button_graph)
 
 

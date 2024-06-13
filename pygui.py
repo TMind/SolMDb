@@ -599,10 +599,6 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
 # Event Handling #
 ##################
 
-def coll_data_on_filter_changed():
-    update_visible_rows_on_count()
-    update_visible_columns_on_count()
-
 def coll_data_on_selection_changed(event, widget):
     global qm
     # Generate a DataFrame from the selected rows
@@ -610,18 +606,7 @@ def coll_data_on_selection_changed(event, widget):
     deck_df = generate_deck_content_dataframe(event, widget)    
     qm.replace_grid('deck', deck_df)    
     qm.set_default_data('deck', deck_df)
-    
-def update_visible_rows_on_count():
-    global qm
-
-    source_qgrid = qm.grids['collection']['main_widget']
-
-    # Update the widget's DataFrame     
-    df = qm.get_default_data('count')
-    source_df = source_qgrid.get_changed_df()
-    #qm.update_data('count', get_dataframe_apply_index_filter(source = source_df, target = df))
-    #TODO: Update count grid visible rows
-    
+        
 def get_dataframe_apply_index_filter(source, target):
     # Initialize a list to store the filtered rows
     filtered_rows = []
@@ -1014,7 +999,7 @@ def setup_interface():
     # Create qgrid widgets for the deck data, count data, and synergy data    
     qm.add_grid('collection', pd.DataFrame(), options = qg_coll_options, dependent_identifiers=['count'])
     qm.add_grid('count', pd.DataFrame(), options = qg_count_options)    
-    qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options) #, grid_type='pandas')
+    qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options)
     
     qm.on('collection', 'selection_changed', coll_data_on_selection_changed)
     qm.on('count', 'selection_changed', coll_data_on_selection_changed)

@@ -1,5 +1,5 @@
 from DeckLibrary    import DeckLibrary
-from Card_Library   import UniversalCardLibrary
+from CardLibrary   import UniversalCardLibrary
 from CacheManager   import CacheManager
 from Synergy        import SynergyTemplate
 from NetApi         import NetApi

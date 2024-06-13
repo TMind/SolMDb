@@ -1,4 +1,4 @@
-from Card_Library import Deck, Fusion
+from CardLibrary import Deck, Fusion
 from tqdm import tqdm 
 from itertools import combinations
 from multiprocessing import Pool, cpu_count, Event

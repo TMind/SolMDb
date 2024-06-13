@@ -24,6 +24,35 @@ from GridManager import GridManager, FilterGrid, get_cardType_entity_names
 from icecream import ic
 ic.disable()
 
+
+# Custom CSS style
+
+custom_css = """
+<style>
+/* Customizes the scrollbar within qgrid */
+.q-grid ::-webkit-scrollbar {
+    width: 5px;  /* Smaller width for vertical scrollbar */
+    height: 5px; /* Smaller height for horizontal scrollbar */
+}
+
+.q-grid ::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background: rgba(0,0,0,0.1); /* Light background for the track */
+}
+
+.q-grid ::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: rgba(128,128,128,0.8); /* Lighter gray color for the thumb */
+}
+
+.q-grid ::-webkit-scrollbar-thumb:hover {
+    background: rgba(90,90,90,0.8); /* Slightly darker gray on hover */
+}
+</style>
+"""
+display(HTML(custom_css))  
+
+
 # Enable qgrid to automatically display all DataFrame and Series instances
 #qgrid.enable(dataframe=True, series=True)
 #qgrid.set_grid_option('forceFitColumns', False)
@@ -113,32 +142,6 @@ qg_deck_options = {
         'H3':               { 'width': 50,  }
     }
 }
-
-custom_css = """
-<style>
-/* Customizes the scrollbar within qgrid */
-.q-grid ::-webkit-scrollbar {
-    width: 5px;  /* Smaller width for vertical scrollbar */
-    height: 5px; /* Smaller height for horizontal scrollbar */
-}
-
-.q-grid ::-webkit-scrollbar-track {
-    border-radius: 10px;
-    background: rgba(0,0,0,0.1); /* Light background for the track */
-}
-
-.q-grid ::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    background: rgba(128,128,128,0.8); /* Lighter gray color for the thumb */
-}
-
-.q-grid ::-webkit-scrollbar-thumb:hover {
-    background: rgba(90,90,90,0.8); /* Slightly darker gray on hover */
-}
-</style>
-"""
-display(HTML(custom_css))
-
 
 ######################
 # Network Operations #
@@ -782,9 +785,9 @@ def update_decks_display(change):
             qm.set_default_data('count', default_count_df)
 
             # Replace the data in the qgrid widgets
-            print(f"Replacing Grid collection with default data")
+            #print(f"Replacing Grid collection with default data")
             qm.replace_grid('collection', default_coll_df)
-            print(f"Replacing Grid count with default data")
+            #print(f"Replacing Grid count with default data")
             qm.replace_grid('count', default_count_df)
         
         else:
@@ -796,7 +799,7 @@ def update_decks_display(change):
                 filter_df = filter_grid.get_changed_df()  
                 #print(change['new']  )                   
                 filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
-                print(f"Replacing Grid collection with filtered data")
+                #print(f"Replacing Grid collection with filtered data")
                 qm.replace_grid('collection', filtered_df)
                 qm.reset_dataframe('deck')
         
@@ -1043,11 +1046,14 @@ def setup_interface():
     display(out_debug)
     display(toggle_box) 
     #display(df_status_widget) 
-    display(filterBox)    
+    display(filterBox)      
     display(out_qm)    
     #display(button_graph)
     #display(out_main)         
     #display(*toggle_dropdown_pairs, button_graph)
 
 
+    from ipywidgets.embed import embed_minimal_html
+    widget_list = [filterBox, out_qm]
 
+    embed_minimal_html('export.html', views=widget_list, title='Widgets export')

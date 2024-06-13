@@ -2,9 +2,10 @@ from datetime import datetime
 import pandas as pd
 import qgrid
 import ipywidgets as widgets
-from IPython.display import display, clear_output
+from IPython.display import display, clear_output, HTML
 import GlobalVariables as gv
 
+# Simplified GridManager implementation
 class GridManager:
     EVENT_DF_STATUS_CHANGED = 'df_status_changed'
 
@@ -20,11 +21,7 @@ class GridManager:
         if dependent_identifiers is None:
             dependent_identifiers = []
 
-        if grid_type == 'qgrid':
-            grid = QGrid(identifier, df, options)
-        else:
-            grid = PandasGrid(identifier, df, options)
-
+        grid = QGrid(identifier, df, options) if grid_type == 'qgrid' else PandasGrid(identifier, df, options)
         self.grids[identifier] = grid
         self.relationships[identifier] = dependent_identifiers
         self.outputs[identifier] = widgets.Output()
@@ -45,41 +42,14 @@ class GridManager:
                 if v == version:
                     version_passed = True
                 if version_passed and df is not None and not df.empty:
-                    return df                        
+                    return df
         return None
 
     def replace_grid(self, identifier, new_df):
         print(f"GridManager::replace_grid() - Replacing grid {identifier} with new DataFrame")
         grid = self.grids.get(identifier)
-        #output = self.outputs.get(identifier)
-
         if grid:
             grid.update_main_widget(new_df)
-            print(f"GridManager::replace_grid() - Calling display_grid for {identifier}")
-            #self.display_grid(identifier)
-            #self.display_registered_events()
-            #self.synchronize_widgets(identifier)
-            #if isinstance(grid, QGrid):
-            #    self.update_visible_columns(None, grid.main_widget)
-
-    def display_grid(self, identifier):
-            output = self.outputs.get(identifier)
-            grid = self.grids.get(identifier)
-            if grid and output:
-                print(f"before clear_output(wait=True): {identifier} {output}")
-                output.clear_output(wait=True)                
-                print(f"after clear_output(wait=True): {identifier} {output}")
-                if isinstance(grid, QGrid):
-                    print(f"display_grid()::Rendering QGrid for {identifier}")
-                    output.append_display_data(widgets.VBox([grid.toggle_widget, grid.main_widget]))
-    
-                else:
-                    #with self.outputs['debug']:
-                    print(f"display_grid()::Rendering PandasGrid for {identifier}")
-                    grid.render_main_widget()  # Render within the main widget context
-            else:
-                with self.outputs['debug']:
-                    print(f"display_grid()::Grid identifier {identifier} or output widget not found.")
 
     def reset_dataframe(self, identifier):
         grid = self.grids.get(identifier)
@@ -103,13 +73,11 @@ class GridManager:
             return grid.df_versions['default']
         return None
 
-
     def update_dataframe(self, identifier, new_df):
         grid = self.grids.get(identifier)
         if grid:
-            grid.update_main_widget(new_df)            
-            self.update_visible_columns(None, grid.main_widget) 
-
+            grid.update_main_widget(new_df)
+            self.update_visible_columns(None, grid.main_widget)
 
     def update_toggle_df(self, df, identifier):
         grid = self.grids.get(identifier)
@@ -125,13 +93,12 @@ class GridManager:
                         grid.toggle_widget.edit_cell('Visible', column, False)
 
     def update_visible_columns(self, event, widget):
-        current_df = widget.get_changed_df()        
-        zero_width_columns = [col for col in current_df.columns if not current_df[col].ne('').any()]        
+        current_df = widget.get_changed_df()
+        zero_width_columns = [col for col in current_df.columns if not current_df[col].ne('').any()]
         if zero_width_columns:
-            print(f"Zero width columns: {zero_width_columns}")
             for grid_id, grid_info in self.grids.items():
                 if grid_info.main_widget == widget:
-                    widget.df = current_df.drop(columns=zero_width_columns, errors='ignore')                    
+                    widget.df = current_df.drop(columns=zero_width_columns, errors='ignore')
                     self.update_toggle_df(current_df, grid_id)
 
     def synchronize_widgets(self, master_identifier):
@@ -149,15 +116,8 @@ class GridManager:
             toggled_df = grid.toggle_widget.get_changed_df()
             if 'Visible' in toggled_df.index:
                 visible_columns = [col for col in toggled_df.columns if toggled_df.loc['Visible', col]]
-            else:
-                print("'Visible' index does not exist in toggled_df")
-
             df_versions = grid.df_versions
-            if not df_versions['filtered'].empty:
-                grid.main_widget.df = df_versions['filtered'][visible_columns].copy()
-            else:
-                grid.main_widget.df = df_versions['default'][visible_columns].copy()
-
+            grid.main_widget.df = df_versions['filtered'][visible_columns].copy() if not df_versions['filtered'].empty else df_versions['default'][visible_columns].copy()
             grid.df_status['current'] = 'filtered'
             grid.df_status['last_set']['filtered'] = datetime.now()
             self.trigger(self.EVENT_DF_STATUS_CHANGED, identifier, grid.df_status)
@@ -192,9 +152,7 @@ class GridManager:
         grid = self.grids.get(identifier)
         if grid:
             grid.main_widget.on(event_name, callback)
-            if identifier not in self.qgrid_callbacks:
-                self.qgrid_callbacks[identifier] = {}
-            self.qgrid_callbacks[identifier].setdefault(event_name, []).append(callback)
+            self.qgrid_callbacks.setdefault(identifier, {}).setdefault(event_name, []).append(callback)
 
     def reapply_callbacks(self, identifier):
         grid = self.grids.get(identifier)
@@ -224,9 +182,6 @@ class GridManager:
         for identifier in self.callbacks:
             for callback in self.callbacks[identifier].get(event_name, []):
                 callback(*args, **kwargs)
-
-
-
 
 class BaseGrid:
     def __init__(self, identifier, df, options=None):
@@ -265,13 +220,6 @@ class BaseGrid:
         raise NotImplementedError("Subclasses should implement this method.")
 
     def set_dataframe_version(self, version, df):
-        """
-        Set a DataFrame for a specific version.
-
-        Parameters:
-        version (str): The version key for the DataFrame.
-        df (pd.DataFrame): The DataFrame to set.
-        """
         self.df_versions[version] = df
         self.df_status['current'] = 'filtered'
         self.df_status['last_set']['filtered'] = datetime.now()
@@ -295,22 +243,18 @@ class QGrid(BaseGrid):
     def update_main_widget(self, new_df):
         self.main_widget.df = new_df
         self.set_dataframe_version('filtered', new_df)
-        
+
 
 class PandasGrid(BaseGrid):
     def create_main_widget(self, df):
         self.update_main_widget(df)
 
     def update_main_widget(self, new_df):
-        #print("PandasGrid::update_main_widget() - Clearing Output")
         self.df_versions['default'] = new_df.copy()
-        self.set_dataframe_version('filtered', new_df)        
+        self.set_dataframe_version('filtered', new_df)
 
     def render_main_widget(self):
-        #print("PandasGrid::render_main_widget() - Displaying DataFrame pure")
         display(self.df_versions['default'])
-
-
 
 
 

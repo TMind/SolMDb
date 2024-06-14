@@ -1,6 +1,6 @@
 from MyGraph import MyGraph
 from MongoDB.DatabaseManager import DatabaseManager
-from Card_Library import  Fusion, FusionData, Deck, Card
+from CardLibrary import  Fusion, FusionData, Deck, Card
 from tqdm import tqdm 
 from MultiProcess import MultiProcess
 from tqdm import tqdm
@@ -24,7 +24,7 @@ class DeckLibrary:
                 deckDataList = []
                 cardDataList = []
                 for deckData in decks_data:
-                    deckName = deckData['name']
+                    deckName = deckData['name'] 
                     # Save only new decks
                     if deckName not in deckNamesDatabase:                         
                         self.new_decks.append(deckData)    

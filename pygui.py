@@ -7,7 +7,7 @@ import numpy as np
 #import qgrid
 
 import GlobalVariables
-from Card_Library import Deck, FusionData, Fusion
+from CardLibrary import Deck, FusionData, Fusion
 from UniversalLibrary import UniversalLibrary
 from DeckLibrary import DeckLibrary
 from MongoDB.DatabaseManager import DatabaseManager
@@ -111,7 +111,7 @@ qg_coll_options = {
         'faction':          { 'width': 100,  },
         'forgebornId':      { 'width': 100,  },
         'cardTitles':       { 'width': 200,  },
-        'FB1':              { 'width': 150,  },
+        'FB4':              { 'width': 150,  },
         'FB2':              { 'width': 150,  },
         'FB3':              { 'width': 150,  },
     }
@@ -411,14 +411,6 @@ def generate_deck_statistics_dataframe():
             print(f"Card {card_id} not found")
             return ''
 
-    def get_forgeborn_name(forgeborn_id):
-        forgeborn = GlobalVariables.commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
-        return forgeborn['name'] if forgeborn else None
-
-    def get_forgeborn_abilities(forgeborn_id):
-        forgeborn = GlobalVariables.commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
-        return forgeborn['abilities'] if forgeborn else None
-
     def get_card_titles(card_ids):
         card_titles = []
         for card_id in card_ids:
@@ -441,7 +433,18 @@ def generate_deck_statistics_dataframe():
     # For column 'cardSetNo' replace the number 99 with 0 
     df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].replace(99, 0)
     df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
-    df_decks_filtered['elo'] = df_decks_filtered['elo'].astype(float)
+
+    # Assuming 'name' is the column with names and 'elo' originally contains the values to convert
+
+    # Convert 'elo' to numeric, coercing errors to NaN
+    df_decks_filtered['elo'] = pd.to_numeric(df_decks_filtered['elo'], errors='coerce').round(2)
+
+    # Identify rows where conversion failed
+    failed_conversions = df_decks_filtered[df_decks_filtered['elo'].isna()]
+
+    # Iterate over the failed conversions to print/store the name and original 'elo' value
+    for index, row in failed_conversions.iterrows():
+        print(f"Index: {index}, Name: {row['name']}, Failed Value: {row['elo']}")
 
     # Add additional columns to the DataFrame -> Count
     additional_columns_count = ['Creatures', 'Spells']
@@ -449,7 +452,7 @@ def generate_deck_statistics_dataframe():
         df_decks_filtered.loc[:,column] = 0
 
     # Add additional columns to the DataFrame -> FB
-    additional_columns_fb = ['FB1', 'FB2', 'FB3']
+    additional_columns_fb = ['FB2', 'FB3', 'FB4']
     for column in additional_columns_fb:
         df_decks_filtered.loc[:,column] = ''
 
@@ -460,19 +463,26 @@ def generate_deck_statistics_dataframe():
             
     df_decks_filtered.set_index('name', inplace=True)
 
+    from CardLibrary import Forgeborn, ForgebornData
     # Create a DataFrame from the fb_abilities sub-dictionary
     for deck in GlobalVariables.myDB.find('Deck', {}):
         if 'forgebornId' in deck:
             forgeborn_id = deck['forgebornId']
-            forgeborn_abilities = get_forgeborn_abilities(forgeborn_id)
+            forgebornId = forgeborn_id[:-3]
+            # Get Forgeborn from the database
+            forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
+            fb_data = ForgebornData(**forgeborn_data)
+            forgeborn = Forgeborn(data = fb_data)
+            unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
+            forgeborn_abilities = unique_forgeborn.abilities 
+
             if forgeborn_abilities:
-                for i in range(len(forgeborn_abilities)):
-                    df_decks_filtered.loc[deck['name'], f'FB{i+1}'] = forgeborn_abilities[i]
+                for aID , aName in forgeborn_abilities.items():
+                    cycle = aID[-3]
+                    df_decks_filtered.loc[deck['name'], f'FB{cycle}'] = aName
 
             # Replace forgebornId with the forgeborn name from the database     
-            forgeborn_name = get_forgeborn_name(forgeborn_id) 
-            if forgeborn_name:
-                df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_name
+            df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_id[5:-3]
                 
     # Create a DataFrame from the 'stats' sub-dictionary
     for deck in GlobalVariables.myDB.find('Deck', {}):

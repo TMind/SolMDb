@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from Synergy import SynergyTemplate
-from Card_Library import Entity, Deck, Card
+from CardLibrary import Entity, Deck, Card
 from dataclasses import field
 from typing import List
 

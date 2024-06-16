@@ -50,6 +50,7 @@ class DatabaseManager:
 
     # Database functions 
     def get_record_by_name(self, collection_name, name):
+        #print(f"Getting record by name: {name} from db - collection: {self.get_current_db_name()} - {collection_name}")
         return self.find_one(collection_name, {'name': name})
 
 class DatabaseObject:

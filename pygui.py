@@ -245,6 +245,9 @@ def generate_deck_content_dataframe(event, widget):
             deckList =  list(union_set - set(deselectList))            
             #deckList = ['The Reeves of Loss', 'The People of Bearing']                
             card_dfs_list = []  # List to store DataFrames for each card
+
+            from CardLibrary import Card , CardData
+
             for deckName in deckList:
                 print(f'DeckName: {deckName}')
                 #Get the Deck from the Database 
@@ -258,6 +261,13 @@ def generate_deck_content_dataframe(event, widget):
                         card = GlobalVariables.myDB.find_one('Card', {'_id': cardId})
                         if card:
                             fullCard = card 
+
+                            # Create Graph for Card 
+                            myGraph = MyGraph()
+                            data = CardData(**fullCard)
+                            myGraph.create_graph_children(Card(data))
+                            interface_ids = myGraph.get_length_interface_ids()
+
                             # Select only the desired fields from the card document
                             card = {field: card[field] for field in desired_fields if field in card}
 
@@ -279,8 +289,8 @@ def generate_deck_content_dataframe(event, widget):
                                     card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
                                     card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
 
-                            # Merge the dictionaries dictionaries
-                            card_dict = {**card, **provides_dict, **seeks_dict}
+                            # Merge the dictionaries
+                            card_dict = {**card, **interface_ids}
                             
                             # Insert 'DeckName' at the beginning of the card dictionary
                             card = {'DeckName': deckName, **card_dict}
@@ -290,15 +300,18 @@ def generate_deck_content_dataframe(event, widget):
                             card_dfs_list.append(card_df)  # Add full_card_df to the list                            
                     
             # Concatenate the header DataFrame with the deck DataFrames
-            final_df = pd.concat(card_dfs_list, ignore_index=True, axis=0)        
+            if card_dfs_list:
+                final_df = pd.concat(card_dfs_list, ignore_index=True, axis=0)        
 
-            # Replace empty values in the 'cardSubType' column with 'Spell'
-            if 'cardSubType' in final_df.columns:
-                final_df['cardSubType'] = final_df['cardSubType'].replace(['', '0', 0], 'Spell')
-                final_df['cardSubType'] = final_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
+                # Replace empty values in the 'cardSubType' column with 'Spell'
+                if 'cardSubType' in final_df.columns:
+                    final_df['cardSubType'] = final_df['cardSubType'].replace(['', '0', 0], 'Spell')
+                    final_df['cardSubType'] = final_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
 
-            return final_df.fillna('')
-        
+                return final_df.fillna('')
+            else:
+                print(f"No cards found in the database for {deckList}")
+                return pd.DataFrame()
 
 def generate_cardType_count_dataframe(existing_df=None):
     # Initialize a list to accumulate the DataFrames for each deck
@@ -317,19 +330,7 @@ def generate_cardType_count_dataframe(existing_df=None):
         myGraph = MyGraph()
         myGraph.create_graph_children(myDeck)
 
-        interface_ids_df = pd.DataFrame(columns=['interface_ids'], index=[deckName])
-
-        interface_ids = {}
-        for interface_id in myGraph.node_data:
-            #print(f"Tag: {interface_id}")
-            #print(f"Node Data: {myGraph.node_data[interface_id]}")
-            
-            if 'input' in myGraph.node_data[interface_id]:
-                interface_length = len(myGraph.node_data[interface_id]['input'])
-            elif 'output' in myGraph.node_data[interface_id]:
-                interface_length = len(myGraph.node_data[interface_id]['output'])
-
-            interface_ids[interface_id] = interface_length
+        interface_ids = myGraph.get_length_interface_ids()
 
         # Add a new row to the interface_ids_df DataFrame with the index of deckName and the column of interface_id
         interface_ids_df = pd.DataFrame(interface_ids, index=[deckName])
@@ -1061,9 +1062,3 @@ def setup_interface():
     #display(button_graph)
     #display(out_main)         
     #display(*toggle_dropdown_pairs, button_graph)
-
-
-    from ipywidgets.embed import embed_minimal_html
-    widget_list = [filterBox, out_qm]
-
-    embed_minimal_html('export.html', views=widget_list, title='Widgets export')

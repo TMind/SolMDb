@@ -5,6 +5,8 @@ from MongoDB.DatabaseManager import DatabaseObject
 from copy import copy
 from dataclasses import dataclass, field
 
+import GlobalVariables
+
 @dataclass
 class EntityData:
     name: str    = ''
@@ -104,11 +106,17 @@ class Card(DatabaseObject):
         super().__init__(data)
                 
         if self.data is not None:
-            if self.data.name :  self.data.title = data.name 
-            else:                self.data.name = data.title            
+            if data.name :  
+                self.data.title = data.name 
+                self.data.name = data.name 
+            elif data.title:                
+                self.data.name = data.title
+                self.data.title = data.name 
 
-            entityNames = self.get_entity_names_from_title(self.name)   
+            #print(f"Data Name: {self.data.name}")
+            entityNames = self.get_entity_names_from_title(self.data.name)   
             if entityNames:
+                #print(f"Entity Names: {entityNames}")
                 self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in entityNames}
                     
         # self.above_stat = None
@@ -132,20 +140,29 @@ class Card(DatabaseObject):
         if not card_name or card_name == '': return None
 
         # First try with full title        
-        card_entity_data = self.db_manager.get_record_by_name('Entity', card_name)        
+        card_entity_data =  GlobalVariables.commonDB.get_record_by_name('Entity', card_name)        
         if card_entity_data:          
+            #print(f"Card Entity Data found : {card_entity_data['name']}")
             return [card_entity_data['name']]
 
         # If not found, try with decreasing title length
         parts = card_name.split(' ')
+        entities_data = []
         for i in range(1, len(parts)):
             modifier_title = ' '.join(parts[:i])
             card_name = ' '.join(parts[i:])
-            modifier_entity_data = self.db_manager.get_record_by_name('Entity', modifier_title)
-            card_entity_data = self.db_manager.get_record_by_name('Entity', card_name)
-            if modifier_entity_data and card_entity_data:
-                return [entity_name for entity_name in [modifier_entity_data['name'], card_entity_data['name']]]
-    
+            #print(f"Modifier Title: {modifier_title} - Card Name: {card_name}")
+            modifier_entity_data = GlobalVariables.commonDB.get_record_by_name('Entity', modifier_title)
+            card_entity_data = GlobalVariables.commonDB.get_record_by_name('Entity', card_name)
+
+            if modifier_entity_data:
+                #print(f"Modifier Entity Data found : {modifier_entity_data['name']}")
+                entities_data.append(modifier_entity_data['name'])
+            if card_entity_data:
+                #print(f"Card Entity Data found : {card_entity_data['name']}")
+                entities_data.append(card_entity_data['name'])
+                
+            return entities_data
         # If no entities found, return card_title
         return [card_name]
 

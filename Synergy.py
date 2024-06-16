@@ -1,6 +1,13 @@
+from dataclasses import dataclass, asdict
+from MongoDB.DatabaseManager import DatabaseObject
+from dataclasses import field
 import csv
 
-class SynergyTemplate:
+@dataclass
+class SynergyTemplateData:
+    synergies: dict  # Assuming `synergies` is a list of Synergy objects
+
+class SynergyTemplate(DatabaseObject):
 
     _instance = None
 
@@ -10,13 +17,30 @@ class SynergyTemplate:
             cls._instance.load_synergy_template(csvfilename)
         return cls._instance
 
+    def to_data(self):
+        synergy_data_list = {synergy.name : synergy for synergy in self.synergies.values()}
+        return SynergyTemplateData(synergies=synergy_data_list)
+
+    @classmethod
+    def from_data(cls, data):
+        instance = cls()
+        for synergyName, synergy_data in data.synergies:
+            synergy = Synergy.from_data(synergy_data)
+            instance.synergies[synergyName] = synergy
+        return instance
+
+    def save(self):
+        for name, synergy in self.synergies.items():
+            synergy.save(name, collection_name='SynergyTemplate')
+
     def load_synergy_template(self, csvfilename=None):
         self.synergies = {}        
         csvpathname = f"csv/{csvfilename or 'synergies'}.csv"
         self.from_csv(csvpathname)
 
-    def add_synergy(self, name, weight, input_tags, output_tags):
-        synergy = Synergy(name, weight, input_tags, output_tags)
+    def add_synergy(self, name, weight, input_tags, output_tags, children_data={}):
+        synergy_data = SynergyData(name, weight, input_tags, output_tags, children_data)
+        synergy = Synergy(synergy_data)
         self.synergies[name] = synergy
 
     def remove_synergy(self, name):
@@ -29,10 +53,16 @@ class SynergyTemplate:
     def get_synergy_by_name(self, name):
         return self.synergies[name]        
 
-    def get_synergies_by_tag(self, tag):
+    def get_synergies_by_tag(self, tag, input_or_output="IO"):
         input_synergies = [synergy for synergy in self.synergies.values() if tag in synergy.input_tags]
         output_synergies = [synergy for synergy in self.synergies.values() if tag in synergy.output_tags]
-        return input_synergies + output_synergies
+        
+        if input_or_output == "I":
+            return input_synergies
+        elif input_or_output == "O":
+            return output_synergies
+        else:
+            return input_synergies + output_synergies
 
     def get_output_tags_by_synergy(self, synergyname):
         synergy = self.get_synergy_by_name(synergyname)
@@ -86,77 +116,53 @@ class SynergyTemplate:
     def from_csv(self, filename):
         
         with open(filename, "r") as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = csv.DictReader(csvfile, delimiter=';')
             for row in reader:
                 name = row["name"]
                 weight = float(row["weight"])
                 input_tags = [tag.strip() for tag in row["input_tags"].split(",")]
                 output_tags = [tag.strip() for tag in row["output_tags"].split(",")]
-                self.add_synergy(name, weight, input_tags, output_tags)
-   
-class Synergy:
-    def __init__(self, name, weight, input_tags, output_tags):
-        self.name = name
-        self.weight = weight
-        self.input_tags = input_tags 
-        self.output_tags = output_tags 
-        self.output_counts = {tag: 0 for tag in output_tags}
-        self.input_counts = {tag: 0 for tag in input_tags}
+                children_data = {}
+                children_data.update({input_tag : 'Input' for input_tag in input_tags})
+                children_data.update({output_tag : 'Output' for output_tag in output_tags})
+                self.add_synergy(name, weight, input_tags, output_tags, children_data)
+        for synergy in self.synergies.values():
+            synergy.save()
+        
 
-    def add_output_tag(self, tag, value=1):
-        set(self.output_tags).update(tag)
-        self.output_counts[tag] = value
-    
-    def add_input_tag(self, tag, value=1):
-        set(self.input_tags).update(tag)        
-        self.input_counts[tag] = value
+    def get_collection_names(self):
+        return self.synergies
+
+
+@dataclass
+class SynergyData:
+    name: str   = ''
+    weight: float   = 0.0
+    input_tags: list    = field(default_factory=list)
+    output_tags: list   = field(default_factory=list)    
+    children_data: dict = field(default_factory=dict)
+
+class Synergy(DatabaseObject):
+
+    def __init__(self, data: SynergyData):
+        super().__init__(data)
 
     def get_input_tags(self):
-        return self.input_tags
+        return self.data.input_tags
     
     def get_output_tags(self):
-        return self.output_tags
-
-    def is_output_tag(self,tag):
-        return tag in self.output_tags
-    
-    def is_input_tag(self,tag):
-        return tag in self.input_tags
-    
-    def set_output_count(self, tag, value=1):
-        if tag in self.output_counts:
-            if self.output_counts[tag] > 0:
-                print(f"{tag} > 0 < {value} already! ")
-            self.output_counts[tag] = value    
-
-    def set_input_count(self, tag, value=1):
-        if tag in self.input_counts:
-            if self.input_counts[tag] > 0:
-                print(f"{tag} > 0 < {value} already! ")
-            self.input_counts[tag] = value
-    
-    def get_output_counts(self):
-        return self.output_counts
-    
-    def get_input_counts(self):
-        return self.input_counts
-    
-    def is_synergy(self):  
-        has_nonzero_output = any(output_val > 0 for output_val in self.output_counts.values())
-        has_nonzero_input = any(input_val > 0 for input_val in self.input_counts.values())
-        return has_nonzero_output and has_nonzero_input
-
-    def stats(self,stats,type):
-        max = max(stats[self.name][type].keys())
-        if type == 'input' :
-            return self.output_counts / max
-        if type == 'output' :
-            return self.input_counts / max
-        return None
+        return self.data.output_tags
 
     def __str__(self):
-        output_counts_str = ", ".join([f"{tag}: {count}" for tag, count in self.output_counts.items()])
-        input_counts_str = ", ".join([f"{tag}: {count}" for tag, count in self.input_counts.items()])
-        output_counts_total = sum(self.get_output_counts().values())
-        input_counts_total = sum(self.get_input_counts().values())
-        return f"{self.name:<17}: {self.weight:<7} - output: {output_counts_str:>40} - input: {input_counts_str:>40} => {output_counts_total:<5.2g}^{input_counts_total:>5.2g}"
+        return f"{self.data}"
+    
+    # def to_data(self):
+    #     # Convert the SynergyData dataclass to a dictionary
+    #     return self.data
+
+    # @classmethod
+    # def from_data(cls, data):
+    #     # Create a new Synergy instance using the unpacked data
+    #     return cls(data['name'], data['weight'], data['input_tags'], data['output_tags'])
+
+    

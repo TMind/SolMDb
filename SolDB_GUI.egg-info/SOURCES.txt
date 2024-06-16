@@ -1,0 +1,5 @@
+setup.py
+SolDB_GUI.egg-info/PKG-INFO
+SolDB_GUI.egg-info/SOURCES.txt
+SolDB_GUI.egg-info/dependency_links.txt
+SolDB_GUI.egg-info/top_level.txt

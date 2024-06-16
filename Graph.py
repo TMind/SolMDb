@@ -1,171 +1,177 @@
 from Interface import InterfaceCollection
-import networkx as nx
 from collections import defaultdict
-import os, re
+from itertools import combinations
+import os
+import networkx as nx
+#from graphspace_python.api.client import GraphSpace
+#from graphspace_python.graphs.classes.gsgraph import GSGraph
 
-# def create_synergy_graph(decks, min_level=1):
-#     G = nx.Graph()
-#     decks = list(decks.values())
+# Define a nested defaultdict
+def default_int():
+    return defaultdict(int) 
 
-#     LibDeck = DeckLibrary(decks)
-#     eval_decks = LibDeck.evaluate_decks()
+class MyGraph:
 
-#     for fusion in LibDeck.fusions:
-#         create_deck_graph(fusion)
+    def __init__(self, deck, forgeborn_name=None): 
 
-#     for deck_name, score in eval_decks.items():
-#         deck_name2 = deck_name.split('|')[1] + '|' + deck_name.split('|')[0] 
-#         if eval_decks[deck_name2] < score :
-#             #print(f"Score {deck_name2} :  {eval_decks[deck_name2]} < {score} ")
-#             G.add_edge(deck_name.split('|')[0], deck_name.split('|')[1], weight=score, label=deck_name.split('|')[0])
-
-#     # Remove nodes with no edges
-#     nodes_to_remove = [node for node, degree in dict(G.degree()).items() if degree == 0]
-#     G.remove_nodes_from(nodes_to_remove)
-
-#     return G
-
-@staticmethod
-def handle_synergy_and_edges(G, source_entity, target_entity):
-    syn_matches = InterfaceCollection.match_synergies(source_entity.ICollection, target_entity.ICollection)
-    if syn_matches:
-        label = ",".join(synergy for synergy, count in syn_matches.items() if count > 0)
-        weight = sum(syn_matches.values())
-        type = source_entity.faction == target_entity.faction
-        G.add_edge(source_entity.name, target_entity.name, label=label, weight=weight, local=type)
-
-
-def create_deck_graph(fusion):        
-    G = nx.DiGraph(name = fusion.name, fusion=fusion , mod = 0, between = 0, avglbl = 0, community_labels = {})
+        self.G      = nx.DiGraph()
+        self.avglbl     = 0
+        self.name       = deck.name
+        self.faction    = deck.faction
+        self.fusion     = deck        
+        self.community_labels   =  {}
+        self.max_ranges = {}        
+        self.Metric = {}
+        self.forgeborn_name     = forgeborn_name        
+        if forgeborn_name: 
+            deck.set_forgeborn(forgeborn_name)
+        self.forgeborn  = deck.forgeborn        
         
-    G.add_nodes_from(list(fusion.fused.cards.keys()) + list(f"{level}{entity.name}" for level, entity in fusion.fused.forgeborn.abilities.items()))
+        self.unmatched_synergies = {} #defaultdict(default_int)
+        self.matched_synergies   = {} #defaultdict(int)
 
-    # Create a dictionary of whether any interface in the card has '*' or '+' in its range
-    card_ranges = {}
-    for card_name, card in fusion.fused.cards.items():
-        max_ranges = card.ICollection.get_max_ranges()
-        card_ranges[card_name] = ','.join(max_ranges)  # Convert list to a string
-
-    # Add the card range flags as node attributes
-    nx.set_node_attributes(G, card_ranges, "max_ranges")
-
+        self.create_deck_graph()
+        self.cancel_non_matching_synergies()       
+        self.calculate_metrics() 
     
-    for i, (card_name_1, card_1) in enumerate(fusion.fused.cards.items()):
-        for j, (card_name_2, card_2) in enumerate(fusion.fused.cards.items()):                
-            if card_name_1 == card_name_2:
+    def handle_synergy_and_edges(self, source_entity, target_entity):
+        syn_matches, syn_misses = InterfaceCollection.match_synergies(source_entity.ICollection, target_entity.ICollection)
 
-                for ability_name, ability in fusion.fused.forgeborn.abilities.items():
-                    handle_synergy_and_edges(G, card_1, ability)
-                    handle_synergy_and_edges(G, ability, card_2)
+        if syn_matches:
+            label = ",".join(synergy for synergy in syn_matches.keys() if 'input' in syn_matches[synergy])
+            weight = sum(len(syn_matches[synergy]['input']) for synergy in syn_matches.keys() if 'input' in syn_matches[synergy])
+            type = source_entity.faction == target_entity.faction
+            self.G.add_edge(source_entity.name, target_entity.name, label=label, weight=weight, local=type)
+
+            for synergy in syn_matches:
+                for type in ['input', 'output']:
+                    if syn_matches[synergy][type]:                        
+                        if synergy not in self.matched_synergies:
+                            self.matched_synergies[synergy] = { 'input' : set(), 'output' : set() }
+                        self.matched_synergies[synergy][type].update(interface.name for interface in syn_matches[synergy][type])
                         
-                handle_synergy_and_edges(G, card_1, card_1)
-                                                                                                                                                  
-            if i < j:
-                # compare only cards whose indices are greater        
-                # Check if the cards have any synergies                
-                handle_synergy_and_edges(G, card_1, card_2)
-                handle_synergy_and_edges(G, card_2, card_1)
-            
-    return G
+        # Handle unmatched synergies and update miss count
+        if syn_misses:
+            for synergy, input_interfaces in syn_misses.items():
+                if synergy not in self.unmatched_synergies:
+                    self.unmatched_synergies[synergy] = {}
+
+                for input_interface in input_interfaces:
+                    self.unmatched_synergies[synergy][input_interface.name] = input_interface.value
 
 
-def print_graph(G, output_filename=None):
-    """
-    Print or write the graph information in a tabular format.
 
-    Args:
-        G (networkx.Graph): The graph object to print or write.
-        output_file (str, optional): The file path to write the output. If not provided, the output is printed to stdout.
 
-    Returns:
-        None
-    """    
-    output_file = None if output_filename is None else f"txt/{output_filename}" 
-    
-    first_time = not output_file or not os.path.isfile(output_file)
-    text = f"\n===============================================================\n"
-    text += f"\nFusion: {G.graph['name']}\n"
-    text += f"{'Node A':<30} {'Node B':<30} {'Weight':<5} {'Label':<30}\n"
-    for nodeA, nodeB, data in G.edges(data=True):
-        weight = data.get('weight', 'N/A')
-        label = data.get('label', 'N/A')
-        local = data.get('local', 'N/A')
-        text += f"{nodeA:<30} {nodeB:<30} {str(weight):<5} {str(label):<30}\n"
-    text += f"\n-------------------------------------------------------------\n"
-
-    # Updated code using enhanced text strings
-    community_labelinfos = G.graph['community_labels']
-    total_nr_community_labels = 0  # Assuming this variable is defined somewhere in the code
-
-    for community, labels_infos in community_labelinfos.items():
-        text += f"Community: {community}\n"
-        label_infos = defaultdict(float)
-        for label, weight, loc_faction, loc_comm in labels_infos:
-            if label not in label_infos:
-                label_infos[label] = {'weight': 0, 'count': 0, 'loc_faction': 0, 'loc_comm': 0}
-            label_infos[label]['count'] += 1
-            label_infos[label]['weight'] += weight
-            label_infos[label]['loc_faction'] += 1 if loc_faction else 0
-            label_infos[label]['loc_comm'] += 1 if loc_comm else 0
+    def create_deck_graph(self):
         
-        for label, label_info in label_infos.items():
-            text += f"Label: {label:<30}, Weight: {label_info['weight']}\n"
-            total_nr_community_labels += label_info['weight']
+        self.G = nx.DiGraph(nmod=0, between=0)
+        self.G.add_nodes_from([card.title for card in self.fusion.cards.values()] + [name for name in self.forgeborn.abilities])
 
-                  #, LocComm: {label_info['loc_comm']}, LocFact: {label_info['loc_faction']}")
+        # Create a dictionary of whether any interface in the card has '*' or '+' in its range
+        self.card_ranges = {
+            card_name: ','.join(card.ICollection.get_max_ranges())
+            for (faction, card_name), card in self.fusion.cards.items()
+        }
 
-    avg_lbl_com = total_nr_community_labels / len(community_labelinfos) if community_labelinfos else 0
-    text += f"\nAvg Labels: {total_nr_community_labels} / {len(community_labelinfos)} = {avg_lbl_com}\n"
-    
+        cards_items = list(self.fusion.cards.items())
 
-    if output_file:
-        mode = 'w' if first_time else 'a'
-        with open(output_file, mode) as file:
-            file.write(text)
-    else:
-        print(text)
+        # Handle self synergy and synergy with Forgeborn abilities for each card
+        for ((faction, card_name), card) in cards_items:
+            self.handle_synergy_and_edges(card, card)
 
- 
-def load_gexf_file(filename):
-    pathname = './gephi/' + filename + '.gexf'
-    if not os.path.isfile(pathname):
-        raise FileNotFoundError(f"File '{pathname}' not found.")
-    
-    # Load the graph from the GEXF file
-    G = nx.read_gexf(pathname)
-    
-    return G
+            for ability_name, ability in self.forgeborn.abilities.items():
+                self.handle_synergy_and_edges(card, ability)
+                self.handle_synergy_and_edges(ability, card)
 
-
-def write_gexf_file(graph, filename):
-    nx.write_gexf(graph, './gephi/' + filename + '.gexf')
+        # Create pairs of cards to check for synergies between them
+        for ((faction1, card_name_1), card_1), ((faction2, card_name_2), card_2) in combinations(cards_items, 2):
+            self.handle_synergy_and_edges(card_1, card_2)
+            self.handle_synergy_and_edges(card_2, card_1)
+        
+    def cancel_non_matching_synergies(self):
+        for synergy in self.matched_synergies:
+            if synergy in self.unmatched_synergies:                
+                del self.unmatched_synergies[synergy]
 
 
-def is_eligible(graph, logical_expression):        
-    translated_expression = translate_expression(graph, logical_expression)
-    evaluated_expression = eval(translated_expression)    
-    return evaluated_expression
+    def calculate_metrics(self):
+        
+        clustering_coefficients = nx.average_clustering(self.G)
+        density = nx.density(self.G)
 
-def translate_expression(graph, logical_expression):                
-    translated_expression = logical_expression.replace('-', ' or ')
-    translated_expression = translated_expression.replace('+', ' and ')
+        self.Metric['cluster_coeff'] = clustering_coefficients
+        self.Metric['density'] = density
 
-    # Replace variable names with their graph presence checks
-    for variable_name in get_variable_names(logical_expression):
-        # Remove single quotes around the variable name if they exist
-        stripped_variable_name = variable_name.replace("'","") #strip("'")
-        presence_check = str(any(stripped_variable_name in node for node in graph.nodes))
-        # Replace the quoted or unquoted variable name with its presence check
-        translated_expression = translated_expression.replace(f"'{variable_name}'", presence_check)
-        translated_expression = translated_expression.replace(variable_name, presence_check)
+        Metric = {}              
+        Metric['between'] = nx.betweenness_centrality(self.G)
+        #Metric['PageRank'] = nx.pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1e-06, nstart=None, dangling=None)
+        #Metric['degree'] = nx.degree_centrality(G)
+        #Metric['cluster_coeff'] = nx.clustering(G)        
+        #Metric['katz'] = nx.katz_centrality(G, alpha=0.1, beta=1.0)
 
-    # Return the translated expression
-    return translated_expression
+        for name, metric in Metric.items():
+            nx.set_node_attributes(self.G, metric, name)
 
+    def print_graph(self, output_file=None):
+        """
+        Print or write the graph information in a tabular format.
 
-def get_variable_names(logical_expression):
-    variable_pattern = r"\b(?:\w+\b\s*)+"
-    #variable_pattern = r"\b\w+(?: \w+)?\b" #r"\b\w+\b"  # Regular expression pattern to match variable names
-    variable_names = re.findall(variable_pattern, logical_expression)
-    return variable_names
+        Args:
+            G (graphspace.Graph): The graph object to print or write.
+            output_file (str, optional): The file path to write the output. If not provided, the output is printed to stdout.
+
+        Returns:
+            None
+        """
+        first_time = not output_file or not os.path.isfile(output_file)
+        text = f"\n===============================================================\n"
+        text += f"\nFusion: {self.name}\n"
+        text += f"{'Node A':<30} {'Node B':<30} {'Weight':<5} {'Label':<30}\n"
+        for nodeA, nodeB, data in self.G.edges(data=True):
+            weight = data.get('weight', 'N/A')
+            label = data.get('label', 'N/A')
+            local = data.get('local', 'N/A')
+            text += f"{nodeA:<30} {nodeB:<30} {str(weight):<5} {str(label):<30}\n"
+        text += f"\n-------------------------------------------------------------\n"
+
+        # Updated code using enhanced text strings
+        #community_labelinfos = self.G.graph['community_labels']
+        total_nr_community_labels = 0  # Assuming this variable is defined somewhere in the code
+
+        for community, labels_infos in self.community_labels.items():
+            text += f"Community: {community}\n"
+            label_infos = {}
+            for label, weight, loc_faction  in labels_infos:
+                if label not in label_infos:
+                    label_infos[label] = {'weight': 0, 'count': 0, 'loc_faction': 0}
+                label_infos[label]['count'] += 1
+                label_infos[label]['weight'] += weight
+                label_infos[label]['loc_faction'] += 1 if loc_faction else 0
+                #label_infos[label]['loc_comm'] += 1 if loc_comm else 0
+
+            for label, label_info in label_infos.items():
+                text += f"Label: {label:<30}, Weight: {label_info['weight']}\n"
+                total_nr_community_labels += label_info['weight']
+
+        #avg_lbl_com = total_nr_community_labels / len(self.community_labels) if self.community_labels else 0
+        text += f"\nTotal Labels: {total_nr_community_labels}\n"
+
+        if output_file:
+            mode = 'w' if first_time else 'a'
+            with open(output_file, mode) as file:
+                file.write(text)
+        else:
+            print(text)
+
+    def load_gexf_file(self,graphfolder, filename):
+        pathname = os.path.join(graphfolder, filename + '.gexf')
+        if not os.path.isfile(pathname):
+            raise FileNotFoundError(f"File '{pathname}' not found.")
+
+        # Load the graph from the GEXF file
+        return nx.read_gexf(pathname)                
+
+    def write_gexf_file(self, graphfolder, filename):
+        nx.write_gexf(self.G, os.path.join(graphfolder,filename + '.gexf'))
+
 

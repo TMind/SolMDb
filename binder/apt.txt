@@ -1,0 +1,6 @@
+curl
+telnet
+nmap
+net-tools
+iproute2
+iputils-ping

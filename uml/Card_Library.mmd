@@ -1,0 +1,99 @@
+classDiagram
+    class DatabaseObject {
+        <<class>>
+    }
+    class InterfaceCollection {
+        -name: str
+        -interfaces: dict
+        -_cache: dict
+        +from_interfaces(name, interfaces)
+        +from_collections(name, collections)
+        +from_entities(name, entity_names)
+        +from_card(card)
+        +from_deck(deck)
+        +from_forgeborn(forgeborn)
+        +_update_cache(interface_types, synergy)
+        +update(other)
+        +add(interface)
+        +copy()
+        +restrict_range(range)
+        +get_max_ranges()
+        +get_interfaces_by_type(interface_types, synergy)
+        +get_synergies()
+        +_get_cache_key(interface_types, synergy)
+        +get_members(type)
+        +to_data()
+        +from_data(data)
+    }
+    class Interface {
+        -_initialize_types_and_synergies(data)
+        +get_type()
+        +is_type(type)
+        +get_synergies_by_type(type)
+        +has_tag_of_type(synergy, type)
+    }
+    class SynergyTemplate {
+        -_instance: SynergyTemplate
+        -synergies: dict
+        +to_data()
+        +from_data(data)
+        +save()
+        +load_synergy_template(csvfilename)
+        +add_synergy(name, weight, input_tags, output_tags)
+        +remove_synergy(name)
+        +get_synergies()
+        +get_synergy_by_name(name)
+        +get_synergies_by_tag(tag)
+        +get_output_tags_by_synergy(synergyname)
+        +get_input_tags_by_synergy(synergyname)
+        +get_output_tags()
+        +get_input_tags()
+        +set_synergy_rows(rows)
+        +to_csv(filename)
+        +from_csv(filename)
+    }
+    class Synergy {
+        +get_input_tags()
+        +get_output_tags()
+        +to_data()
+        +from_data(data)
+        +get_collection_names()
+    }
+    class Entity {
+        +get_collection_names()
+    }
+    class Deck {
+        +get_collection_names()
+    }
+    class Card {
+        +get_entity_names_from_title(card_title)
+        +get_collection_names()
+    }
+    class Forgeborn {
+        +get_collection_names()
+    }
+    class Fusion {
+        -inspire_forgeborn(forgeborn1, forgeborn2)
+        +set_forgeborn(idx_or_forgeborn_name)
+        +copyset_forgeborn(idx_or_forgeborn_name)
+        +get_forgeborn(id_or_forgeborn_name)
+        +to_dict()
+    }
+    class DatabaseManager {
+        -_instances: dict
+        +set_database_name(db_name, host, port)
+        +get_record_by_name(collection_name, name)
+    }
+
+    DatabaseObject <|-- InterfaceCollection
+    DatabaseObject <|-- Interface
+    DatabaseObject <|-- SynergyTemplate
+    DatabaseObject <|-- Synergy
+    DatabaseObject <|-- Entity
+    DatabaseObject <|-- Deck
+    DatabaseObject <|-- Card
+    DatabaseObject <|-- Forgeborn
+    DatabaseObject <|-- Fusion
+    InterfaceCollection "1" *-- "many" Interface : contains
+    SynergyTemplate "1" *-- "many" Synergy : manages
+    Deck --|> Fusion : extends

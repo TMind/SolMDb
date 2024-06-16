@@ -1,0 +1,2 @@
+tmind_TMind filter=lfs diff=lfs merge=lfs -text
+tmind_TMind.cvs filter=lfs diff=lfs merge=lfs -text

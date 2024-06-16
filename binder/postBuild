@@ -1,0 +1,12 @@
+MONGODB_VERSION=$(cat .mongo_version)
+MONGODB_PATH=${CONDA_DIR}/mongodb-$MONGODB_VERSION
+MONGODB_BASE=mongodb-linux-x86_64
+MONGO_DBPATH=${MONGODB_PATH}/data/db
+MONGODB_FILE=${MONGODB_BASE}-${MONGODB_VERSION}
+echo "Download mongo db installer..."
+wget -q https://fastdl.mongodb.org/linux/${MONGODB_FILE}.tgz
+echo "Install mongodb..."
+tar -xvf ${MONGODB_FILE}.tgz
+rm ${MONGODB_FILE}.tgz
+mv ${MONGODB_FILE} ${MONGODB_PATH}
+mkdir -p $MONGO_DBPATH

@@ -1,100 +1,200 @@
 from DeckLibrary    import DeckLibrary
-from Card_Library   import UniversalCardLibrary
-from CacheManager   import CacheManager
+from UniversalLibrary import UniversalLibrary
+#from CacheManager   import CacheManager
 from Synergy        import SynergyTemplate
 from NetApi         import NetApi
+from Filter import Filter
 import Evaluation as ev
-import Graph
+from Graph import MyGraph
 import argparse
+from tqdm import tqdm 
+import os, time, re
+from pathlib import Path
+from multiprocessing import Pool, cpu_count,Event
+from MongoDB.DatabaseManager import DatabaseManager
+import GlobalVariables as gv
 
+def main(args):    
+    gv.username = args.username or 'Default'
 
-def main(args):
-    deck_library_name = "deck_library"
-    eval_graphs_name = "eval_graphs"
+    uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
+    gv.myDB = DatabaseManager(gv.username, uri=gv.uri)
+    gv.commonDB = DatabaseManager('common', uri=gv.uri)
 
-    if args.username:
-        deck_library_name += f"_{args.username}"
-        eval_graphs_name += f"_{args.username}"
+    synergy_template = SynergyTemplate()    
+    
+    ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
 
-    if args.filename:
-        deck_library_name = f"{args.filename}_library"
-        eval_graphs_name = f"{args.filename}_graphs"
-
-    file_mappings = {
-        'cache/ucl.pkl': ['csv/sff.csv', 'csv/forgeborn.csv'],
-        f"cache/{deck_library_name}.pkl": ['cache/ucl.pkl'],
-        f"cache/{eval_graphs_name}.pkl": [f"cache/{deck_library_name}.pkl"],
-    }
-
-    cache_manager = CacheManager(file_mappings)
-
-    # Initialize synergy template singleton with optional file
-    SynergyTemplate(args.synergies)
-
-    myUCL = cache_manager.load_or_create('cache/ucl.pkl', lambda: UniversalCardLibrary(file_mappings['cache/ucl.pkl'][0],file_mappings['cache/ucl.pkl'][1]))
-
-    myApi = NetApi()
-    net_decks = myApi.request_decks(
-        id=args.id,
-        type=args.type,
-        username=args.username,
-        filename=args.filename
-    )
-
-    local_decks = []
-    if not args.username and not args.id:
-        local_decks, incompletes = myUCL.load_decks_from_file(f"data/{args.filename}.json")
-
-    DeckCollection = cache_manager.load_or_create(f"cache/{deck_library_name}.pkl", lambda: DeckLibrary(local_decks))
-
-    DeckCollection.update(net_decks)
-    cache_manager.save_object_to_cache(f"cache/{deck_library_name}.pkl", DeckCollection)
-
-    if args.eval:
-        eval_filename = None
-        if args.eval is not True:
-            eval_filename = args.eval
-
-        egraphs = cache_manager.load_object_from_cache(f"cache/{eval_graphs_name}.pkl") or {}
-
-        new_graphs = False
+    #Read Entities and Forgeborns from Files into Database
+    myUCL = UniversalLibrary(args.username, *ucl_paths)
+    
         
-        for name, fusion in DeckCollection.library['Fusion'].items():
-            if name not in egraphs:
-                DeckGraph = Graph.create_deck_graph(fusion)
-                ev.evaluate_graph(DeckGraph)
-                egraphs[name] = DeckGraph
-                new_graphs = True
+    net_decks = []
+    net_fusions = []
 
-        if new_graphs:
-            cache_manager.save_object_to_cache(f"cache/{eval_graphs_name}.pkl", egraphs)
+    if not args.offline:
+        myApi = NetApi(myUCL)
+                
+        net_decks = get_net_decks(args, myApi)
+        
+        args.id = ''
+        args.type = 'fuseddeck'
+        net_fusions = get_net_decks(args, myApi)
 
-        if args.filter:
-            
-            eligible_graphs = {}
-            for name, graph in egraphs.items():
-                if Graph.is_eligible(graph,args.filter):
-                    eligible_graphs[name] = graph
+    col_filter = get_col_filter(args)
+    #DeckCollection.filter(col_filter) if col_filter else None
 
-            egraphs = eligible_graphs
+    DeckCollection = DeckLibrary(net_decks, net_fusions, args.mode)
 
-        for name, EGraph in egraphs.items():            
-            Graph.print_graph(EGraph, eval_filename)
+    #eval_filename, egraphs, local_graphs = evaluate_fusions(args, DeckCollection)
 
-            if args.graph:
-                Graph.write_gexf_file(EGraph, name.replace('|', '_'))
+    #evaluate_single_decks(DeckCollection, eval_filename, egraphs, local_graphs, args)
 
-        if eval_filename:
-            print(f"Exporting evaluated fusions to csv: {eval_filename}.csv")
-            ev.export_csv(eval_filename + '_excl', egraphs, True)
-            ev.export_csv(eval_filename, egraphs, False)
+def get_net_decks(args, myApi):
+    if args.id:
+        urls = args.id.split('\n')
+        pattern = r"\/([^\/]+)$"        
+        net_data  = []
+        for url in urls:
+            match = re.search(pattern, url)
+            if match:
+                id = match.group(1)
+                url_data = myApi.request_decks(
+                    id=id,
+                    type=args.type,
+                    username=args.username,
+                    filename=args.filename
+                )
+                net_data  += url_data                
+        return net_data
+    else:
+        net_data = myApi.request_decks(
+            id=args.id,
+            type=args.type,
+            username=args.username,
+            filename=args.filename
+        )
+        return net_data
 
-        if args.select_pairs:
-            ev.find_best_pairs(egraphs)
+def get_col_filter(args):
+    if args.filter:
+        query = args.filter
+        attribute_map = {
+            'F': ('faction', str, None),
+            'D': ('name', str, None),
+            'FB': ('forgeborn.name', str, None),
+            'C': ('cards', dict, 'keys'),
+            'A': ('abilities', dict, 'keys'),
+            'K': ('composition', dict, None),
+        }
+        return Filter(query, attribute_map)
+
+# def evaluate_fusions(args, DeckCollection):
+#     eval_filename = None
+#     if args.eval:
+#         eval_filename = args.eval if args.eval is not True else None
+#         egraphs = {}
+#         fusions_without_graphs = {}
+
+#         local_graphs = cache_manager.load_or_create('GraphLib', lambda: dict())
+#         lib_fusions = DeckCollection.library['Fusion']
+
+#         pbar = tqdm(total=len(lib_fusions) * 2, desc="Checking Fusions", mininterval=0.1, colour='GREEN')
+#         for fusion in lib_fusions.values():
+#             for idx in range(2):
+#                 final_fusion = fusion.copyset_forgeborn(idx)
+#                 FusionGraph = local_graphs.get(final_fusion.name)
+
+#                 if col_filter and not col_filter.apply([final_fusion]):
+#                     continue
+
+#                 if not FusionGraph:
+#                     forgeborn_name = final_fusion.get_forgeborn(idx).name
+#                     fusions_without_graphs[final_fusion.name] = (final_fusion, forgeborn_name)
+#                 else:
+#                     egraphs[final_fusion.name] = FusionGraph
+#                 pbar.update()
+#         pbar.close()
+
+#         if fusions_without_graphs:
+#             fusion_results = evaluate_fusions_multiprocess(fusions_without_graphs)
+#             for graph_name, FusionGraph in fusion_results.items():
+#                 if local_graphs.get(graph_name) is not None:
+#                     print(f"{graph_name} already exists locally !")
+#                 local_graphs[graph_name] = FusionGraph
+#                 egraphs[graph_name] = FusionGraph
+
+#         if len(fusions_without_graphs) > 0 and SelectionType == 'Collection':
+#             cache_manager.save_object_to_cache('GraphLib', local_graphs)
+
+#         return eval_filename, egraphs, local_graphs
+
+# def evaluate_fusions_multiprocess(fusions_without_graphs):
+#     with Pool(processes=cpu_count()) as pool:
+#         terminate_event = Event()
+#         fusion_results = {}
+#         args_list = [(fb_name, fusion) for name, (fusion, fb_name) in fusions_without_graphs.items()]
+#         pbar = tqdm(total=len(args_list), desc="Create Graphs", mininterval=0.1, colour='BLUE')
+#         try:
+#             for FusionGraph in pool.imap_unordered(process_fusion, args_list, chunksize=1):
+#                 if terminate_event.is_set():
+#                     print("Parent Process signaled termination. Exiting child processes!")
+#                     pool.terminate()
+#                     break
+
+#                 if FusionGraph:
+#                     fusion_results[FusionGraph.name] = FusionGraph
+#                     pbar.update()
+
+#         except KeyboardInterrupt:
+#             print("Interrupted! Terminating processes...")
+#             terminate_event.set()
+#             pool.terminate()
+#             pool.join()
+#         pbar.close()
+
+#     return fusion_results
+
+# def evaluate_single_decks(DeckCollection, eval_filename, egraphs, local_graphs, args):
+#     total_decks = len(DeckCollection.library['Deck'])
+#     progress_bar = tqdm(total=total_decks, desc="Creating Deck Graphs", mininterval=0.1, colour='CYAN')
+#     dgraphs = {}
+#     for name, deck in DeckCollection.library['Deck'].items():
+#         if name not in dgraphs:
+#             DeckGraph = MyGraph(deck)
+#             ev.evaluate_graph(DeckGraph)
+#             dgraphs[name] = DeckGraph
+#         time.sleep(0.001)
+#         progress_bar.update(1)
+#     progress_bar.close()
+
+#     total_graphs = len(egraphs)
+#     progress_bar = tqdm(total=total_graphs, desc="Printing Fusion Graphs", mininterval=0.1, colour='YELLOW')
+#     for name, myGraph in egraphs.items():
+#         myGraph.print_graph(eval_filename)
+
+#         if args.graph:
+#             eval_path = Path(eval_filename)
+#             gefxFolder = os.path.join(eval_path.parent.absolute(), "gefx")
+#             Path(gefxFolder).mkdir(parents=True, exist_ok=True)
+
+#             myGraph.write_gexf_file(gefxFolder, name.replace('|', '_'))
+#         progress_bar.update(1)
+#     progress_bar.close()
+
+#     if eval_filename:
+#         ev.export_csv(eval_filename + '_interfaction_only', egraphs, True)
+#         ev.export_csv(eval_filename, egraphs, False)
+#         ev.export_csv(eval_filename + '.halfdecks_only', dgraphs, False)
+
+#     if args.select_pairs:
+#         if not eval_filename:
+#             eval_filename = 'evaluation'
+#         print("Selecting top unique pairs\n")
+#         ev.find_best_pairs(egraphs, eval_filename + '_top_pairs.txt')
 
 
-
-if __name__ == "__main__":
+def parse_arguments(arguments = None):
     # Create an argument parser
     parser = argparse.ArgumentParser(description="Script description")
 
@@ -109,6 +209,8 @@ if __name__ == "__main__":
     # If only file is given import deckbase from file.json 
     parser.add_argument("--filename",  default=None,  help="Offline Deck Database Name")
     parser.add_argument("--synergies", default=None, help="CSV Filename for synergy lookup")    
+    parser.add_argument("--offline", default=None, help="Offline use only")    
+    parser.add_argument("--mode", default='insert', help="Mode: insert, update, refresh")    
 
     # Arguments for Evaluation
     
@@ -118,8 +220,13 @@ if __name__ == "__main__":
     parser.add_argument("--select_pairs", action="store_true", help="Select top pairs")
     
     # Parse the command-line arguments
-    args = parser.parse_args()
+    args = parser.parse_args(arguments)
 
+    return args
+
+if __name__ == "__main__":
+
+    args = parse_arguments()
     main(args)
 
 

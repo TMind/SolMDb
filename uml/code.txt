@@ -1,0 +1,864 @@
+Interface.py :
+
+from more_itertools import value_chain
+from MongoDB.DatabaseManager import DatabaseObject
+from dataclasses import dataclass, field
+from Synergy import SynergyTemplate
+from CardLibrary import Entity, Deck, Card
+
+class InterfaceCollection:
+    def __init__(self, name):
+        self.name = name
+        self.interfaces = {}
+        self._cache = {}  # Initialize the cache dictionary
+        
+        synergy_template = SynergyTemplate()  # Instantiate only once here
+        self.synergies = synergy_template.synergies
+
+        if self.synergies:
+            self.interfaces = {syn: {} for syn in self.synergies}
+
+    @classmethod
+    def from_interfaces(cls, name, interfaces):
+        ICollection = InterfaceCollection(name)
+        for interface in interfaces:
+            ICollection.add(interface)
+        return ICollection
+
+    @classmethod
+    def from_collections(cls, name, collections):
+        ICollection = InterfaceCollection(name)
+        for collection in collections:
+            ICollection.update(collection)
+        return ICollection
+    
+    @classmethod
+    def from_entities(cls, name, entity_names):
+        ICollection = InterfaceCollection(name)
+
+        # Consider fetching all entities in one go if possible
+        entities = [Entity.load(entity_name) for entity_name in entity_names]
+
+        for entity in entities:
+            myInterface = Interface.from_data(entity.collection_data['interfaces'])
+            if entity and 'interfaces' in entity.collection_data:
+                for interface_name, value in entity.collection_data['interfaces'].items():
+                    # Validate interface_data format here if necessary
+                    interface = Interface.from_data(interface_data)
+                    ICollection.add(interface)
+                    
+        return ICollection
+
+
+    @classmethod
+    def from_card(cls, card):      
+        if type(card) is dict:
+            card = Card.from_data(card)
+        return cls.from_entities(card.title, card.entity_names)
+
+    @classmethod
+    def from_deck(cls, deck):       
+        if type(deck) is dict:
+            deck = Deck.from_dict(deck['forgeborn'], deck['faction'], deck['cards'])
+        entities = [ entity for card in deck.cards.values() for entity in card.entities ]
+        return cls.from_entities(deck.name, entities)
+
+    @classmethod
+    def from_forgeborn(cls, forgeborn):    
+        return cls.from_entities(forgeborn.name, forgeborn.abilities.values())
+
+    def _update_cache(self, interface_types, synergy=None):
+        """
+        Update the cache with interfaces of given types and synergy.
+        """
+        cache_key = self._get_cache_key(interface_types, synergy)
+        
+        interfaces_to_cache = {}
+        
+        if synergy is None:
+            for syn, interface_dict in self.interfaces.items():
+                matched_interfaces = [interface for interface in interface_dict.values() if any(type_ in interface.types for type_ in interface_types)]
+                if matched_interfaces:
+                    interfaces_to_cache[syn] = matched_interfaces
+        else:
+            if synergy in self.interfaces:
+                matched_interfaces = [interface for interface in self.interfaces[synergy].values() if any(type_ in interface.types for type_ in interface_types)]
+                if matched_interfaces:
+                    interfaces_to_cache[synergy] = matched_interfaces
+    
+        if interfaces_to_cache:
+            self._cache[cache_key] = interfaces_to_cache
+
+
+    def update(self, other):
+        
+        for interface_dict in other.collection_data:
+            for interface in interface_dict.values():
+                self.add(interface)      
+        self._cache.clear()
+        return self
+
+
+    def add(self, interface):
+        for synergy_name in interface.synergies:
+            if interface.tag in self.interfaces[synergy_name]:
+                existing_interface = self.interfaces[synergy_name][interface.tag]
+                existing_interface.types.update(interface.types)  # Add interface.types as a single item to the set
+            else:
+                self.interfaces[synergy_name][interface.tag] = interface
+        self._cache.clear() # Clear the cache whenever the collection is updated.
+
+    def copy(self):
+        """
+        Return a new instance of InterfaceCollection that is a shallow copy of the current instance.
+        """
+        new_collection = InterfaceCollection(self.name)        
+        new_collection.interfaces = {k: v for k, v in self.interfaces.items()}
+        new_collection._cache = self._cache
+        return new_collection
+
+    def restrict_range(self, range):
+        ICollection = InterfaceCollection(self.name)
+
+        ICollection.interfaces = {
+            synergy: {
+                name: interface 
+                for name, interface in interfaces.items() 
+                if range not in interface.ranges
+            } 
+            for synergy, interfaces in self.interfaces.items()
+        }
+
+        # Filter out empty interface dictionaries
+        ICollection.interfaces = {
+            synergy: interfaces 
+            for synergy, interfaces in ICollection.interfaces.items() 
+            if interfaces
+        }
+
+        return ICollection
+
+    def get_max_ranges(self):
+        return [synergy for synergy, interfaces in self.interfaces.items() 
+                for _, interface in interfaces.items() 
+                if any(range_char in r for r in interface.ranges for range_char in ['*', '+'])]
+
+    def get_interfaces_by_type(self, interface_types, synergy=None):
+        cache_key = self._get_cache_key(interface_types, synergy)
+        
+        # Check the cache
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+        
+        # If not in cache, update the cache
+        self._update_cache(interface_types, synergy)
+        
+        # Return the cached value
+        return self._cache.get(cache_key, {})
+    
+    def get_synergies(self):
+        return [synergy for synergy in self.interfaces if self.interfaces[synergy]]
+
+    def _get_cache_key(self, interface_types, synergy=None):
+        """
+        Generate a unique cache key using interface_types and synergy.
+        """
+        interface_types = frozenset(interface_types)  # Convert set to frozenset for hashability
+        return (interface_types, synergy)
+
+
+    def get_members(self, type=None):        
+        members = [f"{synergy} :: {interface_tag.name} - {interface_tag}" for synergy, interfaces in self.interfaces.items() for interface_tag in interfaces if type in interfaces[interface_tag].types]
+
+        return members
+
+
+    def __str__(self):        
+        synergies_str = "Synergies:\n"
+        for synergy in self.interfaces.values():                        
+            synergies_str += f"{str(synergy)}\n"
+        return synergies_str 
+
+    @staticmethod
+    def match_synergies(collection1, collection2):        
+        """
+        Matches synergies between two collections.
+
+        Args:
+        collection1: The first collection object.
+        collection2: The second collection object.
+
+        Returns:
+        A dictionary of matched synergies and their associated factor.
+        """
+        # Restrict range if collections are the same
+        if collection1.name == collection2.name:
+            collection1 = collection2 = collection1.restrict_range('+')
+            
+        synergies = collection2.get_synergies()
+
+        matched_synergies = {}
+        unmatched_input_interfaces = {}
+
+        for synergy in synergies:
+
+            input_interfaces_by_syn = collection2.get_interfaces_by_type("I", synergy)
+            output_interfaces_by_syn = collection1.get_interfaces_by_type("O", synergy)
+
+            if not input_interfaces_by_syn: 
+                continue
+
+            if output_interfaces_by_syn:
+                matched_synergies[synergy] = {
+                    'input' : input_interfaces_by_syn[synergy], 
+                    'output': output_interfaces_by_syn[synergy]
+                }
+            else:
+                unmatched_input_interfaces[synergy] = input_interfaces_by_syn[synergy]
+
+        return matched_synergies , unmatched_input_interfaces
+
+    def to_data(self):
+        """
+        Convert the InterfaceCollection to a dictionary that is JSON serializable.
+        """
+        interfaces_dict = {}
+        for synergy, interface_dict in self.interfaces.items():
+            for name, interface in interface_dict.items():
+                #idict = interface.to_data()
+                interfaces_dict[synergy] = name #{name: idict}
+        return {
+            "name": self.name,
+            "interfaces": interfaces_dict,            
+        }
+    @classmethod
+    def from_data(cls, data):
+        """
+        Create an InterfaceCollection from a dictionary.
+        """
+        name = data['name']
+        interfaces = data['interfaces']
+        ICollection = cls(name)
+        for synergy, interface_dict in interfaces.items():
+            for name, interface in interface_dict.items():
+                ICollection.add(interface)
+        return ICollection
+
+@dataclass
+class InterfaceData:
+    name: str       = ''
+    tag:  str       = ''
+    value: any      = 0
+    ranges: str     = ''
+    types: dict     = field(default_factory=dict)
+    synergies: list = field(default_factory=list)
+
+class Interface(DatabaseObject):
+    def __init__(self, data: InterfaceData):
+        # Initialize the base class first if it does important setup
+        super().__init__(data)
+
+        # Then do the specific initialization for Interface
+        self._initialize_types_and_synergies(data)
+
+    def _initialize_types_and_synergies(self, data: InterfaceData):
+        synergy_template = SynergyTemplate()
+        if data.tag:
+            self.synergies = [synergy.name for synergy in synergy_template.get_synergies_by_tag(data.tag)]
+            self.types = {
+                'O': int(data.tag in synergy_template.get_output_tags()),
+                'I': int(data.tag in synergy_template.get_input_tags())
+            }
+    
+    def get_type(self):
+        return self.types
+    
+    def is_type(self, type):
+        return type in self.types
+
+    def get_synergies_by_type(self, type):
+        return [synergy for synergy in self.synergies if self.has_tag_of_type(synergy, type)]
+
+    def has_tag_of_type(self, synergy, type):
+        if type == "I":
+            return any(tag in synergy.get_target_tags() for tag in SynergyTemplate().get_input_tags())
+        elif type == "O":
+            return any(tag in synergy.get_source_tags() for tag in SynergyTemplate().get_output_tags())        
+        else:
+            return False
+    
+    def __str__(self):
+        string = f"{self.name} {self.tag} {self.value} {[synergy.name for synergy in self.synergies]}"
+        return string
+
+
+    def get_collection_names(self):
+        return self.synergies
+
+Synergy.py :
+
+from dataclasses import dataclass, asdict
+from MongoDB.DatabaseManager import DatabaseObject
+import csv
+
+@dataclass
+class SynergyTemplateData:
+    synergies: dict  # Assuming `synergies` is a list of Synergy objects
+
+class SynergyTemplate(DatabaseObject):
+
+    _instance = None
+
+    def __new__(cls, csvfilename=None):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+            cls._instance.load_synergy_template(csvfilename)
+        return cls._instance
+
+    def to_data(self):
+        synergy_data_list = [synergy.to_data() for synergy in self.synergies.values()]
+        return SynergyTemplateData(synergies=synergy_data_list)
+
+    @classmethod
+    def from_data(cls, data):
+        instance = cls()
+        for synergy_data in data.synergies:
+            synergy = Synergy.from_data(synergy_data)
+            instance.synergies[synergy.name] = synergy
+        return instance
+
+    def save(self):
+        for name, synergy in self.synergies.items():
+            synergy.save(name, collection_name='SynergyTemplate')
+
+    def load_synergy_template(self, csvfilename=None):
+        self.synergies = {}        
+        csvpathname = f"csv/{csvfilename or 'synergies'}.csv"
+        self.from_csv(csvpathname)
+
+    def add_synergy(self, name, weight, input_tags, output_tags):
+        synergy_data = SynergyData(name, weight, input_tags, output_tags)
+        synergy = Synergy(synergy_data)
+        self.synergies[name] = synergy
+
+    def remove_synergy(self, name):
+        if name in self.synergies:
+            del self.synergies[name]
+
+    def get_synergies(self):
+        return self.synergies
+
+    def get_synergy_by_name(self, name):
+        return self.synergies[name]        
+
+    def get_synergies_by_tag(self, tag):
+        input_synergies = [synergy for synergy in self.synergies.values() if tag in synergy.input_tags]
+        output_synergies = [synergy for synergy in self.synergies.values() if tag in synergy.output_tags]        
+        return input_synergies + output_synergies
+
+    def get_output_tags_by_synergy(self, synergyname):
+        synergy = self.get_synergy_by_name(synergyname)
+        return synergy.output_tags
+
+    def get_input_tags_by_synergy(self, synergyname):
+        synergy = self.get_synergy_by_name(synergyname)
+        return synergy.input_tags
+
+    def get_output_tags(self):
+        output_tags = set()
+        for synergy in self.synergies.values():
+            output_tags.update(synergy.output_tags)
+        return output_tags
+
+    def get_input_tags(self):
+        input_tags = set()
+        for synergy in self.synergies.values():
+            input_tags.update(synergy.input_tags)
+        return input_tags
+    
+    def set_synergy_rows(self, rows):
+        
+        syn_keys = list(self.synergies.keys())
+        for key in syn_keys:
+            if key not in rows:        
+                self.remove_synergy(key)
+
+    def __str__(self):
+        output = "Synergies:\n"
+        for name, synergy in self.synergies.items():
+            output += f"{synergy}\n"
+        return output
+    
+    def to_csv(self, filename):
+        fieldnames = ["name", "weight", "input_tags", "output_tags"]
+        rows = []
+        for synergy in self.synergies.values():
+            rows.append({
+                "name": synergy.name,
+                "weight": synergy.weight,
+                "input_tags": ", ".join(synergy.input_tags),
+                "output_tags": ", ".join(synergy.output_tags)
+            })
+
+        with open(filename, "w", newline="") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+    def from_csv(self, filename):
+        
+        with open(filename, "r") as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=';')
+            for row in reader:
+                name = row["name"]
+                weight = float(row["weight"])
+                input_tags = [tag.strip() for tag in row["input_tags"].split(",")]
+                output_tags = [tag.strip() for tag in row["output_tags"].split(",")]
+                self.add_synergy(name, weight, input_tags, output_tags)
+
+    def get_collection_names(self):
+        return self.synergies
+
+
+@dataclass
+class SynergyData:
+    name: str
+    weight: float
+    input_tags: list
+    output_tags: list
+
+class Synergy(DatabaseObject):
+
+    def get_input_tags(self):
+        return self.data.input_tags
+    
+    def get_output_tags(self):
+        return self.data.output_tags
+
+    def __str__(self):
+        return f"{self.data}"
+    
+    def to_data(self):
+        # Convert the SynergyData dataclass to a dictionary
+        return self.data
+
+    @classmethod
+    def from_data(cls, data):
+        # Create a new Synergy instance using the unpacked data
+        return cls(data['name'], data['weight'], data['input_tags'], data['output_tags'])
+    
+    def get_collection_names(self):
+        return self
+    
+CardLibrary.py : 
+
+from MongoDB.DatabaseManager import DatabaseObject
+from copy import copy
+from dataclasses import dataclass, field
+
+@dataclass
+class EntityData:
+    name: str    
+    faction: str
+    attributes: dict
+    abilities: dict
+    interfaceCollection_data: dict
+
+class Entity(DatabaseObject):
+    def __init__(self, data: EntityData):
+        super().__init__(data)
+        
+    def get_collection_names(self):
+        return self.interfaceCollection_data
+        
+    
+@dataclass
+class ForgebornData:
+    id: str = ''
+    name: str   = ''
+    entity_names: list = field(default_factory=list)
+
+class Forgeborn(DatabaseObject):
+    def __init__(self, data: ForgebornData):
+        super().__init__(data)
+            
+    def __str__(self):
+        abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.entity_names.items()])
+        return f"Forgeborn Name: {self.name}\nAbilities:\n{abilities_str}\n"
+    
+    def get_collection_names(self):
+        return self.entity_names
+
+@dataclass
+class CardData():
+    title    : str  = ''
+    faction : str   = ''
+    cardType: str   = ''
+    cardSubType: str    =''
+    attack  : dict  =field(default_factory=dict)
+    health  : dict  =field(default_factory=dict)
+    entity_names : list = field(default_factory=list)
+
+class Card(DatabaseObject):
+
+    def __init__(self, data: CardData):         
+        super().__init__(data)
+        
+        if self.data is not None:
+            self.data.entity_names = self.get_entity_names_from_title(self.title)   
+        
+        # self.above_stat = None
+        # def aggregate_attribute(attribute_name):
+        #     aggregated = {}
+        #     for entity_name in self.entity_names:
+        #         entity = self.lookup(entity_name, collection_name='Entity')
+        #         for level in entity.abilities:
+        #             aggregated[level] = aggregated.get(level,0) + entity.abilities[level][attribute_name]  
+        #     return aggregated
+        
+                # self.above_stat ={'attack' : {}, 'health' : {}}
+
+        # for stat in self.above_stat.keys():
+        #     stats = getattr(self, stat)
+        #     for level in stats: 
+        #         self.above_stat[stat][level] = stats[level] >= 3 * ( level + 1 )
+
+
+    def get_entity_names_from_title(self, card_title):
+        # First try with full title        
+        card_entity = self.db_manager.get_record_by_name('Entities', card_title)        
+        if card_entity:          
+            return card_entity.name
+
+        # If not found, try with decreasing title length
+        parts = card_title.split(' ')
+        for i in range(1, len(parts)):
+            modifier_title = ' '.join(parts[:i])
+            card_title = ' '.join(parts[i:])
+            modifier_entity_data = self.db_manager.get_record_by_name('Entities', modifier_title)
+            card_entity_data = self.db_manager.get_record_by_name('Entities', card_title)
+            if modifier_entity_data and card_entity_data:
+                return [entity_name for entity_name in [modifier_entity_data['name'], card_entity_data['name']]]
+    
+        # If no entities found, create a card with just the card title
+        return [card_title]
+
+    def get_collection_names(self):
+        return self.entity_names
+
+@dataclass
+class DeckData:
+    name        : str
+    forgebornId : str
+    faction     : str    
+    cardIds     : list
+    cards       : dict              # Card ids from Net API
+
+class Deck(DatabaseObject):
+    
+    def __init__(self, data: DeckData):
+        super().__init__(data)
+        
+    # def __init__(self, name: str='', forgebornId : str='0', faction: str='', cardIds: list=[], cards: dict={}):        
+
+    #     self.data = DeckData(
+    #         name = name,
+    #         forgebornId = forgebornId,
+    #         faction = faction,
+    #         cardIds = cardIds,
+    #         cards = cards
+    #     )      
+    def get_collection_names(self):
+        return self.cards
+
+class Fusion(Deck):
+    def __init__(self, decks, name=None):
+        if len(decks) == 1:            
+            super().__init__(DeckData(decks[0].name, decks[0].forgebornId, decks[0].faction, decks[0].cardIds, decks[0].cards))
+            self.forgeborn_options = [decks[0].forgeborn]
+            self.decks = decks
+            return
+        
+        deck1, deck2 = decks[0], decks[1]
+        
+
+        if deck1.faction == deck2.faction:
+            #raise ValueError("Cannot fuse decks of the same faction")
+            return None
+
+        # Default Values 
+        fusion_name = "_".join([deck.name for deck in decks])        
+        # Name and faction for the fusion
+
+        # Sort the deck names alphabetically and then join them with an underscore
+        self.fused_name = name or "_".join(sorted([deck.name for deck in decks]))
+        # Generate the fused faction name        
+        self.fused_faction = "|".join([deck.faction for deck in decks]) 
+        fused_cards = {**deck1.cards, **deck2.cards}
+        fused_card_ids = deck1.cardIds + deck2.cardIds
+        
+        # Additional properties specific to Fusion
+        self.deck1 = deck1
+        self.deck2 = deck2
+        self.forgeborn_options = self.inspire_forgeborn(deck1.forgeborn, deck2.forgeborn)
+        self.fused_abilities = [ability for forgeborn in self.forgeborn_options for ability in forgeborn.abilities]
+        
+
+        # Choosing a default forgeborn (frosm deck1 for simplicity)
+        # Note: Here we're assuming that a 'forgeborn' variable exists in the 'Deck' class
+        self.active_forgeborn = self.forgeborn_options[0]
+
+        # Call the Deck's constructor and exchange fused abilities 
+        super().__init__(DeckData(name or fusion_name, self.active_forgeborn, self.fused_faction,fused_card_ids, fused_cards))
+        self.abilities = self.fused_abilities
+        
+    def inspire_forgeborn(self, forgeborn1, forgeborn2):
+        new_forgeborns = []
+        
+        for original_forgeborn, other_forgeborn in [(forgeborn1, forgeborn2), (forgeborn2, forgeborn1)]:
+            
+            inspire_abilities = [ability for ability in original_forgeborn.abilities if 'Inspire' in ability]
+            
+            if inspire_abilities:
+                new_abilities = original_forgeborn.abilities.copy()
+                
+                for inspire_ability in inspire_abilities:
+                    level = inspire_ability[0]
+                    
+                    for other_ability_name, other_ability in other_forgeborn.abilities.items():
+                        if other_ability_name[0].startswith(str(level)):
+                            new_abilities[other_ability_name] = other_ability
+                            break  # Assuming you only want the first match
+                    
+                new_forgeborn = Forgeborn(original_forgeborn.id, original_forgeborn.name, new_abilities)
+            else:
+                new_forgeborn = original_forgeborn
+            
+            new_forgeborns.append(new_forgeborn)    
+        return new_forgeborns
+
+    def set_forgeborn(self, idx_or_forgeborn_name):
+            """
+            Sets the active Forgeborn of the Fusion deck to the given index or Forgeborn object.
+            Also updates the Fusion's name and faction based on the new active Forgeborn.
+            """
+            new_forgeborn = self.active_forgeborn
+            if isinstance(idx_or_forgeborn_name, int):
+                new_forgeborn = self.forgeborn_options[idx_or_forgeborn_name]
+            else:
+                new_forgeborn = self.get_forgeborn(idx_or_forgeborn_name)
+
+            self.abilities = new_forgeborn.abilities
+            # Check if the new Forgeborn is already the active one
+            if self.active_forgeborn == new_forgeborn: return
+
+            # Update the active Forgeborn
+            self.active_forgeborn = new_forgeborn
+
+            # Update the name and faction based on the active Forgeborn
+            if self.active_forgeborn == self.forgeborn_options[0]:
+                self.name    = f"{self.deck1.name}_{self.deck2.name}"
+                self.faction = f"{self.deck1.faction}|{self.deck2.faction}"
+            else:
+                self.name    = f"{self.deck2.name}_{self.deck1.name}"
+                self.faction = f"{self.deck2.faction}|{self.deck1.faction}"
+            
+            # Update the forgeborn in the parent (Deck) class
+            self.forgeborn = self.active_forgeborn    
+#            self.update_ICollection_with_forgeborn()
+ 
+
+    def copyset_forgeborn(self, idx_or_forgeborn_name):
+
+        final_fusion = copy(self)
+        final_fusion.set_forgeborn(idx_or_forgeborn_name)
+
+        return final_fusion
+
+    def get_forgeborn(self, id_or_forgeborn_name):        
+        if isinstance(id_or_forgeborn_name, int):
+            return self.forgeborn_options[id_or_forgeborn_name]
+        else :
+            for forgeborn in self.forgeborn_options:
+                if id_or_forgeborn_name == forgeborn.name:
+                    return forgeborn
+        return None
+
+    def to_dict(self):
+        fusion_dict = super().to_dict()
+        fusion_dict.update({
+            "fused_name": self.fused_name,
+            "fused_faction": self.fused_faction,
+            #"deck1": self.deck1.to_dict(),
+            #"deck2": self.deck2.to_dict(),
+            "forgeborn_options": [fb.to_dict() for fb in self.forgeborn_options],
+            "fused_abilities": self.fused_abilities
+        })
+        return fusion_dict    
+
+DatabaseManager.py : 
+
+import importlib
+from math import e
+from MongoDB.MongoDB import MongoDB
+import GlobalVariables
+from dataclasses import dataclass, fields, asdict
+from typing import Any, Dict
+
+
+class DatabaseManager:
+    _instances = {}
+
+    def __new__(cls, db_name: str = None, host='localhost', port=27017):
+        if db_name is None:
+            # Create an empty instance without a database name
+            return super().__new__(cls)
+
+        if db_name not in cls._instances:
+            cls._instances[db_name] = super().__new__(cls)
+            cls._instances[db_name].set_database_name(db_name, host, port)
+        return cls._instances[db_name]
+
+    def set_database_name(self, db_name: str, host='localhost', port=27017):
+        if not 'mdb' in self.__dict__: 
+            self.mdb = MongoDB(db_name, host, port)
+        else:
+            self.mdb.set_db(db_name)
+
+    def __getattr__(self, attr):
+        if 'mdb' in self.__dict__:
+            mdb = self.__dict__['mdb']                                    
+            return getattr(mdb, attr)
+        raise AttributeError("Database name not set. Call set_database_name first.")
+
+    # Database functions 
+    def get_record_by_name(self, collection_name, name):
+        return self.find_one(collection_name, {'name': name})
+
+class DatabaseObject:
+    db_manager = None
+
+    def __init__(self, data=None):
+        if self.db_manager:
+            self.db_manager.set_database_name(GlobalVariables.username or 'Default')
+        data_class = self.get_data_class()
+        #print(f"Data class: {data_class}, Data: {data}, Type of Data: {type(data)}")
+
+        if data_class is not None and isinstance(data, data_class):
+            self.data = data
+        else:
+            self.data = None
+
+
+    
+    def get_data_class(self):
+        if self.__class__.DataClass is None:
+            module_name = self.__class__.__module__
+            module = importlib.import_module(module_name)
+            data_class_name = self.__class__.__name__ + "Data"
+            self.__class__.DataClass = getattr(module, data_class_name)
+        return self.__class__.DataClass
+
+    @classmethod
+    def initialize_db_manager(cls):
+        if cls.db_manager is None:
+            cls.db_manager = DatabaseManager(GlobalVariables.username or 'Default')
+
+    @classmethod
+    def from_data(cls, data: Dict[str, Any]):
+        if not isinstance(data, dict):
+            raise TypeError("data must be a dict")
+        
+        # Get DataClass and get the fields from the dataclass
+        dataclass = cls(None).get_data_class()
+        dataclass_fields = {field.name for field in fields(dataclass)}
+
+        # Extract valid data and extra data
+        valid_data = {k: v for k, v in data.items() if k in dataclass_fields}
+        extra_data = {k: v for k, v in data.items() if k not in dataclass_fields}
+        
+        # Create an instance with the valid data as dataclass
+        instance = cls(dataclass(**valid_data)) if valid_data else cls()
+
+        # If there's extra data, handle it as needed (e.g., store in a specific attribute)
+        if extra_data:
+            instance.extra_data = extra_data
+
+        return instance
+
+    DataClass = None
+    extra_data = None  # Placeholder for extra data
+
+    @classmethod
+    def lookup(cls, name, type='name', collection_name=None):
+        collection_name = collection_name or cls.__name__
+        data = cls.db_manager.find_one(collection_name, {type: name})
+        
+        if data:    return cls.from_data(data)
+        else:       return None  # Or handle the 'not found' case as needed
+        
+    def __getattr__(self, name):
+        # Check if the attribute exists as a member variable
+        if name in self.__dict__:
+            return self.__dict__[name]
+                
+        # If not found, check if it exists in the data dictionary
+        if 'data' in self.__dict__:
+            data = self.__dict__['data']
+            if isinstance(data, dict) and name in data:                
+                return data[name]
+            elif hasattr(data, name):
+                return getattr(data, name)
+        
+        #print(f"{self.__class__.__name__} object has no attribute '{name}'")            
+        return None
+    
+    def get_collection(self):
+        # Import here to avoid circular imports
+        from Interface import InterfaceCollection
+        
+        data = None        
+        object = self
+        while not isinstance(object, InterfaceCollection):
+            classname = object.__class__.__name__
+
+            if classname == 'Deck':
+                object = InterfaceCollection.from_entities(self.name, [self])
+            if classname == 'Entity':
+                object = InterfaceCollection.from_entities(self.name, [self])
+            if classname == 'Forgeborn':
+                object = InterfaceCollection.from_forgeborn(self.id)
+            if classname == 'Deck':
+                object = InterfaceCollection.from_deck(self)
+            if classname == 'Card':
+                object = InterfaceCollection.from_card(self)
+            else:
+                object = None
+
+
+    def save(self, name, collection_name=None):
+        collection_name = collection_name or self.__class__.__name__
+        data_to_save = self.to_data() if isinstance(self.to_data(), dict) else vars(self.to_data())
+        DatabaseObject.db_manager.upsert(collection_name, {'name' : name }, data_to_save)     
+
+
+    def to_data(self):
+        if isinstance(self.data, dict):
+            return self.data
+        elif self.data is not None:
+            return asdict(self.data)        
+        
+    @classmethod
+    def load(cls, name, collection_name=None):
+        collection_name = collection_name or cls.__name__
+        data = cls.db_manager.get_record_by_name(collection_name, name)
+        
+        if data:
+            instance = cls.from_data(data)
+            instance.db_manager = cls.db_manager  # Set the db_manager for the instance
+            return instance
+        else:
+            return None
+        
+#Initialize the DatabaseManager 
+DatabaseObject.initialize_db_manager()

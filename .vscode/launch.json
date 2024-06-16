@@ -1,23 +1,53 @@
 {
     "version": "0.2.0",
     "configurations": [
-
+        {
+            "name": "Python: UCL GUI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "SolDB-GUI.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
         {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal",            
-            "justMyCode": True
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--username", "tmind",
+              //  "--filter", "K:Robot > 3 | F=Nekrium",
+                "--eval", "tmind"             
+            ]
         },
         {
             "name": "Python: UCL",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "SolDB.py",
             "console": "integratedTerminal",
-            "justMyCode": True,
-            "args": ["--username","TMind", "--eval", "tmind"]
+            "justMyCode": true,
+            "args": [
+                "--username", "tmind",
+              //  "--filter", "K:Robot > 3 | F=Nekrium",
+                "--eval", "tmind",
+                "--mode", "update"   
+            ]
+        },
+        {
+            "name": "Python: UCL strudel",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "SolDB.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--username", "strudel",
+              //  "--filter", "K:Robot > 3 | F=Nekrium",
+                "--eval", "strudel"
+            ]
         },
     ]
 }

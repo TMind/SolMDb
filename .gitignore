@@ -8,3 +8,11 @@ csv/*
 txt/
 .vscode/*
 .DS_Store
+.vscode/launch.json
+gui/*
+build/*
+dist/*
+lib/*
+.ipynb_checkpoints/*
+myenv/*
+source/*

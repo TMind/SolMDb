@@ -1,0 +1,48 @@
+@startuml DatabaseManager
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class node2 as "MongoDB.DatabaseManager.DatabaseManager" {
+   mdb: 
+   _instances: 
+   __new__(cls, db_name: str = None, host='localhost', port=27017): 
+   set_database_name(self, db_name: str, host='localhost', port=27017): 
+   __getattr__(self, attr): 
+   get_record_by_name(self, collection_name, name): 
+}
+class object {
+   __doc__: 
+   __dict__: 
+   __module__: 
+   __annotations__: 
+   __class__(self): 
+   __class__(self, __type: type[object]): 
+   __init__(self): 
+   __new__(cls): 
+   __setattr__(self, __name: str, __value: Any): 
+   __delattr__(self, __name: str): 
+   __eq__(self, __value: object): 
+   __ne__(self, __value: object): 
+   __str__(self): 
+   __repr__(self): 
+   __hash__(self): 
+   __format__(self, __format_spec: str): 
+   __getattribute__(self, __name: str): 
+   __sizeof__(self): 
+   __reduce__(self): 
+   __reduce_ex__(self, __protocol: SupportsIndex): 
+   __reduce_ex__(self, __protocol: int): 
+   __getstate__(self): 
+   __dir__(self): 
+   __init_subclass__(cls): 
+   __subclasshook__(cls, __subclass: type): 
+}
+class node1 as "typing.Hashable" {
+   __hash__(self): 
+}
+
+node2   ^-[#595959,plain]-  object 
+object  ^-[#595959,dashed]-  node1  
+@enduml

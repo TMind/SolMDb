@@ -16,3 +16,7 @@ lib/*
 .ipynb_checkpoints/*
 myenv/*
 source/*
+.eggs/*
+.idea/
+.ipynb_checkpoints/*
+

@@ -5,6 +5,8 @@ from MongoDB.DatabaseManager import DatabaseObject
 from copy import copy
 from dataclasses import dataclass, field
 
+import GlobalVariables
+
 @dataclass
 class EntityData:
     name: str    = ''
@@ -24,23 +26,59 @@ class Entity(DatabaseObject):
     
 @dataclass
 class ForgebornData:    
+    _id: str = ''
     id: str = ''
     name: str   = ''
-    abilities: list = field(default_factory=list)    
+    abilities: dict = field(default_factory=dict)    
     children_data: dict = field(default_factory=dict)
-    _id: str = ''
     
 
+class ForgebornAbility :
+    def __init__(self, id, name, entity):
+        self.id = id
+        self.name = name
+        self.entity = entity     
+        
 class Forgeborn(DatabaseObject):
     def __init__(self, data: ForgebornData):        
         super().__init__(data)
-        self.data._id = self.id       
+        #self.data._id = self.id       
         if self.abilities:
-            self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in self.abilities}  
+            self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in self.abilities}  #TODO: Check if this is correct
             
-    def __str__(self):
-        abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.entity_names.items()])
-        return f"Forgeborn Name: {self.name}\nAbilities:\n{abilities_str}\n"
+    def add_ability(self, ability):
+        #ability_permutation = ability.id[-4:]   # c3a2
+        #ability_cycle = ability_permutation[1]
+        #ability_number = ability_permutation[3]
+        #ability_name = f"{ability_cycle}{ability.name}"
+
+        if self.abilities:
+            self.abilities[ability.id] = ability.entity                
+
+    def get_permutation(self, forgeborn_id):
+        # Extract ability information from forgeborn_id
+        ability_ids = self._construct_ability_ids(forgeborn_id)
+        
+        # Create a new Forgeborn instance with a subset of abilities
+        new_forgeborn = Forgeborn(self.data)
+        new_forgeborn.data.id = forgeborn_id
+        new_forgeborn.abilities = {aid: self.abilities[aid] for aid in ability_ids if aid in self.abilities}
+        
+        return new_forgeborn
+
+    def _construct_ability_ids(self, forgeborn_id):
+        # Parse the forgeborn_id to get ability IDs
+        ability_prefix = self.id  # Assuming the prefix is the same as Forgeborn ID
+        ability_ids = []
+        ability_data = forgeborn_id[len(self.id):]  # Remove the Forgeborn ID part
+        
+        for i in range(0, len(ability_data)):
+            number = ability_data[i]
+            cycle = i+2
+            ability_id = f"{ability_prefix}-c{cycle}a{number}"
+            ability_ids.append(ability_id)
+        
+        return ability_ids
     
 @dataclass
 class CardData():
@@ -68,11 +106,17 @@ class Card(DatabaseObject):
         super().__init__(data)
                 
         if self.data is not None:
-            if self.data.name :  self.data.title = data.name 
-            else:                self.data.name = data.title            
+            if data.name :  
+                self.data.title = data.name 
+                self.data.name = data.name 
+            elif data.title:                
+                self.data.name = data.title
+                self.data.title = data.name 
 
-            entityNames = self.get_entity_names_from_title(self.name)   
+            #print(f"Data Name: {self.data.name}")
+            entityNames = self.get_entity_names_from_title(self.data.name)   
             if entityNames:
+                #print(f"Entity Names: {entityNames}")
                 self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in entityNames}
                     
         # self.above_stat = None
@@ -96,20 +140,29 @@ class Card(DatabaseObject):
         if not card_name or card_name == '': return None
 
         # First try with full title        
-        card_entity_data = self.db_manager.get_record_by_name('Entity', card_name)        
+        card_entity_data =  GlobalVariables.commonDB.get_record_by_name('Entity', card_name)        
         if card_entity_data:          
+            #print(f"Card Entity Data found : {card_entity_data['name']}")
             return [card_entity_data['name']]
 
         # If not found, try with decreasing title length
         parts = card_name.split(' ')
+        entities_data = []
         for i in range(1, len(parts)):
             modifier_title = ' '.join(parts[:i])
             card_name = ' '.join(parts[i:])
-            modifier_entity_data = self.db_manager.get_record_by_name('Entity', modifier_title)
-            card_entity_data = self.db_manager.get_record_by_name('Entity', card_name)
-            if modifier_entity_data and card_entity_data:
-                return [entity_name for entity_name in [modifier_entity_data['name'], card_entity_data['name']]]
-    
+            #print(f"Modifier Title: {modifier_title} - Card Name: {card_name}")
+            modifier_entity_data = GlobalVariables.commonDB.get_record_by_name('Entity', modifier_title)
+            card_entity_data = GlobalVariables.commonDB.get_record_by_name('Entity', card_name)
+
+            if modifier_entity_data:
+                #print(f"Modifier Entity Data found : {modifier_entity_data['name']}")
+                entities_data.append(modifier_entity_data['name'])
+            if card_entity_data:
+                #print(f"Card Entity Data found : {card_entity_data['name']}")
+                entities_data.append(card_entity_data['name'])
+                
+            return entities_data
         # If no entities found, return card_title
         return [card_name]
 
@@ -248,20 +301,27 @@ class Fusion(DatabaseObject):
         
         for original_forgeborn, other_forgeborn in [(forgeborn1, forgeborn2), (forgeborn2, forgeborn1)]:
             
-            inspire_abilities = [ability for ability in original_forgeborn.abilities if 'Inspire' in ability]
+            inspire_abilities = [ability for ability in original_forgeborn.abilities.values() if 'Inspire' in ability.attributes['Name']]
             
             if inspire_abilities:
                 new_abilities = original_forgeborn.abilities.copy()
                 
                 for inspire_ability in inspire_abilities:
-                    level = inspire_ability[0]
+                    level = inspire_ability.name[-3]
                     
                     for other_ability_name, other_ability in other_forgeborn.abilities.items():
-                        if other_ability_name[0].startswith(str(level)):
-                            new_abilities[other_ability_name] = other_ability
+                        if other_ability_name[-3].startswith(str(level)):
+                            # Remove the old ability that has the same level 
+                            ability_id_replace_name = next((ability_id for ability_id in new_abilities.keys() if ability_id[-3] == level), None)
+                            if ability_id_replace_name:
+                                new_abilities.pop(ability_id_replace_name)
+                            new_abilities[other_ability.name] = other_ability
                             break  # Assuming you only want the first match
-                    
-                new_forgeborn = Forgeborn(original_forgeborn.id, original_forgeborn.name, new_abilities)
+                new_forgeborn = Forgeborn(original_forgeborn.id, original_forgeborn.name)
+                for name, ability in new_abilities.items():
+                    id = name 
+                    name = ability.attributes['Name']
+                    new_forgeborn.add_ability(ForgebornAbility(id, name ,ability))                
             else:
                 new_forgeborn = original_forgeborn
             

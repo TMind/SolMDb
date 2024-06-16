@@ -1,4 +1,3 @@
-from platform import node
 import networkx as nx
 import importlib
 
@@ -7,7 +6,7 @@ def get_class_from_path(full_class_path):
         print(f"No Module found: {full_class_path}")
         return None, None
 
-    module_name, class_name = full_class_path.rsplit('.', 1)  # Split on last dot
+    module_name, class_name = full_class_path.rsplit('.', 1)
 
     try:
         module = importlib.import_module(module_name)
@@ -19,262 +18,145 @@ def get_class_from_path(full_class_path):
 
 class MyGraph:
     def __init__(self):
-        self.G      = nx.DiGraph()
-        self.node_data = {}
-        #self.G.add_node(self.get_nodeId(self.object), color='purple')  # Use the name of the object as the node ID
-        
+        self.G = nx.DiGraph()
+        self.node_data =  { 'tags': {}}
+
     def add_node(self, child_object, **attributes):
-        nodeId_child  = self.get_nodeId(child_object)
-        self.G.add_node(nodeId_child, **attributes)
+        node_id = self.get_node_id(child_object)
+        self.G.add_node(node_id, **attributes)
 
     def add_edge(self, parent, child_object, **attributes):
-        nodeId_parent = self.get_nodeId(parent)
-        nodeId_child  = self.get_nodeId(child_object)
-        self.G.add_edge(nodeId_parent, nodeId_child ,**attributes)
+        parent_id = self.get_node_id(parent)
+        child_id = self.get_node_id(child_object)
+        self.G.add_edge(parent_id, child_id, **attributes)
 
-    def get_nodeId(self, node):
-        nodeId = ''
-        if isinstance(node, str): nodeId = node
-        elif node.name :   nodeId = node.name         
-        elif node.tag :  nodeId = node.tag
-        elif node.title: nodeId = node.title
-        return nodeId
-    
+    def get_node_id(self, node):
+        for attr in ['name', 'tag', 'title']:
+            node_id = getattr(node, attr, None)
+            if node_id:
+                return node_id
+        return node if isinstance(node, str) else ''
+
     def set_node_attributes(self, node, **attributes):
-        nodeId = self.get_nodeId(node)
-        self.G.nodes[nodeId].update(attributes)
-
-    def create_graph_statistics(self):
-        # Create statistics for the graph 
-
-        pass
+        node_id = self.get_node_id(node)
+        self.G.nodes[node_id].update(attributes)
 
     def create_graph_children(self, db_object, parent_object=None, root=None):
-        """
-        Creates the children nodes and edges for a given database object.
-
-        Parameters:
-        - db_object: The database object for which to create the children nodes and edges.
-        - parent_object: The parent object of the database object. Default is None.
-        - root: The root object of the graph. Default is None.
-
-        Returns:
-        None
-        """
-        root, parent_object = self.initialize_root_and_parent(db_object, parent_object, root)
-        self.print_parent_and_db_object(parent_object, db_object)
+        root, parent_object = self._initialize_root_and_parent(db_object, parent_object, root)
+        self._print_parent_and_db_object(parent_object, db_object)
 
         if db_object.children_data:
             for child_name, full_class_path in db_object.children_data.items():
-                self.process_child(root, db_object, parent_object, child_name, full_class_path)
+                self._process_child(root, db_object, parent_object, child_name, full_class_path)
 
-        return
-
-    def initialize_root_and_parent(self, db_object, parent_object, root):
-        """
-        Initializes the root and parent objects if they are not provided.
-
-        Parameters:
-        - db_object: The database object.
-        - parent_object: The parent object. Default is None.
-        - root: The root object. Default is None.
-
-        Returns:
-        - root: The initialized root object.
-        - parent_object: The initialized parent object.
-        """
-        if not root or not parent_object: 
+    def _initialize_root_and_parent(self, db_object, parent_object, root):
+        if not root or not parent_object:
             root = self
             parent_object = db_object
-            self.add_node(self.get_nodeId(db_object), color='purple')
+            self.add_node(db_object, color='purple')
         return root, parent_object
 
-    def print_parent_and_db_object(self, parent_object, db_object):
-        """
-        Prints the parent object and database object information.
+    def _print_parent_and_db_object(self, parent_object, db_object):
+        parent_type = parent_object.__class__.__name__
+        self_type = db_object.__class__.__name__
+        #print(f"Parent Object = {self.get_node_id(parent_object)}[{parent_type}], Db Object = {self.get_node_id(db_object)}[{self_type}]")
 
-        Parameters:
-        - parent_object: The parent object.
-        - db_object: The database object.
-
-        Returns:
-        None
-        """
-        parentType = parent_object.__class__.__name__
-        selfType = db_object.__class__.__name__
-        #print(f"Parent Object = {self.get_nodeId(parent_object)}[{parentType}] , Db Object = {self.get_nodeId(db_object)}[{selfType}] \n")
-
-    def process_child(self, root, db_object, parent_object, child_name, full_class_path):
-        """
-        Processes a child object and adds it to the graph.
-
-        Parameters:
-        - root: The root object of the graph.
-        - db_object: The database object.
-        - parent_object: The parent object.
-        - child_name: The name of the child object.
-        - full_class_path: The full class path of the child object.
-
-        Returns:
-        None
-        """
-        color = '#97c2fc'        
-
-        cls , childType = get_class_from_path(full_class_path)
-        if not cls or not childType: return
-
-        #print(f"Child Name = {child_name}[{childType}] \n")
-
-        if childType == 'Synergy': 
-            self.process_synergy_child(root, db_object, cls, child_name)
+    def _process_child(self, root, db_object, parent_object, child_name, full_class_path):
+        cls, child_type = get_class_from_path(full_class_path)
+        if not cls or not child_type:
             return
 
-        child_object = cls.lookup(child_name)
+        #print(f"Child Name = {child_name}[{child_type}]")
+
+        if child_type == 'Interface':
+            self._process_interface_child(root, db_object, parent_object, child_name, full_class_path)
+        elif child_type == 'Synergy':
+            self._process_synergy_child(root, db_object, cls, child_name)
+        else:
+            child_object = cls.lookup(child_name)
+            if child_object:
+                color = self._get_color_based_on_child_type(child_type, child_object)
+                self._add_child_to_graph(root, db_object, parent_object, child_object, color)
+                self.create_graph_children(child_object, parent_object=db_object, root=root)
+
+    def _process_interface_child(self, root, db_object, parent_object, child_name, full_class_path):
+        cls, child_type = get_class_from_path(full_class_path)
+        if not cls or not child_type:
+            return
+
+        #print(f"Child Name = {child_name}[{child_type}]")
+
+        # Increase the number of child_name in the node_data dictionary
+        self.node_data['tags'].setdefault(child_name, 0)
+        self.node_data['tags'][child_name] += 1
+        
+        child_object = cls.load(child_name)
         if child_object:
 
-            color = self.get_color_based_on_child_type(childType, child_object)
-            self.add_child_to_graph(root, db_object, parent_object, child_object, color)
+            color = self._get_color_based_on_child_type(child_type, child_object)
+            self._add_child_to_graph(root, db_object, parent_object, child_object, color)
             self.create_graph_children(child_object, parent_object=db_object, root=root)
 
-    def process_synergy_child(self, root, db_object, cls, child_name):
-        """
-        Processes a synergy child object and adds it to the graph.
-
-        Parameters:
-        - root: The root object of the graph.
-        - db_object: The database object.
-        - cls: The class of the child object.
-        - child_name: The name of the child object.
-
-        Returns:
-        None
-        """
+    def _process_synergy_child(self, root, db_object, cls, child_name):
         child_object = cls.load(child_name)
-        node_attributes = {'shape' : 'diamond', 'color' : 'greenyellow', 'label' : self.get_nodeId(child_object)}
+        node_attributes = {'shape': 'diamond', 'color': 'greenyellow', 'label': self.get_node_id(child_object)}
         root.add_node(child_object, **node_attributes)
-        root.add_edge(db_object, child_object)  
-        self.add_parent_to_child(root, db_object, child_object)
+        root.add_edge(db_object, child_object)
+        self._add_parent_to_child(root, db_object, child_object)
 
-        # Add this line to store the child_object in the node_data attribute
-        node_id = self.get_nodeId(child_object)
-
-        for input_tag in child_object.input_tags:
-            self.node_data.setdefault(input_tag, {}).setdefault('input', [])
-            self.node_data[input_tag]['input'].append(node_id)
-
-        for output_tag in child_object.output_tags:
-            self.node_data.setdefault(output_tag, {}).setdefault('output', [])
-            self.node_data[output_tag]['output'].append(node_id)        
-
-    def get_color_based_on_child_type(self, childType, child_object):
+    def _get_color_based_on_child_type(self, child_type, child_object):
         """
         Returns the color based on the child type.
 
         Parameters:
-        - childType: The type of the child object.
+        - child_type: The type of the child object.
         - child_object: The child object.
 
         Returns:
         - color: The color based on the child type.
         """
-        if childType == 'Interface':             
-            if 'O' in child_object.types:
+        if child_type == 'Interface':
+            if child_object.types and 'O' in child_object.types:
                 return "gainsboro"
-            if 'I' in child_object.types: 
+            if child_object.types and 'I' in child_object.types:
                 return "gold"
-        elif childType == 'Card':     return 'skyblue'
-        elif childType == 'Fusion': return 'purple'
-        elif childType == 'Deck':   return 'violet'                                            
-        else : return '#97c2fc'
+        color_mapping = {
+            'Card': 'skyblue',
+            'Fusion': 'purple',
+            'Deck': 'violet'
+        }
+        return color_mapping.get(child_type, '#97c2fc')
 
-    def add_child_to_graph(self, root, db_object, parent_object, child_object, color):
-        """
-        Adds a child object to the graph.
 
-        Parameters:
-        - root: The root object of the graph.
-        - db_object: The database object.
-        - parent_object: The parent object.
-        - child_object: The child object.
-        - color: The color of the child object.
+    def _add_child_to_graph(self, root, db_object, parent_object, child_object, color):
+        source_object, target_object, source_type, target_type = self._get_source_and_target_objects(db_object, parent_object, child_object)
 
-        Returns:
-        None
-        """
-        source_object, target_object, source_type, target_type = self.get_source_and_target_objects(db_object, parent_object, child_object)
-        if not target_type == 'Entity' or source_type == 'Forgeborn':
+        if target_type != 'Entity' or source_type == 'Forgeborn':
             root.add_node(target_object, color=color, title=target_type)
         else:
-            #print(f"Skipping {self.get_nodeId(target_object)} \n")
             return
-        dashes = True if source_type in ['Fusion', 'Deck', 'Forgeborn'] else False                
-        edge_arguments = {'smooth' : {'type' : 'diagonalCross'}} if dashes else {'smooth' : False}
-        if not source_type in ['Deck', 'Forgeborn']:
+
+        dashes = source_type in ['Fusion', 'Deck', 'Forgeborn']
+        edge_arguments = {'smooth': {'type': 'diagonalCross'}} if dashes else {'smooth': False}
+        if source_type not in ['Deck', 'Forgeborn']:
             root.add_edge(source_object, target_object, **edge_arguments)
-            #self.print_edge_info(target_type, source_object, target_object)
-        #if source_object not in ['Fusion', 'Deck', 'Forgeborn']:
-        self.add_parent_to_child(root, source_object, target_object)
 
-    def get_source_and_target_objects(self, db_object, parent_object, child_object):
-        """
-        Returns the source and target objects for adding an edge to the graph.
+        self._add_parent_to_child(root, source_object, target_object)
 
-        Parameters:
-        - db_object: The database object.
-        - parent_object: The parent object.
-        - child_object: The child object.
-
-        Returns:
-        - source_object: The source object.
-        - target_object: The target object.
-        - source_type: The type of the source object.
-        - target_type: The type of the target object.
-        """
+    def _get_source_and_target_objects(self, db_object, parent_object, child_object):
         source_object = db_object
         target_object = child_object
-        parent_object = parent_object
-        source_type = source_object.__class__.__name__
-        target_type = target_object.__class__.__name__
         parent_type = parent_object.__class__.__name__
-        
-        #If an edge is to be made between Card and Entity , instead make an edge between Card and Entities children
-        if source_type == 'Entity' and parent_type == 'Card':
-            #print(f"Changing source object from {self.get_nodeId(source_object)} to {self.get_nodeId(parent_object)}")
+
+        if source_object.__class__.__name__ == 'Entity' and parent_type == 'Card':
             source_object = parent_object
-            source_type = source_object.__class__.__name__
-        return source_object, target_object, source_type, target_type
 
-    def print_edge_info(self, target_type, source_object, target_object):
-        """
-        Prints the edge information.
+        return source_object, target_object, source_object.__class__.__name__, target_object.__class__.__name__
 
-        Parameters:
-        - target_type: The type of the target object.
-        - source_object: The source object.
-        - target_object: The target object.
+    def _add_parent_to_child(self, root, source_object, target_object):
+        child_node = root.G.nodes[self.get_node_id(target_object)]
+        child_node.setdefault('parents', []).append(self.get_node_id(source_object))
 
-        Returns:
-        None
-        """
-
-        #Get edge attributes for source_object -> target_object
-        edge_attributes = self.G.get_edge_data(self.get_nodeId(source_object), self.get_nodeId(target_object))
-        #print all edge attributes
-        #print(f"Edge Attributes = {edge_attributes} \n")     
-    
-
-    def add_parent_to_child(self, root, source_object, target_object):
-        """
-        Adds the parent object to the child object.
-
-        Parameters:
-        - root: The root object of the graph.
-        - source_object: The source object.
-        - target_object: The target object.
-
-        Returns:
-        None
-        """
-        ChildNode = root.G.nodes[root.get_nodeId(target_object)]                
-        ChildNode.setdefault('parents', [])
-        ChildNode['parents'].append(self.get_nodeId(source_object))
+    def get_length_interface_ids(self):
+        return {interface_id: self.node_data['tags'][interface_id]
+                for interface_id in self.node_data['tags']}

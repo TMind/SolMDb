@@ -17,7 +17,7 @@ import GlobalVariables as gv
 def main(args):    
     gv.username = args.username or 'Default'
 
-    uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
+    #uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
     gv.myDB = DatabaseManager(gv.username, uri=gv.uri)
     gv.commonDB = DatabaseManager('common', uri=gv.uri)
 

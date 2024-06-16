@@ -1,7 +1,7 @@
 import requests
 import json
 from UniversalLibrary import UniversalLibrary
-from Card_Library import Fusion
+from CardLibrary import Fusion
 from typing import List, Tuple, Dict
 from tqdm import tqdm
 
@@ -32,6 +32,7 @@ class NetApi:
             lastPK = ""
             all_decks = pageData['Items']                        
             total = pageData['Count']
+
 
             with tqdm(total=total, initial=pageData['Count'], desc="Fetching Data", colour='YELLOW') as pbar:
                 while 'LastEvaluatedKey' in pageData and lastPK != pageData['LastEvaluatedKey']['PK']:

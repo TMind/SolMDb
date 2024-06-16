@@ -231,7 +231,7 @@ class BaseGrid:
 
 class QGrid(BaseGrid):
     def create_main_widget(self, df):
-        print("QGrid::create_main_widget() - Creating QGrid")
+        #print("QGrid::create_main_widget() - Creating QGrid")
         self.main_widget = qgrid.show_grid(
             df,
             column_options=self.grid_options.get('col_options', {}),

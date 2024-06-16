@@ -7,7 +7,7 @@ import numpy as np
 #import qgrid
 
 import GlobalVariables
-from Card_Library import Deck, FusionData, Fusion
+from CardLibrary import Deck, FusionData, Fusion
 from UniversalLibrary import UniversalLibrary
 from DeckLibrary import DeckLibrary
 from MongoDB.DatabaseManager import DatabaseManager
@@ -111,7 +111,7 @@ qg_coll_options = {
         'faction':          { 'width': 100,  },
         'forgebornId':      { 'width': 100,  },
         'cardTitles':       { 'width': 200,  },
-        'FB1':              { 'width': 150,  },
+        'FB4':              { 'width': 150,  },
         'FB2':              { 'width': 150,  },
         'FB3':              { 'width': 150,  },
     }
@@ -245,6 +245,9 @@ def generate_deck_content_dataframe(event, widget):
             deckList =  list(union_set - set(deselectList))            
             #deckList = ['The Reeves of Loss', 'The People of Bearing']                
             card_dfs_list = []  # List to store DataFrames for each card
+
+            from CardLibrary import Card , CardData
+
             for deckName in deckList:
                 print(f'DeckName: {deckName}')
                 #Get the Deck from the Database 
@@ -258,6 +261,13 @@ def generate_deck_content_dataframe(event, widget):
                         card = GlobalVariables.myDB.find_one('Card', {'_id': cardId})
                         if card:
                             fullCard = card 
+
+                            # Create Graph for Card 
+                            myGraph = MyGraph()
+                            data = CardData(**fullCard)
+                            myGraph.create_graph_children(Card(data))
+                            interface_ids = myGraph.get_length_interface_ids()
+
                             # Select only the desired fields from the card document
                             card = {field: card[field] for field in desired_fields if field in card}
 
@@ -279,8 +289,8 @@ def generate_deck_content_dataframe(event, widget):
                                     card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
                                     card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
 
-                            # Merge the dictionaries dictionaries
-                            card_dict = {**card, **provides_dict, **seeks_dict}
+                            # Merge the dictionaries
+                            card_dict = {**card, **interface_ids}
                             
                             # Insert 'DeckName' at the beginning of the card dictionary
                             card = {'DeckName': deckName, **card_dict}
@@ -290,15 +300,18 @@ def generate_deck_content_dataframe(event, widget):
                             card_dfs_list.append(card_df)  # Add full_card_df to the list                            
                     
             # Concatenate the header DataFrame with the deck DataFrames
-            final_df = pd.concat(card_dfs_list, ignore_index=True, axis=0)        
+            if card_dfs_list:
+                final_df = pd.concat(card_dfs_list, ignore_index=True, axis=0)        
 
-            # Replace empty values in the 'cardSubType' column with 'Spell'
-            if 'cardSubType' in final_df.columns:
-                final_df['cardSubType'] = final_df['cardSubType'].replace(['', '0', 0], 'Spell')
-                final_df['cardSubType'] = final_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
+                # Replace empty values in the 'cardSubType' column with 'Spell'
+                if 'cardSubType' in final_df.columns:
+                    final_df['cardSubType'] = final_df['cardSubType'].replace(['', '0', 0], 'Spell')
+                    final_df['cardSubType'] = final_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
 
-            return final_df.fillna('')
-        
+                return final_df.fillna('')
+            else:
+                print(f"No cards found in the database for {deckList}")
+                return pd.DataFrame()
 
 def generate_cardType_count_dataframe(existing_df=None):
     # Initialize a list to accumulate the DataFrames for each deck
@@ -317,19 +330,7 @@ def generate_cardType_count_dataframe(existing_df=None):
         myGraph = MyGraph()
         myGraph.create_graph_children(myDeck)
 
-        interface_ids_df = pd.DataFrame(columns=['interface_ids'], index=[deckName])
-
-        interface_ids = {}
-        for interface_id in myGraph.node_data:
-            #print(f"Tag: {interface_id}")
-            #print(f"Node Data: {myGraph.node_data[interface_id]}")
-            
-            if 'input' in myGraph.node_data[interface_id]:
-                interface_length = len(myGraph.node_data[interface_id]['input'])
-            elif 'output' in myGraph.node_data[interface_id]:
-                interface_length = len(myGraph.node_data[interface_id]['output'])
-
-            interface_ids[interface_id] = interface_length
+        interface_ids = myGraph.get_length_interface_ids()
 
         # Add a new row to the interface_ids_df DataFrame with the index of deckName and the column of interface_id
         interface_ids_df = pd.DataFrame(interface_ids, index=[deckName])
@@ -411,14 +412,6 @@ def generate_deck_statistics_dataframe():
             print(f"Card {card_id} not found")
             return ''
 
-    def get_forgeborn_name(forgeborn_id):
-        forgeborn = GlobalVariables.commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
-        return forgeborn['name'] if forgeborn else None
-
-    def get_forgeborn_abilities(forgeborn_id):
-        forgeborn = GlobalVariables.commonDB.find_one('Forgeborn', {'_id': forgeborn_id})
-        return forgeborn['abilities'] if forgeborn else None
-
     def get_card_titles(card_ids):
         card_titles = []
         for card_id in card_ids:
@@ -441,7 +434,18 @@ def generate_deck_statistics_dataframe():
     # For column 'cardSetNo' replace the number 99 with 0 
     df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].replace(99, 0)
     df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
-    df_decks_filtered['elo'] = df_decks_filtered['elo'].astype(float)
+
+    # Assuming 'name' is the column with names and 'elo' originally contains the values to convert
+
+    # Convert 'elo' to numeric, coercing errors to NaN
+    df_decks_filtered['elo'] = pd.to_numeric(df_decks_filtered['elo'], errors='coerce').round(2)
+
+    # Identify rows where conversion failed
+    failed_conversions = df_decks_filtered[df_decks_filtered['elo'].isna()]
+
+    # Iterate over the failed conversions to print/store the name and original 'elo' value
+    for index, row in failed_conversions.iterrows():
+        print(f"Index: {index}, Name: {row['name']}, Failed Value: {row['elo']}")
 
     # Add additional columns to the DataFrame -> Count
     additional_columns_count = ['Creatures', 'Spells']
@@ -449,7 +453,7 @@ def generate_deck_statistics_dataframe():
         df_decks_filtered.loc[:,column] = 0
 
     # Add additional columns to the DataFrame -> FB
-    additional_columns_fb = ['FB1', 'FB2', 'FB3']
+    additional_columns_fb = ['FB2', 'FB3', 'FB4']
     for column in additional_columns_fb:
         df_decks_filtered.loc[:,column] = ''
 
@@ -460,19 +464,26 @@ def generate_deck_statistics_dataframe():
             
     df_decks_filtered.set_index('name', inplace=True)
 
+    from CardLibrary import Forgeborn, ForgebornData
     # Create a DataFrame from the fb_abilities sub-dictionary
     for deck in GlobalVariables.myDB.find('Deck', {}):
         if 'forgebornId' in deck:
             forgeborn_id = deck['forgebornId']
-            forgeborn_abilities = get_forgeborn_abilities(forgeborn_id)
+            forgebornId = forgeborn_id[:-3]
+            # Get Forgeborn from the database
+            forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
+            fb_data = ForgebornData(**forgeborn_data)
+            forgeborn = Forgeborn(data = fb_data)
+            unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
+            forgeborn_abilities = unique_forgeborn.abilities 
+
             if forgeborn_abilities:
-                for i in range(len(forgeborn_abilities)):
-                    df_decks_filtered.loc[deck['name'], f'FB{i+1}'] = forgeborn_abilities[i]
+                for aID , aName in forgeborn_abilities.items():
+                    cycle = aID[-3]
+                    df_decks_filtered.loc[deck['name'], f'FB{cycle}'] = aName
 
             # Replace forgebornId with the forgeborn name from the database     
-            forgeborn_name = get_forgeborn_name(forgeborn_id) 
-            if forgeborn_name:
-                df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_name
+            df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_id[5:-3]
                 
     # Create a DataFrame from the 'stats' sub-dictionary
     for deck in GlobalVariables.myDB.find('Deck', {}):
@@ -1051,9 +1062,3 @@ def setup_interface():
     #display(button_graph)
     #display(out_main)         
     #display(*toggle_dropdown_pairs, button_graph)
-
-
-    from ipywidgets.embed import embed_minimal_html
-    widget_list = [filterBox, out_qm]
-
-    embed_minimal_html('export.html', views=widget_list, title='Widgets export')

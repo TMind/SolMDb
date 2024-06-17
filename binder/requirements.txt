@@ -8,5 +8,5 @@ tqdm
 jupyter-server-proxy
 requests
 pandas
-qgridnext
+qgridnext==2.0.1
 icecream

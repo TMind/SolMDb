@@ -1,6 +1,6 @@
 from datetime import datetime
 import pandas as pd
-import qgrid
+import qgridnext as qgrid
 import ipywidgets as widgets
 from IPython.display import display, clear_output, HTML
 import GlobalVariables as gv

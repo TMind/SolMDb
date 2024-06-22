@@ -15,6 +15,7 @@ class UniversalLibrary:
     def __init__(self, username, sff_path, fb_path, syn_path):        
         self.database = gv.commonDB
         self.forgeborns = {}
+        self.fb_map = {} 
 
         # Check if the database is empty and fill it with the data from the csv files            
         numFB = self.database.count_documents('Forgeborn')
@@ -23,45 +24,30 @@ class UniversalLibrary:
         if numFB <= 0 or numEnt <= 0:
             self.database.ensure_unique_index('Forgeborn', 'id')                    
             self.database.ensure_unique_index('Entity', 'name')        
-            self._read_entities_from_csv(sff_path)
-        
-
-    # def _read_forgeborn_from_csv(self, csv_path):
-    #     forgeborn_list = []
-    #     with open(csv_path, 'r') as csvfile:
-    #         reader = csv.DictReader(csvfile, delimiter=',')
-    #         for row in reader:
-    #             id = row['id']
-    #             id = id.replace('0', '2')                
-    #             re.sub(r'^a', 's', id)
-    #             title =  row['Forgeborn']                                 
-    #             abilities = []
-    #             for level in range(3):                    
-    #                 level += 2
-    #                 name = row[f"{level}name"] if row.get(f"{level}name") else ""
-    #                 text = row[f"{level}text"] if row.get(f"{level}text") else ""                 
-    #                 name = f"{level}{name}"
-    #                 abilities.append(name)
-
-    #             # Add the class and module name to the forgeborn_list
-    #             forgeborn = Card_Library.Forgeborn(Card_Library.ForgebornData(id, title, abilities))                       
-    #             forgeborn_list.append(forgeborn.to_data())
-
-    #     # Insert the forgeborn_list into the database        
-    #     self.database.bulk_write('Forgeborn', [
-    #         UpdateOne(
-    #             {'_id': forgeborn['_id']}, 
-    #             {'$setOnInsert': forgeborn}, 
-    #             upsert=True
-    #         ) for forgeborn in forgeborn_list
-    #     ])              
+            self.fb_map = self._read_forgeborns_from_csv(fb_path)
+            self._read_entities_from_csv(sff_path)           
         
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=',')
+            reader = csv.DictReader(csvfile, delimiter=';')
             for row in reader:    
                 self._process_row(row)
 
+    def _read_forgeborns_from_csv(self, fb_path):
+        fb_map = {}
+        with open(fb_path, 'r') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=',')
+            for row in reader:
+                forgeborn_ability_id = row['forgebornID']
+                card_id = row['cardId']
+                #forgeborn_id = forgeborn_ability_id[:-5]
+                #if forgeborn_id not in self.forgeborns:
+                #    forgeborn_name = forgeborn_id[5:].capitalize()
+                #    self.forgeborns[forgeborn_id] = Forgeborn(forgeborn_id, forgeborn_name)
+                if card_id not in fb_map:
+                    fb_map[card_id] = []
+                fb_map[card_id].append(forgeborn_ability_id)
+        return fb_map  
 
     def _process_row(self, row):
         keys = ['Name', 'rarity', 'cardType', 'cardSubType', 'spliced', 'solbind']            
@@ -124,27 +110,23 @@ class UniversalLibrary:
 
 
     def _process_forgeborn_ability(self, ability):
+        forgeborn_ability_ids = self.fb_map.get(ability.id, [])
         
-        forgeborn_id   = ability.id[0:-5]
-        forgeborn_name = forgeborn_id[5:]
-                
-        # Handle Forgeborn
-        # Create or update Forgeborn entry
+        for forgeborn_ability_id in forgeborn_ability_ids:
+            forgeborn_id = forgeborn_ability_id[:-5]
+            forgeborn_name = forgeborn_id[5:]
 
-        fb = self.database.find_one('Forgeborn', {'id': forgeborn_id})
+            # Handle Forgeborn
+            # Create or update Forgeborn entry
+            fb = self.database.find_one('Forgeborn', {'id': forgeborn_id})
 
-        if not fb:
-            self.database.insert('Forgeborn', {'id': forgeborn_id, 'name': forgeborn_name, 'abilities': {}})            
+            if not fb:
+                self.database.insert('Forgeborn', {'id': forgeborn_id, 'name': forgeborn_name, 'abilities': {}})            
 
-        # Add abilities to the Forgeborn
-        #new_item = {'dictionary_field_name.new_key': 'new_value'}        
-        #self.database.update_one('Forgeborn', {'id': forgeborn_id}, {'$set': {ability_id: ability.name}})
-
-        self.database.update_one( 'Forgeborn', 
-            {'id': forgeborn_id},
-            {f'abilities.{ability.id}': ability.name}
-        )
-
+            self.database.update_one( 'Forgeborn', 
+                {'id': forgeborn_id},
+                {f'abilities.{forgeborn_ability_id}': ability.name}
+            )
 
     def get_entity(self,name, cardType=None):
         #print(f"Searching Entity: {name}")

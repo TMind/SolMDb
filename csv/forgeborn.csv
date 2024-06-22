@@ -1,409 +1,368 @@
-id,Forgeborn,2name,2text,3name,3text,4name,4text
-s1aa1ironbeard123,Ironbeard,Reinforce,"Give a creature +4A. This turn, it gets 4D.",Shields Up,You and your creatures get 6D this turn.,Intimidate,Set a creature's A to 0.
-s1aa1ironbeard124,Ironbeard,Reinforce,"Give a creature +4A. This turn, it gets 4D.",Shields Up,You and your creatures get 6D this turn.,Knockback,Move up to two creatures to the back row of their lanes. You may give them -10A.
-s1aa1ironbeard132,Ironbeard,Reinforce,"Give a creature +4A. This turn, it gets 4D.",Intimidate,Set a creature's A to 0.,Shields Up,You and your creatures get 10D this turn.
-s1aa1ironbeard134,Ironbeard,Reinforce,"Give a creature +4A. This turn, it gets 4D.",Intimidate,Set a creature's A to 0.,Knockback,Move up to two creatures to the back row of their lanes. You may give them -10A.
-s1aa1ironbeard142,Ironbeard,Reinforce,"Give a creature +4A. This turn, it gets 4D.",Knockback,Move a creature to the back row of its lane. You may give it -10A.,Shields Up,You and your creatures get 10D this turn.
-s1aa1ironbeard143,Ironbeard,Reinforce,"Give a creature +4A. This turn, it gets 4D.",Knockback,Move a creature to the back row of its lane. You may give it -10A.,Intimidate,Set a creature's A to 0.
-s1aa1ironbeard213,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Reinforce,"Give a creature +8A. This turn, it gets 8D.",Intimidate,Set a creature's A to 0.
-s1aa1ironbeard214,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Reinforce,"Give a creature +8A. This turn, it gets 8D.",Knockback,Move up to two creatures to the back row of their lanes. You may give them -10A.
-s1aa1ironbeard231,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Intimidate,Set a creature's A to 0.,Reinforce,"Give a creature +12A. This turn, it gets 12D."
-s1aa1ironbeard234,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Intimidate,Set a creature's A to 0.,Knockback,Move up to two creatures to the back row of their lanes. You may give them -10A.
-s1aa1ironbeard241,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Knockback,Move a creature to the back row of its lane. You may give it -10A.,Reinforce,"Give a creature +12A. This turn, it gets 12D."
-s1aa1ironbeard243,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Knockback,Move a creature to the back row of its lane. You may give it -10A.,Intimidate,Set a creature's A to 0.
-s1aa1ironbeard312,Ironbeard,Intimidate,Set a creature's A to 0.,Reinforce,"Give a creature +8A. This turn, it gets 8D.",Shields Up,You and your creatures get 10D this turn.
-s1aa1ironbeard314,Ironbeard,Intimidate,Set a creature's A to 0.,Reinforce,"Give a creature +8A. This turn, it gets 8D.",Knockback,Move up to two creatures to the back row of their lanes. You may give them -10A.
-s1aa1ironbeard321,Ironbeard,Intimidate,Set a creature's A to 0.,Shields Up,You and your creatures get 6D this turn.,Reinforce,"Give a creature +12A. This turn, it gets 12D."
-s1aa1ironbeard324,Ironbeard,Intimidate,Set a creature's A to 0.,Shields Up,You and your creatures get 6D this turn.,Knockback,Move up to two creatures to the back row of their lanes. You may give them -10A.
-s1aa1ironbeard341,Ironbeard,Intimidate,Set a creature's A to 0.,Knockback,Move a creature to the back row of its lane. You may give it -10A.,Reinforce,"Give a creature +12A. This turn, it gets 12D."
-s1aa1ironbeard342,Ironbeard,Intimidate,Set a creature's A to 0.,Knockback,Move a creature to the back row of its lane. You may give it -10A.,Shields Up,You and your creatures get 10D this turn.
-s1aa1ironbeard412,Ironbeard,Knockback,Move a creature to the back row of its lane. You may give it -5A.,Reinforce,"Give a creature +8A. This turn, it gets 8D.",Shields Up,You and your creatures get 10D this turn.
-s1aa1ironbeard413,Ironbeard,Knockback,Move a creature to the back row of its lane. You may give it -5A.,Reinforce,"Give a creature +8A. This turn, it gets 8D.",Intimidate,Set a creature's A to 0.
-s1aa1ironbeard421,Ironbeard,Knockback,Move a creature to the back row of its lane. You may give it -5A.,Shields Up,You and your creatures get 6D this turn.,Reinforce,"Give a creature +12A. This turn, it gets 12D."
-s1aa1ironbeard423,Ironbeard,Knockback,Move a creature to the back row of its lane. You may give it -5A.,Shields Up,You and your creatures get 6D this turn.,Intimidate,Set a creature's A to 0.
-s1aa1ironbeard431,Ironbeard,Knockback,Move a creature to the back row of its lane. You may give it -5A.,Intimidate,Set a creature's A to 0.,Reinforce,"Give a creature +12A. This turn, it gets 12D."
-s1aa1ironbeard432,Ironbeard,Knockback,Move a creature to the back row of its lane. You may give it -5A.,Intimidate,Set a creature's A to 0.,Shields Up,You and your creatures get 10D this turn.
-s1aa1steel-rosetta123,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Tinker,Play up to two Mega Gizmo <b>Minions</b>.
-s1aa1steel-rosetta124,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Inspire,This has the [l4] ability of your unused Forgeborn.
-s1aa1steel-rosetta132,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Tinker,Play a Mega Gizmo <b>Minion</b>.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it."
-s1aa1steel-rosetta134,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Tinker,Play a Mega Gizmo <b>Minion</b>.,Inspire,This has the [l4] ability of your unused Forgeborn.
-s1aa1steel-rosetta142,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Inspire,This has the [l3] ability of your unused Forgeborn.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it."
-s1aa1steel-rosetta143,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Inspire,This has the [l3] ability of your unused Forgeborn.,Tinker,Play up to two Mega Gizmo <b>Minions</b>.
-s1aa1steel-rosetta213,Steel Rosetta,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Tinker,Play up to two Mega Gizmo <b>Minions</b>.
-s1aa1steel-rosetta214,Steel Rosetta,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Inspire,This has the [l4] ability of your unused Forgeborn.
-s1aa1steel-rosetta231,Steel Rosetta,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Tinker,Play a Mega Gizmo <b>Minion</b>.,Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s1aa1steel-rosetta234,Steel Rosetta,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Tinker,Play a Mega Gizmo <b>Minion</b>.,Inspire,This has the [l4] ability of your unused Forgeborn.
-s1aa1steel-rosetta241,Steel Rosetta,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Inspire,This has the [l3] ability of your unused Forgeborn.,Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s1aa1steel-rosetta243,Steel Rosetta,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Inspire,This has the [l3] ability of your unused Forgeborn.,Tinker,Play up to two Mega Gizmo <b>Minions</b>.
-s1aa1steel-rosetta312,Steel Rosetta,Tinker,Play up to two Gizmo <b>Minions</b>.,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it."
-s1aa1steel-rosetta314,Steel Rosetta,Tinker,Play up to two Gizmo <b>Minions</b>.,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Inspire,This has the [l4] ability of your unused Forgeborn.
-s1aa1steel-rosetta321,Steel Rosetta,Tinker,Play up to two Gizmo <b>Minions</b>.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s1aa1steel-rosetta324,Steel Rosetta,Tinker,Play up to two Gizmo <b>Minions</b>.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Inspire,This has the [l4] ability of your unused Forgeborn.
-s1aa1steel-rosetta341,Steel Rosetta,Tinker,Play up to two Gizmo <b>Minions</b>.,Inspire,This has the [l3] ability of your unused Forgeborn.,Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s1aa1steel-rosetta342,Steel Rosetta,Tinker,Play up to two Gizmo <b>Minions</b>.,Inspire,This has the [l3] ability of your unused Forgeborn.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it."
-s1aa1steel-rosetta412,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it."
-s1aa1steel-rosetta413,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Tinker,Play up to two Mega Gizmo <b>Minions</b>.
-s1aa1steel-rosetta421,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s1aa1steel-rosetta423,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it.",Tinker,Play up to two Mega Gizmo <b>Minions</b>.
-s1aa1steel-rosetta431,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Tinker,Play a Mega Gizmo <b>Minion</b>.,Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s1aa1steel-rosetta432,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Tinker,Play a Mega Gizmo <b>Minion</b>.,Repurpose,"Choose a creature. If it is replaced this turn, you may <b>Reanimate</b> it."
-s1nn1cercee123,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile, then return it to your hand.",Deathtouch,Destroy a [l1] or [l2] creature.,Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s1nn1cercee124,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile, then return it to your hand.",Deathtouch,Destroy a [l1] or [l2] creature.,Life Drain,Deal 8 damage to a creature. You gain 8H.
-s1nn1cercee132,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile, then return it to your hand.",Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Deathtouch,Destroy a creature.
-s1nn1cercee134,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile, then return it to your hand.",Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Life Drain,Deal 8 damage to a creature. You gain 8H.
-s1nn1cercee142,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile, then return it to your hand.",Life Drain,Deal 6 damage to a creature. You gain 6H.,Deathtouch,Destroy a creature.
-s1nn1cercee143,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile, then return it to your hand.",Life Drain,Deal 6 damage to a creature. You gain 6H.,Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s1nn1cercee213,Cercee,Deathtouch,Destroy a [l1] creature.,Army Commander,"<b>Upgrade</b> up to two cards in your discard pile, then return one of them to your hand.",Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s1nn1cercee214,Cercee,Deathtouch,Destroy a [l1] creature.,Army Commander,"<b>Upgrade</b> up to two cards in your discard pile, then return one of them to your hand.",Life Drain,Deal 8 damage to a creature. You gain 8H.
-s1nn1cercee231,Cercee,Deathtouch,Destroy a [l1] creature.,Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Army Commander,"<b>Upgrade</b> a card in your discard pile up to two times. Then, you may play it for <b>Free</b>."
-s1nn1cercee234,Cercee,Deathtouch,Destroy a [l1] creature.,Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Life Drain,Deal 8 damage to a creature. You gain 8H.
-s1nn1cercee241,Cercee,Deathtouch,Destroy a [l1] creature.,Life Drain,Deal 6 damage to a creature. You gain 6H.,Army Commander,"<b>Upgrade</b> a card in your discard pile up to two times. Then, you may play it for <b>Free</b>."
-s1nn1cercee243,Cercee,Deathtouch,Destroy a [l1] creature.,Life Drain,Deal 6 damage to a creature. You gain 6H.,Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s1nn1cercee312,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Army Commander,"<b>Upgrade</b> up to two cards in your discard pile, then return one of them to your hand.",Deathtouch,Destroy a creature.
-s1nn1cercee314,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Army Commander,"<b>Upgrade</b> up to two cards in your discard pile, then return one of them to your hand.",Life Drain,Deal 8 damage to a creature. You gain 8H.
-s1nn1cercee321,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Deathtouch,Destroy a [l1] or [l2] creature.,Army Commander,"<b>Upgrade</b> a card in your discard pile up to two times. Then, you may play it for <b>Free</b>."
-s1nn1cercee324,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Deathtouch,Destroy a [l1] or [l2] creature.,Life Drain,Deal 8 damage to a creature. You gain 8H.
-s1nn1cercee341,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Life Drain,Deal 6 damage to a creature. You gain 6H.,Army Commander,"<b>Upgrade</b> a card in your discard pile up to two times. Then, you may play it for <b>Free</b>."
-s1nn1cercee342,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Life Drain,Deal 6 damage to a creature. You gain 6H.,Deathtouch,Destroy a creature.
-s1nn1cercee412,Cercee,Life Drain,Deal 4 damage to a creature. You gain 4H.,Army Commander,"<b>Upgrade</b> up to two cards in your discard pile, then return one of them to your hand.",Deathtouch,Destroy a creature.
-s1nn1cercee413,Cercee,Life Drain,Deal 4 damage to a creature. You gain 4H.,Army Commander,"<b>Upgrade</b> up to two cards in your discard pile, then return one of them to your hand.",Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s1nn1cercee421,Cercee,Life Drain,Deal 4 damage to a creature. You gain 4H.,Deathtouch,Destroy a [l1] or [l2] creature.,Army Commander,"<b>Upgrade</b> a card in your discard pile up to two times. Then, you may play it for <b>Free</b>."
-s1nn1cercee423,Cercee,Life Drain,Deal 4 damage to a creature. You gain 4H.,Deathtouch,Destroy a [l1] or [l2] creature.,Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s1nn1cercee431,Cercee,Life Drain,Deal 4 damage to a creature. You gain 4H.,Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Army Commander,"<b>Upgrade</b> a card in your discard pile up to two times. Then, you may play it for <b>Free</b>."
-s1nn1cercee432,Cercee,Life Drain,Deal 4 damage to a creature. You gain 4H.,Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Deathtouch,Destroy a creature.
-s1nn1nix-nekyia123,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +4A.,Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s1nn1nix-nekyia124,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +4A.,Army of the Damned,Play up to one Zombie Brute <b>Minion</b> in each lane.
-s1nn1nix-nekyia132,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +6A.
-s1nn1nix-nekyia134,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Army of the Damned,Play up to one Zombie Brute <b>Minion</b> in each lane.
-s1nn1nix-nekyia142,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Army of the Damned,Play up to two Zombie Brute <b>Minions</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +6A.
-s1nn1nix-nekyia143,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Army of the Damned,Play up to two Zombie Brute <b>Minions</b>.,Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s1nn1nix-nekyia213,Nix Nekyia,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +2A.,Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s1nn1nix-nekyia214,Nix Nekyia,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +2A.,Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Army of the Damned,Play up to one Zombie Brute <b>Minion</b> in each lane.
-s1nn1nix-nekyia231,Nix Nekyia,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +2A.,Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s1nn1nix-nekyia234,Nix Nekyia,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +2A.,Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Army of the Damned,Play up to one Zombie Brute <b>Minion</b> in each lane.
-s1nn1nix-nekyia241,Nix Nekyia,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +2A.,Army of the Damned,Play up to two Zombie Brute <b>Minions</b>.,Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s1nn1nix-nekyia243,Nix Nekyia,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +2A.,Army of the Damned,Play up to two Zombie Brute <b>Minions</b>.,Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s1nn1nix-nekyia312,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +6A.
-s1nn1nix-nekyia314,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Army of the Damned,Play up to one Zombie Brute <b>Minion</b> in each lane.
-s1nn1nix-nekyia321,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +4A.,Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s1nn1nix-nekyia324,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +4A.,Army of the Damned,Play up to one Zombie Brute <b>Minion</b> in each lane.
-s1nn1nix-nekyia341,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Army of the Damned,Play up to two Zombie Brute <b>Minions</b>.,Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s1nn1nix-nekyia342,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Army of the Damned,Play up to two Zombie Brute <b>Minions</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +6A.
-s1nn1nix-nekyia412,Nix Nekyia,Army of the Damned,Play up to two Mindless Zombies <b>Minions</b>.,Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +6A.
-s1nn1nix-nekyia413,Nix Nekyia,Army of the Damned,Play up to two Mindless Zombies <b>Minions</b>.,Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s1nn1nix-nekyia421,Nix Nekyia,Army of the Damned,Play up to two Mindless Zombies <b>Minions</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +4A.,Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s1nn1nix-nekyia423,Nix Nekyia,Army of the Damned,Play up to two Mindless Zombies <b>Minions</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +4A.,Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s1nn1nix-nekyia431,Nix Nekyia,Army of the Damned,Play up to two Mindless Zombies <b>Minions</b>.,Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s1nn1nix-nekyia432,Nix Nekyia,Army of the Damned,Play up to two Mindless Zombies <b>Minions</b>.,Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Raising Dead,You may play a Mindless Zombie <b>Minion</b>. Give your <b>Minions</b> +6A.
-s1tt1korok123,Korok,Demolish,Destroy a creature with decreased H.,Flame Strike,Deal 8 damage to a creature.,Whirlwind,Give a creature +8A and move it to any lane.
-s1tt1korok124,Korok,Demolish,Destroy a creature with decreased H.,Flame Strike,Deal 8 damage to a creature.,Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s1tt1korok132,Korok,Demolish,Destroy a creature with decreased H.,Whirlwind,Give a creature +6A and move it to any lane.,Flame Strike,Deal 15 damage to a creature.
-s1tt1korok134,Korok,Demolish,Destroy a creature with decreased H.,Whirlwind,Give a creature +6A and move it to any lane.,Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s1tt1korok142,Korok,Demolish,Destroy a creature with decreased H.,Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Flame Strike,Deal 15 damage to a creature.
-s1tt1korok143,Korok,Demolish,Destroy a creature with decreased H.,Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Whirlwind,Give a creature +8A and move it to any lane.
-s1tt1korok213,Korok,Flame Strike,Deal 5 damage to a creature.,Demolish,Destroy a creature with decreased H.,Whirlwind,Give a creature +8A and move it to any lane.
-s1tt1korok214,Korok,Flame Strike,Deal 5 damage to a creature.,Demolish,Destroy a creature with decreased H.,Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s1tt1korok231,Korok,Flame Strike,Deal 5 damage to a creature.,Whirlwind,Give a creature +6A and move it to any lane.,Demolish,Destroy a creature with decreased H.
-s1tt1korok234,Korok,Flame Strike,Deal 5 damage to a creature.,Whirlwind,Give a creature +6A and move it to any lane.,Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s1tt1korok241,Korok,Flame Strike,Deal 5 damage to a creature.,Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Demolish,Destroy a creature with decreased H.
-s1tt1korok243,Korok,Flame Strike,Deal 5 damage to a creature.,Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Whirlwind,Give a creature +8A and move it to any lane.
-s1tt1korok312,Korok,Whirlwind,Give a creature +4A and move it to any lane.,Demolish,Destroy a creature with decreased H.,Flame Strike,Deal 15 damage to a creature.
-s1tt1korok314,Korok,Whirlwind,Give a creature +4A and move it to any lane.,Demolish,Destroy a creature with decreased H.,Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s1tt1korok321,Korok,Whirlwind,Give a creature +4A and move it to any lane.,Flame Strike,Deal 8 damage to a creature.,Demolish,Destroy a creature with decreased H.
-s1tt1korok324,Korok,Whirlwind,Give a creature +4A and move it to any lane.,Flame Strike,Deal 8 damage to a creature.,Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s1tt1korok341,Korok,Whirlwind,Give a creature +4A and move it to any lane.,Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Demolish,Destroy a creature with decreased H.
-s1tt1korok342,Korok,Whirlwind,Give a creature +4A and move it to any lane.,Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Flame Strike,Deal 15 damage to a creature.
-s1tt1korok412,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Demolish,Destroy a creature with decreased H.,Flame Strike,Deal 15 damage to a creature.
-s1tt1korok413,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Demolish,Destroy a creature with decreased H.,Whirlwind,Give a creature +8A and move it to any lane.
-s1tt1korok421,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Flame Strike,Deal 8 damage to a creature.,Demolish,Destroy a creature with decreased H.
-s1tt1korok423,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Flame Strike,Deal 8 damage to a creature.,Whirlwind,Give a creature +8A and move it to any lane.
-s1tt1korok431,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Whirlwind,Give a creature +6A and move it to any lane.,Demolish,Destroy a creature with decreased H.
-s1tt1korok432,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Whirlwind,Give a creature +6A and move it to any lane.,Flame Strike,Deal 15 damage to a creature.
-s1tt1sunder123,Sunder,Gathering Storm,"When you play a spell this turn, deal 3 damage to a creature or player.",Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Stim Bolt,Play a spell for <b>Free</b>.
-s1tt1sunder124,Sunder,Gathering Storm,"When you play a spell this turn, deal 3 damage to a creature or player.",Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Ice Armor,You and one of your creatures get 15D this turn.
-s1tt1sunder132,Sunder,Gathering Storm,"When you play a spell this turn, deal 3 damage to a creature or player.",Stim Bolt,Play a spell for <b>Free</b>.,Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s1tt1sunder134,Sunder,Gathering Storm,"When you play a spell this turn, deal 3 damage to a creature or player.",Stim Bolt,Play a spell for <b>Free</b>.,Ice Armor,You and one of your creatures get 15D this turn.
-s1tt1sunder142,Sunder,Gathering Storm,"When you play a spell this turn, deal 3 damage to a creature or player.",Ice Armor,You and one of your creatures get 10D this turn.,Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s1tt1sunder143,Sunder,Gathering Storm,"When you play a spell this turn, deal 3 damage to a creature or player.",Ice Armor,You and one of your creatures get 10D this turn.,Stim Bolt,Play a spell for <b>Free</b>.
-s1tt1sunder213,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Gathering Storm,"When you play a spell this turn, deal 5 damage to a creature or player.",Stim Bolt,Play a spell for <b>Free</b>.
-s1tt1sunder214,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Gathering Storm,"When you play a spell this turn, deal 5 damage to a creature or player.",Ice Armor,You and one of your creatures get 15D this turn.
-s1tt1sunder231,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Stim Bolt,Play a spell for <b>Free</b>.,Gathering Storm,"When you play a spell this turn, deal 8 damage to a creature or player."
-s1tt1sunder234,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Stim Bolt,Play a spell for <b>Free</b>.,Ice Armor,You and one of your creatures get 15D this turn.
-s1tt1sunder241,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Ice Armor,You and one of your creatures get 10D this turn.,Gathering Storm,"When you play a spell this turn, deal 8 damage to a creature or player."
-s1tt1sunder243,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Ice Armor,You and one of your creatures get 10D this turn.,Stim Bolt,Play a spell for <b>Free</b>.
-s1tt1sunder312,Sunder,Stim Bolt,Play a spell for <b>Free</b>.,Gathering Storm,"When you play a spell this turn, deal 5 damage to a creature or player.",Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s1tt1sunder314,Sunder,Stim Bolt,Play a spell for <b>Free</b>.,Gathering Storm,"When you play a spell this turn, deal 5 damage to a creature or player.",Ice Armor,You and one of your creatures get 15D this turn.
-s1tt1sunder321,Sunder,Stim Bolt,Play a spell for <b>Free</b>.,Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Gathering Storm,"When you play a spell this turn, deal 8 damage to a creature or player."
-s1tt1sunder324,Sunder,Stim Bolt,Play a spell for <b>Free</b>.,Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Ice Armor,You and one of your creatures get 15D this turn.
-s1tt1sunder341,Sunder,Stim Bolt,Play a spell for <b>Free</b>.,Ice Armor,You and one of your creatures get 10D this turn.,Gathering Storm,"When you play a spell this turn, deal 8 damage to a creature or player."
-s1tt1sunder342,Sunder,Stim Bolt,Play a spell for <b>Free</b>.,Ice Armor,You and one of your creatures get 10D this turn.,Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s1tt1sunder412,Sunder,Ice Armor,You and one of your creatures get 5D this turn.,Gathering Storm,"When you play a spell this turn, deal 5 damage to a creature or player.",Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s1tt1sunder413,Sunder,Ice Armor,You and one of your creatures get 5D this turn.,Gathering Storm,"When you play a spell this turn, deal 5 damage to a creature or player.",Stim Bolt,Play a spell for <b>Free</b>.
-s1tt1sunder421,Sunder,Ice Armor,You and one of your creatures get 5D this turn.,Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Gathering Storm,"When you play a spell this turn, deal 8 damage to a creature or player."
-s1tt1sunder423,Sunder,Ice Armor,You and one of your creatures get 5D this turn.,Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Stim Bolt,Play a spell for <b>Free</b>.
-s1tt1sunder431,Sunder,Ice Armor,You and one of your creatures get 5D this turn.,Stim Bolt,Play a spell for <b>Free</b>.,Gathering Storm,"When you play a spell this turn, deal 8 damage to a creature or player."
-s1tt1sunder432,Sunder,Ice Armor,You and one of your creatures get 5D this turn.,Stim Bolt,Play a spell for <b>Free</b>.,Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s1uu1nova123,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Nova's Wrath,"Give one of your creatures +6A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature.",Nova's Might,"Give your creatures +5A,+5H."
-s1uu1nova124,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Nova's Wrath,"Give one of your creatures +6A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature.",Nova's Touch,Choose an enemy creature. The opponent replaces it with a Wisp <b>Minion</b>. Creatures opposing that Wisp get <b>Breakthrough</b> this turn.
-s1uu1nova132,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Nova's Might,"Give your creatures +3A,+3H.",Nova's Wrath,"Give one of your creatures +8A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature."
-s1uu1nova134,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Nova's Might,"Give your creatures +3A,+3H.",Nova's Touch,Choose an enemy creature. The opponent replaces it with a Wisp <b>Minion</b>. Creatures opposing that Wisp get <b>Breakthrough</b> this turn.
-s1uu1nova142,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Nova's Touch,Choose a [l1] or [l2] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Wrath,"Give one of your creatures +8A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature."
-s1uu1nova143,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Nova's Touch,Choose a [l1] or [l2] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Might,"Give your creatures +5A,+5H."
-s1uu1nova213,Nova,Nova's Wrath,"Give one of your creatures +4A. <br> <br> If it's a <b>Minion</b>, deal 4 damage to the opposing creature.",Nova's Dominion,Play an Oakfather <b>Minion</b>.,Nova's Might,"Give your creatures +5A,+5H."
-s1uu1nova214,Nova,Nova's Wrath,"Give one of your creatures +4A. <br> <br> If it's a <b>Minion</b>, deal 4 damage to the opposing creature.",Nova's Dominion,Play an Oakfather <b>Minion</b>.,Nova's Touch,Choose an enemy creature. The opponent replaces it with a Wisp <b>Minion</b>. Creatures opposing that Wisp get <b>Breakthrough</b> this turn.
-s1uu1nova231,Nova,Nova's Wrath,"Give one of your creatures +4A. <br> <br> If it's a <b>Minion</b>, deal 4 damage to the opposing creature.",Nova's Might,"Give your creatures +3A,+3H.",Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s1uu1nova234,Nova,Nova's Wrath,"Give one of your creatures +4A. <br> <br> If it's a <b>Minion</b>, deal 4 damage to the opposing creature.",Nova's Might,"Give your creatures +3A,+3H.",Nova's Touch,Choose an enemy creature. The opponent replaces it with a Wisp <b>Minion</b>. Creatures opposing that Wisp get <b>Breakthrough</b> this turn.
-s1uu1nova241,Nova,Nova's Wrath,"Give one of your creatures +4A. <br> <br> If it's a <b>Minion</b>, deal 4 damage to the opposing creature.",Nova's Touch,Choose a [l1] or [l2] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s1uu1nova243,Nova,Nova's Wrath,"Give one of your creatures +4A. <br> <br> If it's a <b>Minion</b>, deal 4 damage to the opposing creature.",Nova's Touch,Choose a [l1] or [l2] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Might,"Give your creatures +5A,+5H."
-s1uu1nova312,Nova,Nova's Might,"Give your creatures +2A,+2H.",Nova's Dominion,Play an Oakfather <b>Minion</b>.,Nova's Wrath,"Give one of your creatures +8A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature."
-s1uu1nova314,Nova,Nova's Might,"Give your creatures +2A,+2H.",Nova's Dominion,Play an Oakfather <b>Minion</b>.,Nova's Touch,Choose an enemy creature. The opponent replaces it with a Wisp <b>Minion</b>. Creatures opposing that Wisp get <b>Breakthrough</b> this turn.
-s1uu1nova321,Nova,Nova's Might,"Give your creatures +2A,+2H.",Nova's Wrath,"Give one of your creatures +6A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature.",Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s1uu1nova324,Nova,Nova's Might,"Give your creatures +2A,+2H.",Nova's Wrath,"Give one of your creatures +6A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature.",Nova's Touch,Choose an enemy creature. The opponent replaces it with a Wisp <b>Minion</b>. Creatures opposing that Wisp get <b>Breakthrough</b> this turn.
-s1uu1nova341,Nova,Nova's Might,"Give your creatures +2A,+2H.",Nova's Touch,Choose a [l1] or [l2] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s1uu1nova342,Nova,Nova's Might,"Give your creatures +2A,+2H.",Nova's Touch,Choose a [l1] or [l2] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Wrath,"Give one of your creatures +8A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature."
-s1uu1nova412,Nova,Nova's Touch,Choose a [l1] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Dominion,Play an Oakfather <b>Minion</b>.,Nova's Wrath,"Give one of your creatures +8A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature."
-s1uu1nova413,Nova,Nova's Touch,Choose a [l1] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Dominion,Play an Oakfather <b>Minion</b>.,Nova's Might,"Give your creatures +5A,+5H."
-s1uu1nova421,Nova,Nova's Touch,Choose a [l1] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Wrath,"Give one of your creatures +6A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature.",Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s1uu1nova423,Nova,Nova's Touch,Choose a [l1] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Wrath,"Give one of your creatures +6A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature.",Nova's Might,"Give your creatures +5A,+5H."
-s1uu1nova431,Nova,Nova's Touch,Choose a [l1] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Might,"Give your creatures +3A,+3H.",Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s1uu1nova432,Nova,Nova's Touch,Choose a [l1] enemy creature. The opponent replaces it with a Wisp <b>Minion</b>.,Nova's Might,"Give your creatures +3A,+3H.",Nova's Wrath,"Give one of your creatures +8A. <br> <br> If it's a <b>Minion</b>, it may <b>Strike</b> its opposing creature."
-s1uu1oros123,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Shapeshift,"Give a creature +6A,+6H and it has all creature types this turn.",Growth Aura,Give your creautures +7H. You gain 7H.
-s1uu1oros124,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Shapeshift,"Give a creature +6A,+6H and it has all creature types this turn.",Barkskin,Give up to two of your creatures 12D this turn.
-s1uu1oros132,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Growth Aura,Give your creautures +4H. You gain 4H.,Shapeshift,"Give a creature +10A,+10H and it has all creature types this turn."
-s1uu1oros134,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Growth Aura,Give your creautures +4H. You gain 4H.,Barkskin,Give up to two of your creatures 12D this turn.
-s1uu1oros142,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Barkskin,Give up to two of your creatures 8D this turn.,Shapeshift,"Give a creature +10A,+10H and it has all creature types this turn."
-s1uu1oros143,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Barkskin,Give up to two of your creatures 8D this turn.,Growth Aura,Give your creautures +7H. You gain 7H.
-s1uu1oros213,Oros,Shapeshift,"Give a creature +3A,+3H and it has all creature types this turn.",Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Growth Aura,Give your creautures +7H. You gain 7H.
-s1uu1oros214,Oros,Shapeshift,"Give a creature +3A,+3H and it has all creature types this turn.",Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Barkskin,Give up to two of your creatures 12D this turn.
-s1uu1oros231,Oros,Shapeshift,"Give a creature +3A,+3H and it has all creature types this turn.",Growth Aura,Give your creautures +4H. You gain 4H.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s1uu1oros234,Oros,Shapeshift,"Give a creature +3A,+3H and it has all creature types this turn.",Growth Aura,Give your creautures +4H. You gain 4H.,Barkskin,Give up to two of your creatures 12D this turn.
-s1uu1oros241,Oros,Shapeshift,"Give a creature +3A,+3H and it has all creature types this turn.",Barkskin,Give up to two of your creatures 8D this turn.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s1uu1oros243,Oros,Shapeshift,"Give a creature +3A,+3H and it has all creature types this turn.",Barkskin,Give up to two of your creatures 8D this turn.,Growth Aura,Give your creautures +7H. You gain 7H.
-s1uu1oros312,Oros,Growth Aura,Give your creautures +3H. You gain 3H.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Shapeshift,"Give a creature +10A,+10H and it has all creature types this turn."
-s1uu1oros314,Oros,Growth Aura,Give your creautures +3H. You gain 3H.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Barkskin,Give up to two of your creatures 12D this turn.
-s1uu1oros321,Oros,Growth Aura,Give your creautures +3H. You gain 3H.,Shapeshift,"Give a creature +6A,+6H and it has all creature types this turn.",Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s1uu1oros324,Oros,Growth Aura,Give your creautures +3H. You gain 3H.,Shapeshift,"Give a creature +6A,+6H and it has all creature types this turn.",Barkskin,Give up to two of your creatures 12D this turn.
-s1uu1oros341,Oros,Growth Aura,Give your creautures +3H. You gain 3H.,Barkskin,Give up to two of your creatures 8D this turn.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s1uu1oros342,Oros,Growth Aura,Give your creautures +3H. You gain 3H.,Barkskin,Give up to two of your creatures 8D this turn.,Shapeshift,"Give a creature +10A,+10H and it has all creature types this turn."
-s1uu1oros412,Oros,Barkskin,Give up to two of your creatures 4D this turn.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Shapeshift,"Give a creature +10A,+10H and it has all creature types this turn."
-s1uu1oros413,Oros,Barkskin,Give up to two of your creatures 4D this turn.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Growth Aura,Give your creautures +7H. You gain 7H.
-s1uu1oros421,Oros,Barkskin,Give up to two of your creatures 4D this turn.,Shapeshift,"Give a creature +6A,+6H and it has all creature types this turn.",Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s1uu1oros423,Oros,Barkskin,Give up to two of your creatures 4D this turn.,Shapeshift,"Give a creature +6A,+6H and it has all creature types this turn.",Growth Aura,Give your creautures +7H. You gain 7H.
-s1uu1oros431,Oros,Barkskin,Give up to two of your creatures 4D this turn.,Growth Aura,Give your creautures +4H. You gain 4H.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s1uu1oros432,Oros,Barkskin,Give up to two of your creatures 4D this turn.,Growth Aura,Give your creautures +4H. You gain 4H.,Shapeshift,"Give a creature +10A,+10H and it has all creature types this turn."
-s2aa1crux-cobalt123,Crux Cobalt,Mind Over Matter,"Draw two cards, then put two cards from your hand on top of your deck. Give the next creature you play 4D this turn.",Shattered Psyche,Destroy a creature with 8A or less.,Synaptic Siphon,Give a creature -10A. Give a creature +10A.
-s2aa1crux-cobalt124,Crux Cobalt,Mind Over Matter,"Draw two cards, then put two cards from your hand on top of your deck. Give the next creature you play 4D this turn.",Shattered Psyche,Destroy a creature with 8A or less.,Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>."
-s2aa1crux-cobalt132,Crux Cobalt,Mind Over Matter,"Draw two cards, then put two cards from your hand on top of your deck. Give the next creature you play 4D this turn.",Synaptic Siphon,Give a creature -7A. Give a creature +7A.,Shattered Psyche,Destroy a creature with 12A or less.
-s2aa1crux-cobalt134,Crux Cobalt,Mind Over Matter,"Draw two cards, then put two cards from your hand on top of your deck. Give the next creature you play 4D this turn.",Synaptic Siphon,Give a creature -7A. Give a creature +7A.,Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>."
-s2aa1crux-cobalt142,Crux Cobalt,Mind Over Matter,"Draw two cards, then put two cards from your hand on top of your deck. Give the next creature you play 4D this turn.",Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>.",Shattered Psyche,Destroy a creature with 12A or less.
-s2aa1crux-cobalt143,Crux Cobalt,Mind Over Matter,"Draw two cards, then put two cards from your hand on top of your deck. Give the next creature you play 4D this turn.",Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>.",Synaptic Siphon,Give a creature -10A. Give a creature +10A.
-s2aa1crux-cobalt213,Crux Cobalt,Shattered Psyche,Destroy a creature with 5A or less.,Mind Over Matter,"Draw three cards, then put three cards from your hand on top of your deck. Give the next creature you play 8D this turn.",Synaptic Siphon,Give a creature -10A. Give a creature +10A.
-s2aa1crux-cobalt214,Crux Cobalt,Shattered Psyche,Destroy a creature with 5A or less.,Mind Over Matter,"Draw three cards, then put three cards from your hand on top of your deck. Give the next creature you play 8D this turn.",Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>."
-s2aa1crux-cobalt231,Crux Cobalt,Shattered Psyche,Destroy a creature with 5A or less.,Synaptic Siphon,Give a creature -7A. Give a creature +7A.,Mind Over Matter,"Draw four cards, then put four cards from your hand on top of your deck. Give the next creature you play 12D this turn."
-s2aa1crux-cobalt234,Crux Cobalt,Shattered Psyche,Destroy a creature with 5A or less.,Synaptic Siphon,Give a creature -7A. Give a creature +7A.,Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>."
-s2aa1crux-cobalt241,Crux Cobalt,Shattered Psyche,Destroy a creature with 5A or less.,Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>.",Mind Over Matter,"Draw four cards, then put four cards from your hand on top of your deck. Give the next creature you play 12D this turn."
-s2aa1crux-cobalt243,Crux Cobalt,Shattered Psyche,Destroy a creature with 5A or less.,Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>.",Synaptic Siphon,Give a creature -10A. Give a creature +10A.
-s2aa1crux-cobalt312,Crux Cobalt,Synaptic Siphon,Give a creature -4A. Give a creature +4A.,Mind Over Matter,"Draw three cards, then put three cards from your hand on top of your deck. Give the next creature you play 8D this turn.",Shattered Psyche,Destroy a creature with 12A or less.
-s2aa1crux-cobalt314,Crux Cobalt,Synaptic Siphon,Give a creature -4A. Give a creature +4A.,Mind Over Matter,"Draw three cards, then put three cards from your hand on top of your deck. Give the next creature you play 8D this turn.",Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>."
-s2aa1crux-cobalt321,Crux Cobalt,Synaptic Siphon,Give a creature -4A. Give a creature +4A.,Shattered Psyche,Destroy a creature with 8A or less.,Mind Over Matter,"Draw four cards, then put four cards from your hand on top of your deck. Give the next creature you play 12D this turn."
-s2aa1crux-cobalt324,Crux Cobalt,Synaptic Siphon,Give a creature -4A. Give a creature +4A.,Shattered Psyche,Destroy a creature with 8A or less.,Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>."
-s2aa1crux-cobalt341,Crux Cobalt,Synaptic Siphon,Give a creature -4A. Give a creature +4A.,Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>.",Mind Over Matter,"Draw four cards, then put four cards from your hand on top of your deck. Give the next creature you play 12D this turn."
-s2aa1crux-cobalt342,Crux Cobalt,Synaptic Siphon,Give a creature -4A. Give a creature +4A.,Precognition,"The enemy player may play a [l1] card for <b>Free</b>. Then, you may play a card for <b>Free</b>.",Shattered Psyche,Destroy a creature with 12A or less.
-s2aa1crux-cobalt412,Crux Cobalt,Precognition,"The enemy player may play a Gizmo <b>Minion</b>. Then, you may play a card for <b>Free</b>.",Mind Over Matter,"Draw three cards, then put three cards from your hand on top of your deck. Give the next creature you play 8D this turn.",Shattered Psyche,Destroy a creature with 12A or less.
-s2aa1crux-cobalt413,Crux Cobalt,Precognition,"The enemy player may play a Gizmo <b>Minion</b>. Then, you may play a card for <b>Free</b>.",Mind Over Matter,"Draw three cards, then put three cards from your hand on top of your deck. Give the next creature you play 8D this turn.",Synaptic Siphon,Give a creature -10A. Give a creature +10A.
-s2aa1crux-cobalt421,Crux Cobalt,Precognition,"The enemy player may play a Gizmo <b>Minion</b>. Then, you may play a card for <b>Free</b>.",Shattered Psyche,Destroy a creature with 8A or less.,Mind Over Matter,"Draw four cards, then put four cards from your hand on top of your deck. Give the next creature you play 12D this turn."
-s2aa1crux-cobalt423,Crux Cobalt,Precognition,"The enemy player may play a Gizmo <b>Minion</b>. Then, you may play a card for <b>Free</b>.",Shattered Psyche,Destroy a creature with 8A or less.,Synaptic Siphon,Give a creature -10A. Give a creature +10A.
-s2aa1crux-cobalt431,Crux Cobalt,Precognition,"The enemy player may play a Gizmo <b>Minion</b>. Then, you may play a card for <b>Free</b>.",Synaptic Siphon,Give a creature -7A. Give a creature +7A.,Mind Over Matter,"Draw four cards, then put four cards from your hand on top of your deck. Give the next creature you play 12D this turn."
-s2aa1crux-cobalt432,Crux Cobalt,Precognition,"The enemy player may play a Gizmo <b>Minion</b>. Then, you may play a card for <b>Free</b>.",Synaptic Siphon,Give a creature -7A. Give a creature +7A.,Shattered Psyche,Destroy a creature with 12A or less.
-s2aa1ironbeard123,Ironbeard,Formation,Give a creature +3A and creatures adjacent to it +2A.,Shields Up,You and your creatures get 6D this turn.,Intimidate,Set a creature's A to 0.
-s2aa1ironbeard124,Ironbeard,Formation,Give a creature +3A and creatures adjacent to it +2A.,Shields Up,You and your creatures get 6D this turn.,Promote,"Give a creature 8D. Then, you may have it <b>Battle</b> its opposing creature."
-s2aa1ironbeard132,Ironbeard,Formation,Give a creature +3A and creatures adjacent to it +2A.,Intimidate,Set a creature's A to 0.,Shields Up,You and your creatures get 10D this turn.
-s2aa1ironbeard134,Ironbeard,Formation,Give a creature +3A and creatures adjacent to it +2A.,Intimidate,Set a creature's A to 0.,Promote,"Give a creature 8D. Then, you may have it <b>Battle</b> its opposing creature."
-s2aa1ironbeard142,Ironbeard,Formation,Give a creature +3A and creatures adjacent to it +2A.,Promote,"Give a creature 6D. Then, you may have it <b>Battle</b> its opposing creature.",Shields Up,You and your creatures get 10D this turn.
-s2aa1ironbeard143,Ironbeard,Formation,Give a creature +3A and creatures adjacent to it +2A.,Promote,"Give a creature 6D. Then, you may have it <b>Battle</b> its opposing creature.",Intimidate,Set a creature's A to 0.
-s2aa1ironbeard213,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Formation,Give a creature +6A and creatures adjacent to it +4A.,Intimidate,Set a creature's A to 0.
-s2aa1ironbeard214,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Formation,Give a creature +6A and creatures adjacent to it +4A.,Promote,"Give a creature 8D. Then, you may have it <b>Battle</b> its opposing creature."
-s2aa1ironbeard231,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Intimidate,Set a creature's A to 0.,Formation,Give a creature +12A and creatures adjacent to it +8A.
-s2aa1ironbeard234,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Intimidate,Set a creature's A to 0.,Promote,"Give a creature 8D. Then, you may have it <b>Battle</b> its opposing creature."
-s2aa1ironbeard241,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Promote,"Give a creature 6D. Then, you may have it <b>Battle</b> its opposing creature.",Formation,Give a creature +12A and creatures adjacent to it +8A.
-s2aa1ironbeard243,Ironbeard,Shields Up,You and your creatures get 4D this turn.,Promote,"Give a creature 6D. Then, you may have it <b>Battle</b> its opposing creature.",Intimidate,Set a creature's A to 0.
-s2aa1ironbeard312,Ironbeard,Intimidate,Set a creature's A to 0.,Formation,Give a creature +6A and creatures adjacent to it +4A.,Shields Up,You and your creatures get 10D this turn.
-s2aa1ironbeard314,Ironbeard,Intimidate,Set a creature's A to 0.,Formation,Give a creature +6A and creatures adjacent to it +4A.,Promote,"Give a creature 8D. Then, you may have it <b>Battle</b> its opposing creature."
-s2aa1ironbeard321,Ironbeard,Intimidate,Set a creature's A to 0.,Shields Up,You and your creatures get 6D this turn.,Formation,Give a creature +12A and creatures adjacent to it +8A.
-s2aa1ironbeard324,Ironbeard,Intimidate,Set a creature's A to 0.,Shields Up,You and your creatures get 6D this turn.,Promote,"Give a creature 8D. Then, you may have it <b>Battle</b> its opposing creature."
-s2aa1ironbeard341,Ironbeard,Intimidate,Set a creature's A to 0.,Promote,"Give a creature 6D. Then, you may have it <b>Battle</b> its opposing creature.",Formation,Give a creature +12A and creatures adjacent to it +8A.
-s2aa1ironbeard342,Ironbeard,Intimidate,Set a creature's A to 0.,Promote,"Give a creature 6D. Then, you may have it <b>Battle</b> its opposing creature.",Shields Up,You and your creatures get 10D this turn.
-s2aa1ironbeard412,Ironbeard,Promote,"Give a creature 4D. Then, you may have it <b>Battle</b> its opposing creature.",Formation,Give a creature +6A and creatures adjacent to it +4A.,Shields Up,You and your creatures get 10D this turn.
-s2aa1ironbeard413,Ironbeard,Promote,"Give a creature 4D. Then, you may have it <b>Battle</b> its opposing creature.",Formation,Give a creature +6A and creatures adjacent to it +4A.,Intimidate,Set a creature's A to 0.
-s2aa1ironbeard421,Ironbeard,Promote,"Give a creature 4D. Then, you may have it <b>Battle</b> its opposing creature.",Shields Up,You and your creatures get 6D this turn.,Formation,Give a creature +12A and creatures adjacent to it +8A.
-s2aa1ironbeard423,Ironbeard,Promote,"Give a creature 4D. Then, you may have it <b>Battle</b> its opposing creature.",Shields Up,You and your creatures get 6D this turn.,Intimidate,Set a creature's A to 0.
-s2aa1ironbeard431,Ironbeard,Promote,"Give a creature 4D. Then, you may have it <b>Battle</b> its opposing creature.",Intimidate,Set a creature's A to 0.,Formation,Give a creature +12A and creatures adjacent to it +8A.
-s2aa1ironbeard432,Ironbeard,Promote,"Give a creature 4D. Then, you may have it <b>Battle</b> its opposing creature.",Intimidate,Set a creature's A to 0.,Shields Up,You and your creatures get 10D this turn.
-s2aa1steel-rosetta123,Steel Rosetta,Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +2A,+2H.",Nanotech Disruptor,"When you replace a creature this turn, deal 6 damage to a creature.",Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s2aa1steel-rosetta124,Steel Rosetta,Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +2A,+2H.",Nanotech Disruptor,"When you replace a creature this turn, deal 6 damage to a creature.",Inspire,This has the [l4] ability of your unused Forgeborn.
-s2aa1steel-rosetta132,Steel Rosetta,Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +2A,+2H.",Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Nanotech Disruptor,"When you replace a creature this turn, deal 9 damage to a creature."
-s2aa1steel-rosetta134,Steel Rosetta,Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +2A,+2H.",Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Inspire,This has the [l4] ability of your unused Forgeborn.
-s2aa1steel-rosetta142,Steel Rosetta,Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +2A,+2H.",Inspire,This has the [l3] ability of your unused Forgeborn.,Nanotech Disruptor,"When you replace a creature this turn, deal 9 damage to a creature."
-s2aa1steel-rosetta143,Steel Rosetta,Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +2A,+2H.",Inspire,This has the [l3] ability of your unused Forgeborn.,Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s2aa1steel-rosetta213,Steel Rosetta,Nanotech Disruptor,"When you replace a creature this turn, deal 4 damage to a creature.",Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +4A,+4H.",Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s2aa1steel-rosetta214,Steel Rosetta,Nanotech Disruptor,"When you replace a creature this turn, deal 4 damage to a creature.",Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +4A,+4H.",Inspire,This has the [l4] ability of your unused Forgeborn.
-s2aa1steel-rosetta231,Steel Rosetta,Nanotech Disruptor,"When you replace a creature this turn, deal 4 damage to a creature.",Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Optimize,"Play a Mega Gizmo <b>Minion</b>. Give the next creature you play this turn +6A,+6H."
-s2aa1steel-rosetta234,Steel Rosetta,Nanotech Disruptor,"When you replace a creature this turn, deal 4 damage to a creature.",Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Inspire,This has the [l4] ability of your unused Forgeborn.
-s2aa1steel-rosetta241,Steel Rosetta,Nanotech Disruptor,"When you replace a creature this turn, deal 4 damage to a creature.",Inspire,This has the [l3] ability of your unused Forgeborn.,Optimize,"Play a Mega Gizmo <b>Minion</b>. Give the next creature you play this turn +6A,+6H."
-s2aa1steel-rosetta243,Steel Rosetta,Nanotech Disruptor,"When you replace a creature this turn, deal 4 damage to a creature.",Inspire,This has the [l3] ability of your unused Forgeborn.,Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s2aa1steel-rosetta312,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +4A,+4H.",Nanotech Disruptor,"When you replace a creature this turn, deal 9 damage to a creature."
-s2aa1steel-rosetta314,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +4A,+4H.",Inspire,This has the [l4] ability of your unused Forgeborn.
-s2aa1steel-rosetta321,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Nanotech Disruptor,"When you replace a creature this turn, deal 6 damage to a creature.",Optimize,"Play a Mega Gizmo <b>Minion</b>. Give the next creature you play this turn +6A,+6H."
-s2aa1steel-rosetta324,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Nanotech Disruptor,"When you replace a creature this turn, deal 6 damage to a creature.",Inspire,This has the [l4] ability of your unused Forgeborn.
-s2aa1steel-rosetta341,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Inspire,This has the [l3] ability of your unused Forgeborn.,Optimize,"Play a Mega Gizmo <b>Minion</b>. Give the next creature you play this turn +6A,+6H."
-s2aa1steel-rosetta342,Steel Rosetta,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a [l1] card in your hand.,Inspire,This has the [l3] ability of your unused Forgeborn.,Nanotech Disruptor,"When you replace a creature this turn, deal 9 damage to a creature."
-s2aa1steel-rosetta412,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +4A,+4H.",Nanotech Disruptor,"When you replace a creature this turn, deal 9 damage to a creature."
-s2aa1steel-rosetta413,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Optimize,"Play a Gizmo <b>Minion</b>. Give the next creature you play this turn +4A,+4H.",Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s2aa1steel-rosetta421,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Nanotech Disruptor,"When you replace a creature this turn, deal 6 damage to a creature.",Optimize,"Play a Mega Gizmo <b>Minion</b>. Give the next creature you play this turn +6A,+6H."
-s2aa1steel-rosetta423,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Nanotech Disruptor,"When you replace a creature this turn, deal 6 damage to a creature.",Enhance,Play a Mega Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand twice.
-s2aa1steel-rosetta431,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Optimize,"Play a Mega Gizmo <b>Minion</b>. Give the next creature you play this turn +6A,+6H."
-s2aa1steel-rosetta432,Steel Rosetta,Inspire,This has the [l2] ability of your unused Forgeborn.,Enhance,Play a Gizmo <b>Minion</b>. <b>Upgrade</b> a card in your hand.,Nanotech Disruptor,"When you replace a creature this turn, deal 9 damage to a creature."
-s2nn1cercee123,Cercee,Shadowcast,"Give a creature +3A. This turn, it gets <b>Stealth</b>.",Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Army Commander,"<b>Upgrade</b> a card in your discard up to two times. Then, you may play it for <b>Free</b>."
-s2nn1cercee124,Cercee,Shadowcast,"Give a creature +3A. This turn, it gets <b>Stealth</b>.",Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Sorrow,"Give all non-Nekrium creatures -5A,-5H."
-s2nn1cercee132,Cercee,Shadowcast,"Give a creature +3A. This turn, it gets <b>Stealth</b>.",Army Commander,"<b>Upgrade</b> up to two cards in your discard pile. Then, return one to your hand.",Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s2nn1cercee134,Cercee,Shadowcast,"Give a creature +3A. This turn, it gets <b>Stealth</b>.",Army Commander,"<b>Upgrade</b> up to two cards in your discard pile. Then, return one to your hand.",Sorrow,"Give all non-Nekrium creatures -5A,-5H."
-s2nn1cercee142,Cercee,Shadowcast,"Give a creature +3A. This turn, it gets <b>Stealth</b>.",Sorrow,"Give all non-Nekrium creatures -3A,-3H.",Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s2nn1cercee143,Cercee,Shadowcast,"Give a creature +3A. This turn, it gets <b>Stealth</b>.",Sorrow,"Give all non-Nekrium creatures -3A,-3H.",Army Commander,"<b>Upgrade</b> a card in your discard up to two times. Then, you may play it for <b>Free</b>."
-s2nn1cercee213,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Shadowcast,"Give a creature +5A. This turn, it gets <b>Stealth</b>.",Army Commander,"<b>Upgrade</b> a card in your discard up to two times. Then, you may play it for <b>Free</b>."
-s2nn1cercee214,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Shadowcast,"Give a creature +5A. This turn, it gets <b>Stealth</b>.",Sorrow,"Give all non-Nekrium creatures -5A,-5H."
-s2nn1cercee231,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Army Commander,"<b>Upgrade</b> up to two cards in your discard pile. Then, return one to your hand.",Shadowcast,"Give a creature +8A. This turn, it gets <b>Stealth</b>."
-s2nn1cercee234,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Army Commander,"<b>Upgrade</b> up to two cards in your discard pile. Then, return one to your hand.",Sorrow,"Give all non-Nekrium creatures -5A,-5H."
-s2nn1cercee241,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Sorrow,"Give all non-Nekrium creatures -3A,-3H.",Shadowcast,"Give a creature +8A. This turn, it gets <b>Stealth</b>."
-s2nn1cercee243,Cercee,Soul Syphon,"Destroy one of your creatures to give a creature +5A,+5H.",Sorrow,"Give all non-Nekrium creatures -3A,-3H.",Army Commander,"<b>Upgrade</b> a card in your discard up to two times. Then, you may play it for <b>Free</b>."
-s2nn1cercee312,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile. Then, return it to your hand.",Shadowcast,"Give a creature +5A. This turn, it gets <b>Stealth</b>.",Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s2nn1cercee314,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile. Then, return it to your hand.",Shadowcast,"Give a creature +5A. This turn, it gets <b>Stealth</b>.",Sorrow,"Give all non-Nekrium creatures -5A,-5H."
-s2nn1cercee321,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile. Then, return it to your hand.",Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Shadowcast,"Give a creature +8A. This turn, it gets <b>Stealth</b>."
-s2nn1cercee324,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile. Then, return it to your hand.",Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Sorrow,"Give all non-Nekrium creatures -5A,-5H."
-s2nn1cercee341,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile. Then, return it to your hand.",Sorrow,"Give all non-Nekrium creatures -3A,-3H.",Shadowcast,"Give a creature +8A. This turn, it gets <b>Stealth</b>."
-s2nn1cercee342,Cercee,Army Commander,"<b>Upgrade</b> a [l1] card in your discard pile. Then, return it to your hand.",Sorrow,"Give all non-Nekrium creatures -3A,-3H.",Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s2nn1cercee412,Cercee,Sorrow,"Give all non-Nekrium creatures -2A,-2H.",Shadowcast,"Give a creature +5A. This turn, it gets <b>Stealth</b>.",Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s2nn1cercee413,Cercee,Sorrow,"Give all non-Nekrium creatures -2A,-2H.",Shadowcast,"Give a creature +5A. This turn, it gets <b>Stealth</b>.",Army Commander,"<b>Upgrade</b> a card in your discard up to two times. Then, you may play it for <b>Free</b>."
-s2nn1cercee421,Cercee,Sorrow,"Give all non-Nekrium creatures -2A,-2H.",Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Shadowcast,"Give a creature +8A. This turn, it gets <b>Stealth</b>."
-s2nn1cercee423,Cercee,Sorrow,"Give all non-Nekrium creatures -2A,-2H.",Soul Syphon,"Destroy one of your creatures to give a creature +8A,+8H.",Army Commander,"<b>Upgrade</b> a card in your discard up to two times. Then, you may play it for <b>Free</b>."
-s2nn1cercee431,Cercee,Sorrow,"Give all non-Nekrium creatures -2A,-2H.",Army Commander,"<b>Upgrade</b> up to two cards in your discard pile. Then, return one to your hand.",Shadowcast,"Give a creature +8A. This turn, it gets <b>Stealth</b>."
-s2nn1cercee432,Cercee,Sorrow,"Give all non-Nekrium creatures -2A,-2H.",Army Commander,"<b>Upgrade</b> up to two cards in your discard pile. Then, return one to your hand.",Soul Syphon,"Destroy one of your creatures to give a creature +12A,+12H."
-s2nn1nix-nekyia123,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Dark Ritual,"Destroy one of your creatures to give a creature -7A,-7H.",Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s2nn1nix-nekyia124,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Dark Ritual,"Destroy one of your creatures to give a creature -7A,-7H.",Endless Death,"Your creatures get \""When this is destroyed, you may play a Oakfather <b>Minion</b>.\"" this turn."
-s2nn1nix-nekyia132,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Dark Ritual,"Destroy one of your creatures to give a creature -10A,-10H."
-s2nn1nix-nekyia134,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Endless Death,"Your creatures get \""When this is destroyed, you may play a Oakfather <b>Minion</b>.\"" this turn."
-s2nn1nix-nekyia142,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Endless Death,"Your creatures get \""When this is destroyed, you may play a Zombie Brute <b>Minion</b>.\"" this turn.",Dark Ritual,"Destroy one of your creatures to give a creature -10A,-10H."
-s2nn1nix-nekyia143,Nix Nekyia,Soulrip,Destroy one of your creatures to play a [l1] creature for <b>Free</b>.,Endless Death,"Your creatures get \""When this is destroyed, you may play a Zombie Brute <b>Minion</b>.\"" this turn.",Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s2nn1nix-nekyia213,Nix Nekyia,Dark Ritual,"Destroy one of your creatures to give a creature -5A,-5H.",Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s2nn1nix-nekyia214,Nix Nekyia,Dark Ritual,"Destroy one of your creatures to give a creature -5A,-5H.",Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Endless Death,"Your creatures get \""When this is destroyed, you may play a Oakfather <b>Minion</b>.\"" this turn."
-s2nn1nix-nekyia231,Nix Nekyia,Dark Ritual,"Destroy one of your creatures to give a creature -5A,-5H.",Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s2nn1nix-nekyia234,Nix Nekyia,Dark Ritual,"Destroy one of your creatures to give a creature -5A,-5H.",Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Endless Death,"Your creatures get \""When this is destroyed, you may play a Oakfather <b>Minion</b>.\"" this turn."
-s2nn1nix-nekyia241,Nix Nekyia,Dark Ritual,"Destroy one of your creatures to give a creature -5A,-5H.",Endless Death,"Your creatures get \""When this is destroyed, you may play a Zombie Brute <b>Minion</b>.\"" this turn.",Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s2nn1nix-nekyia243,Nix Nekyia,Dark Ritual,"Destroy one of your creatures to give a creature -5A,-5H.",Endless Death,"Your creatures get \""When this is destroyed, you may play a Zombie Brute <b>Minion</b>.\"" this turn.",Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s2nn1nix-nekyia312,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Dark Ritual,"Destroy one of your creatures to give a creature -10A,-10H."
-s2nn1nix-nekyia314,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Endless Death,"Your creatures get \""When this is destroyed, you may play a Oakfather <b>Minion</b>.\"" this turn."
-s2nn1nix-nekyia321,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Dark Ritual,"Destroy one of your creatures to give a creature -7A,-7H.",Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s2nn1nix-nekyia324,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Dark Ritual,"Destroy one of your creatures to give a creature -7A,-7H.",Endless Death,"Your creatures get \""When this is destroyed, you may play a Oakfather <b>Minion</b>.\"" this turn."
-s2nn1nix-nekyia341,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Endless Death,"Your creatures get \""When this is destroyed, you may play a Zombie Brute <b>Minion</b>.\"" this turn.",Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s2nn1nix-nekyia342,Nix Nekyia,Dark Summoning,Play a Zombie Brute <b>Minion</b>.,Endless Death,"Your creatures get \""When this is destroyed, you may play a Zombie Brute <b>Minion</b>.\"" this turn.",Dark Ritual,"Destroy one of your creatures to give a creature -10A,-10H."
-s2nn1nix-nekyia412,Nix Nekyia,Endless Death,"Your creatures get \""When this is destroyed, you may play a Mindless Zombie <b>Minion</b>.\"" this turn.",Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Dark Ritual,"Destroy one of your creatures to give a creature -10A,-10H."
-s2nn1nix-nekyia413,Nix Nekyia,Endless Death,"Your creatures get \""When this is destroyed, you may play a Mindless Zombie <b>Minion</b>.\"" this turn.",Soulrip,Destroy one of your creatures to play a [l1] or [l2] creature for <b>Free</b>.,Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s2nn1nix-nekyia421,Nix Nekyia,Endless Death,"Your creatures get \""When this is destroyed, you may play a Mindless Zombie <b>Minion</b>.\"" this turn.",Dark Ritual,"Destroy one of your creatures to give a creature -7A,-7H.",Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s2nn1nix-nekyia423,Nix Nekyia,Endless Death,"Your creatures get \""When this is destroyed, you may play a Mindless Zombie <b>Minion</b>.\"" this turn.",Dark Ritual,"Destroy one of your creatures to give a creature -7A,-7H.",Dark Summoning,Play a [l1] or [l2] creature from your discard pile for <b>Free</b>.
-s2nn1nix-nekyia431,Nix Nekyia,Endless Death,"Your creatures get \""When this is destroyed, you may play a Mindless Zombie <b>Minion</b>.\"" this turn.",Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Soulrip,Destroy one of your creatures to play a creature for <b>Free</b>.
-s2nn1nix-nekyia432,Nix Nekyia,Endless Death,"Your creatures get \""When this is destroyed, you may play a Mindless Zombie <b>Minion</b>.\"" this turn.",Dark Summoning,Play a [l1] creature from your discard pile for <b>Free</b>.,Dark Ritual,"Destroy one of your creatures to give a creature -10A,-10H."
-s2tt1korok123,Korok,Demolish,Destroy a creature with decreased H.,Blast Wave,Deal 5 damage to up to two creatures,Earthen Fists,"Give a creature +8A. Then, you may have it <b>Battle</b> an enemy creature."
-s2tt1korok124,Korok,Demolish,Destroy a creature with decreased H.,Blast Wave,Deal 5 damage to up to two creatures,Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s2tt1korok132,Korok,Demolish,Destroy a creature with decreased H.,Earthen Fists,"Give a creature +6A. Then, you may have it <b>Battle</b> an enemy creature.",Blast Wave,Deal 9 damage to up to two creatures.
-s2tt1korok134,Korok,Demolish,Destroy a creature with decreased H.,Earthen Fists,"Give a creature +6A. Then, you may have it <b>Battle</b> an enemy creature.",Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s2tt1korok142,Korok,Demolish,Destroy a creature with decreased H.,Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Blast Wave,Deal 9 damage to up to two creatures.
-s2tt1korok143,Korok,Demolish,Destroy a creature with decreased H.,Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Earthen Fists,"Give a creature +8A. Then, you may have it <b>Battle</b> an enemy creature."
-s2tt1korok213,Korok,Blast Wave,Deal 3 damage to up to two creatures.,Demolish,Destroy a creature with decreased H.,Earthen Fists,"Give a creature +8A. Then, you may have it <b>Battle</b> an enemy creature."
-s2tt1korok214,Korok,Blast Wave,Deal 3 damage to up to two creatures.,Demolish,Destroy a creature with decreased H.,Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s2tt1korok231,Korok,Blast Wave,Deal 3 damage to up to two creatures.,Earthen Fists,"Give a creature +6A. Then, you may have it <b>Battle</b> an enemy creature.",Demolish,Destroy a creature with decreased H.
-s2tt1korok234,Korok,Blast Wave,Deal 3 damage to up to two creatures.,Earthen Fists,"Give a creature +6A. Then, you may have it <b>Battle</b> an enemy creature.",Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s2tt1korok241,Korok,Blast Wave,Deal 3 damage to up to two creatures.,Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Demolish,Destroy a creature with decreased H.
-s2tt1korok243,Korok,Blast Wave,Deal 3 damage to up to two creatures.,Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Earthen Fists,"Give a creature +8A. Then, you may have it <b>Battle</b> an enemy creature."
-s2tt1korok312,Korok,Earthen Fists,"Give a creature +4A. Then, you may have it <b>Battle</b> an enemy creature.",Demolish,Destroy a creature with decreased H.,Blast Wave,Deal 9 damage to up to two creatures.
-s2tt1korok314,Korok,Earthen Fists,"Give a creature +4A. Then, you may have it <b>Battle</b> an enemy creature.",Demolish,Destroy a creature with decreased H.,Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s2tt1korok321,Korok,Earthen Fists,"Give a creature +4A. Then, you may have it <b>Battle</b> an enemy creature.",Blast Wave,Deal 5 damage to up to two creatures,Demolish,Destroy a creature with decreased H.
-s2tt1korok324,Korok,Earthen Fists,"Give a creature +4A. Then, you may have it <b>Battle</b> an enemy creature.",Blast Wave,Deal 5 damage to up to two creatures,Lightning Speed,"Give your creatures +4A. This turn, they get <b>Aggressive</b>."
-s2tt1korok341,Korok,Earthen Fists,"Give a creature +4A. Then, you may have it <b>Battle</b> an enemy creature.",Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Demolish,Destroy a creature with decreased H.
-s2tt1korok342,Korok,Earthen Fists,"Give a creature +4A. Then, you may have it <b>Battle</b> an enemy creature.",Lightning Speed,"Give your creatures +3A. This turn, they get <b>Aggressive</b>.",Blast Wave,Deal 9 damage to up to two creatures.
-s2tt1korok412,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Demolish,Destroy a creature with decreased H.,Blast Wave,Deal 9 damage to up to two creatures.
-s2tt1korok413,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Demolish,Destroy a creature with decreased H.,Earthen Fists,"Give a creature +8A. Then, you may have it <b>Battle</b> an enemy creature."
-s2tt1korok421,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Blast Wave,Deal 5 damage to up to two creatures,Demolish,Destroy a creature with decreased H.
-s2tt1korok423,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Blast Wave,Deal 5 damage to up to two creatures,Earthen Fists,"Give a creature +8A. Then, you may have it <b>Battle</b> an enemy creature."
-s2tt1korok431,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Earthen Fists,"Give a creature +6A. Then, you may have it <b>Battle</b> an enemy creature.",Demolish,Destroy a creature with decreased H.
-s2tt1korok432,Korok,Lightning Speed,"Give your creatures +2A. This turn, they get <b>Aggressive</b>.",Earthen Fists,"Give a creature +6A. Then, you may have it <b>Battle</b> an enemy creature.",Blast Wave,Deal 9 damage to up to two creatures.
-s2tt1sunder123,Sunder,Gale Surge,"Give your creatures +2A. This turn, they get <b>Mobility</b> 1.",Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Stim Bolt,Play a Spell for <b>Free</b>.
-s2tt1sunder124,Sunder,Gale Surge,"Give your creatures +2A. This turn, they get <b>Mobility</b> 1.",Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Frost Blast,Deal 6 damage to each enemy creature.
-s2tt1sunder132,Sunder,Gale Surge,"Give your creatures +2A. This turn, they get <b>Mobility</b> 1.",Stim Bolt,Play a Spell for <b>Free</b>.,Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s2tt1sunder134,Sunder,Gale Surge,"Give your creatures +2A. This turn, they get <b>Mobility</b> 1.",Stim Bolt,Play a Spell for <b>Free</b>.,Frost Blast,Deal 6 damage to each enemy creature.
-s2tt1sunder142,Sunder,Gale Surge,"Give your creatures +2A. This turn, they get <b>Mobility</b> 1.",Frost Blast,Deal 4 damage to each enemy creature.,Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s2tt1sunder143,Sunder,Gale Surge,"Give your creatures +2A. This turn, they get <b>Mobility</b> 1.",Frost Blast,Deal 4 damage to each enemy creature.,Stim Bolt,Play a Spell for <b>Free</b>.
-s2tt1sunder213,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Gale Surge,"Give your creatures +3A. This turn, they get <b>Mobility</b> 2.",Stim Bolt,Play a Spell for <b>Free</b>.
-s2tt1sunder214,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Gale Surge,"Give your creatures +3A. This turn, they get <b>Mobility</b> 2.",Frost Blast,Deal 6 damage to each enemy creature.
-s2tt1sunder231,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Stim Bolt,Play a Spell for <b>Free</b>.,Gale Surge,"Give your creatures +4A. This turn, they get <b>Mobility</b> 3."
-s2tt1sunder234,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Stim Bolt,Play a Spell for <b>Free</b>.,Frost Blast,Deal 6 damage to each enemy creature.
-s2tt1sunder241,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Frost Blast,Deal 4 damage to each enemy creature.,Gale Surge,"Give your creatures +4A. This turn, they get <b>Mobility</b> 3."
-s2tt1sunder243,Sunder,Summon the Swarm,Play up to two Spell Sprite <b>Minions</b>.,Frost Blast,Deal 4 damage to each enemy creature.,Stim Bolt,Play a Spell for <b>Free</b>.
-s2tt1sunder312,Sunder,Stim Bolt,Play a Spell for <b>Free</b>.,Gale Surge,"Give your creatures +3A. This turn, they get <b>Mobility</b> 2.",Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s2tt1sunder314,Sunder,Stim Bolt,Play a Spell for <b>Free</b>.,Gale Surge,"Give your creatures +3A. This turn, they get <b>Mobility</b> 2.",Frost Blast,Deal 6 damage to each enemy creature.
-s2tt1sunder321,Sunder,Stim Bolt,Play a Spell for <b>Free</b>.,Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Gale Surge,"Give your creatures +4A. This turn, they get <b>Mobility</b> 3."
-s2tt1sunder324,Sunder,Stim Bolt,Play a Spell for <b>Free</b>.,Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Frost Blast,Deal 6 damage to each enemy creature.
-s2tt1sunder341,Sunder,Stim Bolt,Play a Spell for <b>Free</b>.,Frost Blast,Deal 4 damage to each enemy creature.,Gale Surge,"Give your creatures +4A. This turn, they get <b>Mobility</b> 3."
-s2tt1sunder342,Sunder,Stim Bolt,Play a Spell for <b>Free</b>.,Frost Blast,Deal 4 damage to each enemy creature.,Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s2tt1sunder412,Sunder,Frost Blast,Deal 2 damage to each enemy creature.,Gale Surge,"Give your creatures +3A. This turn, they get <b>Mobility</b> 2.",Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s2tt1sunder413,Sunder,Frost Blast,Deal 2 damage to each enemy creature.,Gale Surge,"Give your creatures +3A. This turn, they get <b>Mobility</b> 2.",Stim Bolt,Play a Spell for <b>Free</b>.
-s2tt1sunder421,Sunder,Frost Blast,Deal 2 damage to each enemy creature.,Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Gale Surge,"Give your creatures +4A. This turn, they get <b>Mobility</b> 3."
-s2tt1sunder423,Sunder,Frost Blast,Deal 2 damage to each enemy creature.,Summon the Swarm,Play a Spell Swarm <b>Minion</b>.,Stim Bolt,Play a Spell for <b>Free</b>.
-s2tt1sunder431,Sunder,Frost Blast,Deal 2 damage to each enemy creature.,Stim Bolt,Play a Spell for <b>Free</b>.,Gale Surge,"Give your creatures +4A. This turn, they get <b>Mobility</b> 3."
-s2tt1sunder432,Sunder,Frost Blast,Deal 2 damage to each enemy creature.,Stim Bolt,Play a Spell for <b>Free</b>.,Summon the Swarm,Play up to two Spell Swarm <b>Minions</b>.
-s2uu1nova123,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Bounty,You gain 3H for each creature you have in play.,Nova's Might,"Give your creatures +5A,+5H."
-s2uu1nova124,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Bounty,You gain 3H for each creature you have in play.,Nova's Judgement,"Give one of your creatures +10H. Then, give its opposing creature -10H."
-s2uu1nova132,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Nova's Might,"Give your creatures +3A,+3H.",Bounty,You gain 4H for each creature you have in play.
-s2uu1nova134,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Nova's Might,"Give your creatures +3A,+3H.",Nova's Judgement,"Give one of your creatures +10H. Then, give its opposing creature -10H."
-s2uu1nova142,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Nova's Judgement,"Give one of your creatures +7H. Then, give its opposing creature -7H.",Bounty,You gain 4H for each creature you have in play.
-s2uu1nova143,Nova,Nova's Dominion,Play up to two Wisp <b>Minions</b>.,Nova's Judgement,"Give one of your creatures +7H. Then, give its opposing creature -7H.",Nova's Might,"Give your creatures +5A,+5H."
-s2uu1nova213,Nova,Bounty,You gain 2H for each creature you have in play.,Nova's Dominion,Play an Oakfather <b>Minion</b>.,Nova's Might,"Give your creatures +5A,+5H."
-s2uu1nova214,Nova,Bounty,You gain 2H for each creature you have in play.,Nova's Dominion,Play an Oakfather <b>Minion</b>.,Nova's Judgement,"Give one of your creatures +10H. Then, give its opposing creature -10H."
-s2uu1nova231,Nova,Bounty,You gain 2H for each creature you have in play.,Nova's Might,"Give your creatures +3A,+3H.",Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s2uu1nova234,Nova,Bounty,You gain 2H for each creature you have in play.,Nova's Might,"Give your creatures +3A,+3H.",Nova's Judgement,"Give one of your creatures +10H. Then, give its opposing creature -10H."
-s2uu1nova241,Nova,Bounty,You gain 2H for each creature you have in play.,Nova's Judgement,"Give one of your creatures +7H. Then, give its opposing creature -7H.",Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s2uu1nova243,Nova,Bounty,You gain 2H for each creature you have in play.,Nova's Judgement,"Give one of your creatures +7H. Then, give its opposing creature -7H.",Nova's Might,"Give your creatures +5A,+5H."
-s2uu1nova312,Nova,Nova's Might,"Give your creatures +2A,+2H.",Nova's Dominion,Play an Oakfather <b>Minion</b>.,Bounty,You gain 4H for each creature you have in play.
-s2uu1nova314,Nova,Nova's Might,"Give your creatures +2A,+2H.",Nova's Dominion,Play an Oakfather <b>Minion</b>.,Nova's Judgement,"Give one of your creatures +10H. Then, give its opposing creature -10H."
-s2uu1nova321,Nova,Nova's Might,"Give your creatures +2A,+2H.",Bounty,You gain 3H for each creature you have in play.,Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s2uu1nova324,Nova,Nova's Might,"Give your creatures +2A,+2H.",Bounty,You gain 3H for each creature you have in play.,Nova's Judgement,"Give one of your creatures +10H. Then, give its opposing creature -10H."
-s2uu1nova341,Nova,Nova's Might,"Give your creatures +2A,+2H.",Nova's Judgement,"Give one of your creatures +7H. Then, give its opposing creature -7H.",Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s2uu1nova342,Nova,Nova's Might,"Give your creatures +2A,+2H.",Nova's Judgement,"Give one of your creatures +7H. Then, give its opposing creature -7H.",Bounty,You gain 4H for each creature you have in play.
-s2uu1nova412,Nova,Nova's Judgement,"Give one of your creatures +4H. Then, give its opposing creature -4H.",Nova's Dominion,Play an Oakfather <b>Minion</b>.,Bounty,You gain 4H for each creature you have in play.
-s2uu1nova413,Nova,Nova's Judgement,"Give one of your creatures +4H. Then, give its opposing creature -4H.",Nova's Dominion,Play an Oakfather <b>Minion</b>.,Nova's Might,"Give your creatures +5A,+5H."
-s2uu1nova421,Nova,Nova's Judgement,"Give one of your creatures +4H. Then, give its opposing creature -4H.",Bounty,You gain 3H for each creature you have in play.,Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s2uu1nova423,Nova,Nova's Judgement,"Give one of your creatures +4H. Then, give its opposing creature -4H.",Bounty,You gain 3H for each creature you have in play.,Nova's Might,"Give your creatures +5A,+5H."
-s2uu1nova431,Nova,Nova's Judgement,"Give one of your creatures +4H. Then, give its opposing creature -4H.",Nova's Might,"Give your creatures +3A,+3H.",Nova's Dominion,Play up to two Oakfather <b>Minions</b>.
-s2uu1nova432,Nova,Nova's Judgement,"Give one of your creatures +4H. Then, give its opposing creature -4H.",Nova's Might,"Give your creatures +3A,+3H.",Bounty,You gain 4H for each creature you have in play.
-s2uu1oros123,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Shapeshift,"Give a creature +6A,+6H. This turn, it has all creature types.",Spell Surge,Give a creature +7A and an additional +7A for each spell you've played this turn.
-s2uu1oros124,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Shapeshift,"Give a creature +6A,+6H. This turn, it has all creature types.",Spirit Bond,Give a creature +10H and a creature adjacent to it +10H.
-s2uu1oros132,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Spell Surge,Give a creature +4A and an additional +4A for each spell you've played this turn.,Shapeshift,"Give a creature +10A,+10H. This turn, it has all creature types."
-s2uu1oros134,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Spell Surge,Give a creature +4A and an additional +4A for each spell you've played this turn.,Spirit Bond,Give a creature +10H and a creature adjacent to it +10H.
-s2uu1oros142,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Spirit Bond,Give a creature +7H and a creature adjacent to it +7H.,Shapeshift,"Give a creature +10A,+10H. This turn, it has all creature types."
-s2uu1oros143,Oros,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Spirit Bond,Give a creature +7H and a creature adjacent to it +7H.,Spell Surge,Give a creature +7A and an additional +7A for each spell you've played this turn.
-s2uu1oros213,Oros,Shapeshift,"Give a creature +3A,+3H. This turn, it has all creature types.",Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Spell Surge,Give a creature +7A and an additional +7A for each spell you've played this turn.
-s2uu1oros214,Oros,Shapeshift,"Give a creature +3A,+3H. This turn, it has all creature types.",Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Spirit Bond,Give a creature +10H and a creature adjacent to it +10H.
-s2uu1oros231,Oros,Shapeshift,"Give a creature +3A,+3H. This turn, it has all creature types.",Spell Surge,Give a creature +4A and an additional +4A for each spell you've played this turn.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s2uu1oros234,Oros,Shapeshift,"Give a creature +3A,+3H. This turn, it has all creature types.",Spell Surge,Give a creature +4A and an additional +4A for each spell you've played this turn.,Spirit Bond,Give a creature +10H and a creature adjacent to it +10H.
-s2uu1oros241,Oros,Shapeshift,"Give a creature +3A,+3H. This turn, it has all creature types.",Spirit Bond,Give a creature +7H and a creature adjacent to it +7H.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s2uu1oros243,Oros,Shapeshift,"Give a creature +3A,+3H. This turn, it has all creature types.",Spirit Bond,Give a creature +7H and a creature adjacent to it +7H.,Spell Surge,Give a creature +7A and an additional +7A for each spell you've played this turn.
-s2uu1oros312,Oros,Spell Surge,Give a creature +2A and an additional +2A for each spell you've played this turn.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Shapeshift,"Give a creature +10A,+10H. This turn, it has all creature types."
-s2uu1oros314,Oros,Spell Surge,Give a creature +2A and an additional +2A for each spell you've played this turn.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Spirit Bond,Give a creature +10H and a creature adjacent to it +10H.
-s2uu1oros321,Oros,Spell Surge,Give a creature +2A and an additional +2A for each spell you've played this turn.,Shapeshift,"Give a creature +6A,+6H. This turn, it has all creature types.",Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s2uu1oros324,Oros,Spell Surge,Give a creature +2A and an additional +2A for each spell you've played this turn.,Shapeshift,"Give a creature +6A,+6H. This turn, it has all creature types.",Spirit Bond,Give a creature +10H and a creature adjacent to it +10H.
-s2uu1oros341,Oros,Spell Surge,Give a creature +2A and an additional +2A for each spell you've played this turn.,Spirit Bond,Give a creature +7H and a creature adjacent to it +7H.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s2uu1oros342,Oros,Spell Surge,Give a creature +2A and an additional +2A for each spell you've played this turn.,Spirit Bond,Give a creature +7H and a creature adjacent to it +7H.,Shapeshift,"Give a creature +10A,+10H. This turn, it has all creature types."
-s2uu1oros412,Oros,Spirit Bond,Give a creature +4H and a creature adjacent to it +4H.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Shapeshift,"Give a creature +10A,+10H. This turn, it has all creature types."
-s2uu1oros413,Oros,Spirit Bond,Give a creature +4H and a creature adjacent to it +4H.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile.",Spell Surge,Give a creature +7A and an additional +7A for each spell you've played this turn.
-s2uu1oros421,Oros,Spirit Bond,Give a creature +4H and a creature adjacent to it +4H.,Shapeshift,"Give a creature +6A,+6H. This turn, it has all creature types.",Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s2uu1oros423,Oros,Spirit Bond,Give a creature +4H and a creature adjacent to it +4H.,Shapeshift,"Give a creature +6A,+6H. This turn, it has all creature types.",Spell Surge,Give a creature +7A and an additional +7A for each spell you've played this turn.
-s2uu1oros431,Oros,Spirit Bond,Give a creature +4H and a creature adjacent to it +4H.,Spell Surge,Give a creature +4A and an additional +4A for each spell you've played this turn.,Darkforge Drain,"Give a creature +2A,+2H for each spell in your banish pile."
-s2uu1oros432,Oros,Spirit Bond,Give a creature +4H and a creature adjacent to it +4H.,Spell Surge,Give a creature +4A and an additional +4A for each spell you've played this turn.,Shapeshift,"Give a creature +10A,+10H. This turn, it has all creature types."
+forgebornID,cardId
+s3aa1ironbeard-c2a9,c2-alloyin-steel-|-vengeful-iron
+s1nn1cercee-c2a1,c2-army-commander
+s2nn1cercee-c2a3,c2-army-commander
+s1nn1nix-nekyia-c2a4,c2-army-of-the-damned
+s3nn1nix-nekyia-c2a2,c2-army-of-the-damned
+s3aa1steel-rosetta-c2a5,c2-augment
+s1uu1oros-c2a4,c2-barkskin
+s3uu1oros-c2a2,c2-barkskin
+s3uu1oros-c2a7,c2-barkskin-|-darkwood-armor
+s2tt1korok-c2a2,c2-blast-wave
+s3tt1korok-c2a1,c2-blast-wave
+s3nn1cercee-c2a6,c2-bones-of-solis-|-kneel-before-cercee!
+s3aa1steel-rosetta-c2a4,c2-boost
+s2uu1nova-c2a2,c2-bounty
+s3uu1nova-c2a2,c2-bounty
+s3nn1cercee-c2a4,c2-cercees-propaganda
+s3uu1nova-c2a4,c2-crimson-thorn
+s2nn1nix-nekyia-c2a2,c2-dark-ritual
+s3uu1oros-c2a4,c2-dark-spores
+s1nn1nix-nekyia-c2a3,c2-dark-summoning
+s2nn1nix-nekyia-c2a3,c2-dark-summoning
+s1uu1oros-c2a1,c2-darkforge-drain
+s2uu1oros-c2a1,c2-darkforge-drain
+s3nn1nix-nekyia-c2a3,c2-dead-winter
+s1nn1cercee-c2a2,c2-deathtouch
+s3tt1korok-c2a5,c2-deep-burn
+s3uu1oros-c2a3,c2-deepwood-assault
+s3uu1oros-c2a8,c2-deepwood-assault-|-unnatural-disaster
+s3uu1oros-c2a9,c2-deepwood-chosen-|-entropic-aura
+s1tt1korok-c2a1,c2-demolish
+s2tt1korok-c2a1,c2-demolish
+s3aa1crux-cobalt-c2a4,c2-determined-choice
+s2tt1korok-c2a3,c2-earthen-fists
+s2nn1nix-nekyia-c2a4,c2-endless-death
+s1aa1steel-rosetta-c2a1,c2-enhance
+s2aa1steel-rosetta-c2a3,c2-enhance
+s1tt1korok-c2a2,c2-flame-strike
+s3aa1steel-rosetta-c2a3,c2-flight-modification
+s2aa1ironbeard-c2a1,c2-formation
+s3aa1ironbeard-c2a4,c2-formation
+s3tt1sunder-c2a9,c2-frost-axe-|-bloodbath
+s2tt1sunder-c2a4,c2-frost-blast
+s2tt1sunder-c2a1,c2-gale-surge
+s1tt1sunder-c2a1,c2-gathering-storm
+s3tt1sunder-c2a2,c2-gathering-storm
+s3tt1sunder-c2a7,c2-gathering-storm-|-shadowbound
+s3nn1cercee-c2a3,c2-grave-robbery
+s1uu1oros-c2a3,c2-growth-aura
+s1tt1sunder-c2a4,c2-ice-armor
+s1aa1steel-rosetta-c2a4,c2-inspire
+s2aa1steel-rosetta-c2a4,c2-inspire
+s1aa1ironbeard-c2a3,c2-intimidate
+s2aa1ironbeard-c2a3,c2-intimidate
+s3aa1ironbeard-c2a1,c2-iron-might
+s1aa1ironbeard-c2a4,c2-knockback
+s3aa1ironbeard-c2a3,c2-knockback
+s3aa1ironbeard-c2a7,c2-knockback-|-spirit-breaker
+s3tt1korok-c2a3,c2-koroks-wisdom
+s1nn1cercee-c2a4,c2-life-drain
+s1tt1korok-c2a4,c2-lightning-speed
+s2tt1korok-c2a4,c2-lightning-speed
+s3nn1nix-nekyia-c2a5,c2-loyal-beyond-death
+s2aa1crux-cobalt-c2a1,c2-mind-over-matter
+s3aa1crux-cobalt-c2a5,c2-mind-wipe
+s2aa1steel-rosetta-c2a2,c2-nanotech-disruptor
+s3nn1nix-nekyia-c2a4,c2-nixs-rebellion
+s1uu1nova-c2a1,c2-novas-dominion
+s2uu1nova-c2a1,c2-novas-dominion
+s3uu1nova-c2a3,c2-novas-evolution
+s2uu1nova-c2a4,c2-novas-judgement
+s1uu1nova-c2a3,c2-novas-might
+s2uu1nova-c2a3,c2-novas-might
+s3uu1nova-c2a1,c2-novas-might
+s1uu1nova-c2a4,c2-novas-touch
+s1uu1nova-c2a2,c2-novas-wrath
+s2aa1steel-rosetta-c2a1,c2-optimize
+s3aa1steel-rosetta-c2a1,c2-optimize
+s3tt1sunder-c2a3,c2-outwit
+s3tt1sunder-c2a8,c2-outwit-|-fog-of-war
+s2aa1crux-cobalt-c2a4,c2-precognition
+s2aa1ironbeard-c2a4,c2-promote
+s1nn1nix-nekyia-c2a2,c2-raising-dead
+s3nn1nix-nekyia-c2a1,c2-raising-dead
+s3tt1sunder-c2a4,c2-reclaim
+s1aa1ironbeard-c2a1,c2-reinforce
+s1aa1steel-rosetta-c2a2,c2-repurpose
+s3tt1sunder-c2a6,c2-scorian-stones-|-elemental-frenzy
+s2nn1cercee-c2a1,c2-shadowcast
+s1uu1oros-c2a2,c2-shapeshift
+s2uu1oros-c2a2,c2-shapeshift
+s3uu1oros-c2a1,c2-shapeshift
+s2aa1crux-cobalt-c2a2,c2-shattered-psyche
+s3aa1crux-cobalt-c2a2,c2-shattered-psyche
+s3uu1oros-c2a6,c2-shatterwild-|-blight-of-solis
+s3aa1ironbeard-c2a2,c2-shield-slam
+s3aa1ironbeard-c2a8,c2-shield-slam-|-ruthless-advance
+s1aa1ironbeard-c2a2,c2-shields-up
+s2aa1ironbeard-c2a2,c2-shields-up
+s2nn1cercee-c2a4,c2-sorrow
+s3nn1cercee-c2a2,c2-sorrow
+s3nn1cercee-c2a7,c2-sorrow-|-pestilence
+s1nn1nix-nekyia-c2a1,c2-soul-rip
+s2nn1nix-nekyia-c2a1,c2-soul-rip
+s3nn1cercee-c2a9,c2-soul-swap-|-soul-reaver
+s1nn1cercee-c2a3,c2-soul-syphon
+s2nn1cercee-c2a2,c2-soul-syphon
+s3nn1cercee-c2a1,c2-soul-syphon
+s3nn1cercee-c2a8,c2-soul-syphon-|-dark-rebirth
+s3aa1ironbeard-c2a6,c2-sovereign-pillars-|-darkforged
+s2uu1oros-c2a3,c2-spell-surge
+s2uu1oros-c2a4,c2-spirit-bond
+s1tt1sunder-c2a3,c2-stim-bolt
+s2tt1sunder-c2a3,c2-stim-bolt
+s3tt1korok-c2a4,c2-stronghold
+s1tt1sunder-c2a2,c2-summon-the-swarm
+s2tt1sunder-c2a2,c2-summon-the-swarm
+s3tt1sunder-c2a1,c2-summon-the-swarm
+s2aa1crux-cobalt-c2a3,c2-synaptic-siphon
+s3aa1crux-cobalt-c2a1,c2-synaptic-siphon
+s1aa1steel-rosetta-c2a3,c2-tinker
+s3aa1steel-rosetta-c2a2,c2-tinker
+s3aa1crux-cobalt-c2a3,c2-unify
+s3uu1nova-c2a5,c2-united-as-one
+s1tt1korok-c2a3,c2-whirlwind
+s3tt1korok-c2a2,c2-whirlwind
+s3aa1ironbeard-c3a9,c3-alloyin-steel-|-vengeful-iron
+s1nn1cercee-c3a1,c3-army-commander
+s2nn1cercee-c3a3,c3-army-commander
+s1nn1nix-nekyia-c3a4,c3-army-of-the-damned
+s3nn1nix-nekyia-c3a2,c3-army-of-the-damned
+s3aa1steel-rosetta-c3a5,c3-augment
+s1uu1oros-c3a4,c3-barkskin
+s3uu1oros-c3a2,c3-barkskin
+s3uu1oros-c3a7,c3-barkskin-|-darkwood-armor
+s2tt1korok-c3a2,c3-blast-wave
+s3tt1korok-c3a1,c3-blast-wave
+s3aa1steel-rosetta-c3a4,c3-boost
+s2uu1nova-c3a2,c3-bounty
+s3uu1nova-c3a2,c3-bounty
+s3nn1cercee-c3a4,c3-cercees-propaganda
+s3uu1nova-c3a4,c3-crimson-thorn
+s2nn1nix-nekyia-c3a2,c3-dark-ritual
+s3uu1oros-c3a4,c3-dark-spores
+s1nn1nix-nekyia-c3a3,c3-dark-summoning
+s2nn1nix-nekyia-c3a3,c3-dark-summoning
+s1uu1oros-c3a1,c3-darkforge-drain
+s2uu1oros-c3a1,c3-darkforge-drain
+s3nn1nix-nekyia-c3a3,c3-dead-winter
+s1nn1cercee-c3a2,c3-deathtouch
+s3tt1korok-c3a5,c3-deep-burn
+s3uu1oros-c3a3,c3-deepwood-assault
+s3uu1oros-c3a8,c3-deepwood-assault-|-unnatural-disaster
+s3uu1oros-c3a9,c3-deepwood-chosen-|-entropic-aura
+s1tt1korok-c3a1,c3-demolish
+s2tt1korok-c3a1,c3-demolish
+s3aa1crux-cobalt-c3a4,c3-determined-choice
+s2tt1korok-c3a3,c3-earthen-fists
+s2nn1nix-nekyia-c3a4,c3-endless-death
+s1aa1steel-rosetta-c3a1,c3-enhance
+s2aa1steel-rosetta-c3a3,c3-enhance
+s1tt1korok-c3a2,c3-flame-strike
+s3aa1steel-rosetta-c3a3,c3-flight-modification
+s2aa1ironbeard-c3a1,c3-formation
+s3aa1ironbeard-c3a4,c3-formation
+s3tt1sunder-c3a9,c3-frost-axe-|-bloodbath
+s2tt1sunder-c3a4,c3-frost-blast
+s2tt1sunder-c3a1,c3-gale-surge
+s1tt1sunder-c3a1,c3-gathering-storm
+s3tt1sunder-c3a2,c3-gathering-storm
+s3tt1sunder-c3a7,c3-gathering-storm-|-shadowbound
+s3nn1cercee-c3a3,c3-grave-robbery
+s1uu1oros-c3a3,c3-growth-aura
+s1tt1sunder-c3a4,c3-ice-armor
+s1aa1steel-rosetta-c3a4,c3-inspire
+s2aa1steel-rosetta-c3a4,c3-inspire
+s1aa1ironbeard-c3a3,c3-intimidate
+s2aa1ironbeard-c3a3,c3-intimidate
+s3aa1ironbeard-c3a1,c3-iron-might
+s1aa1ironbeard-c3a4,c3-knockback
+s3aa1ironbeard-c3a3,c3-knockback
+s3aa1ironbeard-c3a7,c3-knockback-|-spirit-breaker
+s3tt1korok-c3a3,c3-koroks-wisdom
+s1nn1cercee-c3a4,c3-life-drain
+s1tt1korok-c3a4,c3-lightning-speed
+s2tt1korok-c3a4,c3-lightning-speed
+s3nn1nix-nekyia-c3a5,c3-loyal-beyond-death
+s2aa1crux-cobalt-c3a1,c3-mind-over-matter
+s3aa1crux-cobalt-c3a5,c3-mind-wipe
+s2aa1steel-rosetta-c3a2,c3-nanotech-disruptor
+s3nn1nix-nekyia-c3a4,c3-nixs-rebellion
+s1uu1nova-c3a1,c3-novas-dominion
+s2uu1nova-c3a1,c3-novas-dominion
+s3uu1nova-c3a3,c3-novas-evolution
+s2uu1nova-c3a4,c3-novas-judgement
+s1uu1nova-c3a3,c3-novas-might
+s2uu1nova-c3a3,c3-novas-might
+s3uu1nova-c3a1,c3-novas-might
+s1uu1nova-c3a4,c3-novas-touch
+s1uu1nova-c3a2,c3-novas-wrath
+s2aa1steel-rosetta-c3a1,c3-optimize
+s3aa1steel-rosetta-c3a1,c3-optimize
+s3tt1sunder-c3a3,c3-outwit
+s3tt1sunder-c3a8,c3-outwit-|-fog-of-war
+s2aa1crux-cobalt-c3a4,c3-precognition
+s2aa1ironbeard-c3a4,c3-promote
+s1nn1nix-nekyia-c3a2,c3-raising-dead
+s3nn1nix-nekyia-c3a1,c3-raising-dead
+s3tt1sunder-c3a4,c3-reclaim
+s1aa1ironbeard-c3a1,c3-reinforce
+s1aa1steel-rosetta-c3a2,c3-repurpose
+s2nn1cercee-c3a1,c3-shadowcast
+s1uu1oros-c3a2,c3-shapeshift
+s2uu1oros-c3a2,c3-shapeshift
+s3uu1oros-c3a1,c3-shapeshift
+s2aa1crux-cobalt-c3a2,c3-shattered-psyche
+s3aa1crux-cobalt-c3a2,c3-shattered-psyche
+s3aa1ironbeard-c3a2,c3-shield-slam
+s3aa1ironbeard-c3a8,c3-shield-slam-|-ruthless-advance
+s1aa1ironbeard-c3a2,c3-shields-up
+s2aa1ironbeard-c3a2,c3-shields-up
+s2nn1cercee-c3a4,c3-sorrow
+s3nn1cercee-c3a2,c3-sorrow
+s3nn1cercee-c3a7,c3-sorrow-|-pestilence
+s1nn1nix-nekyia-c3a1,c3-soul-rip
+s2nn1nix-nekyia-c3a1,c3-soul-rip
+s3nn1cercee-c3a9,c3-soul-swap-|-soul-reaver
+s1nn1cercee-c3a3,c3-soul-syphon
+s2nn1cercee-c3a2,c3-soul-syphon
+s3nn1cercee-c3a1,c3-soul-syphon
+s3nn1cercee-c3a8,c3-soul-syphon-|-dark-rebirth
+s2uu1oros-c3a3,c3-spell-surge
+s2uu1oros-c3a4,c3-spirit-bond
+s1tt1sunder-c3a3,c3-stim-bolt
+s2tt1sunder-c3a3,c3-stim-bolt
+s3tt1korok-c3a4,c3-stronghold
+s1tt1sunder-c3a2,c3-summon-the-swarm
+s2tt1sunder-c3a2,c3-summon-the-swarm
+s3tt1sunder-c3a1,c3-summon-the-swarm
+s2aa1crux-cobalt-c3a3,c3-synaptic-siphon
+s3aa1crux-cobalt-c3a1,c3-synaptic-siphon
+s1aa1steel-rosetta-c3a3,c3-tinker
+s3aa1steel-rosetta-c3a2,c3-tinker
+s3aa1crux-cobalt-c3a3,c3-unify
+s3uu1nova-c3a5,c3-united-as-one
+s1tt1korok-c3a3,c3-whirlwind
+s3tt1korok-c3a2,c3-whirlwind
+s3aa1ironbeard-c4a9,c4-alloyin-steel-|-vengeful-iron
+s1nn1cercee-c4a1,c4-army-commander
+s2nn1cercee-c4a3,c4-army-commander
+s1nn1nix-nekyia-c4a4,c4-army-of-the-damned
+s3nn1nix-nekyia-c4a2,c4-army-of-the-damned
+s3aa1steel-rosetta-c4a5,c4-augment
+s1uu1oros-c4a4,c4-barkskin
+s3uu1oros-c4a2,c4-barkskin
+s3uu1oros-c4a7,c4-barkskin-|-darkwood-armor
+s2tt1korok-c4a2,c4-blast-wave
+s3tt1korok-c4a1,c4-blast-wave
+s3aa1steel-rosetta-c4a4,c4-boost
+s2uu1nova-c4a2,c4-bounty
+s3uu1nova-c4a2,c4-bounty
+s3nn1cercee-c4a4,c4-cercees-propaganda
+s3uu1nova-c4a4,c4-crimson-thorn
+s2nn1nix-nekyia-c4a2,c4-dark-ritual
+s3uu1oros-c4a4,c4-dark-spores
+s1nn1nix-nekyia-c4a3,c4-dark-summoning
+s2nn1nix-nekyia-c4a3,c4-dark-summoning
+s1uu1oros-c4a1,c4-darkforge-drain
+s2uu1oros-c4a1,c4-darkforge-drain
+s3nn1nix-nekyia-c4a3,c4-dead-winter
+s1nn1cercee-c4a2,c4-deathtouch
+s3tt1korok-c4a5,c4-deep-burn
+s3uu1oros-c4a3,c4-deepwood-assault
+s3uu1oros-c4a8,c4-deepwood-assault-|-unnatural-disaster
+s3uu1oros-c4a9,c4-deepwood-chosen-|-entropic-aura
+s1tt1korok-c4a1,c4-demolish
+s2tt1korok-c4a1,c4-demolish
+s3aa1crux-cobalt-c4a4,c4-determined-choice
+s2tt1korok-c4a3,c4-earthen-fists
+s2nn1nix-nekyia-c4a4,c4-endless-death
+s1aa1steel-rosetta-c4a1,c4-enhance
+s2aa1steel-rosetta-c4a3,c4-enhance
+s1tt1korok-c4a2,c4-flame-strike
+s3aa1steel-rosetta-c4a3,c4-flight-modification
+s2aa1ironbeard-c4a1,c4-formation
+s3aa1ironbeard-c4a4,c4-formation
+s3tt1sunder-c4a9,c4-frost-axe-|-bloodbath
+s2tt1sunder-c4a4,c4-frost-blast
+s2tt1sunder-c4a1,c4-gale-surge
+s1tt1sunder-c4a1,c4-gathering-storm
+s3tt1sunder-c4a2,c4-gathering-storm
+s3tt1sunder-c4a7,c4-gathering-storm-|-shadowbound
+s3nn1cercee-c4a3,c4-grave-robbery
+s1uu1oros-c4a3,c4-growth-aura
+s1tt1sunder-c4a4,c4-ice-armor
+s1aa1steel-rosetta-c4a4,c4-inspire
+s2aa1steel-rosetta-c4a4,c4-inspire
+s1aa1ironbeard-c4a3,c4-intimidate
+s2aa1ironbeard-c4a3,c4-intimidate
+s3aa1ironbeard-c4a1,c4-iron-might
+s1aa1ironbeard-c4a4,c4-knockback
+s3aa1ironbeard-c4a3,c4-knockback
+s3aa1ironbeard-c4a7,c4-knockback-|-spirit-breaker
+s3tt1korok-c4a3,c4-koroks-wisdom
+s1nn1cercee-c4a4,c4-life-drain
+s1tt1korok-c4a4,c4-lightning-speed
+s2tt1korok-c4a4,c4-lightning-speed
+s3nn1nix-nekyia-c4a5,c4-loyal-beyond-death
+s2aa1crux-cobalt-c4a1,c4-mind-over-matter
+s3aa1crux-cobalt-c4a5,c4-mind-wipe
+s2aa1steel-rosetta-c4a2,c4-nanotech-disruptor
+s3nn1nix-nekyia-c4a4,c4-nixs-rebellion
+s1uu1nova-c4a1,c4-novas-dominion
+s2uu1nova-c4a1,c4-novas-dominion
+s3uu1nova-c4a3,c4-novas-evolution
+s2uu1nova-c4a4,c4-novas-judgement
+s1uu1nova-c4a3,c4-novas-might
+s2uu1nova-c4a3,c4-novas-might
+s3uu1nova-c4a1,c4-novas-might
+s1uu1nova-c4a4,c4-novas-touch
+s1uu1nova-c4a2,c4-novas-wrath
+s2aa1steel-rosetta-c4a1,c4-optimize
+s3aa1steel-rosetta-c4a1,c4-optimize
+s3tt1sunder-c4a3,c4-outwit
+s3tt1sunder-c4a8,c4-outwit-|-fog-of-war
+s2aa1crux-cobalt-c4a4,c4-precognition
+s2aa1ironbeard-c4a4,c4-promote
+s1nn1nix-nekyia-c4a2,c4-raising-dead
+s3nn1nix-nekyia-c4a1,c4-raising-dead
+s3tt1sunder-c4a4,c4-reclaim
+s1aa1ironbeard-c4a1,c4-reinforce
+s1aa1steel-rosetta-c4a2,c4-repurpose
+s2nn1cercee-c4a1,c4-shadowcast
+s1uu1oros-c4a2,c4-shapeshift
+s2uu1oros-c4a2,c4-shapeshift
+s3uu1oros-c4a1,c4-shapeshift
+s2aa1crux-cobalt-c4a2,c4-shattered-psyche
+s3aa1crux-cobalt-c4a2,c4-shattered-psyche
+s3aa1ironbeard-c4a2,c4-shield-slam
+s3aa1ironbeard-c4a8,c4-shield-slam-|-ruthless-advance
+s1aa1ironbeard-c4a2,c4-shields-up
+s2aa1ironbeard-c4a2,c4-shields-up
+s2nn1cercee-c4a4,c4-sorrow
+s3nn1cercee-c4a2,c4-sorrow
+s3nn1cercee-c4a7,c4-sorrow-|-pestilence
+s1nn1nix-nekyia-c4a1,c4-soul-rip
+s2nn1nix-nekyia-c4a1,c4-soul-rip
+s3nn1cercee-c4a9,c4-soul-swap-|-soul-reaver
+s1nn1cercee-c4a3,c4-soul-syphon
+s2nn1cercee-c4a2,c4-soul-syphon
+s3nn1cercee-c4a1,c4-soul-syphon
+s3nn1cercee-c4a8,c4-soul-syphon-|-dark-rebirth
+s2uu1oros-c4a3,c4-spell-surge
+s2uu1oros-c4a4,c4-spirit-bond
+s1tt1sunder-c4a3,c4-stim-bolt
+s2tt1sunder-c4a3,c4-stim-bolt
+s3tt1korok-c4a4,c4-stronghold
+s1tt1sunder-c4a2,c4-summon-the-swarm
+s2tt1sunder-c4a2,c4-summon-the-swarm
+s3tt1sunder-c4a1,c4-summon-the-swarm
+s2aa1crux-cobalt-c4a3,c4-synaptic-siphon
+s3aa1crux-cobalt-c4a1,c4-synaptic-siphon
+s1aa1steel-rosetta-c4a3,c4-tinker
+s3aa1steel-rosetta-c4a2,c4-tinker
+s3aa1crux-cobalt-c4a3,c4-unify
+s3uu1nova-c4a5,c4-united-as-one
+s1tt1korok-c4a3,c4-whirlwind
+s3tt1korok-c4a2,c4-whirlwind

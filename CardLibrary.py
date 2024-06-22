@@ -1,8 +1,4 @@
-# Fixed Version
-from operator import is_
-import csv, json, re
-
-from pandas import CategoricalDtype
+import csv, json
 from Interface import Interface, InterfaceCollection
 from typing import List, Tuple, Dict
 from copy import copy
@@ -14,67 +10,57 @@ class Entity:
         self.faction = faction      
         self.abilities = abilities        
         self.provides = {sub_type: 1 for subtype in attributes['cardSubType'].split(',') for sub_type in subtype.split(' ')}
-        self.provides.update({attributes['cardType'] : 1})
+        self.provides.update({attributes['cardType']: 1})
         self.ICollection = Collection
   
     def __str__(self):
-        #trait_str = ", ".join([f"{trait}" for trait in self.sources.items()])
-        #synergy_str = ", ".join([str(synergy) for synergy in self.targets.values()])
         return f"{self.name}"
 
-class ForgebornAbility :
+class ForgebornAbility:
     def __init__(self, id, name, entity):
         self.id = id
         self.name = name
         self.entity = entity 
+
 class Forgeborn:
     def __init__(self, id, name):
         self.id = id 
         self.name = name
         self.abilities = {}        
-        self.ICollection = {} #InterfaceCollection.from_forgeborn(self)
+        self.ICollection = {} 
 
     def add_ability(self, ability):
-        #ability_permutation = ability.id[-4:]   # c3a2
-        #ability_cycle = ability_permutation[1]
-        #ability_number = ability_permutation[3]
-        #ability_name = f"{ability_cycle}{ability.name}"
-
         self.abilities[ability.id] = ability.entity        
         self.create_interface_collection()
 
     def get_permutation(self, forgeborn_id):
-        # Extract ability information from forgeborn_id
         ability_ids = self._construct_ability_ids(forgeborn_id)
-        
-        # Create a new Forgeborn instance with a subset of abilities
         new_forgeborn = Forgeborn(self.id, self.name)
         new_forgeborn.abilities = {aid: self.abilities[aid] for aid in ability_ids if aid in self.abilities}
         new_forgeborn.create_interface_collection()
         return new_forgeborn
 
     def _construct_ability_ids(self, forgeborn_id):
-        # Parse the forgeborn_id to get ability IDs
-        ability_prefix = self.id  # Assuming the prefix is the same as Forgeborn ID
+        ability_prefix = self.id 
         ability_ids = []
-        ability_data = forgeborn_id[len(self.id):]  # Remove the Forgeborn ID part
+        ability_data = forgeborn_id[len(self.id):]
         
         for i in range(0, len(ability_data)):
             number = ability_data[i]
-            cycle = i+2
+            cycle = i + 2
             ability_id = f"{ability_prefix}-c{cycle}a{number}"
             ability_ids.append(ability_id)
         
         return ability_ids
 
     def create_interface_collection(self):
-        self.ICollection = InterfaceCollection.from_entities(self.name ,self.abilities.values())
+        self.ICollection = InterfaceCollection.from_entities(self.name, self.abilities.values())
 
     def __str__(self):
         abilities_str = "\n".join([f"  {ability}: {text}" for ability, text in self.abilities.items()])
         return f"Forgeborn Name: {self.name}\nAbilities:\n{abilities_str}\n"
 
-class Card():
+class Card:
     def __init__(self, card, modifier=None): 
         self.entities = [card]             
         self.faction  = card.faction
@@ -93,17 +79,17 @@ class Card():
             aggregated = {}
             for entity in self.entities:                
                 for level in entity.abilities:
-                    aggregated[level] = aggregated.get(level,0) + entity.abilities[level][attribute_name]  
+                    aggregated[level] = aggregated.get(level, 0) + entity.abilities[level][attribute_name]  
             return aggregated      
 
         self.attack = aggregate_attribute('attack')
         self.health = aggregate_attribute('health')
-        self.above_stat ={'attack' : {}, 'health' : {}}
+        self.above_stat = {'attack': {}, 'health': {}}
 
         for stat in self.above_stat.keys():
             stats = getattr(self, stat)
             for level in stats: 
-                self.above_stat[stat][level] = stats[level] >= 3 * ( level + 1 )
+                self.above_stat[stat][level] = stats[level] >= 3 * (level + 1)
 
     def get_rarities(self):
         return [item.rarity for item in self.entities]
@@ -117,7 +103,6 @@ class Card():
         }
 
 class Deck:
-    
     def __init__(self, name: str, forgeborn, faction: str, cards: Dict[str, Card]):
         assert isinstance(name, str) and name, "Name must be a non-empty string"
         assert isinstance(faction, str) and faction, "Faction must be a non-empty string"
@@ -157,29 +142,14 @@ class Deck:
         return composition
     
     def update_ICollection_with_forgeborn(self):
-        """
-        Update the ICollection of the Deck object by combining 
-        the ICollectionDeck of the Deck object and the ICollection
-        of the active Forgeborn.
-        """
         self.ICollection = self.ICollectionDeck.copy()
         self.ICollection.update(self.forgeborn.ICollection)
 
     def associate_cards_with_factions(self, cards: Dict[str, Card], faction: str) -> Dict[str, Card]:
-        """
-        Associates each card in the input list with the corresponding deck's faction.
-        Parameters:
-        - cards (Dict[str, Card]): A dictionary of cards, where the key is the card name and the value is a Card object.
-        - faction (str): The faction associated with these cards.
-        
-        Returns:
-        - Dict[str, Card]: A dictionary where the keys are tuples (faction, card_name) and the values are Card objects.
-        """
         faction_cards = {}
         for card_name, card in cards.items():
             faction_cards[(faction, card_name)] = card
         return faction_cards
-
 
 class Fusion(Deck):
     def __init__(self, decks, name=None):
@@ -194,29 +164,17 @@ class Fusion(Deck):
         if deck1.faction == deck2.faction:
             raise ValueError("Cannot fuse decks of the same faction")
 
-        
-        # Default Values 
         fusion_name = "_".join([deck.name for deck in decks])        
-        # Name and faction for the fusion
-
-        # Sort the deck names alphabetically and then join them with an underscore
         self.fused_name = name or "_".join(sorted([deck.name for deck in decks]))
-        # Generate the fused faction name        
         self.fused_faction = "|".join([deck.faction for deck in decks]) 
         fused_cards = {**deck1.cards, **deck2.cards}
         
-        # Additional properties specific to Fusion
         self.deck1 = deck1
         self.deck2 = deck2
         self.forgeborn_options = self.inspire_forgeborn(deck1.forgeborn, deck2.forgeborn)
         self.fused_abilities = [ability for forgeborn in self.forgeborn_options for ability in forgeborn.abilities]
-        
 
-        # Choosing a default forgeborn (frosm deck1 for simplicity)
-        # Note: Here we're assuming that a 'forgeborn' variable exists in the 'Deck' class
         self.active_forgeborn = self.forgeborn_options[0]
-
-        # Call the Deck's constructor and exchange fused abilities 
         super().__init__(name or fusion_name, self.active_forgeborn, self.fused_faction, fused_cards)        
         self.abilities = self.fused_abilities
         
@@ -224,91 +182,84 @@ class Fusion(Deck):
         new_forgeborns = []
         
         for original_forgeborn, other_forgeborn in [(forgeborn1, forgeborn2), (forgeborn2, forgeborn1)]:
-            
             inspire_abilities = [ability for ability in original_forgeborn.abilities.values() if 'Inspire' in ability.attributes['Name']]
-            
             if inspire_abilities:
                 new_abilities = original_forgeborn.abilities.copy()
-                
                 for inspire_ability in inspire_abilities:
                     level = inspire_ability.name[-3]
-                    
                     for other_ability_name, other_ability in other_forgeborn.abilities.items():
                         if other_ability_name[-3].startswith(str(level)):
-                            # Remove the old ability that has the same level 
                             ability_id_replace_name = next((ability_id for ability_id in new_abilities.keys() if ability_id[-3] == level), None)
                             if ability_id_replace_name:
                                 new_abilities.pop(ability_id_replace_name)
                             new_abilities[other_ability.name] = other_ability
-                            break  # Assuming you only want the first match
+                            break
                 new_forgeborn = Forgeborn(original_forgeborn.id, original_forgeborn.name)
                 for name, ability in new_abilities.items():
                     id = name 
                     name = ability.attributes['Name']
                     new_forgeborn.add_ability(ForgebornAbility(id, name ,ability))
-                
             else:
                 new_forgeborn = original_forgeborn
-            
             new_forgeborns.append(new_forgeborn)    
         return new_forgeborns
 
     def set_forgeborn(self, idx_or_forgeborn_name):
-            """
-            Sets the active Forgeborn of the Fusion deck to the given index or Forgeborn object.
-            Also updates the Fusion's name and faction based on the new active Forgeborn.
-            """
-            new_forgeborn = self.active_forgeborn
-            if isinstance(idx_or_forgeborn_name, int):
-                new_forgeborn = self.forgeborn_options[idx_or_forgeborn_name]
-            else:
-                new_forgeborn = self.get_forgeborn(idx_or_forgeborn_name)
-
-            self.abilities = new_forgeborn.abilities
-            # Check if the new Forgeborn is already the active one
-            if self.active_forgeborn == new_forgeborn: return
-
-            # Update the active Forgeborn
-            self.active_forgeborn = new_forgeborn
-
-            # Update the name and faction based on the active Forgeborn
-            if self.active_forgeborn == self.forgeborn_options[0]:
-                self.name    = f"{self.deck1.name}_{self.deck2.name}"
-                self.faction = f"{self.deck1.faction}|{self.deck2.faction}"
-            else:
-                self.name    = f"{self.deck2.name}_{self.deck1.name}"
-                self.faction = f"{self.deck2.faction}|{self.deck1.faction}"
-            
-            # Update the forgeborn in the parent (Deck) class
-            self.forgeborn = self.active_forgeborn    
-            self.update_ICollection_with_forgeborn()
+        new_forgeborn = self.active_forgeborn
+        if isinstance(idx_or_forgeborn_name, int):
+            new_forgeborn = self.forgeborn_options[idx_or_forgeborn_name]
+        else:
+            new_forgeborn = self.get_forgeborn(idx_or_forgeborn_name)
+        self.abilities = new_forgeborn.abilities
+        if self.active_forgeborn == new_forgeborn:
+            return
+        self.active_forgeborn = new_forgeborn
+        if self.active_forgeborn == self.forgeborn_options[0]:
+            self.name = f"{self.deck1.name}_{self.deck2.name}"
+            self.faction = f"{self.deck1.faction}|{self.deck2.faction}"
+        else:
+            self.name = f"{self.deck2.name}_{self.deck1.name}"
+            self.faction = f"{self.deck2.faction}|{self.deck1.faction}"
+        self.forgeborn = self.active_forgeborn    
+        self.update_ICollection_with_forgeborn()
  
-
     def copyset_forgeborn(self, idx_or_forgeborn_name):
-
         final_fusion = copy(self)
         final_fusion.set_forgeborn(idx_or_forgeborn_name)
-
         return final_fusion
 
     def get_forgeborn(self, id_or_forgeborn_name):        
         if isinstance(id_or_forgeborn_name, int):
             return self.forgeborn_options[id_or_forgeborn_name]
-        else :
+        else:
             for forgeborn in self.forgeborn_options:
                 if id_or_forgeborn_name == forgeborn.name:
                     return forgeborn
         return None
 
-
-
 class UniversalCardLibrary:
-   
     def __init__(self, sff_path, fb_path, syn_path):        
-        self.entities  = []
+        self.entities = []
         self.forgeborns = {}
         self.unique_forgeborns = {}
+        self.fb_map = self._read_forgeborns_from_csv(fb_path)
         self._read_entities_from_csv(sff_path)
+
+    def _read_forgeborns_from_csv(self, fb_path):
+        fb_map = {}
+        with open(fb_path, 'r') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=',')
+            for row in reader:
+                forgeborn_ability_id = row['forgebornID']
+                card_id = row['cardId']
+                forgeborn_id = forgeborn_ability_id[:-5]
+                if forgeborn_id not in self.unique_forgeborns:
+                    forgeborn_name = forgeborn_id[5:].capitalize()
+                    self.unique_forgeborns[forgeborn_id] = Forgeborn(forgeborn_id, forgeborn_name)
+                if card_id not in fb_map:
+                    fb_map[card_id] = []
+                fb_map[card_id].append(forgeborn_ability_id)
+        return fb_map                
 
     def _read_entities_from_csv(self, csv_path):
         with open(csv_path, 'r') as csvfile:
@@ -341,7 +292,7 @@ class UniversalCardLibrary:
             if key == "3text":
                 read_synergies = True
             elif read_synergies:
-                range = None  # Default: Any
+                range = None  
                 if value is not None:
                     if not value.isnumeric():
                         if key == "Free":
@@ -365,35 +316,26 @@ class UniversalCardLibrary:
 
         is_forgeborn_ability = attributes['cardType'] == 'forgeborn-ability'
         
-        entity = Entity(name if not is_forgeborn_ability else row['id'] , faction, attributes, abilities, Collection)
+        entity = Entity(name if not is_forgeborn_ability else row['id'], faction, attributes, abilities, Collection)
         self.entities.append(entity)
 
-        # Process Forgeborn abilities
         if is_forgeborn_ability:
             ability = ForgebornAbility(row['id'], name, entity)
             self._process_forgeborn_ability(ability)
 
     def _process_forgeborn_ability(self, ability):
-        
-        forgeborn_id   = ability.id[0:-5]
-        forgeborn_name = forgeborn_id[5:]
-                
-        # Handle Forgeborn
-        # Create or update Forgeborn entry
-        if forgeborn_id not in self.unique_forgeborns:
-            self.unique_forgeborns[forgeborn_id] = Forgeborn(forgeborn_id, forgeborn_name)
+        forgeborn_ability_ids = self.fb_map.get(ability.id, [])
+        for forgeborn_ability_id in forgeborn_ability_ids:
+            forgeborn_id = forgeborn_ability_id[:-5]
+            if forgeborn_id in self.unique_forgeborns:
+                ability.id = forgeborn_ability_id
+                self.unique_forgeborns[forgeborn_id].add_ability(ability)
 
-        # Add abilities to the Forgeborn
-        self.unique_forgeborns[forgeborn_id].add_ability(ability)        
-
-
-    def search_entity(self,name, cardType=None):
-        #print(f"Searching Entity: {name}")
+    def search_entity(self, name, cardType=None):
         for entity in self.entities:
             if cardType is None or entity.attributes['cardType'] == cardType:
                 if entity.name == name:
                     return entity
-        #print(f"Entity not found: {name} , {cardType}")
         return None
 
     def get_forgeborn(self, id):
@@ -411,59 +353,40 @@ class UniversalCardLibrary:
         with open(filename, 'r') as f:
             content = f.read()
             data = json.loads(content)
-
         if 'Items' in data:
             return data['Items']
         else:                                
             return [data]
 
     def load_decks_from_data(self, decks_data: List[Dict]) -> Tuple[List[Deck], List[Dict]]:
-
         decks = []
         incomplete_data = []
-        
         for deck_data in decks_data:            
             try:
-                forgebornId = None
-                if 'forgebornId' in deck_data:
-                    forgebornId = deck_data['forgebornId']
-                else:
-                    forgeborn = deck_data['forgeborn']
-                    forgebornId = forgeborn['id']
-                forgebornId = forgebornId.replace('0','2')
-                # Get Forgeborn with permutation 
-                forgeborn_id = forgebornId[:-3] 
-                forgebornKey = [key for key in self.unique_forgeborns if forgeborn_id in key]
-                forgeborn_unique = self.unique_forgeborns[forgebornKey[0]]
-                forgeborn = forgeborn_unique.get_permutation(forgebornId)
-            
-
+                forgeborn_id = deck_data.get('forgebornId') or deck_data['forgeborn']['id']
+                forgeborn_id = forgeborn_id.replace('0', '2')
+                forgeborn_key = [key for key in self.unique_forgeborns if forgeborn_id[:-3] in key]
+                forgeborn_unique = self.unique_forgeborns[forgeborn_key[0]]
+                forgeborn = forgeborn_unique.get_permutation(forgeborn_id)
             except Exception as e:
                 print(f"Exception: {e}")
                 print(f"Could not load Forgeborn data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
-                
                 incomplete_data.append(deck_data)
                 continue
 
             try: 
                 cards_data = deck_data['cards']
-
                 cards_title = []
                 cards_additional_data = {}
 
-                # Handle the case when cards_data is a dictionary
                 if isinstance(cards_data, dict):
                     for card in cards_data.values():
                         card_title = str(card.get('title')) if 'title' in card else str(card.get('name'))
                         cards_title.append(card_title)
-
                 else:
                     cards_title = cards_data
 
-                # Create the cards dictionary with additional data
                 cards = {card_title: self.create_card_from_title(card_title, cards_additional_data.get(card_title, {})) for card_title in cards_title}
-
-                
             except Exception as e:
                 print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
                 print(f"Exception: {e}")
@@ -472,39 +395,33 @@ class UniversalCardLibrary:
 
             deck = Deck(deck_data['name'], forgeborn, deck_data['faction'], cards)
             decks.append(deck)
-            
         return decks, incomplete_data
 
-        
     def load_fusions(self, fusions_data: List[Dict]) -> Tuple[List[Fusion], List[Dict]]:
         fusions = []
         incomplete_fusionsdata = []
-
         for fusion_data in fusions_data:            
-                decks, incomplete_decksdata = self.load_decks_from_data(fusion_data['myDecks'])
-                name = fusion_data['name'] if 'name' in fusion_data else ""
-                if decks:
-                    fusion = Fusion(decks, name)
-                    fusions.append(fusion)
-                if incomplete_decksdata:
-                   incomplete_fusionsdata.append(
-                        {
-                            'name': name, 
-                            'myDecks': incomplete_decksdata
-                        }
-                    )
-                
+            decks, incomplete_decksdata = self.load_decks_from_data(fusion_data['myDecks'])
+            name = fusion_data['name'] if 'name' in fusion_data else ""
+            if decks:
+                fusion = Fusion(decks, name)
+                fusions.append(fusion)
+            if incomplete_decksdata:
+                incomplete_fusionsdata.append(
+                    {
+                        'name': name, 
+                        'myDecks': incomplete_decksdata
+                    }
+                )
         return fusions, incomplete_fusionsdata
 
     def create_card_from_title(self, card_title, card_data_additional):
-        # First try with full title
         card_entity = self.search_entity(card_title)        
         if card_entity:
             for key, value in card_data_additional.items():                
                 setattr(card_entity, key, value)
             return Card(card_entity)
 
-        # If not found, try with decreasing title length
         parts = card_title.split(' ')
         for i in range(1, len(parts)):
             modifier_title = ' '.join(parts[:i])
@@ -513,22 +430,19 @@ class UniversalCardLibrary:
             card_entity = self.search_entity(card_title)
             if modifier_entity and card_entity:
                 for key, value in card_data_additional.items():
-                    existing_value = getattr(card_entity, key)  # Get existing value or use an empty dictionary
+                    existing_value = getattr(card_entity, key)
                     if isinstance(existing_value, dict):
-                        merged_value = {**existing_value, **value}  # Merge the dictionaries
+                        merged_value = {**existing_value, **value}
                         setattr(card_entity, key, merged_value)
                     elif value:
-                        setattr(card_entity, key, value)  # Set the new value directly
-
+                        setattr(card_entity, key, value)
                 return Card(card_entity, modifier_entity)
 
-        # If no entities found, create a card with just the card title
         print(f"Entity not found: {card_title}")
         return Card(Entity(name=card_title, cardType='Unknown'))
-                
+
     def __str__(self):
         entity_strings = []
         for entity in self.entities:
             entity_strings.append(str(entity))
-        return "\n".join(entity_strings)    
-  
+        return "\n".join(entity_strings)

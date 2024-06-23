@@ -523,6 +523,18 @@ def generate_deck_statistics_dataframe():
             # Update the corresponding row in df_decks_filtered with the stats from deck_stats_df
             df_decks_filtered.update(deck_stats_df)
 
+            # Ensure the updated DataFrame is correctly cast to avoid FutureWarning
+            df_decks_filtered = df_decks_filtered.astype({
+                'Creatures': int,
+                'Spells': int,
+                'A1': float,
+                'A2': float,
+                'A3': float,
+                'H1': float,
+                'H2': float,
+                'H3': float
+            })
+
     return df_decks_filtered
 
 def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):

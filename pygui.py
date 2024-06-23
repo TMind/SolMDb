@@ -509,7 +509,7 @@ def generate_deck_statistics_dataframe():
             deck_stats_df = pd.concat([card_type_count_df, attack_df, defense_df], axis=1)
 
             # Round each value in the DataFrame
-            deck_stats_df = deck_stats_df.round(2)
+            deck_stats_df = deck_stats_df.round(2).astype(float)
 
             # Set the 'name' index for deck_stats_df
             deck_stats_df['name'] = deck['name']
@@ -522,18 +522,6 @@ def generate_deck_statistics_dataframe():
 
             # Update the corresponding row in df_decks_filtered with the stats from deck_stats_df
             df_decks_filtered.update(deck_stats_df)
-
-            # Ensure the updated DataFrame is correctly cast to avoid FutureWarning
-            df_decks_filtered = df_decks_filtered.astype({
-                'Creatures': int,
-                'Spells': int,
-                'A1': float,
-                'A2': float,
-                'A3': float,
-                'H1': float,
-                'H2': float,
-                'H3': float
-            })
 
     return df_decks_filtered
 

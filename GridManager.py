@@ -26,9 +26,7 @@ class GridManager:
         self.relationships[identifier] = dependent_identifiers
         self.outputs[identifier] = widgets.Output()
 
-        self._setup_grid_events(identifier, grid)
-        with self.outputs['debug']:
-            print(f"GridManager::add_grid() - Grid {identifier} added. Appending to main_output.")        
+        self._setup_grid_events(identifier, grid)        
         self.outputs[identifier].append_display_data(grid.get_grid_box())            
         self.main_output.append_display_data(self.outputs[identifier])
         
@@ -45,16 +43,14 @@ class GridManager:
                     return df
         return None
 
-    def replace_grid(self, identifier, new_df):
-        print(f"GridManager::replace_grid() - Replacing grid {identifier} with new DataFrame")
+    def replace_grid(self, identifier, new_df):        
         grid = self.grids.get(identifier)
         if grid:
             grid.update_main_widget(new_df)
 
     def reset_dataframe(self, identifier):
         grid = self.grids.get(identifier)
-        if grid:
-            print(f"GridManager::reset_dataframe() - Resetting DataFrame for {identifier}")
+        if grid:            
             grid.reset_dataframe()
 
     def set_default_data(self, identifier, new_data):
@@ -107,8 +103,7 @@ class GridManager:
         for dependent_identifier in self.relationships[master_identifier]:
             dependent_grid = self.grids[dependent_identifier]
             dependent_df = dependent_grid.df_versions['default']
-            filtered_df = dependent_df[dependent_df.index.isin(master_df.index)]
-            print(f"Synchronizing {dependent_identifier} with {master_identifier}")
+            filtered_df = dependent_df[dependent_df.index.isin(master_df.index)]            
             #self.replace_grid(dependent_identifier, filtered_df)
 
     def _setup_grid_events(self, identifier, grid):

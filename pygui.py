@@ -216,7 +216,7 @@ def generate_deck_content_dataframe(event, widget):
     ic(generate_deck_content_dataframe, event, widget)
     #print(f"Generating Deck Content DataFrame : {event}")
     with out_debug:
-        print(f"DeckEvent: {event}, Widget: {widget}")
+   #     print(f"DeckEvent: {event}, Widget: {widget}")
 
         #Get the selection from the deck widget
         desired_fields = ['name', 'cardType', 'cardSubType', 'levels']    
@@ -233,14 +233,14 @@ def generate_deck_content_dataframe(event, widget):
             old_df = qm.get_grid_df('deck')            
             # Ensure old_df is not None before proceeding
             if old_df is None:
-                print("No previous data found in the deck grid.")
+    #            print("No previous data found in the deck grid.")
                 unique_deckNames = []
             else:
                 # Get the unique values from the deckName column in old_df
                 unique_deckNames = old_df['DeckName'].unique().tolist()
         
             # Add the deckList to the unique_deckNames and remove the deselectList
-            print(f"Select: {selectList} \nDeselect: {deselectList}\nUnique: {unique_deckNames}")
+    #        print(f"Select: {selectList} \nDeselect: {deselectList}\nUnique: {unique_deckNames}")
             union_set = set(unique_deckNames) | set(selectList)
             deckList =  list(union_set - set(deselectList))            
             #deckList = ['The Reeves of Loss', 'The People of Bearing']                
@@ -249,7 +249,7 @@ def generate_deck_content_dataframe(event, widget):
             from CardLibrary import Card , CardData
 
             for deckName in deckList:
-                print(f'DeckName: {deckName}')
+    #            print(f'DeckName: {deckName}')
                 #Get the Deck from the Database 
                 deck = GlobalVariables.myDB.find_one('Deck', {'name': deckName})
                 if deck:
@@ -615,8 +615,7 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
 
 def coll_data_on_selection_changed(event, widget):
     global qm
-    # Generate a DataFrame from the selected rows
-    print(f"Selection changed: {event}")
+    # Generate a DataFrame from the selected rows    
     deck_df = generate_deck_content_dataframe(event, widget)    
     qm.replace_grid('deck', deck_df)    
     qm.set_default_data('deck', deck_df)
@@ -679,9 +678,7 @@ def handle_debug_toggle(change):
 
 def handle_db_list_change(change):
     global username
-
-    print(f"DB List Change: {change}")
-
+    
     if change['name'] == 'value' and change['old'] != change['new']:
         new_username = change['new'] #or ""  # Ensure new_username is a string
 
@@ -787,7 +784,7 @@ def update_decks_display(change):
 
     if change['new'] or change['new'] == '':                       
         if change['owner'] == db_list:
-            print(f"Updating Decks Display for widget db_list")
+            #print(f"Updating Decks Display for widget db_list")
             # Generate new DataFrame with new database
             default_coll_df = generate_deck_statistics_dataframe() 
             default_count_df = generate_cardType_count_dataframe(default_coll_df)            
@@ -802,7 +799,7 @@ def update_decks_display(change):
             qm.replace_grid('count', default_count_df)
         
         else:
-            print(f"Updating Decks Display with FilterGrid")
+            #print(f"Updating Decks Display with FilterGrid")
             default_coll_df = qm.get_default_data('collection')
 
             # Apply the filter from FilterGrid                

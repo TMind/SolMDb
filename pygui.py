@@ -472,6 +472,9 @@ def generate_deck_statistics_dataframe():
             forgebornId = forgeborn_id[:-3]
             # Get Forgeborn from the database
             forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
+            if not forgeborn_data:
+                print(f"Forgeborn {forgebornId} not found in the database.")
+                continue
             fb_data = ForgebornData(**forgeborn_data)
             forgeborn = Forgeborn(data = fb_data)
             unique_forgeborn = forgeborn.get_permutation(forgeborn_id)

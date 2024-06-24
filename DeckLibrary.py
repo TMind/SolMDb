@@ -29,6 +29,8 @@ class DeckLibrary:
                     if deckName not in deckNamesDatabase:                         
                         self.new_decks.append(deckData)    
                         new_deck = Deck.from_data(deckData)
+                        if new_deck.forgebornId.startswith('a'):
+                            new_deck.forgebornId = 's' + new_deck.forgebornId[1:]
                         if new_deck.children_data:
                             new_deck.children_data.update({new_deck.forgebornId : 'CardLibrary.Forgeborn'})
                         deckDataList.append(new_deck.to_data())

@@ -19,6 +19,7 @@ from IPython.display import display, HTML
 
 from Synergy import SynergyTemplate
 import pandas as pd
+pd.set_option('future.no_silent_downcasting', True)
 from GridManager import GridManager, FilterGrid, get_cardType_entity_names
 
 from icecream import ic

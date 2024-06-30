@@ -40,6 +40,29 @@ class Forgeborn:
         new_forgeborn.create_interface_collection()
         return new_forgeborn
 
+    def get_fraud_monster(self, fmid):
+        ability_ids = self._construct_fraud_ability_ids(fmid)
+        base_ability_id = ability_ids[0]
+        modifier_ability_ids = ability_ids [1:]
+
+        base_ability = self.abilities[base_ability_id] if base_ability_id in self.abilities else None
+        modifier_abilities = { entity.name : entity for id, entity in self.abilities.items() if id in modifier_ability_ids }
+        return base_ability, modifier_abilities
+    
+    def _construct_fraud_ability_ids(self, fmid):
+        fraud_ability_ids = []
+
+        # The first digit determines the legs
+        first_digit = fmid[0]
+        fraud_ability_ids.append(f"fraud-legs-{first_digit}")
+
+        # The remaining digits determine the specific parts
+        for position, digit in enumerate(fmid[1:], start=2):
+            part_id = f"fraud-part-{digit}-p{position}"
+            fraud_ability_ids.append(part_id)
+        
+        return fraud_ability_ids
+
     def _construct_ability_ids(self, forgeborn_id):
         ability_prefix = self.id 
         ability_ids = []
@@ -61,19 +84,25 @@ class Forgeborn:
         return f"Forgeborn Name: {self.name}\nAbilities:\n{abilities_str}\n"
 
 class Card:
-    def __init__(self, card, modifier=None): 
+    def __init__(self, card, modifiers=None): 
         self.entities = [card]             
         self.faction  = card.faction
-        if modifier:
-            self.title = modifier.name + ' ' + card.name
-            if isinstance(modifier, Entity):
-                self.entities.append(modifier)        
-        else:
-            self.title = card.name        
+        self.title = card.name
+        
+        if modifiers:
+            if isinstance(modifiers, dict):
+                for modifier_name, modifier_entity in modifiers.items():
+                    if modifier_entity:
+                        self.entities.append(modifier_entity)
+                        #self.title = modifier_entity.name + ' ' + self.title
+            elif isinstance(modifiers, Entity):
+                self.entities.append(modifiers)
+                self.title = modifiers.name + ' ' + card.name
+        
         self.cardType = card.attributes['cardType']
         self.cardSubType = card.attributes['cardSubType']
         self.name = self.title
-        self.ICollection = InterfaceCollection.from_card(self)        
+        self.ICollection = InterfaceCollection.from_card(self)         
         
         def aggregate_attribute(attribute_name):
             aggregated = {}
@@ -268,7 +297,7 @@ class UniversalCardLibrary:
                 self._process_row(row)
 
     def _process_row(self, row):
-        keys = ['Name', 'rarity', 'cardType', 'cardSubType', 'spliced', 'solbind']
+        keys = ['id', 'Name', 'rarity', 'cardType', 'cardSubType', 'spliced', 'solbind']
         attributes = {k: row[k] for k in keys if k in row}
         name = row['Name']
         faction = row['faction']
@@ -315,6 +344,7 @@ class UniversalCardLibrary:
                         Collection.add(ISyn)
 
         is_forgeborn_ability = attributes['cardType'] == 'forgeborn-ability'
+        is_fraud_ability = attributes['cardType'] == 'Fraud' or 'fraud-legs' in attributes['id']
         
         entity = Entity(name if not is_forgeborn_ability else row['id'], faction, attributes, abilities, Collection)
         self.entities.append(entity)
@@ -322,6 +352,15 @@ class UniversalCardLibrary:
         if is_forgeborn_ability:
             ability = ForgebornAbility(row['id'], name, entity)
             self._process_forgeborn_ability(ability)
+        elif is_fraud_ability:
+            ability = ForgebornAbility(row['id'], name, entity)
+            self._process_fraud_ability(ability)
+        
+    def _process_fraud_ability(self, ability):
+        if not 'fraud' in self.unique_forgeborns:
+            self.unique_forgeborns['fraud'] = Forgeborn('fraud', "Fraud's Experiment")            
+        self.unique_forgeborns['fraud'].add_ability(ability)
+
 
     def _process_forgeborn_ability(self, ability):
         forgeborn_ability_ids = self.fb_map.get(ability.id, [])
@@ -421,13 +460,23 @@ class UniversalCardLibrary:
             for key, value in card_data_additional.items():                
                 setattr(card_entity, key, value)
             return Card(card_entity)
+        elif "Fraud's Experiment" in card_title:
+            # Assemble Fraud parts from Forgeborn Fraud's Experiment
+            fraud_parts = card_title.split(" ")
+            fraud_id = fraud_parts[-1]
+            fraud_base_entity, fraud_modifiers_entities = self.unique_forgeborns['fraud'].get_fraud_monster(fraud_id)
+            if fraud_base_entity and fraud_modifiers_entities:
+                return Card(fraud_base_entity, fraud_modifiers_entities)
+            else:
+                print(f"Unable to find fraud abilities for: {card_title}")
+                return None
 
         parts = card_title.split(' ')
         for i in range(1, len(parts)):
             modifier_title = ' '.join(parts[:i])
-            card_title = ' '.join(parts[i:])
+            card_title_remainder = ' '.join(parts[i:])
             modifier_entity = self.search_entity(modifier_title, 'Modifier')
-            card_entity = self.search_entity(card_title)
+            card_entity = self.search_entity(card_title_remainder)
             if modifier_entity and card_entity:
                 for key, value in card_data_additional.items():
                     existing_value = getattr(card_entity, key)

@@ -97,6 +97,7 @@ class UniversalLibrary:
                             interfaceNames.append(tag) 
 
         is_forgeborn_ability = attributes['cardType'] == 'forgeborn-ability'
+        is_fraud_ability = attributes['cardType'] == 'Fraud'
 
         name = entityName
         entity_data = CardLibrary.EntityData(name, faction, attributes, abilities, vrange, interfaceNames)
@@ -107,7 +108,21 @@ class UniversalLibrary:
         if is_forgeborn_ability:
             ability = CardLibrary.ForgebornAbility(row['id'], name, entity)
             self._process_forgeborn_ability(ability)
+        elif is_fraud_ability:
+            ability = CardLibrary.ForgebornAbility(row['id'], name, entity)
+            self._process_fraud_ability(ability)
 
+
+    def _process_fraud_ability(self, ability):
+        
+        fraud = self.database.find_one('Forgeborn', {'id': 'fraud'})
+        if not fraud:
+            self.database.insert('Forgeborn', {'id': "fraud", 'name': "Fraud's Experiment", 'abilities': {}} )
+
+        self.database.update_one( 'Forgeborn', 
+            {'id': 'fraud'},
+            {f'abilities.{ability.id}': ability.name}
+        )
 
     def _process_forgeborn_ability(self, ability):
         forgeborn_ability_ids = self.fb_map.get(ability.id, [])

@@ -50,7 +50,7 @@ class UniversalLibrary:
         return fb_map  
 
     def _process_row(self, row):
-        keys = ['Name', 'rarity', 'cardType', 'cardSubType', 'spliced', 'solbind']            
+        keys = ['id', 'Name', 'rarity', 'cardType', 'cardSubType', 'spliced', 'solbind']            
         attributes = {k: row[k] for k in keys if k in row}
         entityName = row['Name']
         faction = row['faction']  
@@ -97,7 +97,7 @@ class UniversalLibrary:
                             interfaceNames.append(tag) 
 
         is_forgeborn_ability = attributes['cardType'] == 'forgeborn-ability'
-        is_fraud_ability = attributes['cardType'] == 'Fraud'
+        is_fraud_ability = attributes['cardType'] == 'Fraud' or 'fraud-legs' in attributes['id']
 
         name = entityName
         entity_data = CardLibrary.EntityData(name, faction, attributes, abilities, vrange, interfaceNames)
@@ -106,10 +106,10 @@ class UniversalLibrary:
 
         # Process Forgeborn abilities
         if is_forgeborn_ability:
-            ability = CardLibrary.ForgebornAbility(row['id'], name, entity)
+            ability = CardLibrary.ForgebornAbxility(attributes['id'], name, entity)
             self._process_forgeborn_ability(ability)
         elif is_fraud_ability:
-            ability = CardLibrary.ForgebornAbility(row['id'], name, entity)
+            ability = CardLibrary.ForgebornAbility(attributes['id'], name, entity)
             self._process_fraud_ability(ability)
 
 
@@ -201,6 +201,7 @@ class UniversalLibrary:
                 # Handle the case when cards_data is a dictionary
                 if isinstance(cards_data, dict):
                     for card in cards_data.values():
+
                         card_title = str(card.get('title')) if 'title' in card else str(card.get('name'))
                         cards_title.append(card_title)
 
@@ -251,6 +252,22 @@ class UniversalLibrary:
                 setattr(entity_data, key, value)
             #return Card(card_entity)
             return CardLibrary.Entity.from_data(entity_data)
+        elif "Fraud's Experiment" in card_title:
+            # Assemble Fraud parts from Forgeborn Fraud's Experiment
+            fraud_parts = card_title.split(" ")
+            fraud_id = fraud_parts[-1]
+            fraud_data = self.database.find_one('Forgeborn', {'id': 'fraud'})
+            fraud = CardLibrary.Forgeborn.from_data(fraud_data)
+            fraud_base_id, fraud_modifier_ids = fraud.get_fraud_monster(fraud_id)
+            
+            fraud_base_entity = self.database.find_one('Entity', {'id' : fraud_base_id })
+            fraud_modifier_entities = {id: self.database.find_one('Entity', {'id': id}) for id in fraud_modifier_ids}
+            
+            if fraud_base_entity and fraud_modifier_entities:
+                return fraud_base_entity, fraud_modifier_entities
+            else:
+                print(f"Unable to find fraud abilities for: {card_title}")
+                return None
 
         # If not found, try with decreasing title length
         parts = card_title.split(' ')

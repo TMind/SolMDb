@@ -66,6 +66,30 @@ class Forgeborn(DatabaseObject):
         
         return new_forgeborn
 
+    def get_fraud_monster(self, fmid):
+        ability_ids = self._construct_fraud_ability_ids(fmid)
+        base_ability_id = ability_ids[0]
+        modifier_ability_ids = ability_ids [1:]
+
+        #base_ability = self.abilities[base_ability_id] if base_ability_id in self.abilities else None
+        #modifier_abilities = { entity.name : entity for id, entity in self.abilities.items() if id in modifier_ability_ids }
+        return base_ability_id, modifier_ability_ids
+    
+    def _construct_fraud_ability_ids(self, fmid):
+        fraud_ability_ids = []
+
+        # The first digit determines the legs
+        first_digit = fmid[0]
+        fraud_ability_ids.append(f"fraud-legs-{first_digit}")
+
+        # The remaining digits determine the specific parts
+        for position, digit in enumerate(fmid[1:], start=2):
+            part_id = f"fraud-part-{digit}-p{position}"
+            fraud_ability_ids.append(part_id)
+        
+        return fraud_ability_ids
+
+
     def _construct_ability_ids(self, forgeborn_id):
         # Parse the forgeborn_id to get ability IDs
         ability_prefix = self.id  # Assuming the prefix is the same as Forgeborn ID

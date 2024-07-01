@@ -4,7 +4,6 @@ import ipywidgets as widgets
 from pyvis.network import Network
 import networkx as nx
 import numpy as np
-#import qgrid
 
 import GlobalVariables
 from CardLibrary import Deck, FusionData, Fusion

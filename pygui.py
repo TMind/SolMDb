@@ -471,6 +471,10 @@ def generate_deck_statistics_dataframe():
             forgebornId = forgeborn_id[:-3]
             # Get Forgeborn from the database
             forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
+            # Check if forgeborn_data is None and handle the error
+            if forgeborn_data is None:
+                print(f"No data found for forgebornId: {forgebornId}")
+                continue
             fb_data = ForgebornData(**forgeborn_data)
             forgeborn = Forgeborn(data = fb_data)
             unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
@@ -482,7 +486,7 @@ def generate_deck_statistics_dataframe():
                     df_decks_filtered.loc[deck['name'], f'FB{cycle}'] = aName
 
             # Replace forgebornId with the forgeborn name from the database     
-            df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_id[5:-3]
+            df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_id[5:-3].capitalize()
                 
     # Create a DataFrame from the 'stats' sub-dictionary
     for deck in GlobalVariables.myDB.find('Deck', {}):

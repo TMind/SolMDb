@@ -21,7 +21,7 @@ class UniversalLibrary:
         numFB = self.database.count_documents('Forgeborn')
         numEnt = self.database.count_documents('Entity')
 
-        if numFB <= 0 or numEnt <= 0:
+        if numFB <= 1 or numEnt <= 0:
             self.database.ensure_unique_index('Forgeborn', 'id')                    
             self.database.ensure_unique_index('Entity', 'name')        
             self.fb_map = self._read_forgeborns_from_csv(fb_path)
@@ -106,7 +106,7 @@ class UniversalLibrary:
 
         # Process Forgeborn abilities
         if is_forgeborn_ability:
-            ability = CardLibrary.ForgebornAbxility(attributes['id'], name, entity)
+            ability = CardLibrary.ForgebornAbility(attributes['id'], name, entity)
             self._process_forgeborn_ability(ability)
         elif is_fraud_ability:
             ability = CardLibrary.ForgebornAbility(attributes['id'], name, entity)

@@ -19,5 +19,14 @@
             "justMyCode": True,
             "args": ["--username","TMind", "--eval", "tmind"]
         },
+        {
+            "name": "Python: UCL Fused",
+            "type": "python",
+            "request": "launch",
+            "program": "SolDB.py",
+            "console": "integratedTerminal",
+            "justMyCode": True,
+            "args": ["--username","TMind", "--eval", "tmind", "--type", "fuseddeck"]
+        },
     ]
 }

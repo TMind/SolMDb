@@ -20,36 +20,36 @@ class DeckLibrary:
             cardIdsDatabase = [card['_id'] for card in cardListDatabase]
 
             length = len(decks_data) 
-            with tqdm(total=length, desc="Saving Decks",mininterval=0.1, colour='BLUE') as pbar:
-                deckDataList = []
-                cardDataList = []
-                for deckData in decks_data:
-                    deckName = deckData['name'] 
-                    # Save only new decks
-                    if deckName not in deckNamesDatabase:                         
-                        self.new_decks.append(deckData)    
-                        new_deck = Deck.from_data(deckData)
-                        if new_deck.children_data:
-                            new_deck.children_data.update({new_deck.forgebornId : 'CardLibrary.Forgeborn'})
-                        deckDataList.append(new_deck.to_data())
-                        
-                        # Save all cards that are not already in the database
-                        for index, card in new_deck.cards.items():
-                            id = new_deck.cardIds[int(index)-1]                                                
-                            if id not in cardIdsDatabase:
-                                myCard = Card.from_data(card)                                                                                
-                                myCard.data._id = id                            
-                                cardDataList.append(myCard.to_data())
-                    pbar.update(1)
+            #with tqdm(total=length, desc="Saving Decks",mininterval=0.1, colour='BLUE') as pbar:
+            deckDataList = []
+            cardDataList = []
+            for deckData in decks_data:
+                deckName = deckData['name'] 
+                # Save only new decks
+                if deckName not in deckNamesDatabase:                         
+                    self.new_decks.append(deckData)    
+                    new_deck = Deck.from_data(deckData)
+                    if new_deck.children_data:
+                        new_deck.children_data.update({new_deck.forgebornId : 'CardLibrary.Forgeborn'})
+                    deckDataList.append(new_deck.to_data())
+                    
+                    # Save all cards that are not already in the database
+                    for index, card in new_deck.cards.items():
+                        id = new_deck.cardIds[int(index)-1]                                                
+                        if id not in cardIdsDatabase:
+                            myCard = Card.from_data(card)                                                                                
+                            myCard.data._id = id                            
+                            cardDataList.append(myCard.to_data())
+                    #pbar.update(1)
                 
-                if deckDataList:
-                    self.dbmgr.insert_many('Deck', deckDataList)                
-                if cardDataList:                                                   
-                    # Remove duplicate entries but keep the first one in the list
-                    seen = set()
-                    cardDataList = [x for x in cardDataList if not (x['_id'] in seen or seen.add(x['_id']))]                                    
-                    self.dbmgr.insert_many('Card', cardDataList)
-    
+            if deckDataList:
+                self.dbmgr.insert_many('Deck', deckDataList)                
+            if cardDataList:                                                   
+                # Remove duplicate entries but keep the first one in the list
+                seen = set()
+                cardDataList = [x for x in cardDataList if not (x['_id'] in seen or seen.add(x['_id']))]                                    
+                self.dbmgr.insert_many('Card', cardDataList)
+
         if fusions_data:
             with tqdm(total=len(fusions_data), desc="Saving Fusions",mininterval=0.1, colour='YELLOW') as pbar:
                 for fusion_data in fusions_data:

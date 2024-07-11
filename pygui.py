@@ -1,9 +1,10 @@
-from enum import unique
+from ast import Global
 import os, time, re
 import ipywidgets as widgets
+from numpy import isin
 from pyvis.network import Network
 import networkx as nx
-import numpy as np
+from tqdm.notebook import tqdm
 
 import GlobalVariables
 from CardLibrary import Deck, FusionData, Fusion
@@ -14,10 +15,11 @@ from MyGraph import MyGraph
 from NetApi import NetApi
 
 from soldb import parse_arguments
-from IPython.display import display, HTML
+from IPython.display import display, HTML, clear_output
 
 from Synergy import SynergyTemplate
 import pandas as pd
+import qgrid
 from GridManager import GridManager, FilterGrid, get_cardType_entity_names
 
 from icecream import ic
@@ -79,14 +81,19 @@ username = widgets.Text(value=GlobalVariables.username, description='Username:',
 button_load = None
 db_list = None 
 cardTypes_names_widget = {}
+deck_selection_widget = None
 
 qgrid_widget_options = {}
-filter_grid = None 
+filter_grid = None
+filter_grid_object = None 
 global_df = None
+data_generation_functions = {}
 
 out_main = widgets.Output()
 out_qm = widgets.Output()
 out_debug = widgets.Output()
+max_number_of_grids = 5
+qm_gridbox = widgets.GridspecLayout(max_number_of_grids, 1, layout=widgets.Layout(width='100%', height='100%'))
 
 qm = GridManager(out_qm)
 
@@ -106,6 +113,8 @@ qg_coll_options = {
     'col_defs' : {        
         'name':             { 'width': 250, },
         'registeredDate':   { 'width': 200, },
+        'UpdatedAt':        { 'width': 200, },
+        'pExpiry':          { 'width': 200, },
         'cardSetNo':        { 'width': 50,  },
         'faction':          { 'width': 100,  },
         'forgebornId':      { 'width': 100,  },
@@ -141,6 +150,11 @@ qg_deck_options = {
         'H3':               { 'width': 50,  }
     }
 }
+
+qg_options ={   'Deck Stats': qg_coll_options, 
+                'Card Types': qg_count_options,
+                'Selected Decks': qg_deck_options
+            }
 
 ######################
 # Network Operations #
@@ -211,12 +225,13 @@ def generate_synergy_statistics_dataframe(deck_df):
 
     return synergy_df
 
-def generate_deck_content_dataframe(event, widget):
-    ic(generate_deck_content_dataframe, event, widget)
+def generate_deck_content_dataframe(event = None):
+    global deck_selection_widget
+    ic(generate_deck_content_dataframe)
     #print(f"Generating Deck Content DataFrame : {event}")
-    with out_debug:
-        print(f"DeckEvent: {event}, Widget: {widget}")
+    widget = deck_selection_widget
 
+    with out_debug:
         #Get the selection from the deck widget
         desired_fields = ['name', 'cardType', 'cardSubType', 'levels']    
         if widget:            
@@ -307,6 +322,19 @@ def generate_deck_content_dataframe(event, widget):
                     final_df['cardSubType'] = final_df['cardSubType'].replace(['', '0', 0], 'Spell')
                     final_df['cardSubType'] = final_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
 
+                # Sort all columns alphabetically
+                sorted_columns = sorted(final_df.columns)
+                
+                # Ensure 'DeckName' is first, followed by the specified order for other columns
+                fixed_order = ['DeckName', 'name', 'cardType', 'cardSubType', 'A1', 'H1', 'A2', 'H2', 'A3', 'H3']
+                # Remove the fixed order columns from the sorted list
+                sorted_columns = [col for col in sorted_columns if col not in fixed_order]
+                # Concatenate the fixed order columns with the rest of the sorted columns
+                final_order = fixed_order + sorted_columns
+                
+                # Reindex the DataFrame with the new column order
+                final_df = final_df.reindex(columns=final_order)
+                
                 return final_df.fillna('')
             else:
                 print(f"No cards found in the database for {deckList}")
@@ -360,7 +388,7 @@ def generate_cardType_count_dataframe(existing_df=None):
         print("No decks found in the database")
         all_decks_df = pd.DataFrame()
 
-    # Filter all_decks_df to only include rows that exist in existing_df
+    # Filter all_decks_df to only include rows that exist in existing_df ( not necessary anymore )
     if existing_df is not None:
         all_decks_df = all_decks_df[all_decks_df.index.isin(existing_df.index)]        
 
@@ -394,41 +422,28 @@ def generate_cardType_count_dataframe(existing_df=None):
 
 
 # Data Handling and Transformation 
-def generate_deck_statistics_dataframe():
-    global cardTypes_names_widget
-
-    def get_card_title(card_id):
-        card = GlobalVariables.myDB.find_one('Card', {'_id': card_id})
-        if card: 
-            if 'title' in card:
-                return card['title']
-            elif 'name' in card:
-                return card['name']
-            else:
-                print(f"Card {card_id} has no title/name")
-                return ''
-        else:
-            print(f"Card {card_id} not found")
-            return ''
+def generate_deck_statistics_dataframe(update_progress=None):
 
     def get_card_titles(card_ids):
         card_titles = []
         for card_id in card_ids:
-            card_title = get_card_title(card_id)
+            card_title = card_id[5:].replace('-', ' ').title()
+            #card_title = get_card_title(card_id)
+
             if card_title:  # Check if card_title is not empty
                 card_titles.append(card_title)
         # Join the list of titles into a single string separated by commas
         return ', '.join(sorted(card_titles))
 
     # Get all Decks from the database
-    try:
-        deck_cursor = GlobalVariables.myDB.find('Deck', {})        
-        df_decks = pd.DataFrame(list(deck_cursor))
-        df_decks_filtered = df_decks[[ 'registeredDate', 'name', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId']].copy()
-        df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
-    except:
-        print("Error reading decks from the database. Try reloading the data.")
-        return pd.DataFrame()
+    #try:
+    deck_cursor = GlobalVariables.myDB.find('Deck', {})        
+    df_decks = pd.DataFrame(list(deck_cursor))
+    df_decks_filtered = df_decks[[ 'registeredDate', 'UpdatedAt', 'pExpiry', 'name', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId']].copy()
+    df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
+    #except:
+    #print("Error reading decks from the database. Try reloading the data.")
+    #return pd.DataFrame()
 
     # For column 'cardSetNo' replace the number 99 with 0 
     df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].replace(99, 0)
@@ -464,32 +479,55 @@ def generate_deck_statistics_dataframe():
     df_decks_filtered.set_index('name', inplace=True)
 
     from CardLibrary import Forgeborn, ForgebornData
+    def process_deck_forgeborn(deck, df_decks_filtered):        
+        forgeborn_id = deck['forgebornId']
+        forgebornId = forgeborn_id[:-3]
+        if forgebornId.startswith('a'):
+            forgebornId = 's' + forgebornId[1:]
+        # Get Forgeborn from the database
+        forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
+        # Check if forgeborn_data is None and handle the error
+        if forgeborn_data is None:
+            print(f"No data found for forgebornId: {forgebornId}")
+            return
+        fb_data = ForgebornData(**forgeborn_data)
+        forgeborn = Forgeborn(data=fb_data)
+        unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
+        forgeborn_abilities = unique_forgeborn.abilities
+
+        if forgeborn_abilities:
+            for aID, aName in forgeborn_abilities.items():
+                cycle = aID[-3]
+                df_decks_filtered.loc[deck['name'], f'FB{cycle}'] = aName
+
+        # Replace forgebornId with the forgeborn name from the database     
+        df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_id[5:-3].title()
+    
     # Create a DataFrame from the fb_abilities sub-dictionary
-    for deck in GlobalVariables.myDB.find('Deck', {}):
+    iterator = 0     
+    number_of_decks = GlobalVariables.myDB.count_documents('Deck', {})
+    if update_progress:
+        update_progress(0, 'Fetching Forgeborn Data...')
+    for deck in GlobalVariables.myDB.find('Deck', {}) :
+        if update_progress: 
+            percentage = iterator * 100 / number_of_decks 
+            iterator += 1
+            update_progress(percentage)
         if 'forgebornId' in deck:
-            forgeborn_id = deck['forgebornId']
-            forgebornId = forgeborn_id[:-3]
-            # Get Forgeborn from the database
-            forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
-            # Check if forgeborn_data is None and handle the error
-            if forgeborn_data is None:
-                print(f"No data found for forgebornId: {forgebornId}")
-                continue
-            fb_data = ForgebornData(**forgeborn_data)
-            forgeborn = Forgeborn(data = fb_data)
-            unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
-            forgeborn_abilities = unique_forgeborn.abilities 
+            process_deck_forgeborn(deck, df_decks_filtered)
 
-            if forgeborn_abilities:
-                for aID , aName in forgeborn_abilities.items():
-                    cycle = aID[-3]
-                    df_decks_filtered.loc[deck['name'], f'FB{cycle}'] = aName
+    if update_progress: update_progress(100, "Finished loading")                
 
-            # Replace forgebornId with the forgeborn name from the database     
-            df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_id[5:-3].capitalize()
-                
+    iterator = 0    
+    if update_progress:
+        update_progress(0, 'Generating Statistics Data...')
     # Create a DataFrame from the 'stats' sub-dictionary
     for deck in GlobalVariables.myDB.find('Deck', {}):
+        if update_progress: 
+            percentage = iterator * 100 / number_of_decks 
+            iterator += 1
+            update_progress(percentage)
+
         if 'stats' in deck:
             stats = deck.get('stats', {})
 
@@ -526,9 +564,13 @@ def generate_deck_statistics_dataframe():
             # Update the corresponding row in df_decks_filtered with the stats from deck_stats_df
             df_decks_filtered.update(deck_stats_df)
 
+    if update_progress:
+        update_progress(100, 'Generating Statistics Data finished!')
     return df_decks_filtered
 
-def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
+def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=None):
+    if update_progress: 
+        update_progress(0, 'Initialising filter!')
     def filter_by_substring(df, filter_row):       
         def apply_filter(df, substrings):
             substring_check_results = []
@@ -555,7 +597,7 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
 
         # Apply the first filter outside the loop
         df_filtered = df_to_filter
-        substrings = re.split(r'\s*,\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
+        substrings = re.split(r'\s*;\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
         if substrings:
             df_filtered = apply_filter(df, substrings)
 
@@ -563,7 +605,7 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
         for i, filter_type in enumerate(['Creature', 'Spell'], start=1):
             operator = filter_row[f'op{i}']
             previous_substrings = substrings
-            substrings = re.split(r'\s*,\s*', filter_row[filter_type]) if filter_row[filter_type] else []
+            substrings = re.split(r'\s*;\s*', filter_row[filter_type]) if filter_row[filter_type] else []
             #print(f"Substrings = '{substrings}'")
             if operator == '+':                
                 substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
@@ -602,6 +644,8 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
         #print(f"Applying filter: {filter_row}")
         df_filtered = filter_by_substring(df_filtered, filter_row)
 
+    if update_progress: 
+        update_progress(100, 'Filter applied!')
     return df_filtered
 
 
@@ -677,8 +721,10 @@ def update_visible_columns_on_count():
 def handle_debug_toggle(change):
     if change.new:
         ic.enable()
+        GlobalVariables.debug = True
     else:
         ic.disable()
+        GlobalVariables.debug = False
 
 def handle_db_list_change(change):
     global username
@@ -699,7 +745,8 @@ def handle_db_list_change(change):
 
             # Update Interface for New Username
             update_filter_widget()
-            update_decks_display(change)
+            #update_decks_display(change)
+            refresh_gridbox(change)
         else:
             print("No valid database selected.")
 
@@ -740,10 +787,6 @@ def reload_data_on_click(button, value):
         db_list.options = ['']
         db_list.value = ''  # Set to an empty string if no valid databases
 
-
-    # Call refresh function for dropdowns
-    #handle_username_change({'new': username_value, 'owner': db_list})
-
 def display_graph_on_click(button):
     myDecks = []
     for dropdown in dropdowns:
@@ -774,48 +817,49 @@ def display_graph_on_click(button):
                 net = visualize_network_graph(myGraph.G)
                 display(net.show(f"{deck.name}.html"))
 
-def update_decks_display(change):
-    ic(update_decks_display, change)
-    #print(f"Updating Decks Display : {change}")
-    global db_list, qm, filter_grid  # Assuming filter_grid is a global instance of FilterGrid
+# def update_decks_display(change):
+#     ic(update_decks_display, change)
+#     #print(f"Updating Decks Display : {change}")
+#     global db_list, qm, filter_grid  # Assuming filter_grid is a global instance of FilterGrid
 
-    for identifier in ['collection', 'count']:
-        default_df = qm.get_default_data(identifier)
-        if default_df.empty:
-            if identifier == 'collection':
-                default_df = generate_deck_statistics_dataframe()
-            elif identifier == 'count':
-                default_df = generate_cardType_count_dataframe()                        
-            qm.set_default_data(identifier, default_df)
+#     for identifier in ['collection']:
+#         default_df = qm.get_default_data(identifier)
+#         if default_df.empty:
+#             if identifier == 'collection':
+#                 default_df = generate_deck_statistics_dataframe(update_progress=qm.grids['collection'].update_progress)
+#             elif identifier == 'count':
+#                 default_df = generate_cardType_count_dataframe()                        
+#             qm.set_default_data(identifier, default_df)
 
-    if change['new'] or change['new'] == '':                       
-        if change['owner'] == db_list:
-            print(f"Updating Decks Display for widget db_list")
-            # Generate new DataFrame with new database
-            default_coll_df = generate_deck_statistics_dataframe() 
-            default_count_df = generate_cardType_count_dataframe(default_coll_df)            
+#     if change['new'] or change['new'] == '':                       
+#         if change['owner'] == db_list:
+#             print(f"Updating Decks Display for widget db_list")
+#             # Generate new DataFrame with new database
+#             default_coll_df = generate_deck_statistics_dataframe(update_progress=qm.grids['collection'].update_progress) 
+#             default_count_df = generate_cardType_count_dataframe(default_coll_df)            
 
-            qm.set_default_data('collection', default_coll_df)
-            qm.set_default_data('count', default_count_df)
+#             qm.set_default_data('collection', default_coll_df)
+#             qm.set_default_data('count', default_count_df)
 
-            # Replace the data in the qgrid widgets
-            #print(f"Replacing Grid collection with default data")
-            qm.replace_grid('collection', default_coll_df)
-            #print(f"Replacing Grid count with default data")
-            qm.replace_grid('count', default_count_df)
+#             # Replace the data in the qgrid widgets
+#             #print(f"Replacing Grid collection with default data")
+#             qm.replace_grid('collection', default_coll_df)
+#             #print(f"Replacing Grid count with default data")
+#             qm.replace_grid('count', default_count_df)
         
-        else:
-            print(f"Updating Decks Display with FilterGrid")
-            default_coll_df = qm.get_default_data('collection')
-
-            # Apply the filter from FilterGrid                
-            if filter_grid:                                
-                filter_df = filter_grid.get_changed_df()  
-                #print(change['new']  )                   
-                filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df)
-                #print(f"Replacing Grid collection with filtered data")
-                qm.replace_grid('collection', filtered_df)
-                qm.reset_dataframe('deck')
+#         else:
+#             print(f"Updating Decks Display with FilterGrid")
+#             default_coll_df = qm.get_default_data('collection')
+            
+#             # Apply the filter from FilterGrid                
+#             if filter_grid:                                
+#                 filter_df = filter_grid.get_changed_df()  
+#                 #print(change['new']  )                   
+#                 filtered_df = apply_cardname_filter_to_dataframe(default_coll_df ,filter_df, update_progress=qm.grids['collection'].update_progress)
+#                 #print(f"Replacing Grid collection with filtered data")
+#                 qm.replace_grid('collection', filtered_df)
+#                 qm.reset_dataframe('deck')
+#             qm.grids['collection'].update_progress(100, 'Grid updated!') 
         
 
 def update_filter_widget(change=None):
@@ -986,6 +1030,72 @@ def create_database_selection_widget():
 
     return db_list
 
+def resize_grid_layout(new_rows, new_cols, existing_widgets):
+    new_grid = widgets.GridspecLayout(new_rows, new_cols)
+    for (widget, row, col) in existing_widgets:
+        if row < new_rows and col < new_cols:
+            new_grid[row, col] = widget
+    return new_grid
+
+
+def refresh_gridbox(change):
+    global qm_gridbox, filter_grid, qm, data_generation_functions
+
+    if 'new' in change and change['new'] != None:                       
+        # If change of database , reset and repopulate default df 
+        if change['owner'] == db_list:
+            for key, function in data_generation_functions.items():
+                qm.set_default_data(key, pd.DataFrame())
+            
+        # Retrieve or update default data frames based on the data generation functions
+        default_dfs = {}
+        for key, function in data_generation_functions.items():
+            default_df = qm.get_default_data(key)
+            if not isinstance(default_df, pd.DataFrame) or default_df.empty:
+                default_df = function()
+                qm.set_default_data(key, default_df)
+            default_dfs[key] = default_df
+
+        print(f"Refreshing Gridbox with change: {change}")
+        filter_df = filter_grid.get_changed_df()
+
+        # Determine the maximum number of rows needed in the grid box
+        max_number_of_grids = len(filter_df)
+
+        # Update and repopulate grids based on the active filters in filter_df
+        for row_index in range(max_number_of_grids):
+            if row_index < len(filter_df):
+                filter_row = filter_df.iloc[row_index]
+                print(f"Filter Row: {filter_row}")
+
+                if filter_row['Active']:
+                    data_function_type = filter_row['Data Function']
+                    default_df = default_dfs.get(data_function_type, pd.DataFrame())
+                    row_df = pd.DataFrame([filter_row])
+                    filtered_df = apply_cardname_filter_to_dataframe(default_df, row_df)
+                    
+                    grid_identifier = f"filtered_grid_{row_index}"
+                    if grid_identifier in qm.grids:
+                        qm.replace_grid(grid_identifier, filtered_df)
+                    else:
+                        print(f"Adding grid to gridbox: {row_index} {grid_identifier}")
+                        qm.add_grid(grid_identifier, filtered_df, options=qg_options[data_function_type])  # qg_options needs to be defined
+                    
+                    # Create a small qgrid for the filter row
+                    filter_row_widget = qgrid.show_grid(row_df, show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False})
+                    filter_row_widget.layout = widgets.Layout(height='70px', border='2px solid blue')
+                    qm_gridbox[row_index, 0] = widgets.VBox([filter_row_widget, qm.grids[grid_identifier].get_grid_box()])
+
+                else:
+                    print(f"Removing grid from gridbox: {row_index}")
+                    qm_gridbox[row_index, 0] = widgets.VBox()  # Clear the grid slot
+
+            else:
+                print(f"Clearing extra grid slot: {row_index}")
+                qm_gridbox[row_index, 0] = widgets.VBox()  # Clear unused grid slots
+    else:
+        print(f"Nothing new in {change}")
+
 ############################
 # Setup and Initialization #
 ############################
@@ -993,7 +1103,7 @@ import json
 def setup_interface():
     global db_list, username, button_load, card_title_widget, \
         qg_coll_options, qg_count_options, qg_syn_options, \
-        filter_grid, out_qm, out_main, qm
+        filter_grid, filter_grid_object, out_main, qm, data_generation_functions
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
@@ -1012,14 +1122,23 @@ def setup_interface():
         button_style='', # 'success', 'info', 'warning', 'danger' or ''
         tooltips=['Decks from the website', 'Fusions from the website', 'Entities from the Collection Manager Sheet sff.csv', 'Forgeborns from the forgeborns.csv', 'Synergies from the Synergys.csv'])
 
+    data_generation_functions = {
+        'Deck Stats': generate_deck_statistics_dataframe,
+        'Card Types': generate_cardType_count_dataframe,
+        #'Selected Decks': generate_deck_content_dataframe
+    }
 
-    # Create qgrid widgets for the deck data, count data, and synergy data    
-    qm.add_grid('collection', pd.DataFrame(), options = qg_coll_options, dependent_identifiers=['count'])
-    qm.add_grid('count', pd.DataFrame(), options = qg_count_options)    
-    qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options)
+    # Create qgrid widgets for the deck stats, card types 
+    for key, function in data_generation_functions.items():
+        qm.add_grid(key, pd.DataFrame(), options=qg_options[key])
     
-    qm.on('collection', 'selection_changed', coll_data_on_selection_changed)
-    qm.on('count', 'selection_changed', coll_data_on_selection_changed)
+    #qm.add_grid('collection', pd.DataFrame(), options = qg_coll_options, dependent_identifiers=['count'])
+    
+    #qm.add_grid('count', pd.DataFrame(), options = qg_count_options)    
+    #qm_gridbox[1,0] = qm.add_grid('deck', pd.DataFrame(), options = qg_deck_options)
+    
+    #qm.on('collection', 'selection_changed', coll_data_on_selection_changed)
+    #qm.on('count', 'selection_changed', coll_data_on_selection_changed)
     # Status Box for Dataframes 
     #df_status_widget = widgets.Textarea(value='', description='DataFrame Status:', disabled=True, layout=widgets.Layout(width='50%', height='200px'))
     #def update_df_status(identifier, df_status):
@@ -1035,7 +1154,7 @@ def setup_interface():
     db_list.observe(handle_db_list_change, names='value')
 
     # Filter widgets
-    filter_grid_object = FilterGrid(update_decks_display)
+    filter_grid_object = FilterGrid(refresh_gridbox, data_generation_functions)
     selection_grid, filter_grid = filter_grid_object.get_widgets()
     filterBox = widgets.VBox([selection_grid, filter_grid])
 
@@ -1054,14 +1173,44 @@ def setup_interface():
     debug_toggle.observe(handle_debug_toggle, 'value')
 
     # Toggle Box 
-    toggle_box = widgets.VBox([loadToggle,  button_load, username, db_list, debug_toggle])    
+    #toggle_box = widgets.VBox([loadToggle,  button_load, username, db_list])    
+    # Create a progress bar widget
+    #if not GlobalVariables.debug : 
+    GlobalVariables.load_progress = widgets.IntProgress(value=0, min=0, max=100, description='Initialised!', bar_style='info', style={'bar_color': 'lightblue'})
 
-    # Display the widgets    
-    display(out_debug)
-    display(toggle_box) 
-    #display(df_status_widget) 
-    display(filterBox)      
-    display(out_qm)    
-    #display(button_graph)
-    #display(out_main)         
-    #display(*toggle_dropdown_pairs, button_graph)
+    # Deck Selection Widget
+    deck_selection_widget = qgrid.show_grid(pd.DataFrame(), show_toolbar=True)
+
+    def on_tab_change(index):
+        if index == 1:
+            print("Deck Tab selected")
+
+    # Create the Tab widget with children
+    db_tab   = widgets.VBox([loadToggle, button_load, username, db_list])
+    deck_tab = widgets.VBox([selection_grid, filter_grid, qm_gridbox])
+    fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph, out_main])
+    debug_tab = widgets.VBox([debug_toggle, out_debug])
+
+    tab = widgets.Tab(children=[db_tab, deck_tab, fusions_tab, debug_tab])
+    tab.set_title(0, 'Database')
+    tab.set_title(1, 'Decks')
+    tab.set_title(2, 'Graphs')
+    tab.set_title(3, 'Debug')
+
+    tab.observe(on_tab_change, names='selected_index')
+
+    tab.selected_index = 1
+    
+    # Display the Tab widget
+    display(tab)
+
+    # # Display the widgets    
+    # #display(out_debug)
+    # display(toggle_box) 
+    # if GlobalVariables.load_progress : display(GlobalVariables.load_progress.container)
+    # #display(df_status_widget) 
+    # display(filterBox)      
+    # display(out_qm)    
+    # #display(button_graph)
+    # #display(out_main)         
+    # #display(*toggle_dropdown_pairs, button_graph)

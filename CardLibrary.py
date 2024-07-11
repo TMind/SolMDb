@@ -201,10 +201,17 @@ class DeckData:
     cardSetId: str   = ''
     cardSetNo: str   = ''
     registeredDate: str = ''
+    pExpiry: str = ''
+    UpdatedAt: str = ''
+    oldDisplayName: str = ''
     xp: int = 0
     digital: str = ''
     elo: int = 0
+    deckRank: str = ''
+    level: int = 0
     children_data: dict = field(default_factory=dict)
+    deckStats: dict = field(default_factory=dict)
+    tags: dict = field(default_factory=dict)
     stats: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)
 

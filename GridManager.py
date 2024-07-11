@@ -1,3 +1,4 @@
+from ctypes import alignment
 from datetime import datetime
 import pandas as pd
 import qgrid
@@ -31,6 +32,7 @@ class GridManager:
             print(f"GridManager::add_grid() - Grid {identifier} added. Appending to main_output.")        
         self.outputs[identifier].append_display_data(grid.get_grid_box())            
         self.main_output.append_display_data(self.outputs[identifier])
+        return grid.get_grid_box()
         
 
     def get_grid_df(self, identifier, version='default'):
@@ -50,7 +52,16 @@ class GridManager:
         grid = self.grids.get(identifier)
         if grid:
             grid.update_main_widget(new_df)
+            return grid.get_grid_box()
 
+    def redraw_all_grids(self):
+        """Clears and redraws all grids in the main_output."""
+        #self.main_output.clear_output(wait=True)  # Clear the output to prevent flickering
+        for identifier, grid in self.grids.items():
+            #self.outputs[identifier].clear_output()
+            #self.outputs[identifier].append_display_data(grid.get_grid_box())
+            self.main_output.append_display_data(self.outputs[identifier])
+    
     def reset_dataframe(self, identifier):
         grid = self.grids.get(identifier)
         if grid:
@@ -203,6 +214,8 @@ class BaseGrid:
         self.main_widget = None
         self.toggle_widget = self.create_toggle_widget(df)
         self.create_main_widget(df)
+        self.progress_bar = widgets.IntProgress(min=0, max=100)  # Create progress bar
+        self.progress_label = widgets.Label('Initialised!')  # Label for progress bar
 
     def create_main_widget(self, df):
         raise NotImplementedError("Subclasses should implement this method.")
@@ -214,7 +227,15 @@ class BaseGrid:
         return toggle_grid
 
     def get_grid_box(self):
-        return widgets.VBox([self.toggle_widget, self.main_widget])
+        # Add the progress bar and label to an HBox to position them nicely
+        progress_container = widgets.HBox([self.progress_label, self.progress_bar])
+        # Return a VBox with the toggle widget, the main widget, and the progress bar
+        return widgets.VBox([self.toggle_widget, self.main_widget, progress_container])
+
+    def update_progress(self, value, description=None):
+        self.progress_bar.value = value
+        if description:         
+            self.progress_label.value = description
 
     def update_main_widget(self, new_df):
         raise NotImplementedError("Subclasses should implement this method.")
@@ -262,14 +283,15 @@ class FilterGrid:
     """
     Manages the grid for filtering data based on user-defined criteria.
     """
-    def __init__(self, update_decks_display):
+    def __init__(self, function_refresh, functions_data_generation):
         """
         Initializes a new instance of the FilterGrid class.
 
         Args:
             update_decks_display (function): The function to call when the filter grid is updated.
         """
-        self.update_decks_display = update_decks_display
+        self.refresh_function = function_refresh
+        self.data_generation_functions = functions_data_generation
         self.df = self.create_initial_dataframe()
         self.qgrid_filter = self.create_filter_qgrid()
         self.selection_box, self.selection_widgets = self.create_selection_box()
@@ -307,7 +329,8 @@ class FilterGrid:
             'Creature': [''],
             'op2': [''],
             'Spell': [''],
-            'Active': [False]
+            'Data Function': 'Deck Stats',
+            'Active': [True]
         })
 
     def grid_filter_on_row_removed(self, event, widget):
@@ -318,14 +341,16 @@ class FilterGrid:
             event (dict): The event data.
             widget (qgrid.QGridWidget): The filter grid widget.
         """
+        active_rows = []
         if 0 in event['indices']:
             df = self.create_initial_dataframe()
             widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
             event['indices'].remove(0)
         
-        if event['indices']:
-            active_rows = widget.df[widget.df['Active'] == True]
-            self.update_decks_display({'new': active_rows, 'old': None, 'owner': 'filter'})
+        #if event['indices']:
+        active_rows = widget.df[widget.df['Active'] == True]
+        
+        self.refresh_function({'new': active_rows, 'old': None, 'owner': 'filter'})
         
         
 
@@ -340,18 +365,19 @@ class FilterGrid:
         new_row_index = event['index']
         df = widget.get_changed_df()
 
+        #print(f"Adding new row at index {new_row_index} with values: {event}")
+
         # Set the values for each column in the new row
         for column in df.columns:
-            if column in ['op1', 'op2', 'Active']:  # Directly use the value for these fields
+            if column in ['op1', 'op2', 'Active', 'Data Function']:  # Directly use the value for these fields
                 df.at[new_row_index, column] = self.selection_widgets[column].value
             else:  # Assume these are multi-select fields and join their values
-                df.at[new_row_index, column] = ', '.join(self.selection_widgets[column].value)
+                df.at[new_row_index, column] = '; '.join(self.selection_widgets[column].value)
         
         widget.df = df
-        
 
-        if widget.df.loc[new_row_index, 'Active']:
-            self.update_decks_display({'new': new_row_index, 'old': None, 'owner': 'filter'})
+        #if widget.df.loc[new_row_index, 'Active']:
+        self.refresh_function({'new': new_row_index, 'old': None, 'owner': 'filter'})
 
     def on_cell_edit(self, event, widget):
         """
@@ -364,8 +390,8 @@ class FilterGrid:
         row_index, column_index = event['index'], event['column']
         widget.df.loc[row_index, column_index] = event['new']
         
-        if column_index == 'Active' or widget.df.loc[row_index, 'Active']:
-            self.update_decks_display({'new': row_index, 'old': None, 'owner': 'filter'})
+        #if column_index == 'Active' or widget.df.loc[row_index, 'Active']:
+        self.refresh_function({'new': row_index, 'old': None, 'owner': 'filter'})
 
     def update_selection_content(self, change):
         """
@@ -378,8 +404,10 @@ class FilterGrid:
             for cardType in ['Modifier', 'Creature', 'Spell']:
                 widget = self.selection_widgets[cardType]
                 widget.options = [''] + get_cardType_entity_names(cardType)
+            print(f"Updated selection content with {change}")
+            #self.refresh_function(change)
 
-    def create_cardType_names_selector(self, cardType):
+    def create_cardType_names_selector(self, cardType, options=None):
         """
         Creates a selector for the names of card types.
 
@@ -389,46 +417,52 @@ class FilterGrid:
         Returns:
             ipywidgets.SelectMultiple: The selector widget.
         """
+        if options is None:
+            options = {}
         cardType_entity_names = [''] + get_cardType_entity_names(cardType)
         cardType_name_widget = widgets.SelectMultiple(
             options=cardType_entity_names,
             description='',
-            value=()
+            layout=widgets.Layout(width='200px', height='auto', align_items='center', justify_content='center', **options)
         )
         return cardType_name_widget
 
     def create_selection_box(self):
-        """
-        Creates a selection box containing widgets for each card type.
-
-        Returns:
-            tuple: A tuple containing the selection box widget and a dictionary of individual selection widgets.
-        """
-        selection_widgets = {}
-        selection_items = {}
-        for cardType in ['Modifier', 'Creature', 'Spell']:
-            widget = self.create_cardType_names_selector(cardType)
-            if cardType == 'Modifier':
-                label=widgets.Label(value='( Modifier')
-            elif cardType == 'Creature':
-                label=widgets.Label(value='Creature )')
-            else:                
-                label = widgets.Label(value=f'{cardType}')
-            selection_widgets[cardType] = widget
-            selection_items[cardType] = widgets.VBox([label, widget], layout=widgets.Layout(align_items='center'))
-
-        operator_widgets = {
-            'op1': widgets.Dropdown(options=['+', 'AND', 'OR', ''], description='', layout=widgets.Layout(width='60px'), value=''),
-            'op2': widgets.Dropdown(options=['AND', 'OR', ''], description='', layout=widgets.Layout(width='60px'), value=''),
-            'Active': widgets.Checkbox(value=True, description='Activated')
+        # Define widgets with their layout settings
+        widgets_dict = {
+            'Modifier': self.create_cardType_names_selector('Modifier', options={'border': '1px solid blue'}),
+            'op1': widgets.Dropdown(options=['+', 'AND', 'OR', ''], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center', margin='5px')),
+            'Creature': self.create_cardType_names_selector('Creature', options={'border': '1px solid green'}),
+            'op2': widgets.Dropdown(options=['AND', 'OR', ''], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center')),
+            'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),            
+            'Data Function': widgets.Dropdown(
+                options=list(self.data_generation_functions.keys()),
+                description='',
+                layout=widgets.Layout(width='150px', border='1px solid purple', align_items='center', justify_content='center')
+            ),
+            'Active': widgets.Checkbox(value=True, description='', layout=widgets.Layout(width='100px', height='auto', align_items='center', justify_content='center'))  # Added label and alignment
         }
-        for name, widget in operator_widgets.items():
-            label = widgets.Label(value='Operator' if 'op' in name else 'Active')
-            selection_widgets[name] = widget
-            selection_items[name] = widgets.VBox([label, widget], layout=widgets.Layout(align_items='center'))
 
-        selection_box = widgets.HBox([selection_items[name] for name in ['Modifier', 'op1', 'Creature', 'op2', 'Spell', 'Active']])
-        return selection_box, selection_widgets
+        # Create widget row first and add a fixed-width spacer
+        widget_row_items = [widgets_dict[key] for key in widgets_dict]
+        fixed_spacer = widgets.Box(layout=widgets.Layout(width='50px'))  # Fixed-width spacer
+        widget_row_items.append(fixed_spacer)
+
+        widget_row = widgets.HBox(widget_row_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%', ))
+
+        # Creating label row using the same layout settings from widget_row
+        label_items = [widgets.Label(key, layout=widgets_dict[key].layout) for key in widgets_dict]
+        label_fixed_spacer = widgets.Label('', layout=widgets.Layout(width='50px'))
+        label_items.append(label_fixed_spacer)
+
+        label_row = widgets.HBox(label_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%'))
+
+        # Vertical box to hold both rows
+        selection_box = widgets.VBox([label_row, widget_row])
+
+        return selection_box, widgets_dict
+
+
 
     def get_changed_df(self):
         """
@@ -466,3 +500,5 @@ def get_cardType_entity_names(cardType):
     cardType_entities_names = [name for name in cardType_entities_names if any(name in cardName for cardName in cardNames)]
     cardType_entities_names.sort()
     return cardType_entities_names
+
+

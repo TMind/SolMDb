@@ -3,7 +3,9 @@ import json
 from UniversalLibrary import UniversalLibrary
 from CardLibrary import Fusion
 from typing import List, Tuple, Dict
-from tqdm import tqdm
+#from tqdm import tqdm
+#from tqdm.notebook import tqdm
+import GlobalVariables as gv 
 
 class NetApi:
 
@@ -34,24 +36,29 @@ class NetApi:
             total = pageData['Count']
 
 
-            with tqdm(total=total, initial=pageData['Count'], desc="Fetching Data", colour='YELLOW') as pbar:
-                while 'LastEvaluatedKey' in pageData and lastPK != pageData['LastEvaluatedKey']['PK']:
-                    lastPK = pageData['LastEvaluatedKey']['PK']            
-                    lastSK = pageData['LastEvaluatedKey']['SK']            
-                    params.update({"exclusiveStartKeyPK": lastPK, 'exclusiveStartKeySK': lastSK})
-                    response = requests.get(endpoint, params=params)
-                    response.raise_for_status()
-                    pageData = response.json()
-                    #print(f"Page data: {pageData}")
+#            with tqdm(total=total, initial=pageData['Count'], desc="Fetching Data", colour='YELLOW') as pbar:
+            gv.load_progress.max = total 
+            #gv.load_progress.n = pageData['Count']
+ 
+ 
+            while 'LastEvaluatedKey' in pageData and lastPK != pageData['LastEvaluatedKey']['PK']:
+                lastPK = pageData['LastEvaluatedKey']['PK']            
+                lastSK = pageData['LastEvaluatedKey']['SK']            
+                params.update({"exclusiveStartKeyPK": lastPK, 'exclusiveStartKeySK': lastSK})
+                response = requests.get(endpoint, params=params)
+                response.raise_for_status()
+                pageData = response.json()
+                #print(f"Page data: {pageData}")
 
-                    if 'error' in pageData:
-                        print(f"Error in response: {pageData['error']}")
-                        return []
-                    all_decks.extend(pageData['Items'])
-                    records_fetched = pageData['Count']                
-                    if pbar.n + records_fetched > pbar.total:
-                        pbar.total += records_fetched
-                    pbar.update(records_fetched)
+                if 'error' in pageData:
+                    print(f"Error in response: {pageData['error']}")
+                    return []
+                all_decks.extend(pageData['Items'])
+                records_fetched = pageData['Count']                
+
+                if gv.load_progress.value + records_fetched > gv.load_progress.max:
+                    gv.load_progress.max += records_fetched
+                gv.load_progress.value = records_fetched
 
             if 'error' in pageData:
                 print(f"Error in response: {pageData['error']}")

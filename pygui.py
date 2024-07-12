@@ -20,7 +20,7 @@ from IPython.display import display, HTML, clear_output
 from Synergy import SynergyTemplate
 import pandas as pd
 import qgrid
-from GridManager import GridManager, FilterGrid, get_cardType_entity_names
+from GridManager import GridManager, FilterGrid, get_cardType_entity_names, DynamicGridManager
 
 from icecream import ic
 ic.disable()
@@ -84,18 +84,18 @@ cardTypes_names_widget = {}
 deck_selection_widget = None
 
 qgrid_widget_options = {}
-filter_grid = None
-filter_grid_object = None 
+#filter_grid = None
+#filter_grid_object = None 
 global_df = None
 data_generation_functions = {}
 
-out_main = widgets.Output()
-out_qm = widgets.Output()
+#out_main = widgets.Output()
+#out_qm = widgets.Output()
 out_debug = widgets.Output()
-max_number_of_grids = 5
-qm_gridbox = widgets.GridspecLayout(max_number_of_grids, 1, layout=widgets.Layout(width='100%', height='100%'))
+#qm_gridbox = widgets.GridspecLayout(3, 1, layout=widgets.Layout(width='100%', height='100%'))
 
-qm = GridManager(out_qm)
+grid_manager = None 
+qm = GridManager(out_debug)
 
 # Widget original options for qgrid
 qg_syn_options = {
@@ -727,7 +727,7 @@ def handle_debug_toggle(change):
         GlobalVariables.debug = False
 
 def handle_db_list_change(change):
-    global username
+    global username, grid_manager
 
     print(f"DB List Change: {change}")
 
@@ -736,6 +736,7 @@ def handle_db_list_change(change):
 
         if new_username:
 
+            change['type'] = 'username'
             # Update the Global Username Variable
             GlobalVariables.username = new_username
             GlobalVariables.myDB.set_database_name(new_username)
@@ -745,8 +746,7 @@ def handle_db_list_change(change):
 
             # Update Interface for New Username
             update_filter_widget()
-            #update_decks_display(change)
-            refresh_gridbox(change)
+            grid_manager.refresh_gridbox(change)
         else:
             print("No valid database selected.")
 
@@ -1038,63 +1038,57 @@ def resize_grid_layout(new_rows, new_cols, existing_widgets):
     return new_grid
 
 
-def refresh_gridbox(change):
-    global qm_gridbox, filter_grid, qm, data_generation_functions
+# def refresh_gridbox(change):
+#     global qm_gridbox, filter_grid, qm, data_generation_functions
 
-    if 'new' in change and change['new'] != None:                       
-        # If change of database , reset and repopulate default df 
-        if change['owner'] == db_list:
-            for key, function in data_generation_functions.items():
-                qm.set_default_data(key, pd.DataFrame())
-            
-        # Retrieve or update default data frames based on the data generation functions
-        default_dfs = {}
-        for key, function in data_generation_functions.items():
-            default_df = qm.get_default_data(key)
-            if not isinstance(default_df, pd.DataFrame) or default_df.empty:
-                default_df = function()
-                qm.set_default_data(key, default_df)
-            default_dfs[key] = default_df
+#     if 'new' in change and change['new'] is not None:
+#         # Retrieve or update default data frames based on the data generation functions
+#         default_dfs = {}
+#         for key, function in data_generation_functions.items():
+#             default_df = qm.get_default_data(key)
+#             if not isinstance(default_df, pd.DataFrame) or default_df.empty:
+#                 default_df = function()
+#                 qm.set_default_data(key, default_df)
+#             default_dfs[key] = default_df
 
-        print(f"Refreshing Gridbox with change: {change}")
-        filter_df = filter_grid.get_changed_df()
+#         print(f"Refreshing Gridbox with change: {change}")
+#         filter_df = filter_grid.get_changed_df()
 
-        # Determine the maximum number of rows needed in the grid box
-        max_number_of_grids = len(filter_df)
+#         # Determine the maximum number of rows needed in the grid box
+#         max_number_of_grids = len(filter_df)
+#         existing_widgets = [(widget, idx, 0) for idx, widget in enumerate(qm_gridbox.children)]
 
-        # Update and repopulate grids based on the active filters in filter_df
-        for row_index in range(max_number_of_grids):
-            if row_index < len(filter_df):
-                filter_row = filter_df.iloc[row_index]
-                print(f"Filter Row: {filter_row}")
+#         # Resize the grid layout according to active filters
+#         #qm_gridbox = resize_grid_layout(max_number_of_grids, 1, existing_widgets)
 
-                if filter_row['Active']:
-                    data_function_type = filter_row['Data Function']
-                    default_df = default_dfs.get(data_function_type, pd.DataFrame())
-                    row_df = pd.DataFrame([filter_row])
-                    filtered_df = apply_cardname_filter_to_dataframe(default_df, row_df)
-                    
-                    grid_identifier = f"filtered_grid_{row_index}"
-                    if grid_identifier in qm.grids:
-                        qm.replace_grid(grid_identifier, filtered_df)
-                    else:
-                        print(f"Adding grid to gridbox: {row_index} {grid_identifier}")
-                        qm.add_grid(grid_identifier, filtered_df, options=qg_options[data_function_type])  # qg_options needs to be defined
-                    
-                    # Create a small qgrid for the filter row
-                    filter_row_widget = qgrid.show_grid(row_df, show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False})
-                    filter_row_widget.layout = widgets.Layout(height='70px', border='2px solid blue')
-                    qm_gridbox[row_index, 0] = widgets.VBox([filter_row_widget, qm.grids[grid_identifier].get_grid_box()])
+#         # Update and repopulate grids based on the active filters in filter_df
+#         for row_index in range(max_number_of_grids):
+#             if row_index < len(filter_df):
+#                 filter_row = filter_df.iloc[row_index]
+#                 if filter_row['Active']:
+#                     data_function_type = filter_row['Data Function']
+#                     default_df = default_dfs.get(data_function_type, pd.DataFrame())
+#                     row_df = pd.DataFrame([filter_row])
+#                     filtered_df = apply_cardname_filter_to_dataframe(default_df, row_df)
 
-                else:
-                    print(f"Removing grid from gridbox: {row_index}")
-                    qm_gridbox[row_index, 0] = widgets.VBox()  # Clear the grid slot
+#                     grid_identifier = f"filtered_grid_{row_index}"
+#                     if grid_identifier in qm.grids:
+#                         qm.replace_grid(grid_identifier, filtered_df)
+#                     else:
+#                         qm.add_grid(grid_identifier, filtered_df, options=qg_options[data_function_type])
 
-            else:
-                print(f"Clearing extra grid slot: {row_index}")
-                qm_gridbox[row_index, 0] = widgets.VBox()  # Clear unused grid slots
-    else:
-        print(f"Nothing new in {change}")
+#                     # Create a small qgrid for the filter row
+#                     filter_row_widget = qgrid.show_grid(row_df, show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False})
+#                     filter_row_widget.layout = widgets.Layout(height='70px', border='2px solid blue')
+#                     qm_gridbox[row_index, 0] = widgets.VBox([filter_row_widget, qm.grids[grid_identifier].get_grid_box()])
+#                 else:
+#                     # Clear the grid slot if filter is deactivated
+#                     qm_gridbox[row_index, 0] = widgets.VBox()
+#             else:
+#                 # Clear any excess grid slots
+#                 qm_gridbox[row_index, 0] = widgets.VBox()
+#     else:
+#         print(f"Nothing new in {change}")
 
 ############################
 # Setup and Initialization #
@@ -1103,7 +1097,7 @@ import json
 def setup_interface():
     global db_list, username, button_load, card_title_widget, \
         qg_coll_options, qg_count_options, qg_syn_options, \
-        filter_grid, filter_grid_object, out_main, qm, data_generation_functions
+        grid_manager, qm, data_generation_functions
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
@@ -1127,10 +1121,6 @@ def setup_interface():
         'Card Types': generate_cardType_count_dataframe,
         #'Selected Decks': generate_deck_content_dataframe
     }
-
-    # Create qgrid widgets for the deck stats, card types 
-    for key, function in data_generation_functions.items():
-        qm.add_grid(key, pd.DataFrame(), options=qg_options[key])
     
     #qm.add_grid('collection', pd.DataFrame(), options = qg_coll_options, dependent_identifiers=['count'])
     
@@ -1154,12 +1144,9 @@ def setup_interface():
     db_list.observe(handle_db_list_change, names='value')
 
     # Filter widgets
-    filter_grid_object = FilterGrid(refresh_gridbox, data_generation_functions)
-    selection_grid, filter_grid = filter_grid_object.get_widgets()
-    filterBox = widgets.VBox([selection_grid, filter_grid])
-
-    # Update the filter grid on db change
-    db_list.observe(filter_grid_object.update_selection_content)
+    #filter_grid_object = FilterGrid(refresh_gridbox, data_generation_functions)
+    #selection_grid, filter_grid = filter_grid_object.get_widgets()
+    #filterBox = widgets.VBox([selection_grid, filter_grid])
 
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description="Load" )
@@ -1181,14 +1168,20 @@ def setup_interface():
     # Deck Selection Widget
     deck_selection_widget = qgrid.show_grid(pd.DataFrame(), show_toolbar=True)
 
+    # Create an instance of the manager
+    grid_manager = DynamicGridManager(data_generation_functions, qg_options, out_debug)
+
+    # Update the filter grid on db change
+    db_list.observe(grid_manager.filterGridObject.update_selection_content)
+
     def on_tab_change(index):
         if index == 1:
             print("Deck Tab selected")
 
     # Create the Tab widget with children
     db_tab   = widgets.VBox([loadToggle, button_load, username, db_list])
-    deck_tab = widgets.VBox([selection_grid, filter_grid, qm_gridbox])
-    fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph, out_main])
+    deck_tab = widgets.VBox([grid_manager.get_ui()])  # , qm_gridbox])
+    fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph])
     debug_tab = widgets.VBox([debug_toggle, out_debug])
 
     tab = widgets.Tab(children=[db_tab, deck_tab, fusions_tab, debug_tab])

@@ -1,5 +1,6 @@
 from ctypes import alignment
 from datetime import datetime
+from gc import collect
 import pandas as pd
 import qgrid
 import ipywidgets as widgets
@@ -78,7 +79,7 @@ class GridManager:
         grid = self.grids.get(identifier)
         if grid:
             return grid.df_versions['default']
-        return None
+        return pd.DataFrame()
 
     def update_dataframe(self, identifier, new_df):
         grid = self.grids.get(identifier)
@@ -279,7 +280,7 @@ class FilterGrid:
     """
     Manages the grid for filtering data based on user-defined criteria.
     """
-    def __init__(self, function_refresh, functions_data_generation):
+    def __init__(self, function_refresh, data_selection_sets):
         """
         Initializes a new instance of the FilterGrid class.
 
@@ -287,7 +288,7 @@ class FilterGrid:
             update_decks_display (function): The function to call when the filter grid is updated.
         """
         self.refresh_function = function_refresh
-        self.data_generation_functions = functions_data_generation
+        self.data_selection_sets = data_selection_sets
         self.df = self.create_initial_dataframe()
         self.qgrid_filter = self.create_filter_qgrid()
         self.selection_box, self.selection_widgets = self.create_selection_box()
@@ -308,7 +309,7 @@ class FilterGrid:
         qgrid_filter.layout = widgets.Layout(height='auto')
         qgrid_filter.on('row_added', self.grid_filter_on_row_added)
         qgrid_filter.on('row_removed', self.grid_filter_on_row_removed)
-        qgrid_filter.on('cell_edited', self.on_cell_edit)
+        qgrid_filter.on('cell_edited', self.grid_filter_on_cell_edit)        
         return qgrid_filter
 
     @staticmethod
@@ -322,10 +323,10 @@ class FilterGrid:
         return pd.DataFrame({
             'Modifier': [''],
             'op1': [''],
-            'Creature': [''],
+            'Creature': ['Arboris'],
             'op2': [''],
             'Spell': [''],
-            'Data Function': ['Deck Stats'],
+            'Data Set': ['Deck Stats'],
             'Active': [True]
         })
 
@@ -365,7 +366,7 @@ class FilterGrid:
 
         # Set the values for each column in the new row
         for column in df.columns:
-            if column in ['op1', 'op2', 'Active', 'Data Function']:  # Directly use the value for these fields
+            if column in ['op1', 'op2', 'Active', 'Data Set']:  # Directly use the value for these fields
                 df.at[new_row_index, column] = self.selection_widgets[column].value
             else:  # Assume these are multi-select fields and join their values
                 df.at[new_row_index, column] = '; '.join(self.selection_widgets[column].value)
@@ -375,7 +376,7 @@ class FilterGrid:
         #if widget.df.loc[new_row_index, 'Active']:
         self.refresh_function({'new': new_row_index, 'old': None, 'owner': 'filter'})
 
-    def on_cell_edit(self, event, widget):
+    def grid_filter_on_cell_edit(self, event, widget):
         """
         Handles the 'cell_edited' event for the filter grid.
 
@@ -388,6 +389,10 @@ class FilterGrid:
         
         #if column_index == 'Active' or widget.df.loc[row_index, 'Active']:
         self.refresh_function({'new': row_index, 'old': None, 'owner': 'filter'})
+
+
+
+    ### Selection Box Functions ###
 
     def update_selection_content(self, change):
         """
@@ -431,8 +436,8 @@ class FilterGrid:
             'Creature': self.create_cardType_names_selector('Creature', options={'border': '1px solid green'}),
             'op2': widgets.Dropdown(options=['AND', 'OR', ''], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center')),
             'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),            
-            'Data Function': widgets.Dropdown(
-                options=list(self.data_generation_functions.keys()),
+            'Data Set': widgets.Dropdown(
+                options=self.data_selection_sets.keys(),
                 description='',
                 layout=widgets.Layout(width='150px', border='1px solid purple', align_items='center', justify_content='center')
             ),
@@ -457,8 +462,6 @@ class FilterGrid:
         selection_box = widgets.VBox([label_row, widget_row])
 
         return selection_box, widgets_dict
-
-
 
     def get_changed_df(self):
         """
@@ -511,7 +514,16 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
             #print(f"Applying filter {substrings} to DataFrame")
             #display(df)
             # Iterate over the 'cardTitles' column            
-            substring_check_results = [any(substring in title for substring in substrings) for title in df['cardTitles']]
+            # for title in df['cardTitles']:
+            #     # Check if any of the substrings are in the title
+            #     for substring in substrings:
+            #         if substring in title:
+            #             substring_check_results.append(True)
+            #             break
+            #     else:
+            #         substring_check_results.append(False)   
+
+            substring_check_results = [any(substring.lower() in title.lower() for substring in substrings) for title in df['cardTitles']]
             
             # Convert the list to a pandas Series
             substring_check_results = pd.Series(substring_check_results, index=df.index)
@@ -579,17 +591,22 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
     return df_filtered
 
 class DynamicGridManager:
-    def __init__(self, data_generation_functions, qg_options, out_debug):
+    def __init__(self, data_selection_data, qg_options, out_debug):
         self.out_debug = out_debug
-        self.data_generation_functions = data_generation_functions
+        self.data_selection_data = data_selection_data
+        self.data_generation_functions  = data_selection_data['data_functions']
+        self.data_selection_sets        = data_selection_data['data_sets']
+        self.data_generate_function     = data_selection_data['generate_function']
         self.qg_options = qg_options
         self.qm = GridManager(out_debug)
         self.grid_layout = widgets.GridspecLayout(1, 1)
         
-        for key, function in data_generation_functions.items():
-            self.qm.add_grid(key, pd.DataFrame(), options=self.qg_options[key])
+        #for key, function in self.data_generation_functions.items():
+        #    self.qm.add_grid(key, pd.DataFrame(), options=self.qg_options[key])
 
-        self.filterGridObject = FilterGrid(self.refresh_gridbox, data_generation_functions)
+        #self.qm.add_grid('collection', collection_df)
+
+        self.filterGridObject = FilterGrid(self.refresh_gridbox, self.data_selection_sets)
         self.filter_df = self.filterGridObject.get_changed_df()
         
         # UI elements
@@ -609,29 +626,33 @@ class DynamicGridManager:
 
     def refresh_gridbox(self, change=None):
         default_dfs = {}
-        for key, function in self.data_generation_functions.items():
-            default_df = self.qm.get_default_data(key)
-            if default_df.empty or (change and 'type' in change and change['type'] == 'username'):
-                default_df = function()
-                self.qm.set_default_data(key, default_df)
-            default_dfs[key] = default_df
+        
+        collection_df = self.qm.get_default_data('collection')
+        if collection_df.empty or (change and 'type' in change and change['type'] == 'username'):
+            collection_df = self.data_generate_function()
+            self.qm.set_default_data('collection', collection_df)
 
         self.filter_df = self.filterGridObject.get_changed_df()
         self.update_grid_layout()
         
+        # Read the filter DataFrame and apply the filters to the default DataFrames per Row 
         for row_index, filter_row in self.filter_df.iterrows():
             if filter_row['Active']:
-                data_function_type = filter_row['Data Function']
-                default_df = default_dfs[data_function_type]
-                filtered_df = apply_cardname_filter_to_dataframe(default_df, pd.DataFrame([filter_row]))
+                data_set_type = filter_row['Data Set']
+                data_selection_list = self.data_selection_sets[data_set_type]
                 
+                filtered_df = apply_cardname_filter_to_dataframe(collection_df, pd.DataFrame([filter_row]))
+                
+                # Filter columns based on the data_selection_list
+                filtered_df = filtered_df[data_selection_list]
+
                 grid_identifier = f"filtered_grid_{row_index}"
-                grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options[data_function_type])
+                grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options[data_set_type])
                 
                 filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
-                filter_row_widget.layout = widgets.Layout(height='70px', border='2px solid blue')
+                filter_row_widget.layout = widgets.Layout(height='70px', border='1px solid blue')
                 
-                self.grid_layout[row_index, 0] = widgets.VBox([filter_row_widget, grid.get_grid_box()])
+                self.grid_layout[row_index, 0] = widgets.VBox([filter_row_widget, grid.get_grid_box()], layout=widgets.Layout(border='1px solid red'))
         
         # After updating, reassign children to trigger update
         self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]

@@ -405,7 +405,7 @@ class FilterGrid:
             for cardType in ['Modifier', 'Creature', 'Spell']:
                 widget = self.selection_widgets[cardType]
                 widget.options = [''] + get_cardType_entity_names(cardType)
-            print(f"Updated selection content with {change}")
+            #print(f"Updated selection content with {change}")
             #self.refresh_function(change)
 
     def create_cardType_names_selector(self, cardType, options=None):
@@ -432,9 +432,9 @@ class FilterGrid:
         # Define widgets with their layout settings
         widgets_dict = {
             'Modifier': self.create_cardType_names_selector('Modifier', options={'border': '1px solid blue'}),
-            'op1': widgets.Dropdown(options=['+', 'AND', 'OR', ''], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center', margin='5px')),
+            'op1': widgets.Dropdown(options=['', 'AND', 'OR', '+'], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center', margin='5px')),
             'Creature': self.create_cardType_names_selector('Creature', options={'border': '1px solid green'}),
-            'op2': widgets.Dropdown(options=['AND', 'OR', ''], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center')),
+            'op2': widgets.Dropdown(options=['', 'AND', 'OR'], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center')),
             'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),            
             'Data Set': widgets.Dropdown(
                 options=self.data_selection_sets.keys(),
@@ -615,6 +615,11 @@ class DynamicGridManager:
         
         self.update_grid_layout()
 
+
+    def reset_grid_layout(self, new_size):
+        self.grid_layout = widgets.GridspecLayout(new_size, 1)
+        self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]
+
     def update_grid_layout(self):
         active_filters_count = len(self.filter_df[self.filter_df['Active']])
         new_grid = widgets.GridspecLayout(max(active_filters_count, 1), 1)
@@ -628,15 +633,22 @@ class DynamicGridManager:
         default_dfs = {}
         
         collection_df = self.qm.get_default_data('collection')
-        if collection_df.empty or (change and 'type' in change and change['type'] == 'username'):
+        if collection_df.empty or (change and 'type' in change and change['type'] == 'username'):            
             collection_df = self.data_generate_function()
-            self.qm.set_default_data('collection', collection_df)
+            self.qm.add_grid('collection', collection_df)            
 
         self.filter_df = self.filterGridObject.get_changed_df()
-        self.update_grid_layout()
         
+        # Filter the DataFrame to include only active filters
+        active_filters_df = self.filter_df[self.filter_df['Active']]
+        self.reset_grid_layout(len(active_filters_df))
+
         # Read the filter DataFrame and apply the filters to the default DataFrames per Row 
-        for row_index, filter_row in self.filter_df.iterrows():
+        with self.out_debug:
+            print(f"Active filters: {active_filters_df}, {len(active_filters_df)}")
+            print(f"Collection DataFrame: {collection_df}")
+
+        for index, (row_index, filter_row) in enumerate(active_filters_df.iterrows()):
             if filter_row['Active']:
                 data_set_type = filter_row['Data Set']
                 data_selection_list = self.data_selection_sets[data_set_type]
@@ -646,13 +658,13 @@ class DynamicGridManager:
                 # Filter columns based on the data_selection_list
                 filtered_df = filtered_df[data_selection_list]
 
-                grid_identifier = f"filtered_grid_{row_index}"
+                grid_identifier = f"filtered_grid_{index}"
                 grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options[data_set_type])
                 
                 filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
                 filter_row_widget.layout = widgets.Layout(height='70px', border='1px solid blue')
                 
-                self.grid_layout[row_index, 0] = widgets.VBox([filter_row_widget, grid.get_grid_box()], layout=widgets.Layout(border='1px solid red'))
+                self.grid_layout[index, 0] = widgets.VBox([filter_row_widget, grid.get_grid_box()], layout=widgets.Layout(border='1px solid red'))
         
         # After updating, reassign children to trigger update
         self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]

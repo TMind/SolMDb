@@ -150,6 +150,23 @@ qg_options ={   'Deck Stats': qg_coll_options,
                 'Card Types': qg_count_options,
                 'Selected Decks': qg_deck_options
             }
+class StdErrRedirector(object):
+    global out_debug
+    def __init__(self, output_widget):
+        self.output_widget = output_widget
+        self._old_stderr = sys.stderr
+    
+    def write(self, message):
+        with self.output_widget:
+            self._old_stderr.write(message)
+            print(message, end='', file=self._old_stderr)  # Display in the original stderr as well
+            
+    def flush(self):
+        self._old_stderr.flush()
+
+import sys
+# Redirect stderr to the output widget
+sys.stderr = StdErrRedirector(out_debug)
 
 ######################
 # Network Operations #

@@ -658,16 +658,112 @@ class DynamicGridManager:
                 # Filter columns based on the data_selection_list
                 filtered_df = filtered_df[data_selection_list]
 
-                grid_identifier = f"filtered_grid_{index}"
-                grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options[data_set_type])
-                
-                filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
-                filter_row_widget.layout = widgets.Layout(height='70px', border='1px solid blue')
-                
-                self.grid_layout[index, 0] = widgets.VBox([filter_row_widget, grid.get_grid_box()], layout=widgets.Layout(border='1px solid red'))
+                filter_widget = None
+                grid_widget  = None 
+
+                if data_set_type == 'Multi index':
+                    multi_index_df = MultiIndexDataFrameToQGrid(filtered_df)
+                    multi_index_df.read_json_as_dataframe_with_multiindex("synergies.json")
+                    multi_index_df.transpose_and_prepare_df()
+                    filter_widget, grid_widget = multi_index_df.getWidgets()
+                else:    
+                    grid_identifier = f"filtered_grid_{index}"
+                    grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options[data_set_type])
+                    
+                    filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
+                    filter_row_widget.layout = widgets.Layout(height='70px', border='1px solid blue')
+
+                    filter_widget = filter_row_widget
+                    grid_widget = grid.get_grid_box()
+                    
+                self.grid_layout[index, 0] = widgets.VBox([filter_widget, grid_widget], layout=widgets.Layout(border='1px solid red'))
         
         # After updating, reassign children to trigger update
         self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]
 
     def get_ui(self):
         return self.ui
+
+
+
+import json
+class MultiIndexDataFrameToQGrid:
+    def __init__(self, df):
+        self.df = df
+        self.combined_df = None
+        self.df_cleaned = None
+        self.qgrid_widget = None
+        self.output_area = widgets.Output()
+
+    def transpose_and_prepare_df(self):
+        # Extracting the level values and creating a DataFrame for each level
+        levels = self.df.columns.names
+        level_values = [self.df.columns.get_level_values(i) for i in range(len(levels))]
+
+        # Create a DataFrame for the levels
+        level_dfs = []
+        for i, level_value in enumerate(level_values):
+            level_df = pd.DataFrame([level_value], columns=self.df.columns)
+            level_df.index = [levels[i]]
+            level_dfs.append(level_df)
+
+        # Create a DataFrame for the values
+        value_df = pd.DataFrame(self.df.values, columns=self.df.columns, index=self.df.index)
+
+        # Concatenate the levels and values DataFrames and transpose
+        self.combined_df = pd.concat(level_dfs + [value_df]).T
+
+        # Adjusting column and row names
+        new_columns = [col if col not in levels else f'_{col}' for col in self.combined_df.columns]
+        self.combined_df.columns = new_columns
+
+        # Filter out unnecessary columns
+        columns_to_keep = [col for col in self.combined_df.columns if '_' not in col]
+        self.df_cleaned = self.combined_df[columns_to_keep]
+
+    def display_in_qgrid(self):
+        # Create qgrid widget for displaying filtered DataFrame
+        self.qgrid_widget = qgrid.show_grid(self.df_cleaned, show_toolbar=True)
+
+        # Attach event handler to the qgrid widget
+        self.qgrid_widget.on('filter_changed', self.on_filter_change)
+
+        # Display the qgrid widget and the output area
+        display(self.qgrid_widget)
+        display(self.output_area)
+
+    def on_filter_change(self, event, widget):
+        with self.output_area:
+            clear_output(wait=True)
+            filtered_df = widget.get_changed_df().T
+            display(filtered_df)
+
+    
+    def write_dataframe_to_json_with_multiindex(self, json_file_path):
+        df = self.df
+        # Prepare data to include MultiIndex column structure
+        data = {
+            'data': df.to_json(orient='split', indent=4),
+            'columns': df.columns.tolist()
+        }
+        
+        # Serialize the structure to JSON file
+        with open(json_file_path, 'w') as file:
+            json.dump(data, file, indent=4)
+        
+    def read_json_as_dataframe_with_multiindex(self, json_file_path):
+        # Load the structure from JSON file
+        with open(json_file_path, 'r') as file:
+            data = json.load(file)
+        
+        # Reconstruct DataFrame from 'data' part
+        df_data = pd.read_json(data['data'], orient='split')
+        
+        # Reconstruct MultiIndex for columns
+        multiindex_columns = pd.MultiIndex.from_tuples(data['columns'])
+        df_data.columns = multiindex_columns
+        
+        return df_data
+    
+    def getWidgets(self):
+        return self.qgrid_widget, self.output_area

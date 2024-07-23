@@ -6,6 +6,6 @@ Pillow
 scipy
 jupyter-server-proxy
 requests
-pandas
+pandas==2.2
 qgridnext==2.0.0
 icecream

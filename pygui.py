@@ -25,6 +25,7 @@ from GridManager import GridManager, get_cardType_entity_names, DynamicGridManag
 from icecream import ic
 ic.disable()
 
+pd.set_option('future.no_silent_downcasting', True)
 
 # Custom CSS style
 

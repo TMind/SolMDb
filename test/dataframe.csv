@@ -1,0 +1,7 @@
+Category;Creatures;Creatures;Creatures;Creatures;Spells;Spells;Spells;Spells
+SubCategory;Mage;Mage;Warrior;Warrior;Mage;Mage;Warrior;Warrior
+Detail;Input;Output;Input;Output;Input;Output;Input;Output
+DeckA;-1;0;1;-1;0;-1;0;-1
+DeckB;0;0;1;0;-1;0;0;0
+DeckC;0;0;-1;0;0;-1;0;0
+DeckD;0;0;0;-1;0;0;0;0

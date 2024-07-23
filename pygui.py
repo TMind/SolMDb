@@ -20,7 +20,7 @@ from IPython.display import display, HTML, clear_output
 from Synergy import SynergyTemplate
 import pandas as pd
 import qgrid
-from GridManager import GridManager, FilterGrid, get_cardType_entity_names, DynamicGridManager
+from GridManager import GridManager, get_cardType_entity_names, DynamicGridManager, TemplateGrid
 
 from icecream import ic
 ic.disable()
@@ -28,7 +28,7 @@ ic.disable()
 
 # Custom CSS style
 
-custom_css = """
+custom_css = '''
 <style>
 /* Customizes the scrollbar within qgrid */
 .q-grid ::-webkit-scrollbar {
@@ -50,7 +50,7 @@ custom_css = """
     background: rgba(90,90,90,0.8); /* Slightly darker gray on hover */
 }
 </style>
-"""
+'''
 display(HTML(custom_css))  
 
 
@@ -173,10 +173,10 @@ sys.stderr = StdErrRedirector(out_debug)
 ######################
 
 def fetch_network_decks(args, myApi):
-    print(f"Fetching Network Decks with args: {args}")
+    print(f'Fetching Network Decks with args: {args}')
     if args.id:
         urls = args.id.split('\n')
-        pattern = r"\/([^\/]+)$"        
+        pattern = r'\/([^\/]+)$'        
         net_data  = []
         for url in urls:
             match = re.search(pattern, url)
@@ -253,7 +253,7 @@ def generate_synergy_statistics_dataframe(deck_df):
 def generate_deck_content_dataframe(event = None):
     global deck_selection_widget
     ic(generate_deck_content_dataframe)
-    #print(f"Generating Deck Content DataFrame : {event}")
+    #print(f'Generating Deck Content DataFrame : {event}')
     widget = deck_selection_widget
 
     with out_debug:
@@ -272,14 +272,14 @@ def generate_deck_content_dataframe(event = None):
             old_df = qm.get_grid_df('deck')            
             # Ensure old_df is not None before proceeding
             if old_df is None:
-                print("No previous data found in the deck grid.")
+                print('No previous data found in the deck grid.')
                 unique_deckNames = []
             else:
                 # Get the unique values from the deckName column in old_df
                 unique_deckNames = old_df['DeckName'].unique().tolist()
         
             # Add the deckList to the unique_deckNames and remove the deselectList
-            print(f"Select: {selectList} \nDeselect: {deselectList}\nUnique: {unique_deckNames}")
+            print(f'Select: {selectList} \nDeselect: {deselectList}\nUnique: {unique_deckNames}')
             union_set = set(unique_deckNames) | set(selectList)
             deckList =  list(union_set - set(deselectList))            
             #deckList = ['The Reeves of Loss', 'The People of Bearing']                
@@ -362,7 +362,7 @@ def generate_deck_content_dataframe(event = None):
                 
                 return final_df.fillna('')
             else:
-                print(f"No cards found in the database for {deckList}")
+                print(f'No cards found in the database for {deckList}')
                 return pd.DataFrame()
 
 def generate_cardType_count_dataframe(existing_df=None):
@@ -372,7 +372,7 @@ def generate_cardType_count_dataframe(existing_df=None):
     # Get interface ids from the database 
     #interface_ids = GlobalVariables.commonDB.find('Interface', {})
     #interface_ids = [interface['_id'] for interface in interface_ids]
-    #print(f"Interface IDs: {interface_ids}")
+    #print(f'Interface IDs: {interface_ids}')
     
     # Get the cardTypes from the stats array in the database
     for deck in GlobalVariables.myDB.find('Deck', {}):
@@ -410,7 +410,7 @@ def generate_cardType_count_dataframe(existing_df=None):
         all_decks_df = pd.concat(all_decks_list)
         all_decks_df.sort_index(axis=1, inplace=True)
     else:
-        print("No decks found in the database")
+        print('No decks found in the database')
         all_decks_df = pd.DataFrame()
 
     # Filter all_decks_df to only include rows that exist in existing_df ( not necessary anymore )
@@ -470,7 +470,7 @@ def generate_deck_statistics_dataframe(update_progress=None):
     df_decks_filtered = df_decks[[ 'registeredDate', 'UpdatedAt', 'pExpiry', 'name', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId']].copy()
     df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
     #except:
-    #print("Error reading decks from the database. Try reloading the data.")
+    #print('Error reading decks from the database. Try reloading the data.')
     #return pd.DataFrame()
 
     # For column 'cardSetNo' replace the number 99 with 0 
@@ -518,7 +518,7 @@ def generate_deck_statistics_dataframe(update_progress=None):
         # Check if forgeborn_data is None and handle the error
         if forgeborn_data is None:
             with out_debug:
-                print(f"No data found for forgebornId: {forgebornId}")
+                print(f'No data found for forgebornId: {forgebornId}')
             return
         fb_data = ForgebornData(**forgeborn_data)
         forgeborn = Forgeborn(data=fb_data)
@@ -546,7 +546,7 @@ def generate_deck_statistics_dataframe(update_progress=None):
         if 'forgebornId' in deck:
             process_deck_forgeborn(deck, df_decks_filtered)
 
-    if update_progress: update_progress(100, "Finished loading")                
+    if update_progress: update_progress(100, 'Finished loading')                
 
     iterator = 0    
     if update_progress:
@@ -605,7 +605,7 @@ def generate_deck_statistics_dataframe(update_progress=None):
 def coll_data_on_selection_changed(event, widget):
     global qm
     # Generate a DataFrame from the selected rows
-    print(f"Selection changed: {event}")
+    print(f'Selection changed: {event}')
     deck_df = generate_deck_content_dataframe(event, widget)    
     qm.replace_grid('deck', deck_df)    
     qm.set_default_data('deck', deck_df)
@@ -649,7 +649,7 @@ def update_visible_columns_on_count():
     # Analyze changed DataFrame for updates
     qgrid_widget = qm.grids['count']['main_widget']
     changed_df = qgrid_widget.get_changed_df()
-    #print(f"Columns : {changed_df.columns}")
+    #print(f'Columns : {changed_df.columns}')
     for column in changed_df.columns:  
         # Check if column values are not just empty strings
         if not check_column_values(column, changed_df):
@@ -672,10 +672,10 @@ def handle_db_list_change(change):
     global username, grid_manager
 
     with out_debug:
-        print(f"DB List Change: {change}")
+        print(f'DB List Change: {change}')
 
     if change['name'] == 'value' and change['old'] != change['new']:
-        new_username = change['new'] #or ""  # Ensure new_username is a string
+        new_username = change['new'] #or ''  # Ensure new_username is a string
 
         if new_username:
 
@@ -691,7 +691,7 @@ def handle_db_list_change(change):
             update_filter_widget()
             grid_manager.refresh_gridbox(change)
         else:
-            print("No valid database selected.")
+            print('No valid database selected.')
 
 def reload_data_on_click(button, value):
     global db_list, username
@@ -699,21 +699,21 @@ def reload_data_on_click(button, value):
     GlobalVariables.username = username_value
 
     if not db_list:
-        print("No database list found.")
+        print('No database list found.')
         return
 
-    print(f"Reloading {value} for username: {username_value}")
+    print(f'Reloading {value} for username: {username_value}')
     if value == 'Decks':
-        arguments = ["--username", username_value,
-                     "--mode", 'update']
-        print(f"Loading Decks with arguments {arguments}")
+        arguments = ['--username', username_value,
+                     '--mode', 'update']
+        print(f'Loading Decks with arguments {arguments}')
         args = parse_arguments(arguments)
         load_deck_data(args)
     elif value == 'Fusions':
-        arguments = ["--username", username_value,
-                     "--mode", 'update',
-                     "--type", 'fuseddeck']
-        print(f"Loading Fusions with arguments {arguments}")
+        arguments = ['--username', username_value,
+                     '--mode', 'update',
+                     '--type', 'fuseddeck']
+        print(f'Loading Fusions with arguments {arguments}')
         args = parse_arguments(arguments)
         load_deck_data(args)
     elif value == 'Entities':
@@ -739,7 +739,7 @@ def display_graph_on_click(button):
     myDeckB = myDecks[1]
 
     if myDeckA and myDeckB:
-        fusionName = f"{myDeckA.name}_{myDeckB.name}"
+        fusionName = f'{myDeckA.name}_{myDeckB.name}'
         fusionCursor = GlobalVariables.myDB.find('Fusion', {'name' : fusionName})
         if fusionCursor: 
             for fusion in fusionCursor:
@@ -758,7 +758,7 @@ def display_graph_on_click(button):
                 myGraph = MyGraph()
                 myGraph.create_graph_children(deck)
                 net = visualize_network_graph(myGraph.G)
-                display(net.show(f"{deck.name}.html"))
+                display(net.show(f'{deck.name}.html'))
         
 
 def update_filter_widget(change=None):
@@ -808,7 +808,7 @@ def filter_options(value, options):
     
     # That should leave us with the options that are a substring of any card name and contain the value as a substring
     
-    #print(f"Filtered options for {value}: {filtered_options}")
+    #print(f'Filtered options for {value}: {filtered_options}')
     return filtered_options
     
 
@@ -836,13 +836,13 @@ def visualize_network_graph(graph, size=10):
 
     for node, data in graph.nodes(data=True):
         num_parents = len(data.get('parents', []))        
-        graph.nodes[node]['label'] += f"[{num_parents}]"
+        graph.nodes[node]['label'] += f'[{num_parents}]'
         
-    net = Network(notebook=True, directed=True, height="1500px", width="2000px", cdn_resources='in_line')    
+    net = Network(notebook=True, directed=True, height='1500px', width='2000px', cdn_resources='in_line')    
     net.from_nx(graph)
     net.force_atlas_2based()
     net.show_buttons()
-    print("Displaying Graph!")
+    print('Displaying Graph!')
     #display(net.show('graph.html'))
     return net
 
@@ -852,7 +852,7 @@ def show_deck_graph(deck, out):
     net = visualize_network_graph(myGraph.G)
     with out:
         out.clear_output() 
-        display(net.show(f"{deck.name}.html"))
+        display(net.show(f'{deck.name}.html'))
 
 #############################
 # User Interface Management #
@@ -944,7 +944,7 @@ def setup_interface():
         dropdowns.append(dropdown)
 
     # Button to create network graph
-    button_graph = widgets.Button(description="Show Graph")
+    button_graph = widgets.Button(description='Show Graph')
     button_graph.on_click(lambda button: display_graph_on_click(button))
 
     # Toggle buttons to select load items
@@ -955,22 +955,15 @@ def setup_interface():
         button_style='', # 'success', 'info', 'warning', 'danger' or ''
         tooltips=['Decks from the website', 'Fusions from the website', 'Entities from the Collection Manager Sheet sff.csv', 'Forgeborns from the forgeborns.csv', 'Synergies from the Synergys.csv'])
 
-    data_generation_functions = {
-        'Deck Stats': generate_deck_statistics_dataframe,
-        'Card Types': generate_cardType_count_dataframe,
-        'Selected Decks': generate_deck_content_dataframe
-    }
-
-    data_selection_sets = {
-        'Deck Stats': [ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'Creatures', 'Spells', 'FB2', 'FB3', 'FB4', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
-        'Card Types': [ 'name', 'faction', 'Creatures', 'Spells', 'Exalts', 'Tribals', 'Free Plays', 'Addons'],
-        'Selected Decks': ['Selected Decks']
-    }
+    #data_generation_functions = {
+    #    'Deck Stats': generate_deck_statistics_dataframe,
+    #    'Card Types': generate_cardType_count_dataframe,
+    #    'Selected Decks': generate_deck_content_dataframe
+    #}
 
     data_selection_data = {
-        'generate_function' : generate_central_dataframe,
-        'data_sets' : data_selection_sets,
-        'data_functions' : data_generation_functions
+        'generate_function' : generate_central_dataframe
+        #'data_functions' : data_generation_functions
     }
 
     # Database selection widget
@@ -978,7 +971,7 @@ def setup_interface():
     db_list.observe(handle_db_list_change, names='value')
 
     # Button to load decks / fusions / forgborns 
-    button_load = widgets.Button(description="Load" )
+    button_load = widgets.Button(description='Load' )
     button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
     
     # Create a list of HBoxes of factionToggles, Labels, and dropdowns
@@ -988,8 +981,6 @@ def setup_interface():
     debug_toggle = widgets.Checkbox(value=False, description='Debugging', disabled=False)    
     debug_toggle.observe(handle_debug_toggle, 'value')
 
-    # Toggle Box 
-    #toggle_box = widgets.VBox([loadToggle,  button_load, username, db_list])    
     # Create a progress bar widget
     #if not GlobalVariables.debug : 
     GlobalVariables.load_progress = widgets.IntProgress(value=0, min=0, max=100, description='Initialised!', bar_style='info', style={'bar_color': 'lightblue'})
@@ -1003,19 +994,23 @@ def setup_interface():
 
     def on_tab_change(index):
         if index == 1:
-            print("Deck Tab selected")
+            print('Deck Tab selected')
 
+    templateGrid = TemplateGrid()
+    
     # Create the Tab widget with children
     db_tab   = widgets.VBox([loadToggle, button_load, username, db_list])
     deck_tab = widgets.VBox([grid_manager.get_ui()])  # , qm_gridbox])
     fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph])
     debug_tab = widgets.VBox([debug_toggle, out_debug])
+    template_tab = widgets.VBox([templateGrid.qgrid_filter])
 
-    tab = widgets.Tab(children=[db_tab, deck_tab, fusions_tab, debug_tab])
+    tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, fusions_tab, debug_tab])
     tab.set_title(0, 'Database')
     tab.set_title(1, 'Decks')
-    tab.set_title(2, 'Graphs')
-    tab.set_title(3, 'Debug')
+    tab.set_title(2, 'Templates')
+    tab.set_title(3, 'Graphs')
+    tab.set_title(4, 'Debug')
 
     tab.observe(on_tab_change, names='selected_index')
 
@@ -1023,14 +1018,3 @@ def setup_interface():
     
     # Display the Tab widget
     display(tab)
-
-    # # Display the widgets    
-    # #display(out_debug)
-    # display(toggle_box) 
-    # if GlobalVariables.load_progress : display(GlobalVariables.load_progress.container)
-    # #display(df_status_widget) 
-    # display(filterBox)      
-    # display(out_qm)    
-    # #display(button_graph)
-    # #display(out_main)         
-    # #display(*toggle_dropdown_pairs, button_graph)

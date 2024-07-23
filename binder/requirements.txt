@@ -4,9 +4,8 @@ pyvis
 numpy
 Pillow
 scipy
-tqdm
 jupyter-server-proxy
 requests
 pandas
-qgridnext==2.0.1
+qgridnext==2.0.0
 icecream

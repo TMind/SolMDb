@@ -1,13 +1,131 @@
 from ctypes import alignment
 from datetime import datetime
 from gc import collect
+from unittest.mock import Base
 import pandas as pd
 import qgrid
 import ipywidgets as widgets
 from IPython.display import display, clear_output, HTML
 import GlobalVariables as gv
 
-# Simplified GridManager implementation
+from DataSelectionManager import DataSelectionManager
+
+# module global variables 
+
+#data_selection_sets = {
+#    'Deck Stats': [ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'Creatures', 'Spells', 'FB2', 'FB3', 'FB4', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
+#    'Card Types': [ 'name', 'faction', 'Creatures', 'Spells', 'Exalts', 'Tribals', 'Free Plays', 'Addons'],        
+#}
+
+data_selection_sets = {
+        'Deck Stats': [ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'Creatures', 'Spells', 'FB2', 'FB3', 'FB4', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
+        'Card Types': [ 'name', 'faction', 'Creatures', 'Spells', 'Exalts', 'Dinosaur', 'Mage', 'Robot', 'Scientist', 'Spirit', 'Warrior', 'Zombie', 'Minion', 'Dragon', 'Elemental', 'Plant'],    
+        'All Types' : [ 'name', 'faction', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy',
+                        'Scientist', 'Scientist Synergy', 'Spirit', 'Spirit Synergy', 'Warrior', 'Warrior Synergy',
+                        'Zombie', 'Zombie Synergy', 'Dragon', 'Dragon Synergy', 'Elemental', 'Elemental Synergy',
+                        'Plant', 'Plant Synergy', 'Replace Setup', 'Replace Profit', 'Minion', 'Minion Synergy',
+                        'Spell', 'Spell Synergy', 'Healing Source', 'Healing Synergy', 'Movement', 'Disruption',
+                        'Movement Benefit', 'Armor', 'Armor Giver', 'Armor Synergy', 'Activate', 'Ready', 'Free',
+                        'Upgrade', 'Upgrade Synergy', 'Face Burn', 'Removal', 'Breakthrough', 'Breakthrough Giver',
+                        'Aggressive', 'Aggressive Giver', 'Defender', 'Defender Giver', 'Stealth', 'Stealth Giver',
+                        'Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Attack Debuff', 'Health Debuff',
+                        'Destruction Synergy', 'Destruction Activator', 'Self Damage Payoff', 'Self Damage Activator',
+                        'Silence',  'Exalts', 'Exalt Synergy', 'Slay', 'Deploy', 'White Fang', 'Last Winter', 'Spicy',
+                        'Cool', 'Fun', 'Annoying'
+                    ],
+        'Synergies' : ['name', 'faction', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy', 'Scientist', 'Scientist Synergy', 'Spirit', 'Spirit Synergy', 
+                       'Warrior', 'Warrior Synergy', 'Zombie', 'Zombie Synergy', 'Dragon', 'Dragon Synergy', 'Elemental', 'Elemental Synergy', 'Plant', 'Plant Synergy', 'Replace Setup', 
+                       'Replace Profit', 'Minion', 'Minion Synergy', 'Spell', 'Spell Synergy', 'Healing Source', 'Healing Synergy', 'Movement', 'Movement Benefit', 'Armor', 'Armor Giver', 
+                       'Armor Synergy', 'Activate', 'Ready', 'Upgrade', 'Upgrade Synergy', 'Destruction Activator', 'Destruction Synergy',  'Self Damage Activator', 'Self Damage Payoff', 
+                       'Exalts', 'Exalt Synergy']
+}
+
+col_defs = {
+    'name':             {'width': 250},
+    'registeredDate':   {'width': 200},
+    'UpdatedAt':        {'width': 200},
+    'pExpiry':          {'width': 200},
+    'cardSetNo':        {'width': 50},
+    'faction':          {'width': 100},
+    'forgebornId':      {'width': 100},
+    'cardTitles':       {'width': 200},
+    'FB4':              {'width': 150},
+    'FB2':              {'width': 150},
+    'FB3':              {'width': 150},
+    'Dinosaur':         {'width': 150},
+    'Dinosaur Synergy': {'width': 150},
+    'Mage':             {'width': 150},
+    'Mage Synergy':     {'width': 150},
+    'Robot':            {'width': 150},
+    'Robot Synergy':    {'width': 150},
+    'Scientist':        {'width': 150},
+    'Scientist Synergy': {'width': 150},
+    'Spirit':           {'width': 150},
+    'Spirit Synergy':   {'width': 150},
+    'Warrior':          {'width': 150},
+    'Warrior Synergy':  {'width': 150},
+    'Zombie':           {'width': 150},
+    'Zombie Synergy':   {'width': 150},
+    'Replace Setup':    {'width': 150},
+    'Replace Profit':   {'width': 150},
+    'Minion':           {'width': 150},
+    'Minion Synergy':   {'width': 150},
+    'Spell':            {'width': 150},
+    'Spell Synergy':    {'width': 150},
+    'Healing Source':   {'width': 150},
+    'Healing Synergy':  {'width': 150},
+    'Movement':         {'width': 150},
+    'Disruption':       {'width': 150},
+    'Movement Benefit': {'width': 150},
+    'Armor':            {'width': 150},
+    'Armor Giver':      {'width': 150},
+    'Armor Synergy':    {'width': 150},
+    'Activate':         {'width': 150},
+    'Ready':            {'width': 150},
+    'Free':             {'width': 150},
+    'Upgrade':          {'width': 150},
+    'Upgrade Synergy':  {'width': 150},
+    'Face Burn':        {'width': 150},
+    'Removal':          {'width': 150},
+    'Breakthrough':     {'width': 150},
+    'Breakthrough Giver':{'width': 150},
+    'Aggressive':       {'width': 150},
+    'Aggressive Giver': {'width': 150},
+    'Defender':         {'width': 150},
+    'Defender Giver':   {'width': 150},
+    'Stealth':          {'width': 150},
+    'Stealth Giver':    {'width': 150},
+    'Stat Buff':        {'width': 150},
+    'Attack Buff':      {'width': 150},
+    'Health Buff':      {'width': 150},
+    'Stat Debuff':      {'width': 150},
+    'Attack Debuff':    {'width': 150},
+    'Health Debuff':    {'width': 150},
+    'Destruction Synergy':{'width': 150},
+    'Destruction Activator':{'width': 150},
+    'Self Damage Payoff':{'width': 150},
+    'Self Damage Activator':{'width': 150},
+    'Silence':          {'width': 150},
+    'White Fang':       {'width': 150},
+    'Dragon':           {'width': 150},
+    'Dragon Synergy':   {'width': 150},
+    'Elemental':        {'width': 150},
+    'Elemental Synergy':{'width': 150},
+    'Plant':            {'width': 150},
+    'Plant Synergy':    {'width': 150},
+    'Exalts':           {'width': 150},
+    'Exalt Synergy':    {'width': 150},
+    'Slay':             {'width': 150},
+    'Deploy':           {'width': 150},
+    'Last Winter':      {'width': 150},
+    'Spicy':            {'width': 150},
+    'Cool':             {'width': 150},
+    'Fun':              {'width': 150},
+    'Annoying':         {'width': 150}
+}
+
+
+
 class GridManager:
     EVENT_DF_STATUS_CHANGED = 'df_status_changed'
 
@@ -26,6 +144,7 @@ class GridManager:
         if identifier in self.grids:
             # Grid exists, update DataFrame
             grid = self.grids[identifier]
+            self.set_default_data(identifier, df)
             self.update_dataframe(identifier, df)  # Ensure grid object has a method to update its DataFrame
             with self.debug_output:
                 print(f"GridManager::add_grid() - Grid {identifier} updated.")
@@ -211,8 +330,8 @@ class BaseGrid:
         self.main_widget = None
         self.toggle_widget = self.create_toggle_widget(df)
         self.create_main_widget(df)
-        self.progress_bar = widgets.IntProgress(min=0, max=100)  # Create progress bar
-        self.progress_label = widgets.Label('Initialised!')  # Label for progress bar
+        #self.progress_bar = widgets.IntProgress(min=0, max=100)  # Create progress bar
+        #self.progress_label = widgets.Label('Initialised!')  # Label for progress bar
 
     def create_main_widget(self, df):
         raise NotImplementedError("Subclasses should implement this method.")
@@ -225,14 +344,16 @@ class BaseGrid:
 
     def get_grid_box(self):
         # Add the progress bar and label to an HBox to position them nicely
-        progress_container = widgets.HBox([self.progress_label, self.progress_bar])
+        #progress_container = widgets.HBox([self.progress_label, self.progress_bar])
         # Return a VBox with the toggle widget, the main widget, and the progress bar
-        return widgets.VBox([self.toggle_widget, self.main_widget, progress_container])
+        #return widgets.VBox([self.toggle_widget, self.main_widget, progress_container])
+        return widgets.VBox([self.toggle_widget, self.main_widget])
+    
 
-    def update_progress(self, value, description=None):
-        self.progress_bar.value = value
-        if description:         
-            self.progress_label.value = description
+    #def update_progress(self, value, description=None):
+    #    self.progress_bar.value = value
+    #    if description:         
+    #        self.progress_label.value = description
 
     def update_main_widget(self, new_df):
         raise NotImplementedError("Subclasses should implement this method.")
@@ -271,16 +392,12 @@ class PandasGrid(BaseGrid):
         self.df_versions['default'] = new_df.copy()
         self.set_dataframe_version('filtered', new_df)
 
-    def render_main_widget(self):
-        display(self.df_versions['default'])
-
-
-
 class FilterGrid:
+    global data_selection_sets
     """
     Manages the grid for filtering data based on user-defined criteria.
     """
-    def __init__(self, function_refresh, data_selection_sets):
+    def __init__(self, function_refresh):
         """
         Initializes a new instance of the FilterGrid class.
 
@@ -292,6 +409,8 @@ class FilterGrid:
         self.df = self.create_initial_dataframe()
         self.qgrid_filter = self.create_filter_qgrid()
         self.selection_box, self.selection_widgets = self.create_selection_box()
+        DataSelectionManager.register_observer(self.update)
+        #DataSelectionManager.register_observer(self.refresh_function)
 
     def create_filter_qgrid(self):
         """
@@ -323,10 +442,10 @@ class FilterGrid:
         return pd.DataFrame({
             'Modifier': [''],
             'op1': [''],
-            'Creature': ['Arboris'],
+            'Creature': [''],
             'op2': [''],
-            'Spell': [''],
-            'Data Set': ['Deck Stats'],
+            'Spell': ['Energy Surge'],
+            'Data Set': ['Synergies'],
             'Active': [True]
         })
 
@@ -390,10 +509,17 @@ class FilterGrid:
         #if column_index == 'Active' or widget.df.loc[row_index, 'Active']:
         self.refresh_function({'new': row_index, 'old': None, 'owner': 'filter'})
 
+    def update(self, event, widget):
+        """
+        Updates the filter grid based on changes in the data selection sets.
+        """
+        global data_selection_sets
 
+        print(f"FilterClass::update() -> Updating filter grid with new data selection sets: {data_selection_sets.keys()}")
+        self.selection_widgets['Data Set'].options = data_selection_sets.keys()
 
+    
     ### Selection Box Functions ###
-
     def update_selection_content(self, change):
         """
         Updates the selection content based on changes in the widget values.
@@ -437,7 +563,7 @@ class FilterGrid:
             'op2': widgets.Dropdown(options=['', 'AND', 'OR'], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center')),
             'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),            
             'Data Set': widgets.Dropdown(
-                options=self.data_selection_sets.keys(),
+                options=data_selection_sets.keys(),
                 description='',
                 layout=widgets.Layout(width='150px', border='1px solid purple', align_items='center', justify_content='center')
             ),
@@ -590,25 +716,19 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
         update_progress(100, 'Filter applied!')
     return df_filtered
 
+from MultiIndexDataFrame import MultiIndexDataFrame
 class DynamicGridManager:
+    global data_selection_sets
+
     def __init__(self, data_selection_data, qg_options, out_debug):
         self.out_debug = out_debug
-        self.data_selection_data = data_selection_data
-        self.data_generation_functions  = data_selection_data['data_functions']
-        self.data_selection_sets        = data_selection_data['data_sets']
+        self.data_selection_data = data_selection_data        
         self.data_generate_function     = data_selection_data['generate_function']
         self.qg_options = qg_options
         self.qm = GridManager(out_debug)
-        self.grid_layout = widgets.GridspecLayout(1, 1)
-        
-        #for key, function in self.data_generation_functions.items():
-        #    self.qm.add_grid(key, pd.DataFrame(), options=self.qg_options[key])
+        self.grid_layout = widgets.GridspecLayout(1, 1)        
+        self.filterGridObject = FilterGrid(self.refresh_gridbox)        
 
-        #self.qm.add_grid('collection', collection_df)
-
-        self.filterGridObject = FilterGrid(self.refresh_gridbox, self.data_selection_sets)
-        self.filter_df = self.filterGridObject.get_changed_df()
-        
         # UI elements
         self.selectionGrid, self.filterGrid = self.filterGridObject.get_widgets()
         self.ui = widgets.VBox([self.selectionGrid, self.filterGrid, self.grid_layout])
@@ -621,7 +741,8 @@ class DynamicGridManager:
         self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]
 
     def update_grid_layout(self):
-        active_filters_count = len(self.filter_df[self.filter_df['Active']])
+        filter_df = self.filterGridObject.get_changed_df()
+        active_filters_count = len(filter_df[filter_df['Active']])
         new_grid = widgets.GridspecLayout(max(active_filters_count, 1), 1)
         for idx, child in enumerate(self.grid_layout.children):
             if idx < active_filters_count:
@@ -636,39 +757,40 @@ class DynamicGridManager:
         if collection_df.empty or (change and 'type' in change and change['type'] == 'username'):            
             collection_df = self.data_generate_function()
             self.qm.add_grid('collection', collection_df)            
-
-        self.filter_df = self.filterGridObject.get_changed_df()
         
         # Filter the DataFrame to include only active filters
-        active_filters_df = self.filter_df[self.filter_df['Active']]
+        filter_df = self.filterGridObject.get_changed_df()
+        active_filters_df = filter_df[filter_df['Active']]
         self.reset_grid_layout(len(active_filters_df))
 
         # Read the filter DataFrame and apply the filters to the default DataFrames per Row 
-        with self.out_debug:
-            print(f"Active filters: {active_filters_df}, {len(active_filters_df)}")
-            print(f"Collection DataFrame: {collection_df}")
+        #with self.out_debug:
+            #print(f"Active filters: {active_filters_df}, {len(active_filters_df)}")
+            #print(f"Collection DataFrame: {collection_df}")
 
         for index, (row_index, filter_row) in enumerate(active_filters_df.iterrows()):
             if filter_row['Active']:
                 data_set_type = filter_row['Data Set']
-                data_selection_list = self.data_selection_sets[data_set_type]
+                #print(f"Applying filter {filter_row} to data set {data_set_type}")
+                data_selection_list = data_selection_sets[data_set_type]
                 
                 filtered_df = apply_cardname_filter_to_dataframe(collection_df, pd.DataFrame([filter_row]))
-                
-                # Filter columns based on the data_selection_list
-                filtered_df = filtered_df[data_selection_list]
+                                
+                # Filter columns based on the data_selection_list, remove all values not in the list                
+                existing_columns = [col for col in data_selection_list if col in filtered_df.columns]
+                filtered_df = filtered_df.loc[:, existing_columns]                
 
                 filter_widget = None
                 grid_widget  = None 
 
-                if data_set_type == 'Multi index':
-                    multi_index_df = MultiIndexDataFrameToQGrid(filtered_df)
-                    multi_index_df.read_json_as_dataframe_with_multiindex("synergies.json")
+                if data_set_type == 'Multi Index':
+                    multi_index_df = MultiIndexDataFrame()
+                    multi_index_df.read_dataframe("test/multiindex.csv")
                     multi_index_df.transpose_and_prepare_df()
                     filter_widget, grid_widget = multi_index_df.getWidgets()
                 else:    
                     grid_identifier = f"filtered_grid_{index}"
-                    grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options[data_set_type])
+                    grid = self.qm.add_grid(grid_identifier, filtered_df, options=col_defs)
                     
                     filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
                     filter_row_widget.layout = widgets.Layout(height='70px', border='1px solid blue')
@@ -685,85 +807,127 @@ class DynamicGridManager:
         return self.ui
 
 
-
-import json
-class MultiIndexDataFrameToQGrid:
-    def __init__(self, df):
-        self.df = df
-        self.combined_df = None
-        self.df_cleaned = None
-        self.qgrid_widget = None
-        self.output_area = widgets.Output()
-
-    def transpose_and_prepare_df(self):
-        # Extracting the level values and creating a DataFrame for each level
-        levels = self.df.columns.names
-        level_values = [self.df.columns.get_level_values(i) for i in range(len(levels))]
-
-        # Create a DataFrame for the levels
-        level_dfs = []
-        for i, level_value in enumerate(level_values):
-            level_df = pd.DataFrame([level_value], columns=self.df.columns)
-            level_df.index = [levels[i]]
-            level_dfs.append(level_df)
-
-        # Create a DataFrame for the values
-        value_df = pd.DataFrame(self.df.values, columns=self.df.columns, index=self.df.index)
-
-        # Concatenate the levels and values DataFrames and transpose
-        self.combined_df = pd.concat(level_dfs + [value_df]).T
-
-        # Adjusting column and row names
-        new_columns = [col if col not in levels else f'_{col}' for col in self.combined_df.columns]
-        self.combined_df.columns = new_columns
-
-        # Filter out unnecessary columns
-        columns_to_keep = [col for col in self.combined_df.columns if '_' not in col]
-        self.df_cleaned = self.combined_df[columns_to_keep]
-
-    def display_in_qgrid(self):
-        # Create qgrid widget for displaying filtered DataFrame
-        self.qgrid_widget = qgrid.show_grid(self.df_cleaned, show_toolbar=True)
-
-        # Attach event handler to the qgrid widget
-        self.qgrid_widget.on('filter_changed', self.on_filter_change)
-
-        # Display the qgrid widget and the output area
-        display(self.qgrid_widget)
-        display(self.output_area)
-
-    def on_filter_change(self, event, widget):
-        with self.output_area:
-            clear_output(wait=True)
-            filtered_df = widget.get_changed_df().T
-            display(filtered_df)
-
+class TemplateGrid:
+    global data_selection_sets
     
-    def write_dataframe_to_json_with_multiindex(self, json_file_path):
-        df = self.df
-        # Prepare data to include MultiIndex column structure
-        data = {
-            'data': df.to_json(orient='split', indent=4),
-            'columns': df.columns.tolist()
-        }
+    def __init__(self):        
+
+        #self.data_selection_sets = data_selection_sets
+        self.df = self.create_initial_dataframe()
+        self.qgrid_filter = self.create_filter_qgrid()        
+
+    def create_filter_qgrid(self):
         
-        # Serialize the structure to JSON file
-        with open(json_file_path, 'w') as file:
-            json.dump(data, file, indent=4)
+        colum_definitions = { }
+        columns = ['Template Name', 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'elo', 'xp', 'level', 'Creatures', 'Spells', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'FB4', 'FB2', 'FB3', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy',
+                        'Scientist', 'Scientist Synergy', 'Spirit', 'Spirit Synergy', 'Warrior', 'Warrior Synergy',
+                        'Zombie', 'Zombie Synergy', 'Dragon', 'Dragon Synergy', 'Elemental', 'Elemental Synergy',
+                        'Plant', 'Plant Synergy', 'Replace Setup', 'Replace Profit', 'Minion', 'Minion Synergy',
+                        'Spell', 'Spell Synergy', 'Healing Source', 'Healing Synergy', 'Movement', 'Disruption',
+                        'Movement Benefit', 'Armor', 'Armor Giver', 'Armor Synergy', 'Activate', 'Ready', 'Free',
+                        'Upgrade', 'Upgrade Synergy', 'Face Burn', 'Removal', 'Breakthrough', 'Breakthrough Giver',
+                        'Aggressive', 'Aggressive Giver', 'Defender', 'Defender Giver', 'Stealth', 'Stealth Giver',
+                        'Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Attack Debuff', 'Health Debuff',
+                        'Destruction Synergy', 'Destruction Activator', 'Self Damage Payoff', 'Self Damage Activator',
+                        'Silence',  'Exalts', 'Exalt Synergy', 'Slay', 'Deploy', 'White Fang', 'Last Winter', 'Spicy',
+                        'Cool', 'Fun', 'Annoying']
+
+        for column in columns:
+            width  = len(column) * 11
+            colum_definitions[column] = { 'width': width }
+            #print(f"Column: {column}, Width: {width}")
+
+        qgrid_filter = qgrid.show_grid(
+            self.df,
+            column_definitions= colum_definitions,
+            grid_options={'forceFitColumns': False, 'filterable' : False, 'sortable' : False, 'defaultColumnWidth' : 75,  'enableColumnReorder': True},
+            show_toolbar=True
+        )
+        qgrid_filter.layout = widgets.Layout(height='auto')
         
-    def read_json_as_dataframe_with_multiindex(self, json_file_path):
-        # Load the structure from JSON file
-        with open(json_file_path, 'r') as file:
-            data = json.load(file)
+        qgrid_filter.on('row_added', self.grid_filter_on_row_added)
+        qgrid_filter.on('row_removed', self.grid_filter_on_row_removed)        
+        qgrid_filter.on('cell_edited', self.grid_filter_on_cell_edit)
+
+        return qgrid_filter
+
+    def create_initial_dataframe(self):
+
+        rows = []
+
+        for template_name, template_set in data_selection_sets.items():
+            # Create a dictionary with True for each column in the template_set
+            row = {col: True for col in template_set}
+            # Add the template_name to the dictionary
+            row['Template Name'] = template_name
+            # Append the dictionary to the list
+            rows.append(row)
+
+        # Create the DataFrame from the list of dictionaries
+        template_df = pd.DataFrame(rows)
+        columns = ['Template Name'] + [col for col in template_df.columns if col != 'Template Name']
+        template_df = template_df[columns]
+        template_df.fillna(False, inplace=True)
+        template_df = template_df.infer_objects()
+
+        # Set the 'Template Name' column as the index of the DataFrame
+        #template_df.set_index('Template Name', inplace=True)
+        return template_df
+
+    def grid_filter_on_row_removed(self, event, widget):
+        """
+        Handles the 'row_removed' event for the filter grid.
+
+        Args:
+            event (dict): The event data.
+            widget (qgrid.QGridWidget): The filter grid widget.
+        """
+        active_rows = []
+        if 0 in event['indices']:
+            df = self.create_initial_dataframe()
+            widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
+            event['indices'].remove(0)        
         
-        # Reconstruct DataFrame from 'data' part
-        df_data = pd.read_json(data['data'], orient='split')
+        # Update the Data Set in the FilterGrid widget 
+        self.update_data_selection_sets()
+        DataSelectionManager.update_data(event, widget)
         
-        # Reconstruct MultiIndex for columns
-        multiindex_columns = pd.MultiIndex.from_tuples(data['columns'])
-        df_data.columns = multiindex_columns
+
+    def grid_filter_on_row_added(self, event, widget):
+        new_row_index = event['index']
+        df = widget.get_changed_df()
         
-        return df_data
+        # Set default values for the new row
+        for column in df.columns:
+            if column != 'Template Name':
+                df.at[new_row_index, column] = False
+        
+        df.at[new_row_index, 'Template Name'] = 'New Template'
+        widget.df = df
+
+        # Update the Data Set in the FilterGrid widget 
+        self.update_data_selection_sets()
+        DataSelectionManager.update_data(event, widget)
+        
+
+    def grid_filter_on_cell_edit(self, event, widget):        
+        row_index, column_index = event['index'], event['column']
+        df = widget.get_changed_df()
+        df.loc[row_index, column_index] = event['new']
+        widget.df = df 
     
-    def getWidgets(self):
-        return self.qgrid_widget, self.output_area
+        # Update the Data Set in the FilterGrid widget 
+        self.update_data_selection_sets()
+        DataSelectionManager.update_data(event, widget)
+   
+    def update_data_selection_sets(self):
+        global data_selection_sets
+        #print(f"TemplateGrid::update_data_selection_sets() -> old data: {data_selection_sets}")
+        # Set data_selection_sets to reflect the current keys and values of the dataframe        
+        template_df = self.qgrid_filter.get_changed_df()
+        data_selection_sets = {template_df.loc[template]['Template Name']: template_df.loc[template].index[template_df.loc[template] == True].tolist() for template in template_df.index}
+        #print(f"TemplateGrid::update_data_selection_sets() -> Updating data selection sets with new data: {data_selection_sets}")
+
+
+
+ 

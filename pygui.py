@@ -19,7 +19,6 @@ from IPython.display import display, HTML, clear_output
 
 from Synergy import SynergyTemplate
 import pandas as pd
-import qgrid
 from GridManager import GridManager, get_cardType_entity_names, DynamicGridManager, TemplateGrid
 
 from icecream import ic
@@ -94,63 +93,99 @@ grid_manager = None
 qm = GridManager(out_debug)
 
 # Widget original options for qgrid
-qg_syn_options = {
-    'col_options' :   { 'defaultColumnWidth' : 700}, 
-    'col_defs' : {                
-        'tag':              { 'width': 175, },
-        'name':            { 'width': 50,  },
-    },
-    'grid_options' : { 'forceFitColumns': False, }        
+default_width = 150
+
+all_column_definitions = {
+    'index':            {'width': 50},
+    'name':             {'width': 250},
+    'registeredDate':   {'width': 200},
+    'UpdatedAt':        {'width': 200},
+    'xp':               {'width': 50},
+    'elo':              {'width': 50},
+    'level':            {'width': 50},
+    'pExpiry':          {'width': 200},
+    'cardSetNo':        {'width': 50},
+    'faction':          {'width': 100},
+    'forgebornId':      {'width': 100},
+    'cardTitles':       {'width': 200},
+    'FB4':              {'width': default_width},
+    'FB2':              {'width': default_width},
+    'FB3':              {'width': default_width},
+    'Beast':            {'width': 80},
+    'Beast Synergy':    {'width': default_width},
+    'Dinosaur':         {'width': 80},
+    'Dinosaur Synergy': {'width': default_width},
+    'Mage':             {'width': 80},
+    'Mage Synergy':     {'width': default_width},
+    'Robot':            {'width': 80},
+    'Robot Synergy':    {'width': default_width},
+    'Scientist':        {'width': 80},
+    'Scientist Synergy': {'width': default_width},
+    'Spirit':           {'width': 80},
+    'Spirit Synergy':   {'width': default_width},
+    'Warrior':          {'width': 80},
+    'Warrior Synergy':  {'width': default_width},
+    'Zombie':           {'width': 80},
+    'Zombie Synergy':   {'width': default_width},
+    'Replace Setup':    {'width': default_width},
+    'Replace Profit':    {'width': default_width},
+    'Minion':           {'width': 80},
+    'Minion Synergy':   {'width': default_width},
+    'Spell':            {'width': 80},
+    'Spell Synergy':    {'width': default_width},
+    'Healing Source':   {'width': default_width},
+    'Healing Synergy':  {'width': default_width},
+    'Movement':         {'width': 80},
+    'Disruption':       {'width': 80},
+    'Movement Benefit':  {'width': default_width},
+    'Armor':            {'width': 80},
+    'Armor Giver':      {'width': default_width},
+    'Armor Synergy':    {'width': default_width},
+    'Activate':         {'width': 80},
+    'Ready':            {'width': 80},
+    'Free':             {'width': 80},
+    'Upgrade':          {'width': 80},
+    'Upgrade Synergy':  {'width': default_width},
+    'Face Burn':        {'width': 80},
+    'Removal':          {'width': 80},
+    'Breakthrough':     {'width': default_width},
+    'Breakthrough Giver':{'width': default_width},
+    'Aggressive':       {'width': 80},
+    'Aggressive Giver': {'width': default_width},
+    'Defender':         {'width': 80},
+    'Defender Giver':   {'width': default_width},
+    'Stealth':          {'width': 80},
+    'Stealth Giver':    {'width': default_width},
+    'Stat Buff':        {'width': default_width},
+    'Attack Buff':      {'width': default_width},
+    'Health Buff':      {'width': default_width},
+    'Stat Debuff':      {'width': default_width},
+    'Attack Debuff':    {'width': default_width},
+    'Health Debuff':    {'width': default_width},
+    'Destruction Synergy':{'width': default_width},
+    'Destruction Activator':{'width': default_width},
+    'Self Damage Payoff':{'width': default_width},
+    'Self Damage Activator':{'width': default_width},
+    'Silence':          {'width': 80},
+    'White Fang':       {'width': 80},
+    'Dragon':           {'width': 80},
+    'Dragon Synergy':   {'width': default_width},
+    'Elemental':        {'width': 80},
+    'Elemental Synergy':{'width': default_width},
+    'Plant':            {'width': 80},
+    'Plant Synergy':    {'width': default_width},
+    'Exalts':           {'width': 80},
+    'Exalt Synergy':    {'width': default_width},
+    'Slay':             {'width': 80},
+    'Deploy':           {'width': 80},
+    'Last Winter':      {'width': default_width},
+    'Spicy':            {'width': 80},
+    'Cool':             {'width': 80},
+    'Fun':              {'width': 80},
+    'Annoying':         {'width': 80}
 }
 
-
-qg_coll_options = {
-    'col_options' :         { 'width': 50, } ,
-    'col_defs' : {        
-        'name':             { 'width': 250, },
-        'registeredDate':   { 'width': 200, },
-        'UpdatedAt':        { 'width': 200, },
-        'pExpiry':          { 'width': 200, },
-        'cardSetNo':        { 'width': 50,  },
-        'faction':          { 'width': 100,  },
-        'forgebornId':      { 'width': 100,  },
-        'cardTitles':       { 'width': 200,  },
-        'FB4':              { 'width': 150,  },
-        'FB2':              { 'width': 150,  },
-        'FB3':              { 'width': 150,  },
-    }
-}
-
-qg_count_options = {    
-    'col_options' :         { 'width': 85, } ,
-    'col_defs' : {                
-        'index': {'width': 250},
-        'faction': {'width': 75},
-        'count': {'width': 50},
-    }    
-}
-
-qg_deck_options = {
-    'col_options' :         { 'width': 100, } ,
-    'col_defs' : {                   
-        'DeckName':         { 'width': 250, }, 
-        'name':             { 'width': 200, },     
-        'rarity':           { 'width': 125,  },        
-        'cardType':         { 'width': 90,  },
-        'cardSubType':      { 'width': 110,  },
-        'A1':               { 'width': 50,  },
-        'A2':               { 'width': 50,  },
-        'A3':               { 'width': 50,  },
-        'H1':               { 'width': 50,  },
-        'H2':               { 'width': 50,  },
-        'H3':               { 'width': 50,  }
-    }
-}
-
-qg_options ={   'Deck Stats': qg_coll_options, 
-                'Card Types': qg_count_options,
-                'Selected Decks': qg_deck_options
-            }
+qg_options ={ 'column_options' : {}, 'column_definitions' : all_column_definitions }   
 class StdErrRedirector(object):
     global out_debug
     def __init__(self, output_widget):
@@ -395,7 +430,7 @@ def generate_cardType_count_dataframe(existing_df=None):
             cardType_df = pd.DataFrame(card_types['Creature'], index=[deckName])
             
             # Combine interface_ids_df and cardType_df
-            #cardType_df = cardType_df.combine_first(interface_ids_df)
+            cardType_df = cardType_df.combine_first(interface_ids_df)
 
             # Sort the columns by their names
             #cardType_df = cardType_df.sort_index(axis=1)
@@ -481,7 +516,8 @@ def generate_deck_statistics_dataframe(update_progress=None):
     # Assuming 'name' is the column with names and 'elo' originally contains the values to convert
 
     # Convert 'elo' to numeric, coercing errors to NaN
-    df_decks_filtered['elo'] = pd.to_numeric(df_decks_filtered['elo'], errors='coerce').round(2)
+    df_decks_filtered['elo'] = pd.to_numeric(df_decks_filtered['elo'], errors='coerce').astype(float).round(2)
+    df_decks_filtered['elo'] = df_decks_filtered['elo'].fillna(-1)
 
     # Identify rows where conversion failed
     failed_conversions = df_decks_filtered[df_decks_filtered['elo'].isna()]
@@ -598,6 +634,9 @@ def generate_deck_statistics_dataframe(update_progress=None):
     if update_progress:
         update_progress(100, 'Generating Statistics Data finished!')
     return df_decks_filtered
+
+
+#TODO: Implement a function to generate all the remaining interface data
 
 ##################
 # Event Handling #

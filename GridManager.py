@@ -6,21 +6,17 @@ import pandas as pd
 import qgrid
 import ipywidgets as widgets
 from IPython.display import display, clear_output, HTML
+from CardLibrary import Forgeborn
 import GlobalVariables as gv
 
 from DataSelectionManager import DataSelectionManager
 
 # module global variables 
 
-#data_selection_sets = {
-#    'Deck Stats': [ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'Creatures', 'Spells', 'FB2', 'FB3', 'FB4', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
-#    'Card Types': [ 'name', 'faction', 'Creatures', 'Spells', 'Exalts', 'Tribals', 'Free Plays', 'Addons'],        
-#}
-
 data_selection_sets = {
         'Deck Stats': [ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'Creatures', 'Spells', 'FB2', 'FB3', 'FB4', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
-        'Card Types': [ 'name', 'faction', 'Creatures', 'Spells', 'Exalts', 'Dinosaur', 'Mage', 'Robot', 'Scientist', 'Spirit', 'Warrior', 'Zombie', 'Minion', 'Dragon', 'Elemental', 'Plant'],    
-        'All Types' : [ 'name', 'faction', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy',
+        'Card Types': [ 'name', 'faction', 'Creatures', 'Spells', 'Exalts', 'Beast', 'Dinosaur', 'Mage', 'Robot', 'Scientist', 'Spirit', 'Warrior', 'Zombie', 'Minion', 'Dragon', 'Elemental', 'Plant'],    
+        'All Types' : [ 'name', 'faction', 'Beast', 'Beast Synergy', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy',
                         'Scientist', 'Scientist Synergy', 'Spirit', 'Spirit Synergy', 'Warrior', 'Warrior Synergy',
                         'Zombie', 'Zombie Synergy', 'Dragon', 'Dragon Synergy', 'Elemental', 'Elemental Synergy',
                         'Plant', 'Plant Synergy', 'Replace Setup', 'Replace Profit', 'Minion', 'Minion Synergy',
@@ -33,99 +29,12 @@ data_selection_sets = {
                         'Silence',  'Exalts', 'Exalt Synergy', 'Slay', 'Deploy', 'White Fang', 'Last Winter', 'Spicy',
                         'Cool', 'Fun', 'Annoying'
                     ],
-        'Synergies' : ['name', 'faction', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy', 'Scientist', 'Scientist Synergy', 'Spirit', 'Spirit Synergy', 
+        'Synergies' : ['name', 'faction', 'Beast', 'Beast Synergy', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy', 'Scientist', 'Scientist Synergy', 'Spirit', 'Spirit Synergy', 
                        'Warrior', 'Warrior Synergy', 'Zombie', 'Zombie Synergy', 'Dragon', 'Dragon Synergy', 'Elemental', 'Elemental Synergy', 'Plant', 'Plant Synergy', 'Replace Setup', 
                        'Replace Profit', 'Minion', 'Minion Synergy', 'Spell', 'Spell Synergy', 'Healing Source', 'Healing Synergy', 'Movement', 'Movement Benefit', 'Armor', 'Armor Giver', 
                        'Armor Synergy', 'Activate', 'Ready', 'Upgrade', 'Upgrade Synergy', 'Destruction Activator', 'Destruction Synergy',  'Self Damage Activator', 'Self Damage Payoff', 
                        'Exalts', 'Exalt Synergy']
 }
-
-col_defs = {
-    'name':             {'width': 250},
-    'registeredDate':   {'width': 200},
-    'UpdatedAt':        {'width': 200},
-    'pExpiry':          {'width': 200},
-    'cardSetNo':        {'width': 50},
-    'faction':          {'width': 100},
-    'forgebornId':      {'width': 100},
-    'cardTitles':       {'width': 200},
-    'FB4':              {'width': 150},
-    'FB2':              {'width': 150},
-    'FB3':              {'width': 150},
-    'Dinosaur':         {'width': 150},
-    'Dinosaur Synergy': {'width': 150},
-    'Mage':             {'width': 150},
-    'Mage Synergy':     {'width': 150},
-    'Robot':            {'width': 150},
-    'Robot Synergy':    {'width': 150},
-    'Scientist':        {'width': 150},
-    'Scientist Synergy': {'width': 150},
-    'Spirit':           {'width': 150},
-    'Spirit Synergy':   {'width': 150},
-    'Warrior':          {'width': 150},
-    'Warrior Synergy':  {'width': 150},
-    'Zombie':           {'width': 150},
-    'Zombie Synergy':   {'width': 150},
-    'Replace Setup':    {'width': 150},
-    'Replace Profit':   {'width': 150},
-    'Minion':           {'width': 150},
-    'Minion Synergy':   {'width': 150},
-    'Spell':            {'width': 150},
-    'Spell Synergy':    {'width': 150},
-    'Healing Source':   {'width': 150},
-    'Healing Synergy':  {'width': 150},
-    'Movement':         {'width': 150},
-    'Disruption':       {'width': 150},
-    'Movement Benefit': {'width': 150},
-    'Armor':            {'width': 150},
-    'Armor Giver':      {'width': 150},
-    'Armor Synergy':    {'width': 150},
-    'Activate':         {'width': 150},
-    'Ready':            {'width': 150},
-    'Free':             {'width': 150},
-    'Upgrade':          {'width': 150},
-    'Upgrade Synergy':  {'width': 150},
-    'Face Burn':        {'width': 150},
-    'Removal':          {'width': 150},
-    'Breakthrough':     {'width': 150},
-    'Breakthrough Giver':{'width': 150},
-    'Aggressive':       {'width': 150},
-    'Aggressive Giver': {'width': 150},
-    'Defender':         {'width': 150},
-    'Defender Giver':   {'width': 150},
-    'Stealth':          {'width': 150},
-    'Stealth Giver':    {'width': 150},
-    'Stat Buff':        {'width': 150},
-    'Attack Buff':      {'width': 150},
-    'Health Buff':      {'width': 150},
-    'Stat Debuff':      {'width': 150},
-    'Attack Debuff':    {'width': 150},
-    'Health Debuff':    {'width': 150},
-    'Destruction Synergy':{'width': 150},
-    'Destruction Activator':{'width': 150},
-    'Self Damage Payoff':{'width': 150},
-    'Self Damage Activator':{'width': 150},
-    'Silence':          {'width': 150},
-    'White Fang':       {'width': 150},
-    'Dragon':           {'width': 150},
-    'Dragon Synergy':   {'width': 150},
-    'Elemental':        {'width': 150},
-    'Elemental Synergy':{'width': 150},
-    'Plant':            {'width': 150},
-    'Plant Synergy':    {'width': 150},
-    'Exalts':           {'width': 150},
-    'Exalt Synergy':    {'width': 150},
-    'Slay':             {'width': 150},
-    'Deploy':           {'width': 150},
-    'Last Winter':      {'width': 150},
-    'Spicy':            {'width': 150},
-    'Cool':             {'width': 150},
-    'Fun':              {'width': 150},
-    'Annoying':         {'width': 150}
-}
-
-
-
 class GridManager:
     EVENT_DF_STATUS_CHANGED = 'df_status_changed'
 
@@ -150,7 +59,7 @@ class GridManager:
                 print(f"GridManager::add_grid() - Grid {identifier} updated.")
         else:
             # Create a new grid
-            grid = QGrid(identifier, df, options) if grid_type == 'qgrid' else PandasGrid(identifier, df, options)
+            grid = QGrid(identifier, df, options) if grid_type == 'qgrid' else print("Not QGrid Type!") #PandasGrid(identifier, df, options)
             self.grids[identifier] = grid
             self.relationships[identifier] = dependent_identifiers
             self._setup_grid_events(identifier, grid)
@@ -312,6 +221,7 @@ class GridManager:
 
 class BaseGrid:
     def __init__(self, identifier, df, options=None):
+        print(f"BaseGrid::__init__() - Creating BaseGrid with identifier {identifier} -> options = {options}")
         self.identifier = identifier
         self.df_versions = {
             'default': df.copy(),
@@ -367,14 +277,13 @@ class BaseGrid:
         self.df_versions['default'] = pd.DataFrame()
         self.update_main_widget(self.df_versions['default'])
 
-
 class QGrid(BaseGrid):
     def create_main_widget(self, df):
-        #print("QGrid::create_main_widget() - Creating QGrid")
+        print(f"QGrid::create_main_widget() - Creating QGrid -> column_definitions = {self.grid_options.get('column_definitions', {})}")
         self.main_widget = qgrid.show_grid(
             df,
-            column_options=self.grid_options.get('col_options', {}),
-            column_definitions=self.grid_options.get('col_defs', {}),
+            column_options=self.grid_options.get('column_options', {}),
+            column_definitions=self.grid_options.get('column_definitions', {}),
             grid_options={'forceFitColumns': False, 'enableColumnReorder': True},
             show_toolbar=False
         )
@@ -383,7 +292,6 @@ class QGrid(BaseGrid):
         self.main_widget.df = new_df
         self.set_dataframe_version('filtered', new_df)
 
-
 class PandasGrid(BaseGrid):
     def create_main_widget(self, df):
         self.update_main_widget(df)
@@ -391,6 +299,7 @@ class PandasGrid(BaseGrid):
     def update_main_widget(self, new_df):
         self.df_versions['default'] = new_df.copy()
         self.set_dataframe_version('filtered', new_df)
+
 
 class FilterGrid:
     global data_selection_sets
@@ -410,7 +319,6 @@ class FilterGrid:
         self.qgrid_filter = self.create_filter_qgrid()
         self.selection_box, self.selection_widgets = self.create_selection_box()
         DataSelectionManager.register_observer(self.update)
-        #DataSelectionManager.register_observer(self.refresh_function)
 
     def create_filter_qgrid(self):
         """
@@ -444,9 +352,10 @@ class FilterGrid:
             'op1': [''],
             'Creature': [''],
             'op2': [''],
-            'Spell': ['Energy Surge'],
-            'Data Set': ['Synergies'],
-            'Active': [True]
+            'Spell': [''],            
+            'Forgeborn Ability': [''],
+            'Data Set': ['Deck Stats'],
+            'Active': [True],
         })
 
     def grid_filter_on_row_removed(self, event, widget):
@@ -478,6 +387,7 @@ class FilterGrid:
             event (dict): The event data.
             widget (qgrid.QGridWidget): The filter grid widget.
         """
+        
         new_row_index = event['index']
         df = widget.get_changed_df()
 
@@ -485,11 +395,16 @@ class FilterGrid:
 
         # Set the values for each column in the new row
         for column in df.columns:
-            if column in ['op1', 'op2', 'Active', 'Data Set']:  # Directly use the value for these fields
+            if column in ['op1', 'op2', 'Data Set']:  # Directly use the value for these fields
                 df.at[new_row_index, column] = self.selection_widgets[column].value
-            else:  # Assume these are multi-select fields and join their values
+            elif column == 'Active':  # Assume these are multi-select fields and join their values
+                df.at[new_row_index, 'Active'] = True
+            elif column == 'Forgeborn Ability':
+                fb_ability = self.selection_widgets[column].value
+                df.at[new_row_index, column] = fb_ability.split(' : ')[1] if fb_ability else ''
+            else:
                 df.at[new_row_index, column] = '; '.join(self.selection_widgets[column].value)
-        
+
         widget.df = df
 
         #if widget.df.loc[new_row_index, 'Active']:
@@ -562,12 +477,13 @@ class FilterGrid:
             'Creature': self.create_cardType_names_selector('Creature', options={'border': '1px solid green'}),
             'op2': widgets.Dropdown(options=['', 'AND', 'OR'], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center')),
             'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),            
+            'Forgeborn Ability': widgets.Dropdown(options=[''] + get_forgeborn_abilities(), description='', layout=widgets.Layout(width='250px', border='1px solid orange', align_items='center', justify_content='center')),
             'Data Set': widgets.Dropdown(
                 options=data_selection_sets.keys(),
                 description='',
                 layout=widgets.Layout(width='150px', border='1px solid purple', align_items='center', justify_content='center')
             ),
-            'Active': widgets.Checkbox(value=True, description='', layout=widgets.Layout(width='100px', height='auto', align_items='center', justify_content='center'))  # Added label and alignment
+            #'Active': widgets.Checkbox(value=True, description='', layout=widgets.Layout(width='100px', height='auto', align_items='center', justify_content='center'))  # Added label and alignment
         }
 
         # Create widget row first and add a fixed-width spacer
@@ -626,12 +542,47 @@ def get_cardType_entity_names(cardType):
     cardType_entities_names.sort()
     return cardType_entities_names
 
+def get_forgeborn_abilities():
+    """
+    Retrieves the names of forgeborn abilities.
+
+    Returns:
+        list: A list of forgeborn ability names.
+    """
+    forgeborns = gv.commonDB.find('Forgeborn', {})
+    forgeborn_abilities_list = [forgeborn['abilities'] for forgeborn in forgeborns]
+    ability_names = [ f"{id[5:-5].capitalize()} : {name}" for abilities in forgeborn_abilities_list for id, name in abilities.items() if "Fraud" not in name]
+    # Cut out the forgeborn ability prefix 'C<number> - '
+    ability_names = [re.sub(r'C\d+ - ', '', name) for name in ability_names]
+    # Remove duplicates
+    ability_names = list(set(ability_names))
+    #print(f"Found {len(ability_names)} forgeborn abilities : {ability_names}")
+    ability_names.sort()
+    return ability_names
+
+
 import re
 def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=None):
-    if update_progress: 
-        update_progress(0, 'Initialising filter!')
-    def filter_by_substring(df, filter_row):       
-        def apply_filter(df, substrings):
+
+    def filter_by_substring(df, filter_row):    
+        def apply_filter(df, substrings, filter_fields=['cardTitles']):
+            if not substrings or not filter_fields:
+                return df
+
+            # Create a boolean mask initialized to False
+            substring_check_results = pd.Series([False] * len(df), index=df.index)
+
+            # Iterate over the specified filter fields
+            for field in filter_fields:
+                if field in df.columns:
+                    # Update the boolean mask if any substring is found in the current field    
+                    substring_check_results |= df[field].apply(lambda title: any(substring.lower() in str(title).lower() for substring in substrings))
+
+            # Filter the DataFrame using the boolean mask
+            current_filter_results = df[substring_check_results].copy()
+
+            return current_filter_results   
+        def apply_filter_old(df, substrings):
             substring_check_results = []
 
             if not substrings:
@@ -670,11 +621,20 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
             df_filtered = apply_filter(df, substrings)
 
         # Apply the remaining filters in the loop
-        for i, filter_type in enumerate(['Creature', 'Spell'], start=1):
-            operator = filter_row[f'op{i}']
+        for i, filter_type in enumerate(['Creature', 'Spell', 'Forgeborn Ability'], start=1):
+            operator = 'OR'
+            
+            if f'op{i}' in filter_row:
+                operator = filter_row[f'op{i}']
+            
+            if filter_type == 'Forgeborn Ability': 
+                filter_fields = ['FB2', 'FB3', 'FB4'] 
+                operator = 'AND'            
+
             previous_substrings = substrings
             substrings = re.split(r'\s*;\s*', filter_row[filter_type]) if filter_row[filter_type] else []
-            #print(f"Substrings = '{substrings}'")
+            #print(f"Substrings = '{substrings}'")            
+            
             if operator == '+':                
                 substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
             
@@ -688,7 +648,7 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
                 continue
 
             # Apply the filter to the DataFrame
-            current_filter_results = apply_filter(df, substrings)
+            current_filter_results = apply_filter(df, substrings, filter_fields)
 
             # Handle the operator logic in the outer loop
             if operator == 'AND':
@@ -705,15 +665,9 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
     df_filtered = df_to_filter
     active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
 
-    #print(f"Active filters: ")
-    #display(active_filters)
-
     for _, filter_row in active_filters.iterrows():
-        #print(f"Applying filter: {filter_row}")
         df_filtered = filter_by_substring(df_filtered, filter_row)
 
-    if update_progress: 
-        update_progress(100, 'Filter applied!')
     return df_filtered
 
 from MultiIndexDataFrame import MultiIndexDataFrame
@@ -756,7 +710,7 @@ class DynamicGridManager:
         collection_df = self.qm.get_default_data('collection')
         if collection_df.empty or (change and 'type' in change and change['type'] == 'username'):            
             collection_df = self.data_generate_function()
-            self.qm.add_grid('collection', collection_df)            
+            self.qm.add_grid('collection', collection_df, options=self.qg_options)            
         
         # Filter the DataFrame to include only active filters
         filter_df = self.filterGridObject.get_changed_df()
@@ -790,10 +744,10 @@ class DynamicGridManager:
                     filter_widget, grid_widget = multi_index_df.getWidgets()
                 else:    
                     grid_identifier = f"filtered_grid_{index}"
-                    grid = self.qm.add_grid(grid_identifier, filtered_df, options=col_defs)
+                    grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options)
                     
                     filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
-                    filter_row_widget.layout = widgets.Layout(height='70px', border='1px solid blue')
+                    filter_row_widget.layout = widgets.Layout(height='70px') #, border='1px solid blue')
 
                     filter_widget = filter_row_widget
                     grid_widget = grid.get_grid_box()
@@ -818,8 +772,9 @@ class TemplateGrid:
 
     def create_filter_qgrid(self):
         
-        colum_definitions = { }
-        columns = ['Template Name', 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'elo', 'xp', 'level', 'Creatures', 'Spells', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'FB4', 'FB2', 'FB3', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy',
+        column_definitions = { 'index' : { 'width' : 25 } }
+        columns = ['Template Name', 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'elo', 'xp', 'level', 'Creatures', 'Spells', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'FB4', 'FB2', 'FB3', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3', 
+                        'Beast', 'Beast Synergy', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy',
                         'Scientist', 'Scientist Synergy', 'Spirit', 'Spirit Synergy', 'Warrior', 'Warrior Synergy',
                         'Zombie', 'Zombie Synergy', 'Dragon', 'Dragon Synergy', 'Elemental', 'Elemental Synergy',
                         'Plant', 'Plant Synergy', 'Replace Setup', 'Replace Profit', 'Minion', 'Minion Synergy',
@@ -834,12 +789,12 @@ class TemplateGrid:
 
         for column in columns:
             width  = len(column) * 11
-            colum_definitions[column] = { 'width': width }
+            column_definitions[column] = { 'width': width }
             #print(f"Column: {column}, Width: {width}")
 
         qgrid_filter = qgrid.show_grid(
             self.df,
-            column_definitions= colum_definitions,
+            column_definitions= column_definitions,
             grid_options={'forceFitColumns': False, 'filterable' : False, 'sortable' : False, 'defaultColumnWidth' : 75,  'enableColumnReorder': True},
             show_toolbar=True
         )

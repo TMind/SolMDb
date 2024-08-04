@@ -1,3 +1,4 @@
+from ast import Global
 from MyGraph import MyGraph
 from MongoDB.DatabaseManager import DatabaseManager
 from CardLibrary import  Fusion, FusionData, Deck, Card
@@ -51,7 +52,10 @@ class DeckLibrary:
                 self.dbmgr.insert_many('Card', cardDataList)
 
         if fusions_data:
-            with tqdm(total=len(fusions_data), desc="Saving Fusions",mininterval=0.1, colour='YELLOW') as pbar:
+
+            with tqdm(total=len(fusions_data), desc="Saving Online Fusions",mininterval=0.1, colour='YELLOW') as pbar:
+                #GlobalVariables.intProgressBar.value = 0 
+                #GlobalVariables.intProgressBar.max = len(fusions_data)
                 for fusion_data in fusions_data:
                     decks = fusion_data['myDecks']            
                     fusionDeckNames = []
@@ -63,7 +67,19 @@ class DeckLibrary:
                     fusion = Fusion.from_data(fusion_data)            
                     fusion.save()           
                     self.online_fusions.append(fusion_data)
+                    #GlobalVariables.intProgressBar.value += 1
                     pbar.update(1)
+                
+        # Get number of fusions from the database
+        fusionCursor = self.dbmgr.find('Fusion', {})
+        fusionNamesDatabase = [fusion['name'] for fusion in fusionCursor]
+        
+        # Check if fusions exist already in the database and if not, create them
+        if len(fusionNamesDatabase) <= len(self.online_fusions) :
+            print('Creating fusions...')
+            deckCursor = self.dbmgr.find('Deck', {}, {'name': 1})                
+            self.new_decks = [deck for deck in deckCursor]             
+            self.make_fusions()
                          
     def make_fusions(self):
         # Get all deckNames from the database
@@ -117,9 +133,9 @@ def create_fusion(dataChunks):
             fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G)
             fusionData['graph'] = fusionGraphDict
 
-            operations.append(UpdateOne({'_id': fusionId}, {'$set': fusionData}, upsert=True))
+            operations.append(UpdateOne({'_id': fusionId}, {'$set': fusionData}, upsert=True))            
 
     if operations and dbmgr:
         dbmgr.bulk_write('Fusion', operations)
     
-    return len(operations)
+    return len(dataChunk) #len(operations)

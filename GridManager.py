@@ -1,12 +1,8 @@
-from ctypes import alignment
 from datetime import datetime
-from gc import collect
-from unittest.mock import Base
 import pandas as pd
 import qgrid
 import ipywidgets as widgets
-from IPython.display import display, clear_output, HTML
-from CardLibrary import Forgeborn
+#from IPython.display import display, clear_output, HTML
 import GlobalVariables as gv
 
 from DataSelectionManager import DataSelectionManager
@@ -221,7 +217,7 @@ class GridManager:
 
 class BaseGrid:
     def __init__(self, identifier, df, options=None):
-        print(f"BaseGrid::__init__() - Creating BaseGrid with identifier {identifier} -> options = {options}")
+        #print(f"BaseGrid::__init__() - Creating BaseGrid with identifier {identifier} -> options = {options}")
         self.identifier = identifier
         self.df_versions = {
             'default': df.copy(),
@@ -279,7 +275,7 @@ class BaseGrid:
 
 class QGrid(BaseGrid):
     def create_main_widget(self, df):
-        print(f"QGrid::create_main_widget() - Creating QGrid -> column_definitions = {self.grid_options.get('column_definitions', {})}")
+        #print(f"QGrid::create_main_widget() - Creating QGrid -> column_definitions = {self.grid_options.get('column_definitions', {})}")
         self.main_widget = qgrid.show_grid(
             df,
             column_options=self.grid_options.get('column_options', {}),
@@ -400,8 +396,9 @@ class FilterGrid:
             elif column == 'Active':  # Assume these are multi-select fields and join their values
                 df.at[new_row_index, 'Active'] = True
             elif column == 'Forgeborn Ability':
-                fb_ability = self.selection_widgets[column].value
-                df.at[new_row_index, column] = fb_ability.split(' : ')[1] if fb_ability else ''
+                fb_ability_list = self.selection_widgets[column].value
+                fb_ability_list = [fb_ability.split(' : ')[1] for fb_ability in fb_ability_list]
+                df.at[new_row_index, column] = ';'.join(fb_ability_list)
             else:
                 df.at[new_row_index, column] = '; '.join(self.selection_widgets[column].value)
 
@@ -477,7 +474,7 @@ class FilterGrid:
             'Creature': self.create_cardType_names_selector('Creature', options={'border': '1px solid green'}),
             'op2': widgets.Dropdown(options=['', 'AND', 'OR'], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center')),
             'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),            
-            'Forgeborn Ability': widgets.Dropdown(options=[''] + get_forgeborn_abilities(), description='', layout=widgets.Layout(width='250px', border='1px solid orange', align_items='center', justify_content='center')),
+            'Forgeborn Ability': widgets.SelectMultiple(options=[''] + get_forgeborn_abilities(), description='', layout=widgets.Layout(width='300px', border='1px solid orange', align_items='center', justify_content='center')),
             'Data Set': widgets.Dropdown(
                 options=data_selection_sets.keys(),
                 description='',
@@ -622,11 +619,11 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
 
         # Apply the remaining filters in the loop
         for i, filter_type in enumerate(['Creature', 'Spell', 'Forgeborn Ability'], start=1):
-            operator = 'OR'
-            
+            operator = ''
             if f'op{i}' in filter_row:
                 operator = filter_row[f'op{i}']
             
+            filter_fields = ['cardTitles'] 
             if filter_type == 'Forgeborn Ability': 
                 filter_fields = ['FB2', 'FB3', 'FB4'] 
                 operator = 'AND'            
@@ -737,21 +734,21 @@ class DynamicGridManager:
                 filter_widget = None
                 grid_widget  = None 
 
-                if data_set_type == 'Multi Index':
-                    multi_index_df = MultiIndexDataFrame()
-                    multi_index_df.read_dataframe("test/multiindex.csv")
-                    multi_index_df.transpose_and_prepare_df()
-                    filter_widget, grid_widget = multi_index_df.getWidgets()
-                else:    
-                    grid_identifier = f"filtered_grid_{index}"
-                    grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options)
-                    
-                    filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
-                    filter_row_widget.layout = widgets.Layout(height='70px') #, border='1px solid blue')
+                #if data_set_type == 'Multi Index':
+                #    multi_index_df = MultiIndexDataFrame()
+                #    multi_index_df.read_dataframe("test/multiindex.csv")
+                #    multi_index_df.transpose_and_prepare_df()
+                #    filter_widget, grid_widget = multi_index_df.getWidgets()
+                #else:    
+                grid_identifier = f"filtered_grid_{index}"
+                grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options)
+                
+                filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
+                filter_row_widget.layout = widgets.Layout(height='70px') #, border='1px solid blue')
 
-                    filter_widget = filter_row_widget
-                    grid_widget = grid.get_grid_box()
-                    
+                filter_widget = filter_row_widget
+                grid_widget = grid.get_grid_box()
+                
                 self.grid_layout[index, 0] = widgets.VBox([filter_widget, grid_widget], layout=widgets.Layout(border='1px solid red'))
         
         # After updating, reassign children to trigger update

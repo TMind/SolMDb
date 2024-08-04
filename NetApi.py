@@ -1,11 +1,11 @@
 import requests
 import json
-from UniversalLibrary import UniversalLibrary
-from CardLibrary import Fusion
-from typing import List, Tuple, Dict
-#from tqdm import tqdm
+#from UniversalLibrary import UniversalLibrary
+#from CardLibrary import Fusion
+#from typing import List, Tuple, Dict
 #from tqdm.notebook import tqdm
 import GlobalVariables as gv 
+
 
 class NetApi:
 
@@ -35,11 +35,10 @@ class NetApi:
             all_decks = pageData['Items']                        
             total = pageData['Count']
 
-
 #            with tqdm(total=total, initial=pageData['Count'], desc="Fetching Data", colour='YELLOW') as pbar:
-            gv.load_progress.max = total 
+            gv.update_progress('Fetching Data', 0, pageData['Count'])
+            #gv.intProgressBar.max = total             
             #gv.load_progress.n = pageData['Count']
- 
  
             while 'LastEvaluatedKey' in pageData and lastPK != pageData['LastEvaluatedKey']['PK']:
                 lastPK = pageData['LastEvaluatedKey']['PK']            
@@ -56,9 +55,10 @@ class NetApi:
                 all_decks.extend(pageData['Items'])
                 records_fetched = pageData['Count']                
 
-                if gv.load_progress.value + records_fetched > gv.load_progress.max:
-                    gv.load_progress.max += records_fetched
-                gv.load_progress.value = records_fetched
+                gv.update_progress('Fetching Data', records_fetched, total)
+                #if gv.intProgressBar.value + records_fetched > gv.intProgressBar.max:
+                #    gv.intProgressBar.max += records_fetched
+                #gv.intProgressBar.value = records_fetched
 
             if 'error' in pageData:
                 print(f"Error in response: {pageData['error']}")

@@ -1,10 +1,8 @@
-from ast import Global
+from itertools import count
 import os, time, re
 import ipywidgets as widgets
-from numpy import isin
 from pyvis.network import Network
 import networkx as nx
-from tqdm.notebook import tqdm
 
 import GlobalVariables
 from CardLibrary import Deck, FusionData, Fusion
@@ -15,7 +13,8 @@ from MyGraph import MyGraph
 from NetApi import NetApi
 
 from soldb import parse_arguments
-from IPython.display import display, HTML, clear_output
+from IPython.display import display, HTML
+from tqdm.notebook import tqdm
 
 from Synergy import SynergyTemplate
 import pandas as pd
@@ -76,7 +75,7 @@ deckCollection = None
 factionToggles = []
 dropdowns = []
 factionNames = ['Alloyin', 'Nekrium', 'Tempys', 'Uterra']
-types = ['Decks', 'Fusions', 'Entities', 'Forgeborns']
+types = ['Decks', 'Fusions']
 username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
 button_load = None
 db_list = None 
@@ -111,6 +110,14 @@ all_column_definitions = {
     'FB4':              {'width': default_width},
     'FB2':              {'width': default_width},
     'FB3':              {'width': default_width},
+    'A1':               {'width': 50},
+    'H1':               {'width': 50},
+    'A2':               {'width': 50},
+    'H2':               {'width': 50},
+    'A3':               {'width': 50},
+    'H3':               {'width': 50},
+    'Creatures':        {'width': 80},
+    'Spells':           {'width': 80},
     'Beast':            {'width': 80},
     'Beast Synergy':    {'width': default_width},
     'Dinosaur':         {'width': 80},
@@ -248,16 +255,18 @@ def load_deck_data(args):
     deckCollection = DeckLibrary(net_decks, net_fusions, args.mode)
 
 ### Dataframe Generation Functions ###
-
 def generate_central_dataframe():
+    identifier = 'Central DataFrame'
     # Start with deck statistics which form the basis of the DataFrame
+    GlobalVariables.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
     deck_stats_df = generate_deck_statistics_dataframe()
-
+    
+    GlobalVariables.update_progress(identifier, 50, 100, 'Halfway there...')
     # Generate card type counts and merge them into the deck_stats_df
     card_type_counts_df = generate_cardType_count_dataframe()
     central_df = deck_stats_df.merge(card_type_counts_df, on=['name', 'faction'], how='left')
 
-    #display(central_df)
+    GlobalVariables.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
     return central_df
 
 def generate_synergy_statistics_dataframe(deck_df):
@@ -404,6 +413,7 @@ def generate_deck_content_dataframe(event = None):
 def generate_cardType_count_dataframe(existing_df=None):
     # Initialize a list to accumulate the DataFrames for each deck
     all_decks_list = []
+    identifier = 'CardType Count Data'
 
     # Get interface ids from the database 
     #interface_ids = GlobalVariables.commonDB.find('Interface', {})
@@ -411,8 +421,16 @@ def generate_cardType_count_dataframe(existing_df=None):
     #print(f'Interface IDs: {interface_ids}')
     
     # Get the cardTypes from the stats array in the database
-    for deck in GlobalVariables.myDB.find('Deck', {}):
+    deckIterator = GlobalVariables.myDB.find('Deck', {})
+    
+    # Get the number of decks in the collection
+    totalDecks = GlobalVariables.myDB.count_documents('Deck', {})
 
+    GlobalVariables.update_progress(identifier, 0, totalDecks , 'Generating CardType Count Data...')
+
+    for deck in deckIterator:
+
+        GlobalVariables.update_progress(identifier, message = f'Processing Deck: {deck["name"]}')
         deckName = deck['name']
         myDeck = Deck.load(deckName)
         myGraph = MyGraph()
@@ -486,7 +504,7 @@ def generate_cardType_count_dataframe(existing_df=None):
 
 
 # Data Handling and Transformation 
-def generate_deck_statistics_dataframe(update_progress=None):
+def generate_deck_statistics_dataframe():
 
     def get_card_titles(card_ids):
         card_titles = []
@@ -538,7 +556,7 @@ def generate_deck_statistics_dataframe(update_progress=None):
         df_decks_filtered.loc[:,column] = ''
 
     # Add additional columns to the DataFrame -> Stats
-    additional_columns_stats = ['A1', 'A2', 'A3', 'H1', 'H2', 'H3']
+    additional_columns_stats = ['A1', 'H1', 'A2', 'H2', 'A3', 'H3']
     for column in additional_columns_stats:
         df_decks_filtered.loc[:,column] = 0.0
             
@@ -570,30 +588,21 @@ def generate_deck_statistics_dataframe(update_progress=None):
         # Replace forgebornId with the forgeborn name from the database     
         df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_id[5:-3].title()
     
-    # Create a DataFrame from the fb_abilities sub-dictionary
-    iterator = 0     
+    identifier = 'Forgeborn Data'
+
+    # Create a DataFrame from the fb_abilities sub-dictionary  
     number_of_decks = GlobalVariables.myDB.count_documents('Deck', {})
-    if update_progress:
-        update_progress(0, 'Fetching Forgeborn Data...')
+    GlobalVariables.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
     for deck in GlobalVariables.myDB.find('Deck', {}) :
-        if update_progress: 
-            percentage = iterator * 100 / number_of_decks 
-            iterator += 1
-            update_progress(percentage)
-        if 'forgebornId' in deck:
-            process_deck_forgeborn(deck, df_decks_filtered)
+        GlobalVariables.update_progress(identifier, message = 'Processing Deck Forgeborn: ' + deck['name'])
+        if 'forgebornId' in deck:   process_deck_forgeborn(deck, df_decks_filtered)
 
-    if update_progress: update_progress(100, 'Finished loading')                
-
-    iterator = 0    
-    if update_progress:
-        update_progress(0, 'Generating Statistics Data...')
+    identifier = 'Stats Data' 
+    GlobalVariables.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
+    
     # Create a DataFrame from the 'stats' sub-dictionary
     for deck in GlobalVariables.myDB.find('Deck', {}):
-        if update_progress: 
-            percentage = iterator * 100 / number_of_decks 
-            iterator += 1
-            update_progress(percentage)
+        GlobalVariables.update_progress(identifier, message = 'Processing Deck Stats: ' + deck['name'])
 
         if 'stats' in deck:
             stats = deck.get('stats', {})
@@ -631,12 +640,8 @@ def generate_deck_statistics_dataframe(update_progress=None):
             # Update the corresponding row in df_decks_filtered with the stats from deck_stats_df
             df_decks_filtered.update(deck_stats_df)
 
-    if update_progress:
-        update_progress(100, 'Generating Statistics Data finished!')
     return df_decks_filtered
 
-
-#TODO: Implement a function to generate all the remaining interface data
 
 ##################
 # Event Handling #
@@ -650,21 +655,21 @@ def coll_data_on_selection_changed(event, widget):
     qm.replace_grid('deck', deck_df)    
     qm.set_default_data('deck', deck_df)
         
-def get_dataframe_apply_index_filter(source, target):
-    # Initialize a list to store the filtered rows
-    filtered_rows = []
+# def get_dataframe_apply_index_filter(source, target):
+#     # Initialize a list to store the filtered rows
+#     filtered_rows = []
 
-    # Iterate over the indices of the source DataFrame
-    for idx in source.index:
-        # Check if the index exists in the target DataFrame
-        if idx in target.index:
-            # Filter the target DataFrame for each index and add the result to the list
-            filtered_rows.append(target.loc[[idx]])
+#     # Iterate over the indices of the source DataFrame
+#     for idx in source.index:
+#         # Check if the index exists in the target DataFrame
+#         if idx in target.index:
+#             # Filter the target DataFrame for each index and add the result to the list
+#             filtered_rows.append(target.loc[[idx]])
 
-    # Concatenate all the filtered rows into a DataFrame
-    filtered_df = pd.concat(filtered_rows) if filtered_rows else pd.DataFrame()
+#     # Concatenate all the filtered rows into a DataFrame
+#     filtered_df = pd.concat(filtered_rows) if filtered_rows else pd.DataFrame()
 
-    return filtered_df
+#     return filtered_df
 
 # Function to check if any value in the column is not an empty string with regards to the changed_df of the qgrid widget
 def check_column_values(column, changed_df):
@@ -682,22 +687,22 @@ def check_column_values(column, changed_df):
 #    Where to get the original column definitions from? global_df[id(qgrid_widget)]
 #    Where to get the current column definitions from? qgrid_widget.column_definitions
 
-def update_visible_columns_on_count():
-    global qm 
+# def update_visible_columns_on_count():
+#     global qm 
 
-    zero_width_columns = []   
-    # Analyze changed DataFrame for updates
-    qgrid_widget = qm.grids['count']['main_widget']
-    changed_df = qgrid_widget.get_changed_df()
-    #print(f'Columns : {changed_df.columns}')
-    for column in changed_df.columns:  
-        # Check if column values are not just empty strings
-        if not check_column_values(column, changed_df):
-            zero_width_columns.append(column)
-            changed_df.drop(column, axis=1, inplace=True)
+#     zero_width_columns = []   
+#     # Analyze changed DataFrame for updates
+#     qgrid_widget = qm.grids['count']['main_widget']
+#     changed_df = qgrid_widget.get_changed_df()
+#     #print(f'Columns : {changed_df.columns}')
+#     for column in changed_df.columns:  
+#         # Check if column values are not just empty strings
+#         if not check_column_values(column, changed_df):
+#             zero_width_columns.append(column)
+#             changed_df.drop(column, axis=1, inplace=True)
         
-    qgrid_widget.column_definitions['index'] = {'width' : 250 }
-    qgrid_widget.df = changed_df    
+#     qgrid_widget.column_definitions['index'] = {'width' : 250 }
+#     qgrid_widget.df = changed_df    
 
 # Function to handle changes to the checkbox
 def handle_debug_toggle(change):
@@ -726,9 +731,11 @@ def handle_db_list_change(change):
 
             # Update Username Widget
             username.value = new_username  # Reflect change in username widget
+            update_deck_and_fusion_counts()
 
             # Update Interface for New Username
-            update_filter_widget()
+            #update_filter_widget()
+            
             grid_manager.refresh_gridbox(change)
         else:
             print('No valid database selected.')
@@ -748,17 +755,23 @@ def reload_data_on_click(button, value):
                      '--mode', 'update']
         print(f'Loading Decks with arguments {arguments}')
         args = parse_arguments(arguments)
-        load_deck_data(args)
+     
     elif value == 'Fusions':
         arguments = ['--username', username_value,
                      '--mode', 'update',
                      '--type', 'fuseddeck']
         print(f'Loading Fusions with arguments {arguments}')
-        args = parse_arguments(arguments)
-        load_deck_data(args)
-    elif value == 'Entities':
-        myUCL._read_entities_from_csv(os.path.join('csv', 'sff.csv'))
+        args = parse_arguments(arguments)    
+    #elif value == 'Entities':
+    #    myUCL._read_entities_from_csv(os.path.join('csv', 'sff.csv'))
+    elif value == 'Make Fusions':
+        arguments = ['--username', username_value,
+                     '--mode', 'make',
+                     '--type', 'fuseddeck']
+        print(f'Loading Fusions with arguments {arguments}')
+        args = parse_arguments(arguments)   
 
+    load_deck_data(args)
     # Refresh db_list widget
     db_names = GlobalVariables.myDB.mdb.client.list_database_names()
     valid_db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
@@ -801,55 +814,55 @@ def display_graph_on_click(button):
                 display(net.show(f'{deck.name}.html'))
         
 
-def update_filter_widget(change=None):
-    global cardTypes_names_widget
+# def update_filter_widget(change=None):
+#     global cardTypes_names_widget
     
-    # Get values of both widgets
-    widget_values = {cardTypesString: cardType_widget.value for cardTypesString, cardType_widget in cardTypes_names_widget.items()}
+#     # Get values of both widgets
+#     widget_values = {cardTypesString: cardType_widget.value for cardTypesString, cardType_widget in cardTypes_names_widget.items()}
 
-    if not change or all(value == '' for value in widget_values.values()):    
-        # If no change is passed or both values are '' , update both widgets
-        for cardTypesString, cardType_widget in cardTypes_names_widget.items():
-            if cardType_widget:
-                new_options = []
-                for cardType in cardTypesString.split('/'):
-                    new_options = new_options + get_cardType_entity_names(cardType)                
-                cardType_widget.options = [''] + new_options
-    else:
-        # If a change is passed, update the other widget
-        changed_widget = change['owner']  
-        if change['new'] == '':             
-            # Get the value of the other widget from the already fetched values
-            for cardTypesString, cardType_widget in cardTypes_names_widget.items():
-                if cardType_widget and cardType_widget != changed_widget:                    
-                    change['new'] = widget_values[cardTypesString]
-                    change['owner'] = cardType_widget                        
-            update_filter_widget(change)            
-        else:
-            for cardTypesString, cardType_widget in cardTypes_names_widget.items():
-                if cardType_widget and cardType_widget != changed_widget and cardType_widget.value == '':                
-                    new_options = []
-                    for cardType in cardTypesString.split('/'):
-                        new_options = new_options + get_cardType_entity_names(cardType)           
-                    new_options = filter_options(change['new'], new_options)  # Filter the options                         
-                    cardType_widget.options = [''] + new_options    
+#     if not change or all(value == '' for value in widget_values.values()):    
+#         # If no change is passed or both values are '' , update both widgets
+#         for cardTypesString, cardType_widget in cardTypes_names_widget.items():
+#             if cardType_widget:
+#                 new_options = []
+#                 for cardType in cardTypesString.split('/'):
+#                     new_options = new_options + get_cardType_entity_names(cardType)                
+#                 cardType_widget.options = [''] + new_options
+#     else:
+#         # If a change is passed, update the other widget
+#         changed_widget = change['owner']  
+#         if change['new'] == '':             
+#             # Get the value of the other widget from the already fetched values
+#             for cardTypesString, cardType_widget in cardTypes_names_widget.items():
+#                 if cardType_widget and cardType_widget != changed_widget:                    
+#                     change['new'] = widget_values[cardTypesString]
+#                     change['owner'] = cardType_widget                        
+#             update_filter_widget(change)            
+#         else:
+#             for cardTypesString, cardType_widget in cardTypes_names_widget.items():
+#                 if cardType_widget and cardType_widget != changed_widget and cardType_widget.value == '':                
+#                     new_options = []
+#                     for cardType in cardTypesString.split('/'):
+#                         new_options = new_options + get_cardType_entity_names(cardType)           
+#                     new_options = filter_options(change['new'], new_options)  # Filter the options                         
+#                     cardType_widget.options = [''] + new_options    
     
 
-def filter_options(value, options):
-    # First get all card names from the database
-    cards = GlobalVariables.myDB.find('Card', {})
-    cardNames = [card['name'] for card in cards]
+# def filter_options(value, options):
+#     # First get all card names from the database
+#     cards = GlobalVariables.myDB.find('Card', {})
+#     cardNames = [card['name'] for card in cards]
 
-    # Filter all cardnames where value is a substring of 
-    filtered_cardNames = [cardName for cardName in cardNames if value in cardName]
+#     # Filter all cardnames where value is a substring of 
+#     filtered_cardNames = [cardName for cardName in cardNames if value in cardName]
 
-    # Filter all filtered_options that are a substring of any card name
-    filtered_options = [option for option in options if any(option in cardName for cardName in filtered_cardNames)]
+#     # Filter all filtered_options that are a substring of any card name
+#     filtered_options = [option for option in options if any(option in cardName for cardName in filtered_cardNames)]
     
-    # That should leave us with the options that are a substring of any card name and contain the value as a substring
+#     # That should leave us with the options that are a substring of any card name and contain the value as a substring
     
-    #print(f'Filtered options for {value}: {filtered_options}')
-    return filtered_options
+#     #print(f'Filtered options for {value}: {filtered_options}')
+#     return filtered_options
     
 
 
@@ -969,14 +982,27 @@ def create_database_selection_widget():
 
     return db_list
 
+count_display = widgets.Label(value='Deck / Fusion counts will be displayed here.')
+
+def update_deck_and_fusion_counts():
+    global count_display
+    # Ensure we are querying the right database based on the selected username
+    db_manager = GlobalVariables.myDB
+    deck_count = db_manager.count_documents('Deck', {})
+    fusion_count = db_manager.count_documents('Fusion', {})
+    
+    # Update the display widget with the new counts
+    if count_display:
+        count_display.value = f"Decks: {deck_count}, Fusions: {fusion_count}"
+    else:
+        print(f"Decks: {deck_count}, Fusions: {fusion_count}")
+
 ############################
 # Setup and Initialization #
 ############################
 import json
 def setup_interface():
-    global db_list, username, button_load, card_title_widget, \
-        qg_coll_options, qg_count_options, qg_syn_options, \
-        grid_manager, qm, data_generation_functions
+    global db_list, button_load, card_title_widget, grid_manager
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
@@ -989,7 +1015,7 @@ def setup_interface():
 
     # Toggle buttons to select load items
     loadToggle = widgets.ToggleButtons(
-        options=types,
+        options=['Decks', 'Fusions'],
         description='Reload:',
         disabled=False,
         button_style='', # 'success', 'info', 'warning', 'danger' or ''
@@ -1023,7 +1049,8 @@ def setup_interface():
 
     # Create a progress bar widget
     #if not GlobalVariables.debug : 
-    GlobalVariables.load_progress = widgets.IntProgress(value=0, min=0, max=100, description='Initialised!', bar_style='info', style={'bar_color': 'lightblue'})
+    #GlobalVariables.intProgressBar = widgets.IntProgress(value=0, min=0, max=100, description='Initialised!', bar_style='info', 
+    #                                                     style={'bar_color': 'lightblue', 'description_width' : '350px'}, layout=widgets.Layout(width='25%'))
 
     
     # Create an instance of the manager
@@ -1037,9 +1064,9 @@ def setup_interface():
             print('Deck Tab selected')
 
     templateGrid = TemplateGrid()
-    
+
     # Create the Tab widget with children
-    db_tab   = widgets.VBox([loadToggle, button_load, username, db_list])
+    db_tab   = widgets.VBox([loadToggle, button_load, count_display, username, db_list])
     deck_tab = widgets.VBox([grid_manager.get_ui()])  # , qm_gridbox])
     fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph])
     debug_tab = widgets.VBox([debug_toggle, out_debug])
@@ -1054,7 +1081,11 @@ def setup_interface():
 
     tab.observe(on_tab_change, names='selected_index')
 
-    tab.selected_index = 1
+    tab.selected_index = 0
+    display(tab)
+
+    #GlobalVariables.tqdmBar = tqdm(total=100, desc='Loading...', bar_format='{desc}: {percentage:3.0f}% {bar}')
     
     # Display the Tab widget
-    display(tab)
+    #display(GlobalVariables.intProgressBar)
+    

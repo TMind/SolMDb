@@ -22,7 +22,7 @@ from GridManager import GridManager, get_cardType_entity_names, DynamicGridManag
 from icecream import ic
 ic.disable()
 
-pd.set_option('future.no_silent_downcasting', True)
+#pd.set_option('future.no_silent_downcasting', True)
 
 # Custom CSS style
 
@@ -261,9 +261,17 @@ def load_deck_data(args):
     deckCollection = DeckLibrary(net_decks, net_fusions, args.mode)
     return deckCollection
 
+user_dataframes = {}
+
 ### Dataframe Generation Functions ###
 def generate_central_dataframe():
-    identifier = 'Central DataFrame'
+    # Get the current username from the global variables
+    username = GlobalVariables.username
+    identifier = f"Main DataFrame: {username}"
+
+    if username in user_dataframes:
+        return user_dataframes[username]
+
     # Start with deck statistics which form the basis of the DataFrame
     GlobalVariables.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
     deck_stats_df = generate_deck_statistics_dataframe()
@@ -271,67 +279,59 @@ def generate_central_dataframe():
     GlobalVariables.update_progress(identifier, 50, 100, 'Halfway there...')
     # Generate card type counts and merge them into the deck_stats_df
     card_type_counts_df = generate_cardType_count_dataframe()
-    central_df = deck_stats_df.merge(card_type_counts_df, on=['name', 'faction'], how='left')
+    #central_df = deck_stats_df.merge(card_type_counts_df, on=['name', 'faction'], how='left')
+    central_df = deck_stats_df.merge(card_type_counts_df, left_index=True, right_index=True, how='left')
 
     fusion_stats_df = generate_fusion_statistics_dataframe()
 
     # Append the fusion_stats_df to the central_df
-    central_df = pd.concat([central_df, fusion_stats_df], ignore_index=True)
-
+    central_df = pd.concat([central_df, fusion_stats_df])
+    
+    # Reset the index to move the index to the 'name' column
+    central_df.reset_index(inplace=True)
+    
     GlobalVariables.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
+
+    # Store the central_df in the user_dataframes dictionary
+    user_dataframes[username] = central_df.copy()
+
     return central_df
 
-def generate_synergy_statistics_dataframe(deck_df):
-    global synergy_template
-    #Start with an empty dataframe
-    synergy_df = pd.DataFrame()
-
-    #Get the tags from the synergy_template
-    input_tags = list(synergy_template.get_input_tags())
-    output_tags = list(synergy_template.get_output_tags())
-
-    tags = input_tags + output_tags
-
-    synergy_df['tag'] = tags
-
-    # Now add columns for each deck from the statistics dataframe 
-    if 'name' in deck_df.columns:
-        decklist = deck_df['name']
-
-        # Create a DataFrame with column names as keys and 0 as values
-        new_columns_df = pd.DataFrame(0, columns=decklist, index=synergy_df.index, dtype=float)    
-        # Assuming `df` is your DataFrame and `column` is the name of the column you want to downcast
-        #synergy_df[column] = df[column].fillna(0).astype(int)
-        # Concatenate the original DataFrame with the new columns DataFrame
-        synergy_df = pd.concat([synergy_df, new_columns_df], axis=1)
-
-    return synergy_df
-
 from CardLibrary import Forgeborn, ForgebornData
-def process_deck_forgeborn(deck, df_decks_filtered):        
-    forgeborn_id = deck['forgebornId']
-    forgebornId = forgeborn_id[:-3]
-    if forgebornId.startswith('a'):
-        forgebornId = 's' + forgebornId[1:]
-    # Get Forgeborn from the database
-    forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
-    # Check if forgeborn_data is None and handle the error
-    if forgeborn_data is None:
-        with out_debug:
+def process_deck_forgeborn(item_name, forgebornId_key, df):
+    try:
+        if item_name not in df.index:
+            display(df)
+            print(f"Fusion name '{item_name}' not found in DataFrame index.")
+            return
+        if forgebornId_key not in df.columns:
+            print(f"ForgebornId key '{forgebornId_key}' not found in DataFrame columns.")
+            return
+        forgeborn_id = df.loc[item_name, forgebornId_key]
+        forgebornId = forgeborn_id[:-3]
+        if forgebornId.startswith('a'):
+            forgebornId = 's' + forgebornId[1:]
+        forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
+        if forgeborn_data is None:
             print(f'No data found for forgebornId: {forgebornId}')
-        return
-    fb_data = ForgebornData(**forgeborn_data)
-    forgeborn = Forgeborn(data=fb_data)
-    unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
-    forgeborn_abilities = unique_forgeborn.abilities
-
-    if forgeborn_abilities:
-        for aID, aName in forgeborn_abilities.items():
-            cycle = aID[-3]
-            df_decks_filtered.loc[deck['name'], f'FB{cycle}'] = aName
-
-    # Replace forgebornId with the forgeborn name from the database     
-    df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_id[5:-3].title()
+            return
+        fb_data = ForgebornData(**forgeborn_data)
+        forgeborn = Forgeborn(data=fb_data)
+        unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
+        forgeborn_abilities = unique_forgeborn.abilities
+        if forgeborn_abilities:
+            for aID, aName in forgeborn_abilities.items():
+                cycle = aID[-3]
+                df.loc[item_name, f'FB{cycle}'] = aName
+        df.loc[item_name, 'forgebornId'] = forgeborn_id[5:-3].title()
+    except KeyError as e:
+        print(f"KeyError: {e}")
+        print(f"Index: {item_name}, ForgebornId key: {forgebornId_key}")
+        print(df.head())
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        print(f"Index: {item_name}, ForgebornId key: {forgebornId_key}")
+        print(df.head())
 
 def generate_deck_content_dataframe(event = None):
     global deck_selection_widget
@@ -488,9 +488,6 @@ def generate_cardType_count_dataframe(existing_df=None):
             # Combine interface_ids_df and cardType_df
             cardType_df = cardType_df.combine_first(interface_ids_df)
 
-            # Sort the columns by their names
-            #cardType_df = cardType_df.sort_index(axis=1)
-
             # Add 'faction' column to cardType_df
             cardType_df['faction'] = deck.get('faction', 'None')  # Replace 'Unknown' with a default value if 'faction' is not in deck
 
@@ -534,8 +531,8 @@ def generate_cardType_count_dataframe(existing_df=None):
     # Insert the 'faction' column to the second position
     numeric_df.insert(0, 'faction', faction_df)
 
-    numeric_df.reset_index(inplace=True)
-    numeric_df.rename(columns={'index': 'name'}, inplace=True)
+    #numeric_df.reset_index(inplace=True)
+    #numeric_df.rename(columns={'index': 'name'}, inplace=True)
 
     #display(numeric_df)
     return numeric_df
@@ -551,20 +548,37 @@ def generate_fusion_statistics_dataframe():
 
         return item_names
         
-
+    # Fetch fusion data
     fusion_cursor = GlobalVariables.myDB.find('Fusion', {})
     
+    # Convert cursor to DataFrame
     df_fusions = pd.DataFrame(list(fusion_cursor))
-    df_fusions_filtered = df_fusions[[ 'id', 'name','currentForgebornId', 'ForgebornIds', 'myDecks', 'CreatedAt', 'deckRank', 'children_data', 'graph' ]].copy()
+    df_fusions_filtered = df_fusions[['name', 'CreatedAt', 'deckRank', 'children_data']].copy()
     df_fusions_filtered['type'] = 'Fusion'
-    df_fusions_filtered['Deck A'] = df_fusions_filtered['children_data'].apply(lambda x: get_items_from_child_data(x, 'CardLibrary.Deck')[0])
-    df_fusions_filtered['Deck B'] = df_fusions_filtered['children_data'].apply(lambda x: get_items_from_child_data(x, 'CardLibrary.Deck')[1])
-    df_fusions_filtered['forgebornId'] = df_fusions_filtered['children_data'].apply(lambda x: get_items_from_child_data(x, 'CardLibrary.Forgeborn')[0])
 
-    df_fusions_filtered['forgebornId'] = df_fusions_filtered['forgebornId'].apply(lambda x: x[5:-3].replace('-', ' ').title())
+    df_fusions_filtered.set_index('name', inplace=True)
 
-    #df_fusions_filtered = df_fusions_filtered.fillna(0).astype(int)
-    #df_fusions_filtered = df_fusions_filtered.astype(str).replace('NaN', '')
+    # Add new columns for Deck A, Deck B, and forgebornId
+    df_fusions_filtered['Deck A'] = None
+    df_fusions_filtered['Deck B'] = None
+    df_fusions_filtered['forgebornId'] = None
+
+    # Assign values before setting index
+    for fusion_data in df_fusions.itertuples():
+        fusion_name = fusion_data.name
+        decks = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Deck')
+        forgeborns = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Forgeborn')
+
+        if len(decks) > 1:
+            df_fusions_filtered.loc[fusion_name, 'Deck A'] = decks[0]
+            df_fusions_filtered.loc[fusion_name, 'Deck B'] = decks[1]
+        if forgeborns:
+            df_fusions_filtered.loc[fusion_name, 'forgebornId'] = forgeborns[0]
+
+    # Call process_deck_forgeborn for each fusion
+    for fusion_data in df_fusions.itertuples():
+        process_deck_forgeborn(fusion_data.name, 'forgebornId', df_fusions_filtered)
+
     return df_fusions_filtered
 
 # Data Handling and Transformation 
@@ -585,7 +599,7 @@ def generate_deck_statistics_dataframe():
     #try:
     deck_cursor = GlobalVariables.myDB.find('Deck', {})        
     df_decks = pd.DataFrame(list(deck_cursor))
-    df_decks_filtered = df_decks[[ 'registeredDate', 'UpdatedAt', 'pExpiry', 'name', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId']].copy()
+    df_decks_filtered = df_decks[[ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId']].copy()
     df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
     df_decks_filtered['type'] = 'Deck'
 
@@ -635,7 +649,7 @@ def generate_deck_statistics_dataframe():
     GlobalVariables.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
     for deck in GlobalVariables.myDB.find('Deck', {}) :
         GlobalVariables.update_progress(identifier, message = 'Processing Deck Forgeborn: ' + deck['name'])
-        if 'forgebornId' in deck:   process_deck_forgeborn(deck, df_decks_filtered)
+        if 'forgebornId' in deck:   process_deck_forgeborn(deck['name'], 'forgebornId', df_decks_filtered)
 
     identifier = 'Stats Data' 
     GlobalVariables.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
@@ -1100,10 +1114,6 @@ def setup_interface():
     # Update the filter grid on db change
     db_list.observe(grid_manager.filterGridObject.update_selection_content)
 
-    def on_tab_change(index):
-        if index == 1:
-            print('Deck Tab selected')
-
     templateGrid = TemplateGrid()
 
     # Create the Tab widget with children
@@ -1120,9 +1130,7 @@ def setup_interface():
     tab.set_title(3, 'Graphs')
     tab.set_title(4, 'Debug')
 
-    tab.observe(on_tab_change, names='selected_index')
-
-    tab.selected_index = 0
+    tab.selected_index = 1
     display(tab)
 
     #GlobalVariables.tqdmBar = tqdm(total=100, desc='Loading...', bar_format='{desc}: {percentage:3.0f}% {bar}')

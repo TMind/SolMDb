@@ -523,6 +523,7 @@ class FilterGrid:
             pandas.DataFrame: The initial dataframe.
         """
         return pd.DataFrame({
+            'Type': ['Deck'],
             'Modifier': [''],
             'op1': [''],
             'Creature': [''],
@@ -648,6 +649,11 @@ class FilterGrid:
     def create_selection_box(self):
         # Define widgets with their layout settings
         widgets_dict = {
+            'Type': widgets.Dropdown(
+                options=['Deck', 'Fusion'],
+                description='',
+                layout=widgets.Layout(width='75px', border='2px solid cyan', align_items='center', justify_content='center')
+            ),
             'Modifier': self.create_cardType_names_selector('Modifier', options={'border': '1px solid blue'}),
             'op1': widgets.Dropdown(options=['', 'AND', 'OR', '+'], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center', margin='5px')),
             'Creature': self.create_cardType_names_selector('Creature', options={'border': '1px solid green'}),
@@ -659,7 +665,6 @@ class FilterGrid:
                 description='',
                 layout=widgets.Layout(width='150px', border='1px solid purple', align_items='center', justify_content='center')
             ),
-            #'Active': widgets.Checkbox(value=True, description='', layout=widgets.Layout(width='100px', height='auto', align_items='center', justify_content='center'))  # Added label and alignment
         }
 
         # Create widget row first and add a fixed-width spacer
@@ -758,37 +763,6 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
             current_filter_results = df[substring_check_results].copy()
 
             return current_filter_results   
-        def apply_filter_old(df, substrings):
-            substring_check_results = []
-
-            if not substrings:
-                return df
-
-            #print(f"Applying filter {substrings} to DataFrame")
-            #display(df)
-            # Iterate over the 'cardTitles' column            
-            # for title in df['cardTitles']:
-            #     # Check if any of the substrings are in the title
-            #     for substring in substrings:
-            #         if substring in title:
-            #             substring_check_results.append(True)
-            #             break
-            #     else:
-            #         substring_check_results.append(False)   
-
-            substring_check_results = [any(substring.lower() in title.lower() for substring in substrings) for title in df['cardTitles']]
-            
-            # Convert the list to a pandas Series
-            substring_check_results = pd.Series(substring_check_results, index=df.index)
-
-            # Assign the results to filtered_indices
-            #filtered_indices = substring_check_results
-            #true_indices = filtered_indices[filtered_indices].index
-            #print(f"True indices for filter {substrings}: {list(true_indices)}")
-
-            current_filter_results = df[substring_check_results].copy()
-
-            return current_filter_results
 
         # Apply the first filter outside the loop
         df_filtered = df_to_filter
@@ -797,7 +771,7 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
             df_filtered = apply_filter(df, substrings)
 
         # Apply the remaining filters in the loop
-        for i, filter_type in enumerate(['Creature', 'Spell', 'Forgeborn Ability'], start=1):
+        for i, filter_type in enumerate(['Type', 'Creature', 'Spell', 'Forgeborn Ability'], start=1):
             operator = ''
             if f'op{i}' in filter_row:
                 operator = filter_row[f'op{i}']
@@ -806,6 +780,10 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
             if filter_type == 'Forgeborn Ability': 
                 filter_fields = ['FB2', 'FB3', 'FB4'] 
                 operator = 'AND'            
+
+            if filter_type == 'Type':
+                filter_fields = ['type']
+                operator = 'AND'
 
             previous_substrings = substrings
             substrings = re.split(r'\s*;\s*', filter_row[filter_type]) if filter_row[filter_type] else []

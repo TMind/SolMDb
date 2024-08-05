@@ -7,13 +7,18 @@ RUN wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add -
     && apt-get update \
     && apt-get install -y mongodb-org
 
-# Start MongoDB service (optional: consider starting it manually based on your workflow)
+# Hold packages to prevent unintended upgrades
 RUN echo "mongodb-org hold" | dpkg --set-selections \
     && echo "mongodb-org-server hold" | dpkg --set-selections \
     && echo "mongodb-org-shell hold" | dpkg --set-selections \
     && echo "mongodb-org-mongos hold" | dpkg --set-selections \
-    && echo "mongodb-org-tools hold" | dpkg --set-selections \
-    && service mongod start
+    && echo "mongodb-org-tools hold" | dpkg --set-selections
 
-# Optionally enable MongoDB to start automatically
-RUN systemctl enable mongod
+# Create a custom entrypoint script
+RUN echo '#!/bin/bash' > /usr/local/bin/start-mongo.sh \
+    && echo 'mongod --fork --logpath /var/log/mongod.log --config /etc/mongod.conf' >> /usr/local/bin/start-mongo.sh \
+    && echo 'tail -f /dev/null' >> /usr/local/bin/start-mongo.sh \
+    && chmod +x /usr/local/bin/start-mongo.sh
+
+# Set the container to run the MongoDB starter script by default
+CMD ["/usr/local/bin/start-mongo.sh"]

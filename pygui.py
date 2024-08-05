@@ -1,4 +1,3 @@
-from itertools import count
 import os, time, re
 import ipywidgets as widgets
 from pyvis.network import Network
@@ -97,6 +96,9 @@ default_width = 150
 all_column_definitions = {
     'index':            {'width': 50},
     'name':             {'width': 250},
+    'type':             {'width': 60},
+    'Deck A':           {'width': 250},
+    'Deck B':           {'width': 250},
     'registeredDate':   {'width': 200},
     'UpdatedAt':        {'width': 200},
     'xp':               {'width': 50},
@@ -216,7 +218,7 @@ sys.stderr = StdErrRedirector(out_debug)
 ######################
 
 def fetch_network_decks(args, myApi):
-    print(f'Fetching Network Decks with args: {args}')
+    #print(f'Fetching Network Decks with args: {args}')
     if args.id:
         urls = args.id.split('\n')
         pattern = r'\/([^\/]+)$'        
@@ -243,16 +245,21 @@ def fetch_network_decks(args, myApi):
         return net_data
     
 def load_deck_data(args):
+    global deckCollection
     net_decks = []
     net_fusions = []
 
-    myApi = NetApi(myUCL)                    
-    net_results = fetch_network_decks(args, myApi)            
+    myApi = NetApi(myUCL)                   
+    types = args.type.split(',')
+    for type in types:
+        args.type = type
+        net_results = fetch_network_decks(args, myApi)            
         
-    if args.type == 'deck':     net_decks = net_results
-    elif args.type == 'fuseddeck': net_fusions = net_results
+        if args.type == 'deck':     net_decks = net_results
+        elif args.type == 'fuseddeck': net_fusions = net_results
         
     deckCollection = DeckLibrary(net_decks, net_fusions, args.mode)
+    return deckCollection
 
 ### Dataframe Generation Functions ###
 def generate_central_dataframe():
@@ -265,6 +272,11 @@ def generate_central_dataframe():
     # Generate card type counts and merge them into the deck_stats_df
     card_type_counts_df = generate_cardType_count_dataframe()
     central_df = deck_stats_df.merge(card_type_counts_df, on=['name', 'faction'], how='left')
+
+    fusion_stats_df = generate_fusion_statistics_dataframe()
+
+    # Append the fusion_stats_df to the central_df
+    central_df = pd.concat([central_df, fusion_stats_df], ignore_index=True)
 
     GlobalVariables.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
     return central_df
@@ -294,6 +306,32 @@ def generate_synergy_statistics_dataframe(deck_df):
         synergy_df = pd.concat([synergy_df, new_columns_df], axis=1)
 
     return synergy_df
+
+from CardLibrary import Forgeborn, ForgebornData
+def process_deck_forgeborn(deck, df_decks_filtered):        
+    forgeborn_id = deck['forgebornId']
+    forgebornId = forgeborn_id[:-3]
+    if forgebornId.startswith('a'):
+        forgebornId = 's' + forgebornId[1:]
+    # Get Forgeborn from the database
+    forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
+    # Check if forgeborn_data is None and handle the error
+    if forgeborn_data is None:
+        with out_debug:
+            print(f'No data found for forgebornId: {forgebornId}')
+        return
+    fb_data = ForgebornData(**forgeborn_data)
+    forgeborn = Forgeborn(data=fb_data)
+    unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
+    forgeborn_abilities = unique_forgeborn.abilities
+
+    if forgeborn_abilities:
+        for aID, aName in forgeborn_abilities.items():
+            cycle = aID[-3]
+            df_decks_filtered.loc[deck['name'], f'FB{cycle}'] = aName
+
+    # Replace forgebornId with the forgeborn name from the database     
+    df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_id[5:-3].title()
 
 def generate_deck_content_dataframe(event = None):
     global deck_selection_widget
@@ -502,6 +540,32 @@ def generate_cardType_count_dataframe(existing_df=None):
     #display(numeric_df)
     return numeric_df
 
+def generate_fusion_statistics_dataframe():
+
+    def get_items_from_child_data(children_data, item_type):
+        # Children data is a dictionary that contains the deck names as keys, where the value is the object type CardLibrary.Deck 
+        item_names = []
+        for name, data_type in children_data.items():
+            if data_type == item_type:
+                item_names.append(name)
+
+        return item_names
+        
+
+    fusion_cursor = GlobalVariables.myDB.find('Fusion', {})
+    
+    df_fusions = pd.DataFrame(list(fusion_cursor))
+    df_fusions_filtered = df_fusions[[ 'id', 'name','currentForgebornId', 'ForgebornIds', 'myDecks', 'CreatedAt', 'deckRank', 'children_data', 'graph' ]].copy()
+    df_fusions_filtered['type'] = 'Fusion'
+    df_fusions_filtered['Deck A'] = df_fusions_filtered['children_data'].apply(lambda x: get_items_from_child_data(x, 'CardLibrary.Deck')[0])
+    df_fusions_filtered['Deck B'] = df_fusions_filtered['children_data'].apply(lambda x: get_items_from_child_data(x, 'CardLibrary.Deck')[1])
+    df_fusions_filtered['forgebornId'] = df_fusions_filtered['children_data'].apply(lambda x: get_items_from_child_data(x, 'CardLibrary.Forgeborn')[0])
+
+    df_fusions_filtered['forgebornId'] = df_fusions_filtered['forgebornId'].apply(lambda x: x[5:-3].replace('-', ' ').title())
+
+    #df_fusions_filtered = df_fusions_filtered.fillna(0).astype(int)
+    #df_fusions_filtered = df_fusions_filtered.astype(str).replace('NaN', '')
+    return df_fusions_filtered
 
 # Data Handling and Transformation 
 def generate_deck_statistics_dataframe():
@@ -523,6 +587,8 @@ def generate_deck_statistics_dataframe():
     df_decks = pd.DataFrame(list(deck_cursor))
     df_decks_filtered = df_decks[[ 'registeredDate', 'UpdatedAt', 'pExpiry', 'name', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId']].copy()
     df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
+    df_decks_filtered['type'] = 'Deck'
+
     #except:
     #print('Error reading decks from the database. Try reloading the data.')
     #return pd.DataFrame()
@@ -561,32 +627,6 @@ def generate_deck_statistics_dataframe():
         df_decks_filtered.loc[:,column] = 0.0
             
     df_decks_filtered.set_index('name', inplace=True)
-
-    from CardLibrary import Forgeborn, ForgebornData
-    def process_deck_forgeborn(deck, df_decks_filtered):        
-        forgeborn_id = deck['forgebornId']
-        forgebornId = forgeborn_id[:-3]
-        if forgebornId.startswith('a'):
-            forgebornId = 's' + forgebornId[1:]
-        # Get Forgeborn from the database
-        forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
-        # Check if forgeborn_data is None and handle the error
-        if forgeborn_data is None:
-            with out_debug:
-                print(f'No data found for forgebornId: {forgebornId}')
-            return
-        fb_data = ForgebornData(**forgeborn_data)
-        forgeborn = Forgeborn(data=fb_data)
-        unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
-        forgeborn_abilities = unique_forgeborn.abilities
-
-        if forgeborn_abilities:
-            for aID, aName in forgeborn_abilities.items():
-                cycle = aID[-3]
-                df_decks_filtered.loc[deck['name'], f'FB{cycle}'] = aName
-
-        # Replace forgebornId with the forgeborn name from the database     
-        df_decks_filtered.loc[deck['name'], 'forgebornId'] = forgeborn_id[5:-3].title()
     
     identifier = 'Forgeborn Data'
 
@@ -749,27 +789,20 @@ def reload_data_on_click(button, value):
         print('No database list found.')
         return
 
-    print(f'Reloading {value} for username: {username_value}')
-    if value == 'Decks':
+    #print(f'{value} for username: {username_value}')
+    if value == 'Load Decks/Fusions':
         arguments = ['--username', username_value,
-                     '--mode', 'update']
-        print(f'Loading Decks with arguments {arguments}')
+                     '--mode', 'update',
+                     '--type', 'deck,fuseddeck']
+        #print(f'Loading Decks/Fusions with arguments {arguments}')
         args = parse_arguments(arguments)
      
-    elif value == 'Fusions':
+    elif value == 'Create all Fusions':
         arguments = ['--username', username_value,
                      '--mode', 'update',
                      '--type', 'fuseddeck']
-        print(f'Loading Fusions with arguments {arguments}')
+        #print(f'Loading Fusions with arguments {arguments}')
         args = parse_arguments(arguments)    
-    #elif value == 'Entities':
-    #    myUCL._read_entities_from_csv(os.path.join('csv', 'sff.csv'))
-    elif value == 'Make Fusions':
-        arguments = ['--username', username_value,
-                     '--mode', 'make',
-                     '--type', 'fuseddeck']
-        print(f'Loading Fusions with arguments {arguments}')
-        args = parse_arguments(arguments)   
 
     load_deck_data(args)
     # Refresh db_list widget
@@ -777,8 +810,17 @@ def reload_data_on_click(button, value):
     valid_db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
 
     if valid_db_names:
-        db_list.options = valid_db_names
-        db_list.value = username_value if username_value in valid_db_names else valid_db_names[0]
+        db_list.options = [''] + valid_db_names
+        #print(f'Valid DB Names: {valid_db_names}')
+        #print(f'Username Value: {username_value}')
+        
+        if username_value in valid_db_names:
+            #print(f'Setting db_list value to {username_value}')
+            db_list.value = username_value
+        else:
+            #print(f'Setting db_list value to {valid_db_names[0]} because {username_value} not in {valid_db_names}')
+            db_list.value = valid_db_names[0]
+        
     else:
         db_list.options = ['']
         db_list.value = ''  # Set to an empty string if no valid databases
@@ -865,9 +907,8 @@ def display_graph_on_click(button):
 #     return filtered_options
     
 
-
 def refresh_faction_deck_options(faction_toggle, dropdown):    
-    GlobalVariables.myDB.set_database_name(GlobalVariables.username)    
+    #GlobalVariables.myDB.set_database_name(GlobalVariables.username)    
     deckCursor = GlobalVariables.myDB.find('Deck', { 'faction' : faction_toggle.value })
     deckNames = []    
     deckNames = [deck['name'] for deck in deckCursor]
@@ -1015,11 +1056,11 @@ def setup_interface():
 
     # Toggle buttons to select load items
     loadToggle = widgets.ToggleButtons(
-        options=['Decks', 'Fusions'],
-        description='Reload:',
+        options=['Load Decks/Fusions', 'Create all Fusions'],
+        description='Action:',
         disabled=False,
-        button_style='', # 'success', 'info', 'warning', 'danger' or ''
-        tooltips=['Decks from the website', 'Fusions from the website', 'Entities from the Collection Manager Sheet sff.csv', 'Forgeborns from the forgeborns.csv', 'Synergies from the Synergys.csv'])
+        button_style='warning', # 'success', 'info', 'warning', 'danger' or ''
+        tooltips=['Load Decks and Fusions from the website', 'Create Fusions from loaded decks'])
 
     #data_generation_functions = {
     #    'Deck Stats': generate_deck_statistics_dataframe,
@@ -1037,7 +1078,7 @@ def setup_interface():
     db_list.observe(handle_db_list_change, names='value')
 
     # Button to load decks / fusions / forgborns 
-    button_load = widgets.Button(description='Load' )
+    button_load = widgets.Button(description='Execute', button_style='info', tooltip='Execute the selected action')
     button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
     
     # Create a list of HBoxes of factionToggles, Labels, and dropdowns

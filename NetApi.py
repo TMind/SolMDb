@@ -36,7 +36,7 @@ class NetApi:
             total = pageData['Count']
 
 #            with tqdm(total=total, initial=pageData['Count'], desc="Fetching Data", colour='YELLOW') as pbar:
-            gv.update_progress('Fetching Data', 0, pageData['Count'])
+            gv.update_progress('Network API', 0, pageData['Count'], f"{total} records fetched") 
             #gv.intProgressBar.max = total             
             #gv.load_progress.n = pageData['Count']
  
@@ -55,7 +55,8 @@ class NetApi:
                 all_decks.extend(pageData['Items'])
                 records_fetched = pageData['Count']                
 
-                gv.update_progress('Fetching Data', records_fetched, total)
+                total += records_fetched
+                gv.update_progress('Network API', total, total, f"{records_fetched} additional records from {total} fetched")
                 #if gv.intProgressBar.value + records_fetched > gv.intProgressBar.max:
                 #    gv.intProgressBar.max += records_fetched
                 #gv.intProgressBar.value = records_fetched

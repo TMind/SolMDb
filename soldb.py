@@ -201,7 +201,7 @@ def parse_arguments(arguments = None):
     # Add command-line arguments
     # Arguments for online use 
     parser.add_argument("--username", default="", help="Online account name or omit for offline use")
-    parser.add_argument("--type", default="deck", choices=["deck", "fuseddeck"], help="Decktype for user collection , default=deck")
+    parser.add_argument("--type", default="deck", choices=["deck", "fuseddeck", "deck,fuseddeck"], help="Decktype for user collection , default=deck")
     parser.add_argument("--id", default="", help="Specific Deck ID from solforgefusion website")
     
     # Arguments for general use 

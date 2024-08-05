@@ -9,7 +9,8 @@ import GlobalVariables
 
 class DeckLibrary:
     def __init__(self, decks_data, fusions_data, mode):                
-        self.dbmgr = DatabaseManager(GlobalVariables.username)
+        #self.dbmgr = DatabaseManager(GlobalVariables.username)
+        self.dbmgr = GlobalVariables.myDB
         self.new_decks = []
         self.online_fusions = []
         
@@ -53,23 +54,31 @@ class DeckLibrary:
 
         if fusions_data:
 
-            with tqdm(total=len(fusions_data), desc="Saving Online Fusions",mininterval=0.1, colour='YELLOW') as pbar:
-                #GlobalVariables.intProgressBar.value = 0 
-                #GlobalVariables.intProgressBar.max = len(fusions_data)
-                for fusion_data in fusions_data:
-                    decks = fusion_data['myDecks']            
-                    fusionDeckNames = []
-                    if isinstance(decks[0], str):
-                        fusionDeckNames = [deckName for deckName in decks]
-                    else:
-                        fusionDeckNames = [deck['name'] for deck in decks]
-                                    
-                    fusion = Fusion.from_data(fusion_data)            
-                    fusion.save()           
-                    self.online_fusions.append(fusion_data)
-                    #GlobalVariables.intProgressBar.value += 1
-                    pbar.update(1)
-                
+            #with tqdm(total=len(fusions_data), desc="Saving Online Fusions",mininterval=0.1, colour='YELLOW') as pbar:
+            GlobalVariables.update_progress('DeckLibrary', 0, len(fusions_data), 'Saving Online Fusions')
+            #GlobalVariables.intProgressBar.value = 0 
+            #GlobalVariables.intProgressBar.max = len(fusions_data)
+            for fusion_data in fusions_data:
+                decks = fusion_data['myDecks']            
+                fusionDeckNames = []
+                if isinstance(decks[0], str):
+                    fusionDeckNames = [deckName for deckName in decks]
+                else:
+                    fusionDeckNames = [deck['name'] for deck in decks]
+                                
+                fusionObject = Fusion.from_data(fusion_data)
+
+                fusionGraph = MyGraph()  
+                fusionGraph.create_graph_children(fusionObject)
+                # Convert the graph to a dictionary
+                fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G)
+                fusionObject.graph = fusionGraphDict
+                fusionObject.save()           
+                self.online_fusions.append(fusion_data)
+                #GlobalVariables.intProgressBar.value += 1
+                GlobalVariables.update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")
+                #pbar.update(1)
+            
         # Get number of fusions from the database
         fusionCursor = self.dbmgr.find('Fusion', {})
         fusionNamesDatabase = [fusion['name'] for fusion in fusionCursor]

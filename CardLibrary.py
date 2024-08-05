@@ -1,6 +1,3 @@
-from itertools import count
-
-from numpy import cross
 from MongoDB.DatabaseManager import DatabaseObject
 from copy import copy
 from dataclasses import dataclass, field
@@ -280,7 +277,8 @@ class FusionData:
     ForgebornIds: list = field(default_factory=list)
     id: str = ''
     deckRank: str = ''
-    CreatedAt: str = ''        
+    CreatedAt: str = ''   
+    UpdatedAt: str = ''     
     tags: list = field(default_factory=list)
     children_data: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)

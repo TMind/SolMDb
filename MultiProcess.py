@@ -1,4 +1,4 @@
-#from GlobalVariables import intProgressDict, tqdmBar
+import GlobalVariables
 from multiprocessing import Pool, cpu_count
 from tqdm.notebook import tqdm
 
@@ -14,8 +14,10 @@ class MultiProcess:
         
     def run(self):
         with Pool(processes=self.num_processes) as pool:            
-            with tqdm(total=self.num_items, mininterval=1, desc='Fusioning Decks') as pbar:
-                for chunk_size in pool.imap_unordered(self.func, self.data):
-                    #intProgressBar.value += chunk_size
-                    pbar.update(chunk_size)                      
-                
+            #with tqdm(total=self.num_items, mininterval=1, desc='Fusioning Decks') as pbar:
+            GlobalVariables.update_progress('MultiProcess Fusions', 0, self.num_items, 'Fusioning Decks')
+            for chunk_size in pool.imap_unordered(self.func, self.data):
+                #intProgressBar.value += chunk_size
+                #pbar.update(chunk_size)                      
+                GlobalVariables.update_progress('MultiProcess', chunk_size)
+            

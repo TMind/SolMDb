@@ -1,7 +1,8 @@
 {  
     "name": "MongoDB Environment",  
     "build": {  
-        "dockerfile": "Dockerfile"  
+        "dockerfile": "Dockerfile",
+        "context": ".."  
     },  
     "settings": {  
         "terminal.integrated.shell.linux": "/bin/bash"  

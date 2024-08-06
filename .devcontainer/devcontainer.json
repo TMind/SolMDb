@@ -1,14 +1,31 @@
-{
-  "name": "MongoDB Environment",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
-  "settings": { 
-    "terminal.integrated.shell.linux": "/bin/bash"
-  },
-  "forwardPorts": [27017],
-  "extensions": [
-    "mongodb.mongodb-vscode"
-  ]
-}
+{  
+    "name": "MongoDB Environment",  
+    "build": {  
+        "dockerfile": "Dockerfile"  
+    },  
+    "settings": { 
+      "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "forwardPorts": [27017],
+    "extensions": [
+      "mongodb.mongodb-vscode",
+      "jupyter notebooks",
+      "python"
+    ],
+    "runArgs": [  
+        "--init"  
+    ],  
+    "mounts": [  
+        "source=/workspace,target=/workspace,type=bind"  
+    ],  
+    "initializeCommand": "echo 'Initializing container...'",  
+    "onCreateCommand": "echo 'Container created!'",  
+    "updateContentCommand": "echo 'Updating content...'",  
+    "postCreateCommand": [  
+        "echo 'Post create command...'",  
+        "mkdir -p /workspace/mongodb/data/db && chown -R mongodb:mongodb /workspace/mongodb/data/db && chmod -R 755 /workspace/mongodb/data/db"  
+    ],  
+    "postStartCommand": "mongod --logpath /tmp/mongod.log --config /etc/mongod.conf --dbpath /workspace/mongodb/data/db",  
+    "postAttachCommand": "echo 'Attached to container!'",  
+    "waitFor": "updateContentCommand"  
+}  

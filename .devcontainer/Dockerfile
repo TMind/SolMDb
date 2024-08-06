@@ -8,8 +8,8 @@ RUN wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add -
     && apt-get install -y mongodb-org
 
 # Install Python packages using pip  
-COPY binder/requirements.txt /tmp/requirements.txt  
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+COPY binder/requirements.txt /workspaces/requirements.txt  
+RUN pip install --no-cache-dir -r /workspaces/requirements.txt
 
 # Hold packages to prevent unintended upgrades
 RUN echo "mongodb-org hold" | dpkg --set-selections \
@@ -17,19 +17,6 @@ RUN echo "mongodb-org hold" | dpkg --set-selections \
     && echo "mongodb-org-shell hold" | dpkg --set-selections \
     && echo "mongodb-org-mongos hold" | dpkg --set-selections \
     && echo "mongodb-org-tools hold" | dpkg --set-selections
-
-# Create MongoDB data directory under /workspace and set permissions  
-RUN mkdir -p /workspaces/mongodb/data/db \  
-    && chown -R mongodb:mongodb /workspaces/mongodb/data/db \  
-    && chmod -R 755 /workspaces/mongodb/data/db  
-    
-# Create a custom entrypoint script  
-RUN echo '#!/bin/bash' > /usr/local/bin/start-mongo.sh \  
-    && echo 'mongod --logpath /tmp/mongod.log --config /etc/mongod.conf --dbpath /workspaces/data/db' >> /usr/local/bin/start-mongo.sh \  
-    && chmod +x /usr/local/bin/start-mongo.sh  
-
-# Set the container to run the MongoDB starter script as the entrypoint  
-ENTRYPOINT ["/usr/local/bin/start-mongo.sh"] 
 
 # Expose MongoDB port  
 EXPOSE 27017  

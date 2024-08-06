@@ -18,15 +18,14 @@ RUN echo "mongodb-org hold" | dpkg --set-selections \
     && echo "mongodb-org-mongos hold" | dpkg --set-selections \
     && echo "mongodb-org-tools hold" | dpkg --set-selections
 
-# Create MongoDB data directory and set permissions  
-RUN mkdir -p /var/lib/mongodb \  
-    && chown -R mongodb:mongodb /var/lib/mongodb \  
-    && mkdir -p /data/db \  
-    && chown -R mongodb:mongodb /data/db  
-
+# Create MongoDB data directory under /workspace and set permissions  
+RUN mkdir -p /workspaces/mongodb/data/db \  
+    && chown -R mongodb:mongodb /workspaces/mongodb/data/db \  
+    && chmod -R 755 /workspaces/mongodb/data/db  
+    
 # Create a custom entrypoint script  
 RUN echo '#!/bin/bash' > /usr/local/bin/start-mongo.sh \  
-    && echo 'mongod --logpath /tmp/mongod.log --config /etc/mongod.conf --dbpath /data/db' >> /usr/local/bin/start-mongo.sh \  
+    && echo 'mongod --logpath /tmp/mongod.log --config /etc/mongod.conf --dbpath /workspaces/data/db' >> /usr/local/bin/start-mongo.sh \  
     && chmod +x /usr/local/bin/start-mongo.sh  
 
 # Set the container to run the MongoDB starter script as the entrypoint  

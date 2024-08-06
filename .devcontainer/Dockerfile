@@ -7,6 +7,9 @@ RUN wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add -
     && apt-get update \
     && apt-get install -y mongodb-org
 
+# Install Python packages using pip  
+RUN pip install --no-cache-dir -r binder/requirements.tx
+
 # Hold packages to prevent unintended upgrades
 RUN echo "mongodb-org hold" | dpkg --set-selections \
     && echo "mongodb-org-server hold" | dpkg --set-selections \

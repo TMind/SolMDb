@@ -8,7 +8,7 @@ RUN wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add -
     && apt-get install -y mongodb-org
 
 # Install Python packages using pip  
-COPY ../binder/requirements.txt /workspaces/requirements.txt  
+COPY binder/requirements.txt /workspaces/requirements.txt  
 RUN pip install --no-cache-dir -r /workspaces/requirements.txt
 
 # Hold packages to prevent unintended upgrades

@@ -20,8 +20,7 @@ RUN echo "mongodb-org hold" | dpkg --set-selections \
 
 # Create a custom entrypoint script
 RUN echo '#!/bin/bash' > /usr/local/bin/start-mongo.sh \
-    && echo 'mongod --fork --logpath /var/log/mongod.log --config /etc/mongod.conf' >> /usr/local/bin/start-mongo.sh \
-    && echo 'tail -f /dev/null' >> /usr/local/bin/start-mongo.sh \
+    && echo 'mongod --logpath /var/log/mongod.log --config /etc/mongod.conf' >> /usr/local/bin/start-mongo.sh >> /usr/local/bin/start-mongo.sh \
     && chmod +x /usr/local/bin/start-mongo.sh
 
 # Set the container to run the MongoDB starter script as the entrypoint  

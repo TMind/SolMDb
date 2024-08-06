@@ -1,3 +1,4 @@
+ipywidgets
 pymongo
 networkx
 pyvis
@@ -7,5 +8,6 @@ scipy
 jupyter-server-proxy
 requests
 pandas==2.0.3
-qgridnext==2.0.0
+qgridnext==2.0.1
 icecream
+tqdm

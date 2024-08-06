@@ -6,7 +6,7 @@
     },  
     "settings": {  
         "terminal.integrated.shell.linux": "/bin/bash"  
-    },  s
+    },
     "forwardPorts": [27017],  
     "extensions": [  
         "mongodb.mongodb-vscode",  

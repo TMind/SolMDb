@@ -25,3 +25,6 @@ RUN echo '#!/bin/bash' > /usr/local/bin/start-mongo.sh \
 
 # Set the container to run the MongoDB starter script as the entrypoint  
 ENTRYPOINT ["/usr/local/bin/start-mongo.sh"] 
+
+# Expose MongoDB port  
+EXPOSE 27017  

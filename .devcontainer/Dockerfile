@@ -20,5 +20,5 @@ RUN echo '#!/bin/bash' > /usr/local/bin/start-mongo.sh \
     && echo 'tail -f /dev/null' >> /usr/local/bin/start-mongo.sh \
     && chmod +x /usr/local/bin/start-mongo.sh
 
-# Set the container to run the MongoDB starter script by default
-CMD ["/usr/local/bin/start-mongo.sh"]
+# Set the container to run the MongoDB starter script as the entrypoint  
+ENTRYPOINT ["/usr/local/bin/start-mongo.sh"] 

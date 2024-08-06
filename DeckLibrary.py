@@ -141,6 +141,7 @@ def create_fusion(dataChunks):
             # Convert the graph to a dictionary
             fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G)
             fusionData['graph'] = fusionGraphDict
+            fusionData['node_data'] = fusionGraph.node_data
 
             operations.append(UpdateOne({'_id': fusionId}, {'$set': fusionData}, upsert=True))            
 

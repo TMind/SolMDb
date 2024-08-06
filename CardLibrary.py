@@ -282,6 +282,7 @@ class FusionData:
     tags: list = field(default_factory=list)
     children_data: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)
+    node_data: dict = field(default_factory=dict)
 
 class Fusion(DatabaseObject):
     def __init__(self, data=None):

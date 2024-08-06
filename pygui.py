@@ -472,7 +472,9 @@ def generate_cardType_count_dataframe(existing_df=None):
         deckName = deck['name']
         myDeck = Deck.load(deckName)
         myGraph = MyGraph()
-        myGraph.create_graph_children(myDeck)
+        #myGraph.create_graph_children(myDeck)
+
+        myGraph.G = nx.from_dict_of_dicts(deck['graph'])
 
         interface_ids = myGraph.get_length_interface_ids()
 
@@ -547,7 +549,7 @@ def generate_fusion_statistics_dataframe():
                 item_names.append(name)
 
         return item_names
-        
+
     # Fetch fusion data
     fusion_cursor = GlobalVariables.myDB.find('Fusion', {})
     
@@ -564,6 +566,8 @@ def generate_fusion_statistics_dataframe():
     df_fusions_filtered['forgebornId'] = None
 
     # Assign values before setting index
+    total = len(df_fusions)
+    GlobalVariables.update_progress('Fusion Stats', 0, total, 'Generating Fusion Dataframe...')    
     for fusion_data in df_fusions.itertuples():
         fusion_name = fusion_data.name
         decks = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Deck')
@@ -576,8 +580,9 @@ def generate_fusion_statistics_dataframe():
             df_fusions_filtered.loc[fusion_name, 'forgebornId'] = forgeborns[0]
 
     # Call process_deck_forgeborn for each fusion
-    for fusion_data in df_fusions.itertuples():
+    #for fusion_data in df_fusions.itertuples():
         process_deck_forgeborn(fusion_data.name, 'forgebornId', df_fusions_filtered)
+        GlobalVariables.update_progress('Fusion Stats', message = f"Processing Fusion Forgeborn:  {fusion_data.name}")
 
     return df_fusions_filtered
 

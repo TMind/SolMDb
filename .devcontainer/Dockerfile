@@ -18,5 +18,6 @@ RUN echo "mongodb-org hold" | dpkg --set-selections \
     && echo "mongodb-org-mongos hold" | dpkg --set-selections \
     && echo "mongodb-org-tools hold" | dpkg --set-selections
 
-# Expose MongoDB port  
-EXPOSE 27017  
+# Copy post-create.sh to image
+COPY post-create.sh /usr/local/bin/post-create.sh  
+RUN chmod +x /usr/local/bin/post-create.sh  

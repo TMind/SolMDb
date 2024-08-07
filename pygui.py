@@ -59,9 +59,6 @@ display(HTML(custom_css))
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
-#GlobalVariables.myDB = DatabaseManager(GlobalVariables.username, uri=GlobalVariables.uri)
-#global_vars.commonDB = DatabaseManager('common', uri=global_vars.uri)
-
 synergy_template = SynergyTemplate()    
 ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
 
@@ -539,6 +536,7 @@ def generate_cardType_count_dataframe(existing_df=None):
     #display(numeric_df)
     return numeric_df
 
+deck_card_titles = {}
 def generate_fusion_statistics_dataframe():
 
     def get_items_from_child_data(children_data, item_type):
@@ -561,21 +559,24 @@ def generate_fusion_statistics_dataframe():
         return sorted(card_titles)
 
     def get_card_titles_by_Ids(fusion_children_data):
+        global deck_card_titles
         all_card_titles_list = []
         deck_names = get_items_from_child_data(fusion_children_data, 'CardLibrary.Deck')
-        #print(f"Deck Names: {deck_names}")  # Debug statement
-        for deck_name in deck_names:
-            deck = global_vars.myDB.find_one('Deck', {'name': deck_name})
-            #print(f"Deck: {deck}")  # Debug statement
-            if deck:
-                card_ids = deck.get('cardIds', [])
-                #print(f"Card IDs: {card_ids}")  # Debug statement
-                card_titles_list = get_card_titles(card_ids)
-                #print(f"Card Titles: {card_titles_list}")  # Debug statement
-                all_card_titles_list = all_card_titles_list + card_titles_list
         
-        cardTitles = ', '.join(sorted(all_card_titles_list))
-        #print(f"Returning Card Titles: {cardTitles}")  # Debug statement
+        for deck_name in deck_names:
+            card_titles_list = deck_card_titles.get(deck_name)
+            
+            if card_titles_list is None:
+                deck = global_vars.myDB.find_one('Deck', {'name': deck_name})
+                if deck:
+                    card_ids = deck.get('cardIds', [])
+                    card_titles_list = get_card_titles(card_ids)
+                    deck_card_titles[deck_name] = card_titles_list
+            
+            if card_titles_list:
+                all_card_titles_list.extend(card_titles_list)
+            global_vars.update_progress('Fusion Card Titles', message=f'Fetching Card Titles for {deck_name}')
+        cardTitles = ', '.join(sorted(all_card_titles_list))        
         return cardTitles
         
     # Fetch fusion data
@@ -583,7 +584,8 @@ def generate_fusion_statistics_dataframe():
     
     # Convert cursor to DataFrame
     df_fusions = pd.DataFrame(list(fusion_cursor))
-    df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)
+    global_vars.update_progress('Fusion Card Titles', 0, len(df_fusions) * 2, 'Fetching Card Titles')
+    df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)    
     df_fusions_filtered = df_fusions[['name', 'CreatedAt', 'deckRank', 'children_data', 'cardTitles']].copy()
     df_fusions_filtered['type'] = 'Fusion'
 
@@ -594,9 +596,6 @@ def generate_fusion_statistics_dataframe():
     df_fusions_filtered['Deck B'] = None
     df_fusions_filtered['forgebornId'] = None
 
-    # Add card ids from each deck in the fusion 
-    #df_fusions_filtered['cardTitles'] = df_fusions_filtered['children_data'].apply(get_card_titles_by_Ids)
-    #print(df_fusions_filtered[['cardTitles']])
     # Assign values before setting index
     total = len(df_fusions)
     global_vars.update_progress('Fusion Stats', 0, total, 'Generating Fusion Dataframe...')    

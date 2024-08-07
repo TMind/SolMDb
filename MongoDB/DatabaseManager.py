@@ -1,7 +1,7 @@
 import importlib
 from MongoDB.MongoDB import MongoDB
 import pymongo
-import GlobalVariables
+import pymongo.errors
 from dataclasses import dataclass, fields, asdict
 from typing import Any, Dict
 from time import sleep
@@ -74,7 +74,7 @@ class DatabaseManager:
         #print(f"Getting record by name: {name} from db - collection: {self.get_current_db_name()} - {collection_name}")
         return self.find_one(collection_name, {'name': name})
 
-from GlobalVariables import global_vars 
+from GlobalVariables import global_vars
 class DatabaseObject:
     _db_manager = None
 

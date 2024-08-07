@@ -1,4 +1,5 @@
 from datetime import datetime
+from operator import or_
 import pandas as pd
 import qgrid
 import ipywidgets as widgets
@@ -9,30 +10,6 @@ from DataSelectionManager import DataSelectionManager
 from MongoDB.DatabaseManager import DatabaseManager
 
 # module global variables 
-
-data_selection_sets2 = {
-        'Deck Stats': [ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'Creatures', 'Spells', 'FB2', 'FB3', 'FB4', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
-        'Card Types': [ 'name', 'faction', 'Creatures', 'Spells', 'Exalts', 'Beast', 'Dinosaur', 'Mage', 'Robot', 'Scientist', 'Spirit', 'Warrior', 'Zombie', 'Minion', 'Dragon', 'Elemental', 'Plant'],    
-        'All Types' : [ 'name', 'faction', 'Beast', 'Beast Synergy', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy',
-                        'Scientist', 'Scientist Synergy', 'Spirit', 'Spirit Synergy', 'Warrior', 'Warrior Synergy',
-                        'Zombie', 'Zombie Synergy', 'Dragon', 'Dragon Synergy', 'Elemental', 'Elemental Synergy',
-                        'Plant', 'Plant Synergy', 'Replace Setup', 'Replace Profit', 'Minion', 'Minion Synergy',
-                        'Spell', 'Spell Synergy', 'Healing Source', 'Healing Synergy', 'Movement', 'Disruption',
-                        'Movement Benefit', 'Armor', 'Armor Giver', 'Armor Synergy', 'Activate', 'Ready', 'Free',
-                        'Upgrade', 'Upgrade Synergy', 'Face Burn', 'Removal', 'Breakthrough', 'Breakthrough Giver',
-                        'Aggressive', 'Aggressive Giver', 'Defender', 'Defender Giver', 'Stealth', 'Stealth Giver',
-                        'Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Attack Debuff', 'Health Debuff',
-                        'Destruction Synergy', 'Destruction Activator', 'Self Damage Payoff', 'Self Damage Activator',
-                        'Silence',  'Exalts', 'Exalt Synergy', 'Slay', 'Deploy', 'White Fang', 'Last Winter', 'Spicy',
-                        'Cool', 'Fun', 'Annoying'
-                    ],
-        'Synergies' : ['name', 'type', 'faction', 'Beast', 'Beast Synergy', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy', 'Scientist', 'Scientist Synergy', 'Spirit', 'Spirit Synergy', 
-                       'Warrior', 'Warrior Synergy', 'Zombie', 'Zombie Synergy', 'Dragon', 'Dragon Synergy', 'Elemental', 'Elemental Synergy', 'Plant', 'Plant Synergy', 'Replace Setup', 
-                       'Replace Profit', 'Minion', 'Minion Synergy', 'Spell', 'Spell Synergy', 'Healing Source', 'Healing Synergy', 'Movement', 'Movement Benefit', 'Armor', 'Armor Giver', 
-                       'Armor Synergy', 'Activate', 'Ready', 'Upgrade', 'Upgrade Synergy', 'Destruction Activator', 'Destruction Synergy',  'Self Damage Activator', 'Self Damage Payoff', 
-                       'Exalts', 'Exalt Synergy'],
-        'Fusion Stats' : ['name', 'Deck A', 'Deck B', 'Current ForgebornId', 'FB2', 'FB3', 'FB4', 'cardTitles', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
-}
 
 data_selection_sets = {
   "Deck Stats": {
@@ -258,7 +235,7 @@ class GridManager:
         return None
 
     def replace_grid(self, identifier, new_df):
-        print(f"GridManager::replace_grid() - Replacing grid {identifier} with new DataFrame")
+        #print(f"GridManager::replace_grid() - Replacing grid {identifier} with new DataFrame")
         grid = self.grids.get(identifier)
         if grid:
             grid.update_main_widget(new_df)
@@ -267,7 +244,7 @@ class GridManager:
     def reset_dataframe(self, identifier):
         grid = self.grids.get(identifier)
         if grid:
-            print(f"GridManager::reset_dataframe() - Resetting DataFrame for {identifier}")
+            #print(f"GridManager::reset_dataframe() - Resetting DataFrame for {identifier}")
             grid.reset_dataframe()
 
     def set_default_data(self, identifier, new_data):
@@ -381,15 +358,16 @@ class GridManager:
                         grid.main_widget.on(event_name, callback)
 
     def display_registered_events(self):
-        print("Registered GridManager events:")
-        for identifier, events in self.callbacks.items():
-            for event_name, callbacks in events.items():
-                print(f"Identifier: {identifier}, Event: {event_name}, Callbacks: {len(callbacks)}")
-
-        print("\nRegistered QGrid events:")
-        for identifier, events in self.qgrid_callbacks.items():
-            for event_name, callbacks in events.items():
-                print(f"Identifier: {identifier}, Event: {event_name}, Callbacks: {len(callbacks)}")
+        with self.debug_output:
+            print("Registered GridManager events:")
+            for identifier, events in self.callbacks.items():
+                for event_name, callbacks in events.items():                
+                    print(f"Identifier: {identifier}, Event: {event_name}, Callbacks: {len(callbacks)}")
+            
+            print("\nRegistered QGrid events:")
+            for identifier, events in self.qgrid_callbacks.items():
+                for event_name, callbacks in events.items():
+                    print(f"Identifier: {identifier}, Event: {event_name}, Callbacks: {len(callbacks)}")
 
     def trigger(self, event_name, *args, **kwargs):
         for identifier in self.callbacks:
@@ -609,7 +587,7 @@ class FilterGrid:
         """
         global data_selection_sets
 
-        print(f"FilterClass::update() -> Updating filter grid with new data selection sets: {data_selection_sets.keys()}")
+        #print(f"FilterClass::update() -> Updating filter grid with new data selection sets: {data_selection_sets.keys()}")
         self.selection_widgets['Data Set'].options = data_selection_sets.keys()
 
     
@@ -776,11 +754,29 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
 
             return current_filter_results   
 
-        def determine_operator_and_substrings(string):
-            if ':' in string:
-                return 'AND', re.split(r'\s*:\s*', string)
-            else:
-                return 'OR', re.split(r'\s*;\s*', string)
+        def determine_operator_and_substrings(string): 
+            and_symbols = {
+                ':': r'\s*:\s*',
+                '&': r'\s*&\s*',
+                '+': r'\s*\+\s*'
+            }            
+            or_symbols = {
+                '|': r'\s*\|\s*',
+                '-': r'\s*-\s*'             
+            }
+            
+            for symbol, pattern in and_symbols.items():
+                if symbol in string:
+                    #print(f"Found AND symbol '{symbol}' in '{string}'")
+                    return 'AND', re.split(pattern, string)
+            
+            for symbol, pattern in or_symbols.items():
+                if symbol in string:
+                    #print(f"Found OR symbol '{symbol}' in '{string}'")
+                    return 'OR', re.split(pattern, string)
+            
+            #print(f"Falling back on standard '{string}'")
+            return 'OR', re.split(r'\s*;\s*', string)                                                   
 
 
         # Apply the first filter outside the loop
@@ -881,7 +877,7 @@ class DynamicGridManager:
         self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]  # Update UI children
 
     def refresh_gridbox(self, change=None):
-        print(f"DynamicGridManager::refresh_gridbox() - Refreshing grid box with change: {change}")
+        #print(f"DynamicGridManager::refresh_gridbox() - Refreshing grid box with change: {change}")
         
         collection_df = self.qm.get_default_data('collection')
         if collection_df.empty or (change and 'type' in change and change['type'] == 'username'):            

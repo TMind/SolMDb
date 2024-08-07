@@ -2,12 +2,12 @@ from MyGraph import MyGraph
 from MongoDB.DatabaseManager import DatabaseManager
 from CardLibrary import  Fusion, Deck, Card
 from MultiProcess import MultiProcess
-from GlobalVariables import username, update_progress
+from GlobalVariables import global_vars as gv
 import networkx as nx  
 
 class DeckLibrary:
     def __init__(self, decks_data, fusions_data, mode):                
-        self.dbmgr = DatabaseManager(username)
+        self.dbmgr = DatabaseManager(gv.username)
         self.new_decks = []
         self.online_fusions = []
         
@@ -51,7 +51,7 @@ class DeckLibrary:
 
         if fusions_data:
             
-            update_progress('DeckLibrary', 0, len(fusions_data), 'Saving Online Fusions')            
+            gv.update_progress('DeckLibrary', 0, len(fusions_data), 'Saving Online Fusions')            
             for fusion_data in fusions_data:
                 decks = fusion_data['myDecks']                      
                 fusionObject = Fusion.from_data(fusion_data)
@@ -63,7 +63,7 @@ class DeckLibrary:
                 fusionObject.node_data = fusionGraph.node_data
                 fusionObject.save()           
                 self.online_fusions.append(fusion_data)                
-                update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")
+                gv.update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")
                 #pbar.update(1)
             
         # Get number of fusions from the database
@@ -98,7 +98,7 @@ class DeckLibrary:
 
         # Create new fusions with the newCombinations
         if deckCombinationData:
-            multi_process = MultiProcess(deckCombinationData, username)
+            multi_process = MultiProcess(deckCombinationData, gv.username)
             multi_process.run()
          
 

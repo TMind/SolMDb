@@ -1,4 +1,4 @@
-from GlobalVariables import update_progress, username  
+from GlobalVariables import global_vars as gv
 from multiprocessing import Pool, cpu_count  
 from pymongo.operations import UpdateOne  
 from CardLibrary import Fusion, FusionData  
@@ -7,23 +7,24 @@ from MyGraph import MyGraph
 import networkx as nx  
   
 class MultiProcess:  
-    def __init__(self, data, chunk_size=100):  
-        self.func = create_fusion  
+    def __init__(self, data, username, chunk_size=100):          
         self.num_items = len(data)  
         self.num_processes = min(self.num_items, cpu_count())  
         self.data = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]  
+        self.username = username
   
     def init_worker(self):  
         global dbmgr  
-        dbmgr = DatabaseManager(username, force_new=True)  
+        dbmgr = DatabaseManager(self.username, force_new=True)  
   
     def run(self):  
         with Pool(processes=self.num_processes, initializer=self.init_worker) as pool:  
-            update_progress('MultiProcess Fusions', 0, self.num_items, 'Fusioning Decks')  
-            for chunk_size in pool.imap_unordered(lambda chunk: self.func(chunk, dbmgr), self.data):  
-                update_progress('MultiProcess Fusions', chunk_size)  
+            gv.update_progress('MultiProcess Fusions', 0, self.num_items, 'Fusioning Decks')  
+            for chunk_size in pool.imap_unordered(create_fusion, self.data):  
+                gv.update_progress('MultiProcess Fusions', chunk_size)  
   
-def create_fusion(dataChunk, dbmgr):  
+def create_fusion(dataChunk):  
+    global dbmgr
     operations = []  
     for decks in dataChunk:  
         deck1, deck2 = decks  

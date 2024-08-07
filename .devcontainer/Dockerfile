@@ -8,8 +8,8 @@ RUN wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add -
     && apt-get install -y mongodb-org
 
 # Install Python packages using pip  
-COPY binder/requirements.txt /workspaces/requirements.txt  
-RUN pip install --no-cache-dir -r /workspaces/requirements.txt
+# COPY binder/requirements.txt /workspaces/requirements.txt  
+# RUN pip install --no-cache-dir -r /workspaces/requirements.txt
 
 # Hold packages to prevent unintended upgrades
 RUN echo "mongodb-org hold" | dpkg --set-selections \
@@ -18,5 +18,6 @@ RUN echo "mongodb-org hold" | dpkg --set-selections \
     && echo "mongodb-org-mongos hold" | dpkg --set-selections \
     && echo "mongodb-org-tools hold" | dpkg --set-selections
 
-# Expose MongoDB port  
-EXPOSE 27017  
+# Copy post-create.sh to image
+COPY .devcontainer/post-create.sh /usr/local/bin/post-create.sh  
+RUN chmod +x /usr/local/bin/post-create.sh  

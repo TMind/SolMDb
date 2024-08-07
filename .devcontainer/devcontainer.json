@@ -14,9 +14,6 @@
         "ms-python.python"  
     ],  
     "runArgs": ["--init"],      
-    "postCreateCommand": [  
-        "echo 'Post create command...'",  
-        "mkdir -p /workspaces/mongodb/data/db && chown -R mongodb:mongodb /workspaces/mongodb/data/db && chmod -R 755 /workspaces/mongodb/data/db"  
-    ],  
-    "postStartCommand": "mongod --logpath /tmp/mongod.log --config /etc/mongod.conf --dbpath /workspaces/mongodb/data/db"    
+    "postCreateCommand": "/usr/local/bin/post-create.sh" ,  
+    "postStartCommand": "mongod --fork --logpath /tmp/mongod.log --dbpath /workspaces/mongodb/data/db"    
 }  

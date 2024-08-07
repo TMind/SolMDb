@@ -1,8 +1,8 @@
-from MongoDB.DatabaseManager import DatabaseObject
+from MongoDB.DatabaseManager import DatabaseManager, DatabaseObject
 from copy import copy
 from dataclasses import dataclass, field
 
-import GlobalVariables
+from GlobalVariables import global_vars
 
 @dataclass
 class EntityData:
@@ -160,8 +160,9 @@ class Card(DatabaseObject):
     def get_entity_names_from_title(self, card_name):        
         if not card_name or card_name == '': return None
 
-        # First try with full title        
-        card_entity_data =  GlobalVariables.commonDB.get_record_by_name('Entity', card_name)        
+        # First try with full title   
+        commonDB = DatabaseManager('common')     
+        card_entity_data =  commonDB.get_record_by_name('Entity', card_name)        
         if card_entity_data:          
             #print(f"Card Entity Data found : {card_entity_data['name']}")
             return [card_entity_data['name']]
@@ -173,8 +174,8 @@ class Card(DatabaseObject):
             modifier_title = ' '.join(parts[:i])
             card_name = ' '.join(parts[i:])
             #print(f"Modifier Title: {modifier_title} - Card Name: {card_name}")
-            modifier_entity_data = GlobalVariables.commonDB.get_record_by_name('Entity', modifier_title)
-            card_entity_data = GlobalVariables.commonDB.get_record_by_name('Entity', card_name)
+            modifier_entity_data = commonDB.get_record_by_name('Entity', modifier_title)
+            card_entity_data = commonDB.get_record_by_name('Entity', card_name)
 
             if modifier_entity_data:
                 #print(f"Modifier Entity Data found : {modifier_entity_data['name']}")

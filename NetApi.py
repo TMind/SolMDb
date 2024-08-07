@@ -1,10 +1,6 @@
 import requests
 import json
-#from UniversalLibrary import UniversalLibrary
-#from CardLibrary import Fusion
-#from typing import List, Tuple, Dict
-#from tqdm.notebook import tqdm
-import GlobalVariables as gv 
+from GlobalVariables import global_vars as gv 
 
 
 class NetApi:

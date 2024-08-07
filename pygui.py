@@ -3,7 +3,7 @@ import ipywidgets as widgets
 from pyvis.network import Network
 import networkx as nx
 
-import GlobalVariables
+from GlobalVariables import global_vars
 from CardLibrary import Deck, FusionData, Fusion
 from UniversalLibrary import UniversalLibrary
 from DeckLibrary import DeckLibrary
@@ -13,16 +13,15 @@ from NetApi import NetApi
 
 from soldb import parse_arguments
 from IPython.display import display, HTML
-from tqdm.notebook import tqdm
 
 from Synergy import SynergyTemplate
 import pandas as pd
-from GridManager import GridManager, get_cardType_entity_names, DynamicGridManager, TemplateGrid
+from GridManager import GridManager, DynamicGridManager, TemplateGrid
 
 from icecream import ic
 ic.disable()
 
-#pd.set_option('future.no_silent_downcasting', True)
+pd.set_option('future.no_silent_downcasting', True)
 
 # Custom CSS style
 
@@ -60,14 +59,14 @@ display(HTML(custom_css))
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
-GlobalVariables.myDB = DatabaseManager(GlobalVariables.username, uri=GlobalVariables.uri)
-GlobalVariables.commonDB = DatabaseManager('common', uri=GlobalVariables.uri)
+#GlobalVariables.myDB = DatabaseManager(GlobalVariables.username, uri=GlobalVariables.uri)
+#global_vars.commonDB = DatabaseManager('common', uri=global_vars.uri)
 
 synergy_template = SynergyTemplate()    
 ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
 
 #Read Entities and Forgeborns from Files into Database
-myUCL = UniversalLibrary(GlobalVariables.username, *ucl_paths)
+myUCL = UniversalLibrary(global_vars.username, *ucl_paths)
 deckCollection = None
 
 # Widget Variables
@@ -75,7 +74,7 @@ factionToggles = []
 dropdowns = []
 factionNames = ['Alloyin', 'Nekrium', 'Tempys', 'Uterra']
 types = ['Decks', 'Fusions']
-username = widgets.Text(value=GlobalVariables.username, description='Username:', disabled=False)
+username_widget = widgets.Text(value=global_vars.username, description='Username:', disabled=False)
 button_load = None
 db_list = None 
 cardTypes_names_widget = {}
@@ -266,17 +265,17 @@ user_dataframes = {}
 ### Dataframe Generation Functions ###
 def generate_central_dataframe():
     # Get the current username from the global variables
-    username = GlobalVariables.username
+    username = global_vars.username
     identifier = f"Main DataFrame: {username}"
 
     if username in user_dataframes:
         return user_dataframes[username]
 
     # Start with deck statistics which form the basis of the DataFrame
-    GlobalVariables.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
+    global_vars.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
     deck_stats_df = generate_deck_statistics_dataframe()
     
-    GlobalVariables.update_progress(identifier, 50, 100, 'Halfway there...')
+    global_vars.update_progress(identifier, 50, 100, 'Halfway there...')
     # Generate card type counts and merge them into the deck_stats_df
     card_type_counts_df = generate_cardType_count_dataframe()
     #central_df = deck_stats_df.merge(card_type_counts_df, on=['name', 'faction'], how='left')
@@ -290,7 +289,7 @@ def generate_central_dataframe():
     # Reset the index to move the index to the 'name' column
     central_df.reset_index(inplace=True)
     
-    GlobalVariables.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
+    global_vars.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
 
     # Store the central_df in the user_dataframes dictionary
     user_dataframes[username] = central_df.copy()
@@ -311,7 +310,8 @@ def process_deck_forgeborn(item_name, forgebornId_key, df):
         forgebornId = forgeborn_id[:-3]
         if forgebornId.startswith('a'):
             forgebornId = 's' + forgebornId[1:]
-        forgeborn_data = GlobalVariables.commonDB.find_one('Forgeborn', {'id': forgebornId})
+        commonDB = DatabaseManager('common')
+        forgeborn_data = commonDB.find_one('Forgeborn', {'id': forgebornId})
         if forgeborn_data is None:
             print(f'No data found for forgebornId: {forgebornId}')
             return
@@ -373,14 +373,14 @@ def generate_deck_content_dataframe(event = None):
             for deckName in deckList:
                 print(f'DeckName: {deckName}')
                 #Get the Deck from the Database 
-                deck = GlobalVariables.myDB.find_one('Deck', {'name': deckName})
+                deck = global_vars.myDB.find_one('Deck', {'name': deckName})
                 if deck:
                     #print(f'Found deck: {deck}')
                     #Get the cardIds from the Deck
                     cardIds = deck['cardIds']
                     deck_df_list = pd.DataFrame([deck])  # Create a single row DataFrame from deck                    
                     for cardId in cardIds:
-                        card = GlobalVariables.myDB.find_one('Card', {'_id': cardId})
+                        card = global_vars.myDB.find_one('Card', {'_id': cardId})
                         if card:
                             fullCard = card 
 
@@ -454,21 +454,21 @@ def generate_cardType_count_dataframe(existing_df=None):
     identifier = 'CardType Count Data'
 
     # Get interface ids from the database 
-    #interface_ids = GlobalVariables.commonDB.find('Interface', {})
+    #interface_ids = global_vars.commonDB.find('Interface', {})
     #interface_ids = [interface['_id'] for interface in interface_ids]
     #print(f'Interface IDs: {interface_ids}')
     
     # Get the cardTypes from the stats array in the database
-    deckIterator = GlobalVariables.myDB.find('Deck', {})
+    deckIterator = global_vars.myDB.find('Deck', {})
     
     # Get the number of decks in the collection
-    totalDecks = GlobalVariables.myDB.count_documents('Deck', {})
+    totalDecks = global_vars.myDB.count_documents('Deck', {})
 
-    GlobalVariables.update_progress(identifier, 0, totalDecks , 'Generating CardType Count Data...')
+    global_vars.update_progress(identifier, 0, totalDecks , 'Generating CardType Count Data...')
 
     for deck in deckIterator:
 
-        GlobalVariables.update_progress(identifier, message = f'Processing Deck: {deck["name"]}')
+        global_vars.update_progress(identifier, message = f'Processing Deck: {deck["name"]}')
         deckName = deck['name']
         myDeck = Deck.load(deckName)
         myGraph = MyGraph()
@@ -550,12 +550,41 @@ def generate_fusion_statistics_dataframe():
 
         return item_names
 
+    def get_card_titles(card_ids):
+        card_titles = []
+        for card_id in card_ids:
+            card_title = card_id[5:].replace('-', ' ').title()
+
+            if card_title:  # Check if card_title is not empty
+                card_titles.append(card_title)
+        # Join the list of titles into a single string separated by commas
+        return sorted(card_titles)
+
+    def get_card_titles_by_Ids(fusion_children_data):
+        all_card_titles_list = []
+        deck_names = get_items_from_child_data(fusion_children_data, 'CardLibrary.Deck')
+        #print(f"Deck Names: {deck_names}")  # Debug statement
+        for deck_name in deck_names:
+            deck = global_vars.myDB.find_one('Deck', {'name': deck_name})
+            #print(f"Deck: {deck}")  # Debug statement
+            if deck:
+                card_ids = deck.get('cardIds', [])
+                #print(f"Card IDs: {card_ids}")  # Debug statement
+                card_titles_list = get_card_titles(card_ids)
+                #print(f"Card Titles: {card_titles_list}")  # Debug statement
+                all_card_titles_list = all_card_titles_list + card_titles_list
+        
+        cardTitles = ', '.join(sorted(all_card_titles_list))
+        #print(f"Returning Card Titles: {cardTitles}")  # Debug statement
+        return cardTitles
+        
     # Fetch fusion data
-    fusion_cursor = GlobalVariables.myDB.find('Fusion', {})
+    fusion_cursor = global_vars.myDB.find('Fusion', {})
     
     # Convert cursor to DataFrame
     df_fusions = pd.DataFrame(list(fusion_cursor))
-    df_fusions_filtered = df_fusions[['name', 'CreatedAt', 'deckRank', 'children_data']].copy()
+    df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)
+    df_fusions_filtered = df_fusions[['name', 'CreatedAt', 'deckRank', 'children_data', 'cardTitles']].copy()
     df_fusions_filtered['type'] = 'Fusion'
 
     df_fusions_filtered.set_index('name', inplace=True)
@@ -565,9 +594,12 @@ def generate_fusion_statistics_dataframe():
     df_fusions_filtered['Deck B'] = None
     df_fusions_filtered['forgebornId'] = None
 
+    # Add card ids from each deck in the fusion 
+    #df_fusions_filtered['cardTitles'] = df_fusions_filtered['children_data'].apply(get_card_titles_by_Ids)
+    #print(df_fusions_filtered[['cardTitles']])
     # Assign values before setting index
     total = len(df_fusions)
-    GlobalVariables.update_progress('Fusion Stats', 0, total, 'Generating Fusion Dataframe...')    
+    global_vars.update_progress('Fusion Stats', 0, total, 'Generating Fusion Dataframe...')    
     for fusion_data in df_fusions.itertuples():
         fusion_name = fusion_data.name
         decks = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Deck')
@@ -582,7 +614,7 @@ def generate_fusion_statistics_dataframe():
     # Call process_deck_forgeborn for each fusion
     #for fusion_data in df_fusions.itertuples():
         process_deck_forgeborn(fusion_data.name, 'forgebornId', df_fusions_filtered)
-        GlobalVariables.update_progress('Fusion Stats', message = f"Processing Fusion Forgeborn:  {fusion_data.name}")
+        global_vars.update_progress('Fusion Stats', message = f"Processing Fusion Forgeborn:  {fusion_data.name}")
 
     return df_fusions_filtered
 
@@ -602,10 +634,12 @@ def generate_deck_statistics_dataframe():
 
     # Get all Decks from the database
     #try:
-    deck_cursor = GlobalVariables.myDB.find('Deck', {})        
-    df_decks = pd.DataFrame(list(deck_cursor))
-    df_decks_filtered = df_decks[[ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId']].copy()
-    df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
+    deck_cursor = global_vars.myDB.find('Deck', {}) 
+    deck_list = list(deck_cursor)       
+    df_decks = pd.DataFrame(deck_list)
+    df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
+    df_decks_filtered = df_decks[[ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles']].copy()
+    #df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
     df_decks_filtered['type'] = 'Deck'
 
     #except:
@@ -613,7 +647,7 @@ def generate_deck_statistics_dataframe():
     #return pd.DataFrame()
 
     # For column 'cardSetNo' replace the number 99 with 0 
-    df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].replace(99, 0)
+    df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].astype(int).replace(99, 0)
     df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
 
     # Assuming 'name' is the column with names and 'elo' originally contains the values to convert
@@ -650,18 +684,18 @@ def generate_deck_statistics_dataframe():
     identifier = 'Forgeborn Data'
 
     # Create a DataFrame from the fb_abilities sub-dictionary  
-    number_of_decks = GlobalVariables.myDB.count_documents('Deck', {})
-    GlobalVariables.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
-    for deck in GlobalVariables.myDB.find('Deck', {}) :
-        GlobalVariables.update_progress(identifier, message = 'Processing Deck Forgeborn: ' + deck['name'])
+    number_of_decks = global_vars.myDB.count_documents('Deck', {})
+    global_vars.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
+    for deck in global_vars.myDB.find('Deck', {}) :
+        global_vars.update_progress(identifier, message = 'Processing Deck Forgeborn: ' + deck['name'])
         if 'forgebornId' in deck:   process_deck_forgeborn(deck['name'], 'forgebornId', df_decks_filtered)
 
     identifier = 'Stats Data' 
-    GlobalVariables.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
+    global_vars.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
     
     # Create a DataFrame from the 'stats' sub-dictionary
-    for deck in GlobalVariables.myDB.find('Deck', {}):
-        GlobalVariables.update_progress(identifier, message = 'Processing Deck Stats: ' + deck['name'])
+    for deck in global_vars.myDB.find('Deck', {}):
+        global_vars.update_progress(identifier, message = 'Processing Deck Stats: ' + deck['name'])
 
         if 'stats' in deck:
             stats = deck.get('stats', {})
@@ -767,13 +801,13 @@ def check_column_values(column, changed_df):
 def handle_debug_toggle(change):
     if change.new:
         ic.enable()
-        GlobalVariables.debug = True
+        global_vars.debug = True
     else:
         ic.disable()
-        GlobalVariables.debug = False
+        global_vars.debug = False
 
 def handle_db_list_change(change):
-    global username, grid_manager
+    global username_widget, grid_manager
 
     with out_debug:
         print(f'DB List Change: {change}')
@@ -785,11 +819,12 @@ def handle_db_list_change(change):
 
             change['type'] = 'username'
             # Update the Global Username Variable
-            GlobalVariables.username = new_username
-            GlobalVariables.myDB.set_database_name(new_username)
+            global_vars.username = new_username
+            #global_vars.myDB = DatabaseManager(new_username)
+            #global_vars.myDB.set_database_name(new_username)
 
             # Update Username Widget
-            username.value = new_username  # Reflect change in username widget
+            username_widget.value = new_username  # Reflect change in username widget
             update_deck_and_fusion_counts()
 
             # Update Interface for New Username
@@ -800,9 +835,9 @@ def handle_db_list_change(change):
             print('No valid database selected.')
 
 def reload_data_on_click(button, value):
-    global db_list, username
-    username_value = username.value if username else GlobalVariables.username
-    GlobalVariables.username = username_value
+    global db_list, username_widget
+    username_value = username_widget.value if username_widget else global_vars.username
+    global_vars.username = username_value
 
     if not db_list:
         print('No database list found.')
@@ -813,19 +848,18 @@ def reload_data_on_click(button, value):
         arguments = ['--username', username_value,
                      '--mode', 'update',
                      '--type', 'deck,fuseddeck']
-        #print(f'Loading Decks/Fusions with arguments {arguments}')
+        print(f'Loading Decks/Fusions with arguments {arguments}')
         args = parse_arguments(arguments)
      
     elif value == 'Create all Fusions':
         arguments = ['--username', username_value,
-                     '--mode', 'update',
-                     '--type', 'fuseddeck']
-        #print(f'Loading Fusions with arguments {arguments}')
+                     '--mode', 'create' ]
+        print(f'Loading Fusions with arguments {arguments}')
         args = parse_arguments(arguments)    
 
     load_deck_data(args)
     # Refresh db_list widget
-    db_names = GlobalVariables.myDB.mdb.client.list_database_names()
+    db_names = global_vars.myDB.mdb.client.list_database_names()
     valid_db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
 
     if valid_db_names:
@@ -834,7 +868,7 @@ def reload_data_on_click(button, value):
         #print(f'Username Value: {username_value}')
         
         if username_value in valid_db_names:
-            #print(f'Setting db_list value to {username_value}')
+            print(f'Setting db_list value to {username_value}')
             db_list.value = username_value
         else:
             #print(f'Setting db_list value to {valid_db_names[0]} because {username_value} not in {valid_db_names}')
@@ -854,7 +888,7 @@ def display_graph_on_click(button):
 
     if myDeckA and myDeckB:
         fusionName = f'{myDeckA.name}_{myDeckB.name}'
-        fusionCursor = GlobalVariables.myDB.find('Fusion', {'name' : fusionName})
+        fusionCursor = global_vars.myDB.find('Fusion', {'name' : fusionName})
         if fusionCursor: 
             for fusion in fusionCursor:
                 myFusion = Fusion.from_data(fusion)
@@ -911,7 +945,7 @@ def display_graph_on_click(button):
 
 # def filter_options(value, options):
 #     # First get all card names from the database
-#     cards = GlobalVariables.myDB.find('Card', {})
+#     cards = global_vars.myDB.find('Card', {})
 #     cardNames = [card['name'] for card in cards]
 
 #     # Filter all cardnames where value is a substring of 
@@ -927,8 +961,8 @@ def display_graph_on_click(button):
     
 
 def refresh_faction_deck_options(faction_toggle, dropdown):    
-    #GlobalVariables.myDB.set_database_name(GlobalVariables.username)    
-    deckCursor = GlobalVariables.myDB.find('Deck', { 'faction' : faction_toggle.value })
+    #global_vars.myDB.set_database_name(global_vars.username)    
+    deckCursor = global_vars.myDB.find('Deck', { 'faction' : faction_toggle.value })
     deckNames = []    
     deckNames = [deck['name'] for deck in deckCursor]
     dropdown.options = deckNames        
@@ -1012,31 +1046,31 @@ def create_faction_selection_toggle(faction_names, initial_style='info'):
 def initialize_widgets() :
     factionToggle = create_faction_selection_toggle(factionNames)
     dropdown = widgets.Dropdown()
-    refresh_faction_deck_options(factionToggle, dropdown)
+    #refresh_faction_deck_options(factionToggle, dropdown)
     factionToggle.observe(lambda change: refresh_faction_deck_options(factionToggle, dropdown), 'value')
     return factionToggle, dropdown
 
 def create_database_selection_widget():
-    global username
-    db_names = GlobalVariables.myDB.mdb.client.list_database_names()
+    global username_widget
+    DB = DatabaseManager('common')
+    db_names = DB.mdb.client.list_database_names()
     db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
     db_list = widgets.RadioButtons(
         options= [''] + db_names ,
         description='Databases:',
         disabled=False
-        #value=''
     )
     # Set the username to the value of the selected database
     
-    #GlobalVariables.username = db_list.value or 'user'
-    #GlobalVariables.myDB.set_database_name(GlobalVariables.username)
+    #global_vars.username = db_list.value or 'user'
+    #global_vars.myDB.set_database_name(global_vars.username)
     # Also set the value of the username widget
-    if username:
-        username.value = GlobalVariables.username
+    if username_widget:
+        username_widget.value = global_vars.username
 
     def on_db_list_change(change):    
-        if username:
-            username.value = change['new']
+        if username_widget:
+            username_widget.value = change['new']
 
     db_list.observe(on_db_list_change, 'value')
 
@@ -1047,7 +1081,7 @@ count_display = widgets.Label(value='Deck / Fusion counts will be displayed here
 def update_deck_and_fusion_counts():
     global count_display
     # Ensure we are querying the right database based on the selected username
-    db_manager = GlobalVariables.myDB
+    db_manager = global_vars.myDB
     deck_count = db_manager.count_documents('Deck', {})
     fusion_count = db_manager.count_documents('Fusion', {})
     
@@ -1092,13 +1126,13 @@ def setup_interface():
         #'data_functions' : data_generation_functions
     }
 
-    # Database selection widget
-    db_list = create_database_selection_widget()
-    db_list.observe(handle_db_list_change, names='value')
-
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description='Execute', button_style='info', tooltip='Execute the selected action')
     button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
+
+    # Database selection widget
+    db_list = create_database_selection_widget()
+    db_list.observe(handle_db_list_change, names='value')
     
     # Create a list of HBoxes of factionToggles, Labels, and dropdowns
     toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
@@ -1106,23 +1140,17 @@ def setup_interface():
     # Create a Checkbox widget to toggle debugging
     debug_toggle = widgets.Checkbox(value=False, description='Debugging', disabled=False)    
     debug_toggle.observe(handle_debug_toggle, 'value')
-
-    # Create a progress bar widget
-    #if not GlobalVariables.debug : 
-    #GlobalVariables.intProgressBar = widgets.IntProgress(value=0, min=0, max=100, description='Initialised!', bar_style='info', 
-    #                                                     style={'bar_color': 'lightblue', 'description_width' : '350px'}, layout=widgets.Layout(width='25%'))
-
     
     # Create an instance of the manager
     grid_manager = DynamicGridManager(data_selection_data, qg_options, out_debug)
 
     # Update the filter grid on db change
-    db_list.observe(grid_manager.filterGridObject.update_selection_content)
+    db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')
 
     templateGrid = TemplateGrid()
 
     # Create the Tab widget with children
-    db_tab   = widgets.VBox([loadToggle, button_load, count_display, username, db_list])
+    db_tab   = widgets.VBox([loadToggle, button_load, count_display, username_widget, db_list])
     deck_tab = widgets.VBox([grid_manager.get_ui()])  # , qm_gridbox])
     fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph])
     debug_tab = widgets.VBox([debug_toggle, out_debug])
@@ -1138,8 +1166,8 @@ def setup_interface():
     tab.selected_index = 1
     display(tab)
 
-    #GlobalVariables.tqdmBar = tqdm(total=100, desc='Loading...', bar_format='{desc}: {percentage:3.0f}% {bar}')
+    #global_vars.tqdmBar = tqdm(total=100, desc='Loading...', bar_format='{desc}: {percentage:3.0f}% {bar}')
     
     # Display the Tab widget
-    #display(GlobalVariables.intProgressBar)
+    #display(global_vars.intProgressBar)
     

@@ -3,16 +3,17 @@ import pandas as pd
 import qgrid
 import ipywidgets as widgets
 #from IPython.display import display, clear_output, HTML
-import GlobalVariables as gv
+from GlobalVariables import global_vars as gv
 
 from DataSelectionManager import DataSelectionManager
+from MongoDB.DatabaseManager import DatabaseManager
 
 # module global variables 
 
 data_selection_sets2 = {
-        'Deck Stats': [ 'name', 'type', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'Creatures', 'Spells', 'FB2', 'FB3', 'FB4', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
-        'Card Types': [ 'name', 'type', 'faction', 'Creatures', 'Spells', 'Exalts', 'Beast', 'Dinosaur', 'Mage', 'Robot', 'Scientist', 'Spirit', 'Warrior', 'Zombie', 'Minion', 'Dragon', 'Elemental', 'Plant'],    
-        'All Types' : [ 'name', 'type', 'faction', 'Beast', 'Beast Synergy', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy',
+        'Deck Stats': [ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'Creatures', 'Spells', 'FB2', 'FB3', 'FB4', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
+        'Card Types': [ 'name', 'faction', 'Creatures', 'Spells', 'Exalts', 'Beast', 'Dinosaur', 'Mage', 'Robot', 'Scientist', 'Spirit', 'Warrior', 'Zombie', 'Minion', 'Dragon', 'Elemental', 'Plant'],    
+        'All Types' : [ 'name', 'faction', 'Beast', 'Beast Synergy', 'Dinosaur', 'Dinosaur Synergy', 'Mage', 'Mage Synergy', 'Robot', 'Robot Synergy',
                         'Scientist', 'Scientist Synergy', 'Spirit', 'Spirit Synergy', 'Warrior', 'Warrior Synergy',
                         'Zombie', 'Zombie Synergy', 'Dragon', 'Dragon Synergy', 'Elemental', 'Elemental Synergy',
                         'Plant', 'Plant Synergy', 'Replace Setup', 'Replace Profit', 'Minion', 'Minion Synergy',
@@ -30,7 +31,7 @@ data_selection_sets2 = {
                        'Replace Profit', 'Minion', 'Minion Synergy', 'Spell', 'Spell Synergy', 'Healing Source', 'Healing Synergy', 'Movement', 'Movement Benefit', 'Armor', 'Armor Giver', 
                        'Armor Synergy', 'Activate', 'Ready', 'Upgrade', 'Upgrade Synergy', 'Destruction Activator', 'Destruction Synergy',  'Self Damage Activator', 'Self Damage Payoff', 
                        'Exalts', 'Exalt Synergy'],
-        'Fusions'   : ['type', 'Deck A', 'Deck B', 'Current ForgebornId', 'FB2', 'FB3', 'FB4', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
+        'Fusion Stats' : ['name', 'Deck A', 'Deck B', 'Current ForgebornId', 'FB2', 'FB3', 'FB4', 'cardTitles', 'A1', 'A2', 'A3', 'H1', 'H2', 'H3'],
 }
 
 data_selection_sets = {
@@ -192,7 +193,7 @@ data_selection_sets = {
     "Exalts": True,
     "Exalt Synergy": True
   },
-  "Fusions": {
+  "Fusion Stats": {
     "name": True,
     "type": 'Fusion',
     "Deck A": True,
@@ -201,11 +202,12 @@ data_selection_sets = {
     "FB2": True,
     "FB3": True,
     "FB4": True,
+    "cardTitles": True,
     "A1": True,
-    "A2": True,
-    "A3": True,
     "H1": True,
+    "A2": True,
     "H2": True,
+    "A3": True,
     "H3": True
   }
 }
@@ -571,7 +573,7 @@ class FilterGrid:
 
         # Set the values for each column in the new row
         for column in df.columns:
-            if column in ['op1', 'op2', 'Data Set']:  # Directly use the value for these fields
+            if column in ['Type', 'op1', 'op2', 'Data Set']:  # Directly use the value for these fields
                 df.at[new_row_index, column] = self.selection_widgets[column].value
             elif column == 'Active':  # Assume these are multi-select fields and join their values
                 df.at[new_row_index, 'Active'] = True
@@ -652,7 +654,7 @@ class FilterGrid:
             'Type': widgets.Dropdown(
                 options=['Deck', 'Fusion'],
                 description='',
-                layout=widgets.Layout(width='75px', border='2px solid cyan', align_items='center', justify_content='center')
+                layout=widgets.Layout(width='100px', border='1px solid cyan', align_items='center', justify_content='center')
             ),
             'Modifier': self.create_cardType_names_selector('Modifier', options={'border': '1px solid blue'}),
             'op1': widgets.Dropdown(options=['', 'AND', 'OR', '+'], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center', margin='5px')),
@@ -715,11 +717,14 @@ def get_cardType_entity_names(cardType):
     Returns:
         list: A list of entity names that match the card type.
     """
-    cardType_entities = gv.commonDB.find('Entity', {"attributes.cardType": cardType})
+    commonDB = DatabaseManager('common')
+    cardType_entities = commonDB.find('Entity', {"attributes.cardType": cardType})
     cardType_entities_names = [entity['name'] for entity in cardType_entities]
-    cards = gv.myDB.find('Card', {})
-    cardNames = [card.get('title', card.get('name', '')) for card in cards]
-    cardType_entities_names = [name for name in cardType_entities_names if any(name in cardName for cardName in cardNames)]
+    if gv.myDB: 
+        # If the user has a database, filter the cardType_entities_names to only include cards that are in the user's database
+        cards = gv.myDB.find('Card', {})
+        cardNames = [card.get('title', card.get('name', '')) for card in cards]
+        cardType_entities_names = [name for name in cardType_entities_names if any(name in cardName for cardName in cardNames)]
     cardType_entities_names.sort()
     return cardType_entities_names
 
@@ -730,7 +735,8 @@ def get_forgeborn_abilities():
     Returns:
         list: A list of forgeborn ability names.
     """
-    forgeborns = gv.commonDB.find('Forgeborn', {})
+    commonDB = DatabaseManager('common')
+    forgeborns = commonDB.find('Forgeborn', {})
     forgeborn_abilities_list = [forgeborn['abilities'] for forgeborn in forgeborns]
     ability_names = [ f"{id[5:-5].capitalize()} : {name}" for abilities in forgeborn_abilities_list for id, name in abilities.items() if "Fraud" not in name]
     # Cut out the forgeborn ability prefix 'C<number> - '
@@ -746,32 +752,46 @@ import re
 def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=None):
 
     def filter_by_substring(df, filter_row):    
-        def apply_filter(df, substrings, filter_fields=['cardTitles']):
+        def apply_filter(df, substrings, filter_fields=['cardTitles'], apply_operator='OR'):
             if not substrings or not filter_fields:
                 return df
 
-            # Create a boolean mask initialized to False
-            substring_check_results = pd.Series([False] * len(df), index=df.index)
-
-            # Iterate over the specified filter fields
-            for field in filter_fields:
-                if field in df.columns:
-                    # Update the boolean mask if any substring is found in the current field    
-                    substring_check_results |= df[field].apply(lambda title: any(substring.lower() in str(title).lower() for substring in substrings))
-
+            if apply_operator == 'AND':
+                # Create a boolean mask initialized to True for "AND" logic
+                mask = pd.Series([True] * len(df), index=df.index)
+                for field in filter_fields:
+                    if field in df.columns:
+                        for substring in substrings:
+                            mask &= df[field].apply(lambda title: substring.lower() in str(title).lower())
+            else:
+                # Create a boolean mask initialized to False for "OR" logic
+                mask = pd.Series([False] * len(df), index=df.index)
+                for field in filter_fields:
+                    if field in df.columns:
+                        for substring in substrings:
+                            mask |= df[field].apply(lambda title: substring.lower() in str(title).lower())
+            
             # Filter the DataFrame using the boolean mask
-            current_filter_results = df[substring_check_results].copy()
+            current_filter_results = df[mask].copy()
 
             return current_filter_results   
 
+        def determine_operator_and_substrings(string):
+            if ':' in string:
+                return 'AND', re.split(r'\s*:\s*', string)
+            else:
+                return 'OR', re.split(r'\s*;\s*', string)
+
+
         # Apply the first filter outside the loop
         df_filtered = df_to_filter
-        substrings = re.split(r'\s*;\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
+        #substrings = re.split(r'\s*;\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
+        apply_operator, substrings = determine_operator_and_substrings(filter_row['Modifier']) if filter_row['Modifier'] else ('OR', [])
         if substrings:
             df_filtered = apply_filter(df, substrings)
 
         # Apply the remaining filters in the loop
-        for i, filter_type in enumerate(['Type', 'Creature', 'Spell', 'Forgeborn Ability'], start=1):
+        for i, filter_type in enumerate(['Creature', 'Spell', 'Forgeborn Ability', 'Type'], start=1):
             operator = ''
             if f'op{i}' in filter_row:
                 operator = filter_row[f'op{i}']
@@ -786,7 +806,9 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
                 operator = 'AND'
 
             previous_substrings = substrings
-            substrings = re.split(r'\s*;\s*', filter_row[filter_type]) if filter_row[filter_type] else []
+            # Determine if we should use AND or OR logic based on the operator            
+            apply_operator, substrings = determine_operator_and_substrings(filter_row[filter_type]) if filter_row[filter_type] else ("",[])
+            #substrings = re.split(r'\s*;\s*', filter_row[filter_type]) if filter_row[filter_type] else []
             #print(f"Substrings = '{substrings}'")            
             
             if operator == '+':                
@@ -802,7 +824,7 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
                 continue
 
             # Apply the filter to the DataFrame
-            current_filter_results = apply_filter(df, substrings, filter_fields)
+            current_filter_results = apply_filter(df, substrings, filter_fields, apply_operator=apply_operator)
 
             # Handle the operator logic in the outer loop
             if operator == 'AND':
@@ -859,7 +881,7 @@ class DynamicGridManager:
         self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]  # Update UI children
 
     def refresh_gridbox(self, change=None):
-        default_dfs = {}
+        print(f"DynamicGridManager::refresh_gridbox() - Refreshing grid box with change: {change}")
         
         collection_df = self.qm.get_default_data('collection')
         if collection_df.empty or (change and 'type' in change and change['type'] == 'username'):            

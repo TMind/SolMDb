@@ -5,12 +5,12 @@ from CardLibrary import  Fusion, FusionData, Deck, Card
 from tqdm import tqdm 
 from MultiProcess import MultiProcess
 from tqdm import tqdm
-import GlobalVariables
+from GlobalVariables import global_vars
 
 class DeckLibrary:
     def __init__(self, decks_data, fusions_data, mode):                
-        #self.dbmgr = DatabaseManager(GlobalVariables.username)
-        self.dbmgr = GlobalVariables.myDB
+        #self.dbmgr = DatabaseManager(global_vars.username)
+        self.dbmgr = global_vars.myDB
         self.new_decks = []
         self.online_fusions = []
         
@@ -53,38 +53,28 @@ class DeckLibrary:
                 self.dbmgr.insert_many('Card', cardDataList)
 
         if fusions_data:
-
-            #with tqdm(total=len(fusions_data), desc="Saving Online Fusions",mininterval=0.1, colour='YELLOW') as pbar:
-            GlobalVariables.update_progress('DeckLibrary', 0, len(fusions_data), 'Saving Online Fusions')
-            #GlobalVariables.intProgressBar.value = 0 
-            #GlobalVariables.intProgressBar.max = len(fusions_data)
+            
+            global_vars.update_progress('DeckLibrary', 0, len(fusions_data), 'Saving Online Fusions')            
             for fusion_data in fusions_data:
-                decks = fusion_data['myDecks']            
-                fusionDeckNames = []
-                if isinstance(decks[0], str):
-                    fusionDeckNames = [deckName for deckName in decks]
-                else:
-                    fusionDeckNames = [deck['name'] for deck in decks]
-                                
+                decks = fusion_data['myDecks']                      
                 fusionObject = Fusion.from_data(fusion_data)
-
                 fusionGraph = MyGraph()  
                 fusionGraph.create_graph_children(fusionObject)
                 # Convert the graph to a dictionary
                 fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G)
                 fusionObject.graph = fusionGraphDict
+                fusionObject.node_data = fusionGraph.node_data
                 fusionObject.save()           
-                self.online_fusions.append(fusion_data)
-                #GlobalVariables.intProgressBar.value += 1
-                GlobalVariables.update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")
-                #pbar.update(1)
-            
+                self.online_fusions.append(fusion_data)                
+                global_vars.update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")
+                            
         # Get number of fusions from the database
         fusionCursor = self.dbmgr.find('Fusion', {})
         fusionNamesDatabase = [fusion['name'] for fusion in fusionCursor]
         
         # Check if fusions exist already in the database and if not, create them
-        if len(fusionNamesDatabase) <= len(self.online_fusions) :
+
+        if mode =='create':
             print('Creating fusions...')
             deckCursor = self.dbmgr.find('Deck', {}, {'name': 1})                
             self.new_decks = [deck for deck in deckCursor]             
@@ -110,7 +100,7 @@ class DeckLibrary:
 
         # Create new fusions with the newCombinations
         if deckCombinationData:
-            multi_process = MultiProcess(create_fusion, deckCombinationData, GlobalVariables.username)
+            multi_process = MultiProcess(create_fusion, deckCombinationData, global_vars.username)
             multi_process.run()
            
 
@@ -124,9 +114,9 @@ def create_fusion(dataChunks):
     dataChunk , additional_data = dataChunks
 
     for decks in dataChunk:
-        GlobalVariables.username = additional_data
+        global_vars.username = additional_data
         if not dbmgr:
-            dbmgr = DatabaseManager(GlobalVariables.username)
+            dbmgr = DatabaseManager(global_vars.username)
         deck1, deck2 = decks
 
         if deck1['faction'] != deck2['faction']:

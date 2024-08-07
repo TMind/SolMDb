@@ -1,22 +1,16 @@
 import importlib
 from MongoDB.MongoDB import MongoDB
 #from MyGraph import MyGraph
-import GlobalVariables
 from dataclasses import dataclass, fields, asdict
 from typing import Any, Dict
+
+
 
 class DatabaseManager:
     _instances = {}
     _credentials = None
 
-    def __new__(cls, db_name: str = None, host='localhost', port=27017, uri = None):        
-        #if cls._instance is None:
-        #    cls._instance = super().__new__(cls)
-        #    cls._instance.mdb = MongoDB(db_name, host, port, uri)
-        #if db_name: 
-        #    cls._instance.set_database_name(db_name)
-        #return cls._instance
-        
+    def __new__(cls, db_name: str = None, host='localhost', port=27017, uri = None ):                
         if cls._credentials is None:
             cls._credentials = {'host': host, 'port': port, 'uri': uri}
 
@@ -53,6 +47,7 @@ class DatabaseManager:
         #print(f"Getting record by name: {name} from db - collection: {self.get_current_db_name()} - {collection_name}")
         return self.find_one(collection_name, {'name': name})
 
+from GlobalVariables import global_vars 
 class DatabaseObject:
     _db_manager = None
 
@@ -64,8 +59,8 @@ class DatabaseObject:
             if data_class.__name__ in ['EntityData', 'ForgebornData', 'InterfaceData','SynergyData']:
                 self.db_name = 'common'
             else:
-                if GlobalVariables.username: 
-                    self.db_name = GlobalVariables.username 
+                if global_vars.username: 
+                    self.db_name = global_vars.username 
                 else:
                     self.db_name ='user_specific'
             
@@ -89,8 +84,8 @@ class DatabaseObject:
         if data_class.__name__ in ['EntityData', 'ForgebornData', 'InterfaceData', 'SynergyData']:
             self.db_name = 'common'
         else:
-            if GlobalVariables.username: 
-                self.db_name = GlobalVariables.username 
+            if global_vars.username: 
+                self.db_name = global_vars.username 
             else:
                 self.db_name ='user_specific'
         if self.db_manager:
@@ -106,7 +101,7 @@ class DatabaseObject:
 
     @classmethod
     def _get_class_db_manager(cls):
-        db_name = 'common' if cls.__name__ in ['Entity', 'Forgeborn', 'Interface', 'Synergy'] else GlobalVariables.username or 'user_specific'
+        db_name = 'common' if cls.__name__ in ['Entity', 'Forgeborn', 'Interface', 'Synergy'] else global_vars.username or 'user_specific'
         return DatabaseManager(db_name)
 
 

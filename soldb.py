@@ -210,7 +210,7 @@ def parse_arguments(arguments = None):
     parser.add_argument("--filename",  default=None,  help="Offline Deck Database Name")
     parser.add_argument("--synergies", default=None, help="CSV Filename for synergy lookup")    
     parser.add_argument("--offline", default=None, help="Offline use only")    
-    parser.add_argument("--mode", default='insert', help="Mode: insert, update, refresh")    
+    parser.add_argument("--mode", default='insert', help="Mode: insert, update, refresh, create")    
 
     # Arguments for Evaluation
     

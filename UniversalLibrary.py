@@ -1,19 +1,16 @@
-from dataclasses import asdict
 import CardLibrary
-#from CardLibrary import EntityData, Entity, Forgeborn, Deck, ForgebornData, Fusion, Card
-from Interface import InterfaceCollection, Interface, InterfaceData
-from pymongo.operations import UpdateOne
-#from MongoDB.DatabaseManager import DatabaseManager
-import GlobalVariables as gv
+from Interface import Interface, InterfaceData
 from typing import Tuple, List, Dict
 import csv, json, re
+
+from MongoDB.DatabaseManager import DatabaseManager
 
 class UniversalLibrary:
 
     entities = []
 
     def __init__(self, username, sff_path, fb_path, syn_path):        
-        self.database = gv.commonDB
+        self.database = DatabaseManager('common')
         self.forgeborns = {}
         self.fb_map = {} 
 

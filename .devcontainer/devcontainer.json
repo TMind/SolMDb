@@ -15,5 +15,5 @@
     ],  
     "runArgs": ["--init"],      
     "postCreateCommand": "/usr/local/bin/post-create.sh" ,  
-    "postStartCommand": "mongod --logpath /tmp/mongod.log --config /etc/mongod.conf --dbpath /workspaces/mongodb/data/db"    
+    "postStartCommand": "mongod --fork --logpath /tmp/mongod.log --dbpath /workspaces/mongodb/data/db"    
 }  

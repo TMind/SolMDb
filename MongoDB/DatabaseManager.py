@@ -1,29 +1,56 @@
 import importlib
 from MongoDB.MongoDB import MongoDB
-#from MyGraph import MyGraph
+import pymongo
+import GlobalVariables
 from dataclasses import dataclass, fields, asdict
 from typing import Any, Dict
-
-
+from time import sleep
 
 class DatabaseManager:
     _instances = {}
     _credentials = None
 
-    def __new__(cls, db_name: str = None, host='localhost', port=27017, uri = None ):                
-        if cls._credentials is None:
-            cls._credentials = {'host': host, 'port': port, 'uri': uri}
+    # New method to check MongoDB availability  
+    @staticmethod  
+    def check_mongo_availability(host='localhost', port=27017, uri=None):  
+        try:  
+            if uri:  
+                client = pymongo.MongoClient(uri)  
+            else:  
+                client = pymongo.MongoClient(host, port)  
+            client.admin.command('ping')  
+            #print("MongoDB is available")  
+            return True  
+        except pymongo.errors.ConnectionFailure as e:  
+            print(f"MongoDB is not available: {e}")  
+            return False  
 
-        if db_name is None:
-            # Create an empty instance without a database name
-            return super().__new__(cls)
-
-        if db_name not in cls._instances:
-            host, port, uri = cls._credentials.values()
-            cls._instances[db_name] = super().__new__(cls)
-            cls._instances[db_name].mdb = MongoDB(db_name, host, port, uri)            
-        return cls._instances[db_name]
-
+    def __new__(cls, db_name: str = None, host='localhost', port=27017, uri=None, force_new=False):  
+        if cls._credentials is None:  
+            cls._credentials = {'host': host, 'port': port, 'uri': uri}  
+  
+        if db_name is None:  
+            # Create an empty instance without a database name  
+            return super().__new__(cls)  
+  
+        if force_new or db_name not in cls._instances:  
+            host, port, uri = cls._credentials.values()  
+            if force_new:  
+                new_instance = super().__new__(cls)  
+                while not cls.check_mongo_availability(host, port, uri):  
+                    print("MongoDB ist nicht verfügbar. Warte...")  
+                    sleep(1)  
+                new_instance.mdb = MongoDB(db_name, host, port, uri)  
+                return new_instance  
+            else:  
+                cls._instances[db_name] = super().__new__(cls)  
+                while not cls.check_mongo_availability(host, port, uri):  
+                    print("MongoDB ist nicht verfügbar. Warte...")  
+                    sleep(1)  
+                cls._instances[db_name].mdb = MongoDB(db_name, host, port, uri)  
+          
+        return cls._instances[db_name]  
+    
     def set_database_name(self, db_name: str, host='localhost', port=27017, uri = None):        
         if not 'mdb' in self.__dict__: 
             if self._credentials is None:

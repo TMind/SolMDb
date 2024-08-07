@@ -1,16 +1,13 @@
-from ast import Global
 from MyGraph import MyGraph
 from MongoDB.DatabaseManager import DatabaseManager
-from CardLibrary import  Fusion, FusionData, Deck, Card
-from tqdm import tqdm 
+from CardLibrary import  Fusion, Deck, Card
 from MultiProcess import MultiProcess
-from tqdm import tqdm
-from GlobalVariables import global_vars
+from GlobalVariables import username, update_progress
+import networkx as nx  
 
 class DeckLibrary:
     def __init__(self, decks_data, fusions_data, mode):                
-        #self.dbmgr = DatabaseManager(global_vars.username)
-        self.dbmgr = global_vars.myDB
+        self.dbmgr = DatabaseManager(username)
         self.new_decks = []
         self.online_fusions = []
         
@@ -54,7 +51,7 @@ class DeckLibrary:
 
         if fusions_data:
             
-            global_vars.update_progress('DeckLibrary', 0, len(fusions_data), 'Saving Online Fusions')            
+            update_progress('DeckLibrary', 0, len(fusions_data), 'Saving Online Fusions')            
             for fusion_data in fusions_data:
                 decks = fusion_data['myDecks']                      
                 fusionObject = Fusion.from_data(fusion_data)
@@ -66,8 +63,9 @@ class DeckLibrary:
                 fusionObject.node_data = fusionGraph.node_data
                 fusionObject.save()           
                 self.online_fusions.append(fusion_data)                
-                global_vars.update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")
-                            
+                update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")
+                #pbar.update(1)
+            
         # Get number of fusions from the database
         fusionCursor = self.dbmgr.find('Fusion', {})
         fusionNamesDatabase = [fusion['name'] for fusion in fusionCursor]
@@ -100,42 +98,7 @@ class DeckLibrary:
 
         # Create new fusions with the newCombinations
         if deckCombinationData:
-            multi_process = MultiProcess(create_fusion, deckCombinationData, global_vars.username)
+            multi_process = MultiProcess(deckCombinationData, username)
             multi_process.run()
-           
+         
 
-from pymongo.operations import UpdateOne
-import networkx as nx
-
-def create_fusion(dataChunks):
-    operations = []
-    dbmgr = None 
-    
-    dataChunk , additional_data = dataChunks
-
-    for decks in dataChunk:
-        global_vars.username = additional_data
-        if not dbmgr:
-            dbmgr = DatabaseManager(global_vars.username)
-        deck1, deck2 = decks
-
-        if deck1['faction'] != deck2['faction']:
-            fusionName = f"{deck1['name']}_{deck2['name']}"                     
-            fusionId = fusionName
-            fusionDeckNames =  [deck1['name'], deck2['name']] 
-            fusionBornIds = [deck1['forgebornId'], deck2['forgebornId']]            
-            fusionObject = Fusion(FusionData(fusionName, fusionDeckNames, deck1['forgebornId'] ,fusionBornIds, fusionId) )
-            fusionData = fusionObject.to_data()  
-            fusionGraph = MyGraph()  
-            fusionGraph.create_graph_children(fusionObject)
-            # Convert the graph to a dictionary
-            fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G)
-            fusionData['graph'] = fusionGraphDict
-            fusionData['node_data'] = fusionGraph.node_data
-
-            operations.append(UpdateOne({'_id': fusionId}, {'$set': fusionData}, upsert=True))            
-
-    if operations and dbmgr:
-        dbmgr.bulk_write('Fusion', operations)
-    
-    return len(dataChunk) #len(operations)

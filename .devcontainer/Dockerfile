@@ -19,5 +19,5 @@ RUN echo "mongodb-org hold" | dpkg --set-selections \
     && echo "mongodb-org-tools hold" | dpkg --set-selections
 
 # Copy post-create.sh to image
-COPY post-create.sh /usr/local/bin/post-create.sh  
+COPY .devcontainer/post-create.sh /usr/local/bin/post-create.sh  
 RUN chmod +x /usr/local/bin/post-create.sh  

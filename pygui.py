@@ -1,5 +1,6 @@
 import os, time, re
 import ipywidgets as widgets
+from numpy import isin
 from pyvis.network import Network
 import networkx as nx
 import pickle
@@ -260,23 +261,24 @@ def load_deck_data(args):
 
 user_dataframes = {}
 ### Dataframe Generation Functions ###
-def generate_central_dataframe():
+def generate_central_dataframe(force_new=False):
     # Get the current username from the global variables
     username = global_vars.username
     identifier = f"Main DataFrame: {username}"
 
-    if username in user_dataframes:
-        return user_dataframes[username]
+    if not force_new:
+        if username in user_dataframes:
+            return user_dataframes[username]
 
-    # Check if the DataFrame already exists in GridFS
-    file_record = global_vars.myDB.find_one('fs.files',  {'filename': 'central_df'})
-    if file_record:
-        # Retrieve the DataFrame from GridFS
-        file_id = file_record['_id']
-        with global_vars.fs.get(file_id) as file:
-            central_df = pickle.load(file)
-            user_dataframes[username] = central_df
-            return central_df
+        # Check if the DataFrame already exists in GridFS
+        file_record = global_vars.myDB.find_one('fs.files',  {'filename': 'central_df'})
+        if file_record:
+            # Retrieve the DataFrame from GridFS
+            file_id = file_record['_id']
+            with global_vars.fs.get(file_id) as file:
+                central_df = pickle.load(file)
+                user_dataframes[username] = central_df
+                return central_df
 
     # Start with deck statistics which form the basis of the DataFrame
     global_vars.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
@@ -308,33 +310,43 @@ def generate_central_dataframe():
     return central_df
 
 from CardLibrary import Forgeborn, ForgebornData
-def process_deck_forgeborn(item_name, forgebornId_key, df):
+def process_deck_forgeborn(item_name, forgebornIds, df):
     try:
         if item_name not in df.index:
             display(df)
             print(f"Fusion name '{item_name}' not found in DataFrame index.")
-            return
-        if forgebornId_key not in df.columns:
-            print(f"ForgebornId key '{forgebornId_key}' not found in DataFrame columns.")
-            return
-        forgeborn_id = df.loc[item_name, forgebornId_key]
-        forgebornId = forgeborn_id[:-3]
-        if forgebornId.startswith('a'):
-            forgebornId = 's' + forgebornId[1:]
-        commonDB = DatabaseManager('common')
-        forgeborn_data = commonDB.find_one('Forgeborn', {'id': forgebornId})
-        if forgeborn_data is None:
-            print(f'No data found for forgebornId: {forgebornId}')
-            return
-        fb_data = ForgebornData(**forgeborn_data)
-        forgeborn = Forgeborn(data=fb_data)
-        unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
-        forgeborn_abilities = unique_forgeborn.abilities
-        if forgeborn_abilities:
-            for aID, aName in forgeborn_abilities.items():
-                cycle = aID[-3]
-                df.loc[item_name, f'FB{cycle}'] = aName
-        df.loc[item_name, 'forgebornId'] = forgeborn_id[5:-3].title()
+            return        
+        
+        forgebornCounter = 0
+        inspired_ability = 0
+
+        for forgeborn_id in forgebornIds:
+            forgebornCounter += 1
+            forgebornId = forgeborn_id[:-3]
+            if forgebornId.startswith('a'):
+                forgebornId = 's' + forgebornId[1:]
+            commonDB = DatabaseManager('common')
+            forgeborn_data = commonDB.find_one('Forgeborn', {'id': forgebornId})
+            if forgeborn_data is None:
+                print(f'No data found for forgebornId: {forgebornId}')
+                return
+            fb_data = ForgebornData(**forgeborn_data)
+            forgeborn = Forgeborn(data=fb_data)
+            unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
+            forgeborn_abilities = unique_forgeborn.abilities
+            if forgeborn_abilities:
+                
+                for aID, aName in forgeborn_abilities.items():
+                    cycle = aID[-3]
+                    if 'Inspire' in aName:
+                        inspired_ability = cycle 
+
+                    if forgebornCounter == 1 or cycle == inspired_ability:
+                        if forgebornCounter == 2:
+                            print(f'Inspired Ability: {inspired_ability}')
+                        df.loc[item_name, f'FB{cycle}'] = aName
+
+            df.loc[item_name, 'forgebornId'] = forgeborn_id[5:-3].title()
     except KeyError as e:
         print(f"KeyError: {e}")
         print(f"Index: {item_name}, ForgebornId key: {forgebornId_key}")
@@ -600,7 +612,7 @@ def generate_fusion_statistics_dataframe():
     df_fusions = pd.DataFrame(list(fusion_cursor))
     global_vars.update_progress('Fusion Card Titles', 0, len(df_fusions) * 2, 'Fetching Card Titles')
     df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)    
-    df_fusions_filtered = df_fusions[['name', 'CreatedAt', 'deckRank', 'children_data', 'cardTitles']].copy()
+    df_fusions_filtered = df_fusions[['name', 'CreatedAt', 'UpdatedAt', 'deckRank', 'children_data', 'graph', 'node_data', 'tags', 'cardTitles']].copy()
     df_fusions_filtered['type'] = 'Fusion'
 
     df_fusions_filtered.set_index('name', inplace=True)
@@ -616,17 +628,30 @@ def generate_fusion_statistics_dataframe():
     for fusion_data in df_fusions.itertuples():
         fusion_name = fusion_data.name
         decks = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Deck')
-        forgeborns = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Forgeborn')
+        myDecks = fusion_data.myDecks
+        # Filter out invalid entries and ensure they contain the required structure
+        valid_decks = [deck for deck in myDecks if isinstance(deck, dict) and 'forgeborn' in deck and isinstance(deck['forgeborn'], dict)]
+        forgebornIds = [deck['forgeborn']['id'] for deck in valid_decks]
 
+        # Handle the case where forgebornIds might come from fusion_data
+        if not forgebornIds and 'ForgebornIds' in fusion_data:
+            forgebornIds = fusion_data['ForgebornIds']
+
+        # Determine the currentForgebornId
+        if 'currentForgebornId' in fusion_data and fusion_data.currentForgebornId:
+            currentForgebornId = fusion_data.currentForgebornId
+        elif valid_decks:
+            currentForgebornId = valid_decks[0]['forgeborn']['id']
+        else:
+            currentForgebornId = None
+                
         if len(decks) > 1:
             df_fusions_filtered.loc[fusion_name, 'Deck A'] = decks[0]
             df_fusions_filtered.loc[fusion_name, 'Deck B'] = decks[1]
-        if forgeborns:
-            df_fusions_filtered.loc[fusion_name, 'forgebornId'] = forgeborns[0]
+        if currentForgebornId:
+            df_fusions_filtered.loc[fusion_name, 'forgebornId'] = currentForgebornId
 
-    # Call process_deck_forgeborn for each fusion
-    #for fusion_data in df_fusions.itertuples():
-        process_deck_forgeborn(fusion_data.name, 'forgebornId', df_fusions_filtered)
+        process_deck_forgeborn(fusion_data.name, forgebornIds, df_fusions_filtered)
         global_vars.update_progress('Fusion Stats', message = f"Processing Fusion Forgeborn:  {fusion_data.name}")
 
     return df_fusions_filtered
@@ -701,7 +726,7 @@ def generate_deck_statistics_dataframe():
     global_vars.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
     for deck in global_vars.myDB.find('Deck', {}) :
         global_vars.update_progress(identifier, message = 'Processing Deck Forgeborn: ' + deck['name'])
-        if 'forgebornId' in deck:   process_deck_forgeborn(deck['name'], 'forgebornId', df_decks_filtered)
+        if 'forgebornId' in deck:   process_deck_forgeborn(deck['name'], [deck['forgebornId']], df_decks_filtered)
 
     identifier = 'Stats Data' 
     global_vars.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
@@ -881,7 +906,9 @@ def reload_data_on_click(button, value):
         #print(f'Username Value: {username_value}')
         
         if username_value in valid_db_names:
-            print(f'Setting db_list value to {username_value}')
+            #print(f'Setting db_list value to {username_value}')
+            # Force update the central DataFrame for the username after reloading the data 
+            generate_central_dataframe(force_new=True)
             db_list.value = username_value
         else:
             #print(f'Setting db_list value to {valid_db_names[0]} because {username_value} not in {valid_db_names}')
@@ -1128,17 +1155,6 @@ def setup_interface():
         button_style='warning', # 'success', 'info', 'warning', 'danger' or ''
         tooltips=['Load Decks and Fusions from the website', 'Create Fusions from loaded decks'])
 
-    #data_generation_functions = {
-    #    'Deck Stats': generate_deck_statistics_dataframe,
-    #    'Card Types': generate_cardType_count_dataframe,
-    #    'Selected Decks': generate_deck_content_dataframe
-    #}
-
-    data_selection_data = {
-        'generate_function' : generate_central_dataframe
-        #'data_functions' : data_generation_functions
-    }
-
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description='Execute', button_style='info', tooltip='Execute the selected action')
     button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
@@ -1155,7 +1171,7 @@ def setup_interface():
     debug_toggle.observe(handle_debug_toggle, 'value')
     
     # Create an instance of the manager
-    grid_manager = DynamicGridManager(data_selection_data, qg_options, out_debug)
+    grid_manager = DynamicGridManager(generate_central_dataframe, qg_options, out_debug)
 
     # Update the filter grid on db change
     db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')

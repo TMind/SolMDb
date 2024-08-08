@@ -846,10 +846,10 @@ from MultiIndexDataFrame import MultiIndexDataFrame
 class DynamicGridManager:
     global data_selection_sets
 
-    def __init__(self, data_selection_data, qg_options, out_debug):
+    def __init__(self, data_generate_function, qg_options, out_debug):
         self.out_debug = out_debug
-        self.data_selection_data = data_selection_data        
-        self.data_generate_function     = data_selection_data['generate_function']
+        #self.data_selection_data = data_selection_data        
+        self.data_generate_function = data_generate_function
         self.qg_options = qg_options
         self.qm = GridManager(out_debug)
         self.grid_layout = widgets.GridspecLayout(1, 1)        

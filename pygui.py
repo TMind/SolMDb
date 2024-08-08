@@ -2,6 +2,7 @@ import os, time, re
 import ipywidgets as widgets
 from pyvis.network import Network
 import networkx as nx
+import pickle
 
 from GlobalVariables import global_vars
 from CardLibrary import Deck, FusionData, Fusion
@@ -258,7 +259,6 @@ def load_deck_data(args):
     return deckCollection
 
 user_dataframes = {}
-
 ### Dataframe Generation Functions ###
 def generate_central_dataframe():
     # Get the current username from the global variables
@@ -267,6 +267,16 @@ def generate_central_dataframe():
 
     if username in user_dataframes:
         return user_dataframes[username]
+
+    # Check if the DataFrame already exists in GridFS
+    file_record = global_vars.myDB.find_one('fs.files',  {'filename': 'central_df'})
+    if file_record:
+        # Retrieve the DataFrame from GridFS
+        file_id = file_record['_id']
+        with global_vars.fs.get(file_id) as file:
+            central_df = pickle.load(file)
+            user_dataframes[username] = central_df
+            return central_df
 
     # Start with deck statistics which form the basis of the DataFrame
     global_vars.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
@@ -290,6 +300,10 @@ def generate_central_dataframe():
 
     # Store the central_df in the user_dataframes dictionary
     user_dataframes[username] = central_df.copy()
+
+  # Serialize the DataFrame to a bytes-like object and store it in GridFS
+    with global_vars.fs.new_file(filename='central_df') as file:
+        pickle.dump(central_df, file)
 
     return central_df
 

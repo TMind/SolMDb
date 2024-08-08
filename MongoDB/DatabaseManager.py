@@ -74,7 +74,6 @@ class DatabaseManager:
         #print(f"Getting record by name: {name} from db - collection: {self.get_current_db_name()} - {collection_name}")
         return self.find_one(collection_name, {'name': name})
 
-from GlobalVariables import global_vars
 class DatabaseObject:
     _db_manager = None
 
@@ -86,6 +85,7 @@ class DatabaseObject:
             if data_class.__name__ in ['EntityData', 'ForgebornData', 'InterfaceData','SynergyData']:
                 self.db_name = 'common'
             else:
+                from GlobalVariables import global_vars
                 if global_vars.username: 
                     self.db_name = global_vars.username 
                 else:
@@ -111,6 +111,7 @@ class DatabaseObject:
         if data_class.__name__ in ['EntityData', 'ForgebornData', 'InterfaceData', 'SynergyData']:
             self.db_name = 'common'
         else:
+            from GlobalVariables import global_vars
             if global_vars.username: 
                 self.db_name = global_vars.username 
             else:
@@ -128,6 +129,7 @@ class DatabaseObject:
 
     @classmethod
     def _get_class_db_manager(cls):
+        from GlobalVariables import global_vars
         db_name = 'common' if cls.__name__ in ['Entity', 'Forgeborn', 'Interface', 'Synergy'] else global_vars.username or 'user_specific'
         return DatabaseManager(db_name)
 

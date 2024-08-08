@@ -1,13 +1,15 @@
 import ipywidgets as widgets
 from IPython.display import display
+from gridfs import GridFS
+
 class GlobalVariables:
     def __init__(self):
         self._username = ''
         self.uri = "mongodb://localhost:27017"
         self.myDB = None
-        self.commonDB = self._initialize_commonDB
+        self.fs = None 
+        self.commonDB = self._initialize_commonDB()
         self.progress_containers = {}
-        self.tqdmBar = None
         self.debug = False
 
     @property
@@ -23,6 +25,7 @@ class GlobalVariables:
         from MongoDB.DatabaseManager import DatabaseManager
         # Logic to set myDB based on the new username
         self.myDB = DatabaseManager(self._username)
+        self.fs = GridFS(self.myDB.mdb.db)  # Set GridFS for the user-specific DB
 
     def _initialize_commonDB(self):
         from MongoDB.DatabaseManager import DatabaseManager  # Lazy import

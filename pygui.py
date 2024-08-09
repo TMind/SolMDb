@@ -671,18 +671,12 @@ def generate_deck_statistics_dataframe():
         return ', '.join(sorted(card_titles))
 
     # Get all Decks from the database
-    #try:
     deck_cursor = global_vars.myDB.find('Deck', {}) 
     deck_list = list(deck_cursor)       
     df_decks = pd.DataFrame(deck_list)
     df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
     df_decks_filtered = df_decks[[ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles']].copy()
-    #df_decks_filtered['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
     df_decks_filtered['type'] = 'Deck'
-
-    #except:
-    #print('Error reading decks from the database. Try reloading the data.')
-    #return pd.DataFrame()
 
     # For column 'cardSetNo' replace the number 99 with 0 
     df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].astype(int).replace(99, 0)
@@ -1192,7 +1186,7 @@ def setup_interface():
     tab.set_title(3, 'Graphs')
     tab.set_title(4, 'Debug')
 
-    tab.selected_index = 1
+    tab.selected_index = 0
     display(tab)
 
     #global_vars.tqdmBar = tqdm(total=100, desc='Loading...', bar_format='{desc}: {percentage:3.0f}% {bar}')

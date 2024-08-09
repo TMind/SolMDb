@@ -64,11 +64,6 @@ class DeckLibrary:
                 fusionObject.save()           
                 self.online_fusions.append(fusion_data)                
                 gv.update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")
-                #pbar.update(1)
-            
-        # Get number of fusions from the database
-        fusionCursor = self.dbmgr.find('Fusion', {})
-        fusionNamesDatabase = [fusion['name'] for fusion in fusionCursor]
         
         # Check if fusions exist already in the database and if not, create them
 

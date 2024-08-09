@@ -528,12 +528,10 @@ class FilterGrid:
             widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
             event['indices'].remove(0)
         
-        #if event['indices']:
         active_rows = widget.df[widget.df['Active'] == True]
         
         self.refresh_function({'new': active_rows, 'old': None, 'owner': 'filter'})
-        
-        
+                
 
     def grid_filter_on_row_added(self, event, widget):
         """
@@ -564,7 +562,6 @@ class FilterGrid:
 
         widget.df = df
 
-        #if widget.df.loc[new_row_index, 'Active']:
         self.refresh_function({'new': new_row_index, 'old': None, 'owner': 'filter'})
 
     def grid_filter_on_cell_edit(self, event, widget):
@@ -603,8 +600,6 @@ class FilterGrid:
             for cardType in ['Modifier', 'Creature', 'Spell']:
                 widget = self.selection_widgets[cardType]
                 widget.options = [''] + get_cardType_entity_names(cardType)
-            #print(f"Updated selection content with {change}")
-            #self.refresh_function(change)
 
     def create_cardType_names_selector(self, cardType, options=None):
         """
@@ -847,8 +842,7 @@ class DynamicGridManager:
     global data_selection_sets
 
     def __init__(self, data_generate_function, qg_options, out_debug):
-        self.out_debug = out_debug
-        #self.data_selection_data = data_selection_data        
+        self.out_debug = out_debug       
         self.data_generate_function = data_generate_function
         self.qg_options = qg_options
         self.qm = GridManager(out_debug)
@@ -861,15 +855,16 @@ class DynamicGridManager:
         
         self.update_grid_layout()
 
-
     def reset_grid_layout(self, new_size):
+        self.ui.children = [self.selectionGrid, self.filterGrid] 
         self.grid_layout = widgets.GridspecLayout(new_size, 1)
+        #print(f"Resetting grid layout to size {new_size} : {self.grid_layout}")
         self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]
 
     def update_grid_layout(self):
         filter_df = self.filterGridObject.get_changed_df()
         active_filters_count = len(filter_df[filter_df['Active']])
-        new_grid = widgets.GridspecLayout(max(active_filters_count, 1), 1)
+        new_grid = widgets.GridspecLayout(active_filters_count, 1)
         for idx, child in enumerate(self.grid_layout.children):
             if idx < active_filters_count:
                 new_grid[idx, 0] = child
@@ -887,12 +882,8 @@ class DynamicGridManager:
         # Filter the DataFrame to include only active filters
         filter_df = self.filterGridObject.get_changed_df()
         active_filters_df = filter_df[filter_df['Active']]
+        #print(f"{len(active_filters_df)} Active Filters: {active_filters_df} ")
         self.reset_grid_layout(len(active_filters_df))
-
-        # Read the filter DataFrame and apply the filters to the default DataFrames per Row 
-        #with self.out_debug:
-            #print(f"Active filters: {active_filters_df}, {len(active_filters_df)}")
-            #print(f"Collection DataFrame: {collection_df}")
 
         for index, (row_index, filter_row) in enumerate(active_filters_df.iterrows()):
             if filter_row['Active']:
@@ -909,12 +900,6 @@ class DynamicGridManager:
                 filter_widget = None
                 grid_widget  = None 
 
-                #if data_set_type == 'Multi Index':
-                #    multi_index_df = MultiIndexDataFrame()
-                #    multi_index_df.read_dataframe("test/multiindex.csv")
-                #    multi_index_df.transpose_and_prepare_df()
-                #    filter_widget, grid_widget = multi_index_df.getWidgets()
-                #else:    
                 grid_identifier = f"filtered_grid_{index}"
                 grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options)
                 
@@ -927,6 +912,7 @@ class DynamicGridManager:
                 self.grid_layout[index, 0] = widgets.VBox([filter_widget, grid_widget], layout=widgets.Layout(border='1px solid red'))
         
         # After updating, reassign children to trigger update
+        #print(f"Refresh Gridbox. Layout = {self.grid_layout}")
         self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]
 
     def get_ui(self):

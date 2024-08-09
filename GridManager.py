@@ -175,6 +175,7 @@ data_selection_sets = {
     "type": 'Fusion',
     "Deck A": True,
     "Deck B": True,
+    "faction": True,
     "forgebornId": True,
     "FB2": True,
     "FB3": True,
@@ -503,14 +504,14 @@ class FilterGrid:
             pandas.DataFrame: The initial dataframe.
         """
         return pd.DataFrame({
-            'Type': ['Deck'],
+            'Type': ['Fusion'],
             'Modifier': [''],
             'op1': [''],
             'Creature': [''],
             'op2': [''],
             'Spell': [''],            
-            'Forgeborn Ability': [''],
-            'Data Set': ['Deck Stats'],
+            'Forgeborn Ability': ['Inspire'],
+            'Data Set': ['Fusion Stats'],
             'Active': [True],
         })
 

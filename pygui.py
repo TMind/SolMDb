@@ -83,6 +83,7 @@ qgrid_widget_options = {}
 data_generation_functions = {}
 
 out_debug = widgets.Output()
+central_frame_output = widgets.Output()
 
 # Manager Variables
 grid_manager = None 
@@ -259,26 +260,65 @@ def load_deck_data(args):
     deckCollection = DeckLibrary(net_decks, net_fusions, args.mode)
     return deckCollection
 
+
+# Function to update the central data frame tab
+import qgridnext as qgrid
+def update_central_frame_tab(central_df):
+    global central_frame_output
+    # Update the content of the central_frame_tab
+    central_frame_output.clear_output()  # Clear existing content
+    with central_frame_output:
+        grid = qgrid.show_grid(central_df, grid_options={'forceFitColumns': False}, column_definitions=all_column_definitions)  # Create a qgrid grid from the DataFrame
+        display(grid)  # Display the qgrid grid
+    
+    print("Central DataFrame tab updated.")
+
 user_dataframes = {}
 ### Dataframe Generation Functions ###
 def generate_central_dataframe(force_new=False):
     # Get the current username from the global variables
+
+    def merge_on_index(df1, df2):
+        # Merge with suffixes to temporarily differentiate overlapping columns
+        merged_df = df1.merge(df2, left_index=True, right_index=True, how='left', suffixes=('', '_dup'))
+
+        # Identify overlapping columns (those with '_dup' suffix)
+        overlap_cols = [col[:-4] for col in merged_df.columns if col.endswith('_dup')]
+
+        # Combine overlapping columns and drop duplicates
+        for col in overlap_cols:
+            merged_df[col] = merged_df[col].combine_first(merged_df[f'{col}_dup'])
+            merged_df.drop(columns=[f'{col}_dup'], inplace=True)
+
+        return merged_df
+
     username = global_vars.username
     identifier = f"Main DataFrame: {username}"
 
+    file_record = global_vars.myDB.find_one('fs.files',  {'filename': 'central_df'})
     if not force_new:
         if username in user_dataframes:
+            update_central_frame_tab(user_dataframes[username])
             return user_dataframes[username]
 
         # Check if the DataFrame already exists in GridFS
-        file_record = global_vars.myDB.find_one('fs.files',  {'filename': 'central_df'})
         if file_record:
             # Retrieve the DataFrame from GridFS
             file_id = file_record['_id']
             with global_vars.fs.get(file_id) as file:
                 central_df = pickle.load(file)
                 user_dataframes[username] = central_df
+                update_central_frame_tab(central_df)
                 return central_df
+    else:
+        # Clear the existing DataFrame from the user_dataframes dictionary
+        if username in user_dataframes:
+            del user_dataframes[username]
+    
+        # Delete the old DataFrame from GridFS
+        if file_record:
+            file_id = file_record['_id']
+            global_vars.fs.delete(file_id)                        
 
     # Start with deck statistics which form the basis of the DataFrame
     global_vars.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
@@ -287,8 +327,12 @@ def generate_central_dataframe(force_new=False):
     global_vars.update_progress(identifier, 50, 100, 'Halfway there...')
     # Generate card type counts and merge them into the deck_stats_df
     card_type_counts_df = generate_cardType_count_dataframe()
-    #central_df = deck_stats_df.merge(card_type_counts_df, on=['name', 'faction'], how='left')
-    central_df = deck_stats_df.merge(card_type_counts_df, left_index=True, right_index=True, how='left')
+    
+
+    # Example usage    
+    central_df = merge_on_index(deck_stats_df, card_type_counts_df)
+
+#    central_df = deck_stats_df.merge(card_type_counts_df, left_index=True, right_index=True, how='left', suffixes=('', ''))
 
     fusion_stats_df = generate_fusion_statistics_dataframe()
 
@@ -307,10 +351,11 @@ def generate_central_dataframe(force_new=False):
     with global_vars.fs.new_file(filename='central_df') as file:
         pickle.dump(central_df, file)
 
+    update_central_frame_tab(central_df)
     return central_df
 
 from CardLibrary import Forgeborn, ForgebornData
-def process_deck_forgeborn(item_name, forgebornIds, df):
+def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds, df):
     try:
         if item_name not in df.index:
             display(df)
@@ -318,7 +363,7 @@ def process_deck_forgeborn(item_name, forgebornIds, df):
             return        
         
         forgebornCounter = 0
-        inspired_ability = 0
+        inspired_ability_cycle = 0
 
         for forgeborn_id in forgebornIds:
             forgebornCounter += 1
@@ -334,26 +379,35 @@ def process_deck_forgeborn(item_name, forgebornIds, df):
             forgeborn = Forgeborn(data=fb_data)
             unique_forgeborn = forgeborn.get_permutation(forgeborn_id)
             forgeborn_abilities = unique_forgeborn.abilities
+
             if forgeborn_abilities:
-                
                 for aID, aName in forgeborn_abilities.items():
                     cycle = aID[-3]
-                    if 'Inspire' in aName:
-                        inspired_ability = cycle 
 
-                    if forgebornCounter == 1 or cycle == inspired_ability:
-                        if forgebornCounter == 2:
-                            print(f'Inspired Ability: {inspired_ability}')
+                    # Check if the ability is inspired
+                    if forgebornCounter == 1 and 'Inspire' in aName:
+                        inspired_ability_cycle = cycle 
+
+                    # Apply the inspired label if necessary
+                    if forgebornCounter == 2 and cycle == inspired_ability_cycle:
+                        if "Inspire" in aName:
+                            print(f'Inspired Ability: {aName} {inspired_ability_cycle} for {item_name}')
+                        aName += " (Inspire)"
+                        
+                        #print(f'Inspired Ability: {aName} {inspired_ability_cycle} for {item_name}')
+                    
+                    # Update the DataFrame with the ability name
+                    if forgebornCounter == 1 or cycle == inspired_ability_cycle:
                         df.loc[item_name, f'FB{cycle}'] = aName
 
-            df.loc[item_name, 'forgebornId'] = forgeborn_id[5:-3].title()
+            df.loc[item_name, 'forgebornId'] = currentForgebornId[5:-3].title()
     except KeyError as e:
         print(f"KeyError: {e}")
-        print(f"Index: {item_name}, ForgebornId key: {forgebornId_key}")
+        print(f"Index: {item_name}, ForgebornId key: {forgebornIds}")
         print(df.head())
     except Exception as e:
         print(f"Unexpected error: {e}")
-        print(f"Index: {item_name}, ForgebornId key: {forgebornId_key}")
+        print(f"Index: {item_name}, ForgebornId key: {forgebornIds}")
         print(df.head())
 
 def generate_deck_content_dataframe(event = None):
@@ -632,26 +686,28 @@ def generate_fusion_statistics_dataframe():
         # Filter out invalid entries and ensure they contain the required structure
         valid_decks = [deck for deck in myDecks if isinstance(deck, dict) and 'forgeborn' in deck and isinstance(deck['forgeborn'], dict)]
         forgebornIds = [deck['forgeborn']['id'] for deck in valid_decks]
+        currentForgebornId = valid_decks[0]['forgeborn']['id'] if valid_decks else None
 
         # Handle the case where forgebornIds might come from fusion_data
         if not forgebornIds and 'ForgebornIds' in fusion_data:
             forgebornIds = fusion_data['ForgebornIds']
+            currentForgebornId = forgebornIds[0] if forgebornIds else None
+                    
+        # Determine the faction of the fusion , which is the faction of the deck where the forgebornId is the currentForgebornId
+        faction = valid_decks[0]['faction'] if valid_decks else None
 
-        # Determine the currentForgebornId
-        if 'currentForgebornId' in fusion_data and fusion_data.currentForgebornId:
-            currentForgebornId = fusion_data.currentForgebornId
-        elif valid_decks:
-            currentForgebornId = valid_decks[0]['forgeborn']['id']
-        else:
-            currentForgebornId = None
-                
+        # Assign the faction to the DataFrame
+        if faction:
+            df_fusions_filtered.loc[fusion_name, 'faction'] = faction
+
         if len(decks) > 1:
             df_fusions_filtered.loc[fusion_name, 'Deck A'] = decks[0]
             df_fusions_filtered.loc[fusion_name, 'Deck B'] = decks[1]
         if currentForgebornId:
+            print(f'ForgebornId: {currentForgebornId} for {fusion_name}')
             df_fusions_filtered.loc[fusion_name, 'forgebornId'] = currentForgebornId
 
-        process_deck_forgeborn(fusion_data.name, forgebornIds, df_fusions_filtered)
+        process_deck_forgeborn(fusion_data.name, currentForgebornId, forgebornIds, df_fusions_filtered)
         global_vars.update_progress('Fusion Stats', message = f"Processing Fusion Forgeborn:  {fusion_data.name}")
 
     return df_fusions_filtered
@@ -720,7 +776,7 @@ def generate_deck_statistics_dataframe():
     global_vars.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
     for deck in global_vars.myDB.find('Deck', {}) :
         global_vars.update_progress(identifier, message = 'Processing Deck Forgeborn: ' + deck['name'])
-        if 'forgebornId' in deck:   process_deck_forgeborn(deck['name'], [deck['forgebornId']], df_decks_filtered)
+        if 'forgebornId' in deck:   process_deck_forgeborn(deck['name'], deck['forgebornId'] ,[deck['forgebornId']], df_decks_filtered)
 
     identifier = 'Stats Data' 
     global_vars.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
@@ -1130,7 +1186,7 @@ def update_deck_and_fusion_counts():
 ############################
 import json
 def setup_interface():
-    global db_list, button_load, card_title_widget, grid_manager
+    global db_list, button_load, card_title_widget, grid_manager, central_frame_output
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
@@ -1178,13 +1234,15 @@ def setup_interface():
     fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph])
     debug_tab = widgets.VBox([debug_toggle, out_debug])
     template_tab = widgets.VBox([templateGrid.qgrid_filter])
+    central_frame_tab = widgets.VBox([central_frame_output])
 
-    tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, fusions_tab, debug_tab])
+    tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, fusions_tab, debug_tab, central_frame_tab])
     tab.set_title(0, 'Database')
     tab.set_title(1, 'Decks')
     tab.set_title(2, 'Templates')
     tab.set_title(3, 'Graphs')
     tab.set_title(4, 'Debug')
+    tab.set_title(5, 'CentralDataframe')
 
     tab.selected_index = 0
     display(tab)
@@ -1193,4 +1251,3 @@ def setup_interface():
     
     # Display the Tab widget
     #display(global_vars.intProgressBar)
-    

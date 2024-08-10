@@ -271,7 +271,7 @@ def update_central_frame_tab(central_df):
         grid = qgrid.show_grid(central_df, grid_options={'forceFitColumns': False}, column_definitions=all_column_definitions)  # Create a qgrid grid from the DataFrame
         display(grid)  # Display the qgrid grid
     
-    print("Central DataFrame tab updated.")
+    #print("Central DataFrame tab updated.")
 
 user_dataframes = {}
 ### Dataframe Generation Functions ###
@@ -390,8 +390,8 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds, df):
 
                     # Apply the inspired label if necessary
                     if forgebornCounter == 2 and cycle == inspired_ability_cycle:
-                        if "Inspire" in aName:
-                            print(f'Inspired Ability: {aName} {inspired_ability_cycle} for {item_name}')
+                        #if "Inspire" in aName:
+                        #    print(f'Inspired Ability: {aName} {inspired_ability_cycle} for {item_name}')
                         aName += " (Inspire)"
                         
                         #print(f'Inspired Ability: {aName} {inspired_ability_cycle} for {item_name}')
@@ -549,9 +549,8 @@ def generate_cardType_count_dataframe(existing_df=None):
         deckName = deck['name']
         myDeck = Deck.load(deckName)
         myGraph = MyGraph()
-        #myGraph.create_graph_children(myDeck)
-
         myGraph.G = nx.from_dict_of_dicts(deck['graph'])
+        myGraph.node_data = deck['node_data']
 
         interface_ids = myGraph.get_length_interface_ids()
 
@@ -682,35 +681,53 @@ def generate_fusion_statistics_dataframe():
     for fusion_data in df_fusions.itertuples():
         fusion_name = fusion_data.name
         decks = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Deck')
-        myDecks = fusion_data.myDecks
-        # Filter out invalid entries and ensure they contain the required structure
-        valid_decks = [deck for deck in myDecks if isinstance(deck, dict) and 'forgeborn' in deck and isinstance(deck['forgeborn'], dict)]
-        forgebornIds = [deck['forgeborn']['id'] for deck in valid_decks]
-        currentForgebornId = valid_decks[0]['forgeborn']['id'] if valid_decks else None
-
-        # Handle the case where forgebornIds might come from fusion_data
-        if not forgebornIds and 'ForgebornIds' in fusion_data:
-            forgebornIds = fusion_data['ForgebornIds']
-            currentForgebornId = forgebornIds[0] if forgebornIds else None
-                    
-        # Determine the faction of the fusion , which is the faction of the deck where the forgebornId is the currentForgebornId
-        faction = valid_decks[0]['faction'] if valid_decks else None
-
-        # Assign the faction to the DataFrame
-        if faction:
-            df_fusions_filtered.loc[fusion_name, 'faction'] = faction
-
+        my_decks = fusion_data.myDecks
+        
+        forgeborn_ids, factions = extract_forgeborn_ids_and_factions(my_decks, fusion_data)
+        
+        if not forgeborn_ids:
+            print(f"forgebornIds is empty for {fusion_name}")
+            continue
+        
+        current_forgeborn_id = forgeborn_ids[0] 
+        
+        if factions:
+            for i, field in enumerate(['faction', 'crossfaction']):
+                df_fusions_filtered.loc[fusion_name, field] = factions[i] if i < len(factions) else ''
+        
         if len(decks) > 1:
             df_fusions_filtered.loc[fusion_name, 'Deck A'] = decks[0]
             df_fusions_filtered.loc[fusion_name, 'Deck B'] = decks[1]
-        if currentForgebornId:
-            print(f'ForgebornId: {currentForgebornId} for {fusion_name}')
-            df_fusions_filtered.loc[fusion_name, 'forgebornId'] = currentForgebornId
-
-        process_deck_forgeborn(fusion_data.name, currentForgebornId, forgebornIds, df_fusions_filtered)
-        global_vars.update_progress('Fusion Stats', message = f"Processing Fusion Forgeborn:  {fusion_data.name}")
+        
+        if current_forgeborn_id:
+            df_fusions_filtered.loc[fusion_name, 'forgebornId'] = current_forgeborn_id
+        
+        process_deck_forgeborn(fusion_name, current_forgeborn_id, forgeborn_ids, df_fusions_filtered)
+        global_vars.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion_name}")
 
     return df_fusions_filtered
+    
+def extract_forgeborn_ids_and_factions(my_decks, fusion_data):
+    forgeborn_ids = []
+    factions = []
+
+    for deck in my_decks:
+        if isinstance(deck, dict):
+            # If deck is a dictionary, extract the forgeborn ID and faction
+            if 'forgeborn' in deck and isinstance(deck['forgeborn'], dict):
+                forgeborn_ids.append(deck['forgeborn']['id'])
+            faction = deck.get('faction')
+            if faction:
+                factions.append(faction)
+        elif isinstance(deck, str):
+            # If deck is a string, assume the forgeborn IDs are provided separately in fusion_data
+            if hasattr(fusion_data, 'ForgebornIds'):
+                forgeborn_ids = fusion_data.ForgebornIds
+            if hasattr(fusion_data, 'faction'):
+                factions.append(fusion_data.faction)
+            break  # Exit loop since we handled this case
+
+    return forgeborn_ids, factions
 
 # Data Handling and Transformation 
 def generate_deck_statistics_dataframe():
@@ -731,8 +748,12 @@ def generate_deck_statistics_dataframe():
     deck_list = list(deck_cursor)       
     df_decks = pd.DataFrame(deck_list)
     df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
-    df_decks_filtered = df_decks[[ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles']].copy()
+    df_decks_filtered = df_decks[[ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph', 'node_data']].copy()
     df_decks_filtered['type'] = 'Deck'
+
+    # Print the fields for graph and node_data
+    print(f"Fields for graph: {df_decks_filtered['graph'].iloc[0]}")
+    print(f"Fields for node_data: {df_decks_filtered['node_data'].iloc[0]}")
 
     # For column 'cardSetNo' replace the number 99 with 0 
     df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].astype(int).replace(99, 0)
@@ -925,24 +946,28 @@ def handle_db_list_change(change):
 def reload_data_on_click(button, value):
     global db_list, username_widget
     username_value = username_widget.value if username_widget else global_vars.username
+    if not username_value:
+        print('Username cannot be empty.')
+        return
+
     global_vars.username = username_value
 
     if not db_list:
         print('No database list found.')
         return
-
+    
     #print(f'{value} for username: {username_value}')
     if value == 'Load Decks/Fusions':
         arguments = ['--username', username_value,
                      '--mode', 'update',
                      '--type', 'deck,fuseddeck']
-        print(f'Loading Decks/Fusions with arguments {arguments}')
+        #print(f'Loading Decks/Fusions with arguments {arguments}')
         args = parse_arguments(arguments)
      
     elif value == 'Create all Fusions':
         arguments = ['--username', username_value,
                      '--mode', 'create' ]
-        print(f'Loading Fusions with arguments {arguments}')
+        #print(f'Loading Fusions with arguments {arguments}')
         args = parse_arguments(arguments)    
 
     load_deck_data(args)
@@ -958,6 +983,7 @@ def reload_data_on_click(button, value):
         if username_value in valid_db_names:
             #print(f'Setting db_list value to {username_value}')
             # Force update the central DataFrame for the username after reloading the data 
+            update_deck_and_fusion_counts()
             generate_central_dataframe(force_new=True)
             db_list.value = username_value
         else:

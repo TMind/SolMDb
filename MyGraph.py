@@ -43,7 +43,7 @@ class MyGraph:
 
     def create_graph_children(self, db_object, parent_object=None, root=None):
         root, parent_object = self._initialize_root_and_parent(db_object, parent_object, root)
-        self._print_parent_and_db_object(parent_object, db_object)
+        #self._print_parent_and_db_object(parent_object, db_object)
 
         if db_object.children_data:
             for child_name, full_class_path in db_object.children_data.items():
@@ -59,7 +59,7 @@ class MyGraph:
     def _print_parent_and_db_object(self, parent_object, db_object):
         parent_type = parent_object.__class__.__name__
         self_type = db_object.__class__.__name__
-        #print(f"Parent Object = {self.get_node_id(parent_object)}[{parent_type}], Db Object = {self.get_node_id(db_object)}[{self_type}]")
+        print(f"Parent Object = {self.get_node_id(parent_object)}[{parent_type}], Db Object = {self.get_node_id(db_object)}[{self_type}]")
 
     def _process_child(self, root, db_object, parent_object, child_name, full_class_path):
         cls, child_type = get_class_from_path(full_class_path)
@@ -90,7 +90,8 @@ class MyGraph:
         self.node_data['tags'].setdefault(child_name, 0)
         self.node_data['tags'][child_name] += 1
         
-        child_object = cls.load(child_name)
+        #child_object = cls.load(child_name)
+        child_object = cls.lookup(child_name)
         if child_object:
 
             color = self._get_color_based_on_child_type(child_type, child_object)

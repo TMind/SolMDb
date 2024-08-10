@@ -1,5 +1,6 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.collection import Collection
+from pymongo import UpdateOne, InsertOne, DeleteOne
 
 class MongoDB:
     def __init__(self, db_name: str, host='localhost', port=27017, uri=None):
@@ -55,7 +56,6 @@ class MongoDB:
         collection = self.get_collection(collection_name)        
         return collection.find(query, projection)
 
-    from pymongo.operations import UpdateOne, InsertOne, DeleteOne
 
     def bulk_write(self, collection_name: str, operations: list):
         collection = self.get_collection(collection_name)
@@ -64,6 +64,32 @@ class MongoDB:
     def update_one(self, collection_name: str, query: dict, update_data: dict):
         collection = self.get_collection(collection_name)
         return collection.update_one(query, {'$set': update_data})
+
+    def upsert_many(self, collection_name: str, data: list):
+        # Prepare bulk operations for upsert
+        operations = []
+        for doc in data:
+            if '_id' in doc:
+                filter_query = {'_id': doc['_id']}
+            else:
+                # Define another unique identifier or criteria for upsert
+                filter_query = {'_id': doc['name'] }
+            
+            update_doc = {'$set': doc}  # The document to upsert
+            
+            # Add an upsert operation
+            operations.append(UpdateOne(filter_query, update_doc, upsert=True))
+        
+        if operations:
+            # Execute the bulk upsert operation
+            result = self.bulk_write(collection_name, operations)
+            return {
+                "matched_count": result.matched_count,
+                "modified_count": result.modified_count,
+                "upserted_ids": result.upserted_ids
+            }
+        else:
+            return None
 
     def delete_one(self, collection_name: str, query: dict):
         collection = self.get_collection(collection_name)

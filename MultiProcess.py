@@ -1,3 +1,5 @@
+from email import message
+from itertools import accumulate
 from GlobalVariables import global_vars as gv
 from multiprocessing import Pool, cpu_count  
 from pymongo.operations import UpdateOne  
@@ -18,10 +20,12 @@ class MultiProcess:
         dbmgr = DatabaseManager(self.username, force_new=True)  
   
     def run(self):  
+        accumulated = 0
+        gv.update_progress('MultiProcess Fusions', value = 0, total = self.num_items, message = 'Fusioning Decks')  
         with Pool(processes=self.num_processes, initializer=self.init_worker) as pool:  
-            gv.update_progress('MultiProcess Fusions', 0, self.num_items, 'Fusioning Decks')  
             for chunk_size in pool.imap_unordered(create_fusion, self.data):  
-                gv.update_progress('MultiProcess Fusions', chunk_size)  
+                accumulated += chunk_size
+                gv.update_progress('MultiProcess Fusions', value = chunk_size, message = f'Fusioning Decks {accumulated}/{self.num_items}')  
   
 def create_fusion(dataChunk):  
     global dbmgr
@@ -33,8 +37,9 @@ def create_fusion(dataChunk):
             fusionId = fusionName  
             fusionDeckNames = [deck1['name'], deck2['name']]  
             fusionBornIds = [deck1['forgebornId'], deck2['forgebornId']]  
-  
-            fusionObject = Fusion(FusionData(fusionName, fusionDeckNames, deck1['forgebornId'], fusionBornIds, fusionId))  
+            fusionFaction = deck1['faction']
+            fusionCrossFaction = deck2['faction']
+            fusionObject = Fusion(FusionData(fusionName, fusionDeckNames, fusionFaction, fusionCrossFaction, deck1['forgebornId'], fusionBornIds, fusionId))  
             fusionData = fusionObject.to_data()  
   
             fusionGraph = MyGraph()  

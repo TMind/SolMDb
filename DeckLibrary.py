@@ -3,7 +3,19 @@ from MongoDB.DatabaseManager import DatabaseManager
 from CardLibrary import  Fusion, Deck, Card
 from MultiProcess import MultiProcess
 from GlobalVariables import global_vars as gv
-import networkx as nx  
+import networkx as nx
+
+def create_graph_for_object(object):
+    # Graph creation
+    objectGraph = MyGraph()
+    objectGraph.create_graph_children(object)
+    object.data.node_data = objectGraph.node_data
+    
+    # Convert the graph to a dictionary
+    objectGraphDict = nx.to_dict_of_dicts(objectGraph.G)
+    object.data.graph = objectGraphDict
+    
+    return object
 
 class DeckLibrary:
     def __init__(self, decks_data, fusions_data, mode):                
@@ -18,19 +30,22 @@ class DeckLibrary:
             cardListDatabase = self.dbmgr.find('Card', {})        
             cardIdsDatabase = [card['_id'] for card in cardListDatabase]
 
-            length = len(decks_data) 
-            #with tqdm(total=length, desc="Saving Decks",mininterval=0.1, colour='BLUE') as pbar:
             deckDataList = []
             cardDataList = []
+            deck_objects = []
+
             for deckData in decks_data:
                 deckName = deckData['name'] 
                 # Save only new decks
                 if deckName not in deckNamesDatabase:                         
                     self.new_decks.append(deckData)    
                     new_deck = Deck.from_data(deckData)
+                    
                     if new_deck.children_data:
                         new_deck.children_data.update({new_deck.forgebornId : 'CardLibrary.Forgeborn'})
-                    deckDataList.append(new_deck.to_data())
+        
+                    # Store the deck object for later use
+                    deck_objects.append(new_deck)
                     
                     # Save all cards that are not already in the database
                     for index, card in new_deck.cards.items():
@@ -39,28 +54,61 @@ class DeckLibrary:
                             myCard = Card.from_data(card)                                                                                
                             myCard.data._id = id                            
                             cardDataList.append(myCard.to_data())
-                    #pbar.update(1)
-                
-            if deckDataList:
-                self.dbmgr.insert_many('Deck', deckDataList)                
+                    
             if cardDataList:                                                   
                 # Remove duplicate entries but keep the first one in the list
                 seen = set()
-                cardDataList = [x for x in cardDataList if not (x['_id'] in seen or seen.add(x['_id']))]                                    
+                cardDataList = [x for x in cardDataList if x['_id'] not in seen and not seen.add(x['_id'])]
+                #cardDataList = [x for x in cardDataList if not (x['_id'] in seen or seen.add(x['_id']))]                                    
                 self.dbmgr.insert_many('Card', cardDataList)
+
+            # Prepare all deck data for upsert in a single operation
+            for deckObject in deck_objects:
+                # Now create the graph since the cards are in the database
+                create_graph_for_object(deckObject)
+                
+                # Update the deck data with the graph and node data
+                deck_data = deckObject.to_data()
+                deck_data['graph'] = deckObject.data.graph
+                deck_data['node_data'] = deckObject.data.node_data
+
+                # Collect the deck data for upserting
+                deckDataList.append(deck_data)
+
+            if deckDataList:
+                #self.dbmgr.insert_many('Deck', deckDataList)
+                self.dbmgr.upsert_many('Deck', deckDataList)                
 
         if fusions_data:
             
+            def extract_fb_ids_and_factions(my_decks, fusion_data):
+                forgeborn_ids = []
+                factions = []
+
+                for deck in my_decks:
+                    if isinstance(deck, dict):
+                        # If deck is a dictionary, extract the forgeborn ID and faction
+                        if 'forgeborn' in deck and isinstance(deck['forgeborn'], dict):
+                            forgeborn_ids.append(deck['forgeborn']['id'])
+                        faction = deck.get('faction')
+                        if faction:
+                            factions.append(faction)
+
+                return forgeborn_ids, factions
+
             gv.update_progress('DeckLibrary', 0, len(fusions_data), 'Saving Online Fusions')            
             for fusion_data in fusions_data:
                 decks = fusion_data['myDecks']                      
+                forgebornIds, factions = extract_fb_ids_and_factions(decks, fusion_data)
+                fusion_data['ForgebornIds'] = forgebornIds
+                fusion_data['faction'] = factions[0]
+                fusion_data['crossFaction'] = factions[1]
+
+                # Graph creation 
                 fusionObject = Fusion.from_data(fusion_data)
-                fusionGraph = MyGraph()  
-                fusionGraph.create_graph_children(fusionObject)
-                # Convert the graph to a dictionary
-                fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G)
-                fusionObject.graph = fusionGraphDict
-                fusionObject.node_data = fusionGraph.node_data
+                create_graph_for_object(fusionObject)
+                
+                # Save the fusion to the database
                 fusionObject.save()           
                 self.online_fusions.append(fusion_data)                
                 gv.update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")

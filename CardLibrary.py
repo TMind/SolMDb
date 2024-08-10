@@ -1,3 +1,4 @@
+from numpy import cross
 from MongoDB.DatabaseManager import DatabaseManager, DatabaseObject
 from copy import copy
 from dataclasses import dataclass, field
@@ -207,11 +208,13 @@ class DeckData:
     elo: int = 0
     deckRank: str = ''
     level: int = 0
+    _id: str = ''
     children_data: dict = field(default_factory=dict)
     deckStats: dict = field(default_factory=dict)
     tags: dict = field(default_factory=dict)
     stats: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)
+    node_data: dict = field(default_factory=dict)
 
 class Deck(DatabaseObject):
     
@@ -219,6 +222,7 @@ class Deck(DatabaseObject):
         super().__init__(data)         
         self._id = self.name  
         if self.data and self.cardIds: 
+            self.data._id = self.name
             self.data.children_data = {cardId: 'CardLibrary.Card' for cardId in self.cardIds}
             self.calculate_stats()
             self.calculate_averages()
@@ -274,6 +278,8 @@ class Deck(DatabaseObject):
 class FusionData:
     name: str = ''    
     myDecks: list = field(default_factory=list)    
+    faction: str = ''
+    crossFaction: str = ''
     currentForgebornId: str = ''
     ForgebornIds: list = field(default_factory=list)
     id: str = ''
@@ -295,125 +301,11 @@ class Fusion(DatabaseObject):
                 #Check if myDecks contains only strings or objects 
                 if isinstance(self.data.myDecks[0], str):
                     self.data.children_data = {deckName : 'CardLibrary.Deck' for deckName in self.data.myDecks}
-                else:
-                    self.data.children_data = {deck_data['name']: 'CardLibrary.Deck' for deck_data in self.data.myDecks}
-                
-                if not self.data.currentForgebornId:                                    
-                    self.data.currentForgebornId = self.data.myDecks[0]['forgeborn']['id']
+                    if not self.data.currentForgebornId:
+                        self.data.currentForgebornId = self.data.ForgebornIds[0]
+                else:                    
+                    if not self.data.currentForgebornId:                                    
+                        self.data.currentForgebornId = self.data.myDecks[0]['forgeborn']['id']
+                    self.data.children_data = {deck_data['name']: 'CardLibrary.Deck' for deck_data in self.data.myDecks}                
+            
                 self.data.children_data.update({self.currentForgebornId: 'CardLibrary.Forgeborn'})
-        
-        # Default Values 
-        #fusion_name = "_".join([deck.name for deck in decks])        
-        # Name and faction for the fusion
-
-        # Sort the deck names alph1_".join(sorted([deck.name for deck in decks]))
-        # Generate the fused faction name        
-        #self.fused_faction = "|".join([deck.faction for deck in decks]) 
-        #fused_cards = {**deck1.cards, **deck2.cards}
-        #fused_card_ids = deck1.cardIds + deck2.cardIds
-        
-        # Additional properties specific to Fusion
-        #self.deck1 = deck1
-        #self.deck2 = deck2
-        #self.forgeborn_options = self.inspire_forgeborn(deck1.forgeborn, deck2.forgeborn)
-        #self.fused_abilities = [ability for forgeborn in self.forgeborn_options for ability in forgeborn.abilities]
-        
-
-        # Choosing a default forgeborn (frosm deck1 for simplicity)
-        # Note: Here we're assuming that a 'forgeborn' variable exists in the 'Deck' class
-        #self.active_forgeborn = self.forgeborn_options[0]
-
-        # Call the Deck's constructor and exchange fused abilities 
-        #super().__init__(DeckData(name or fusion_name, self.active_forgeborn, self.fused_faction,fused_card_ids, fused_cards))
-        #self.abilities = self.fused_abilities
-        
-    def inspire_forgeborn(self, forgeborn1, forgeborn2):
-        new_forgeborns = []
-        
-        for original_forgeborn, other_forgeborn in [(forgeborn1, forgeborn2), (forgeborn2, forgeborn1)]:
-            
-            inspire_abilities = [ability for ability in original_forgeborn.abilities.values() if 'Inspire' in ability.attributes['Name']]
-            
-            if inspire_abilities:
-                new_abilities = original_forgeborn.abilities.copy()
-                
-                for inspire_ability in inspire_abilities:
-                    level = inspire_ability.name[-3]
-                    
-                    for other_ability_name, other_ability in other_forgeborn.abilities.items():
-                        if other_ability_name[-3].startswith(str(level)):
-                            # Remove the old ability that has the same level 
-                            ability_id_replace_name = next((ability_id for ability_id in new_abilities.keys() if ability_id[-3] == level), None)
-                            if ability_id_replace_name:
-                                new_abilities.pop(ability_id_replace_name)
-                            new_abilities[other_ability.name] = other_ability
-                            break  # Assuming you only want the first match
-                new_forgeborn = Forgeborn(original_forgeborn.id, original_forgeborn.name)
-                for name, ability in new_abilities.items():
-                    id = name 
-                    name = ability.attributes['Name']
-                    new_forgeborn.add_ability(ForgebornAbility(id, name ,ability))                
-            else:
-                new_forgeborn = original_forgeborn
-            
-            new_forgeborns.append(new_forgeborn)    
-        return new_forgeborns
-
-    def set_forgeborn(self, idx_or_forgeborn_name):
-            """
-            Sets the active Forgeborn of the Fusion deck to the given index or Forgeborn object.
-            Also updates the Fusion's name and faction based on the new active Forgeborn.
-            """
-            new_forgeborn = self.active_forgeborn
-            if isinstance(idx_or_forgeborn_name, int):
-                new_forgeborn = self.forgeborn_options[idx_or_forgeborn_name]
-            else:
-                new_forgeborn = self.get_forgeborn(idx_or_forgeborn_name)
-
-            self.abilities = new_forgeborn.abilities
-            # Check if the new Forgeborn is already the active one
-            if self.active_forgeborn == new_forgeborn: return
-
-            # Update the active Forgeborn
-            self.active_forgeborn = new_forgeborn
-
-            # Update the name and faction based on the active Forgeborn
-            if self.active_forgeborn == self.forgeborn_options[0]:
-                self.name    = f"{self.deck1.name}_{self.deck2.name}"
-                self.faction = f"{self.deck1.faction}|{self.deck2.faction}"
-            else:
-                self.name    = f"{self.deck2.name}_{self.deck1.name}"
-                self.faction = f"{self.deck2.faction}|{self.deck1.faction}"
-            
-            # Update the forgeborn in the parent (Deck) class
-            self.forgeborn = self.active_forgeborn    
-#            self.update_ICollection_with_forgeborn()
- 
-
-    def copyset_forgeborn(self, idx_or_forgeborn_name):
-
-        final_fusion = copy(self)
-        final_fusion.set_forgeborn(idx_or_forgeborn_name)
-
-        return final_fusion
-
-    def get_forgeborn(self, id_or_forgeborn_name):        
-        if isinstance(id_or_forgeborn_name, int):
-            return self.forgeborn_options[id_or_forgeborn_name]
-        else :
-            for forgeborn in self.forgeborn_options:
-                if id_or_forgeborn_name == forgeborn.name:
-                    return forgeborn
-        return None
-
-    def to_dict(self):
-        fusion_dict = super().to_dict()
-        fusion_dict.update({
-            "fused_name": self.fused_name,
-            "fused_faction": self.fused_faction,
-            #"deck1": self.deck1.to_dict(),
-            #"deck2": self.deck2.to_dict(),
-            "forgeborn_options": [fb.to_dict() for fb in self.forgeborn_options],
-            "fused_abilities": self.fused_abilities
-        })
-        return fusion_dict    

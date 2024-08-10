@@ -176,6 +176,7 @@ data_selection_sets = {
     "Deck A": True,
     "Deck B": True,
     "faction": True,
+    "crossfaction": True,
     "forgebornId": True,
     "FB2": True,
     "FB3": True,
@@ -510,7 +511,7 @@ class FilterGrid:
             'Creature': [''],
             'op2': [''],
             'Spell': [''],            
-            'Forgeborn Ability': ['Inspire'],
+            'Forgeborn Ability': ['Inspire + Enhance'],
             'Data Set': ['Fusion Stats'],
             'Active': [True],
         })
@@ -733,10 +734,15 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
             if apply_operator == 'AND':
                 # Create a boolean mask initialized to True for "AND" logic
                 mask = pd.Series([True] * len(df), index=df.index)
-                for field in filter_fields:
-                    if field in df.columns:
-                        for substring in substrings:
-                            mask &= df[field].apply(lambda title: substring.lower() in str(title).lower())
+                for substring in substrings:
+                    # Create a temporary mask for each substring
+                    temp_mask = pd.Series([False] * len(df), index=df.index)
+                    for field in filter_fields:
+                        if field in df.columns:
+                            # If the substring is found in any of the field‚s, update the temp_mask
+                            temp_mask |= df[field].apply(lambda title: substring.lower() in str(title).lower())
+                    # Update the main mask with the temp_mask using AND logic
+                    mask &= temp_mask
             else:
                 # Create a boolean mask initialized to False for "OR" logic
                 mask = pd.Series([False] * len(df), index=df.index)
@@ -744,7 +750,7 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
                     if field in df.columns:
                         for substring in substrings:
                             mask |= df[field].apply(lambda title: substring.lower() in str(title).lower())
-            
+
             # Filter the DataFrame using the boolean mask
             current_filter_results = df[mask].copy()
 

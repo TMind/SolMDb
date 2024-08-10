@@ -59,7 +59,7 @@ class GlobalVariables:
         if total is not None:
             progress_bar.max = total
         if value is not None:
-            progress_bar.value = value
+            progress_bar.value += value
             if value == 0:
                 progress_bar.bar_style = 'info'
                 progress_bar.style.bar_color = 'lightblue'

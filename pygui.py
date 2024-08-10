@@ -547,7 +547,7 @@ def generate_cardType_count_dataframe(existing_df=None):
 
         global_vars.update_progress(identifier, message = f'Processing Deck: {deck["name"]}')
         deckName = deck['name']
-        myDeck = Deck.load(deckName)
+        #myDeck = Deck.load(deckName)
         myGraph = MyGraph()
         myGraph.G = nx.from_dict_of_dicts(deck['graph'])
         myGraph.node_data = deck['node_data']
@@ -678,6 +678,7 @@ def generate_fusion_statistics_dataframe():
     # Assign values before setting index
     total = len(df_fusions)
     global_vars.update_progress('Fusion Stats', 0, total, 'Generating Fusion Dataframe...')    
+    interface_ids_total_df = pd.DataFrame()
     for fusion_data in df_fusions.itertuples():
         fusion_name = fusion_data.name
         decks = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Deck')
@@ -705,7 +706,53 @@ def generate_fusion_statistics_dataframe():
         process_deck_forgeborn(fusion_name, current_forgeborn_id, forgeborn_ids, df_fusions_filtered)
         global_vars.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion_name}")
 
+        # Create synergy counts for each fusion 
+        myGraph = MyGraph()
+        myGraph.G = nx.from_dict_of_dicts(fusion_data.graph)
+        myGraph.node_data = fusion_data.node_data
+
+        interface_ids = myGraph.get_length_interface_ids()
+
+        # Add a new row to the interface_ids_df DataFrame with the index of deckName and the column of interface_id
+        interface_ids_df = pd.DataFrame(interface_ids, index=[fusion_name])
+
+        # Replace NaN values with 0 and convert to integer for only numeric columns
+        interface_ids_total_df = pd.concat([interface_ids_total_df, interface_ids_df])
+
+    interface_ids_total_df = clean_numeric_columns(interface_ids_total_df)
+
+    df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)
+
+    #display(df_fusions_filtered)
     return df_fusions_filtered
+
+def clean_numeric_columns(df):
+    """
+    Cleans the numeric columns of a DataFrame by:
+    1. Replacing NaN values with 0.
+    2. Converting the columns to integers.
+    3. Converting the DataFrame to strings, replacing '0' with ''.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing numeric columns to clean.
+
+    Returns:
+        pd.DataFrame: The cleaned DataFrame with the numeric columns processed.
+    """
+    # Select only the numeric columns
+    numeric_df = df.select_dtypes(include='number')
+
+    # Replace NaN values with 0 and convert to integer for only numeric columns
+    numeric_df = numeric_df.fillna(0).astype(int)
+
+    # Convert the DataFrame to strings, replacing '0' with ''
+    numeric_df = numeric_df.astype(str).replace('0', '')
+
+    # Update the original DataFrame with the cleaned numeric DataFrame
+    df[numeric_df.columns] = numeric_df
+
+    return df
+
     
 def extract_forgeborn_ids_and_factions(my_decks, fusion_data):
     forgeborn_ids = []
@@ -750,10 +797,6 @@ def generate_deck_statistics_dataframe():
     df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
     df_decks_filtered = df_decks[[ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph', 'node_data']].copy()
     df_decks_filtered['type'] = 'Deck'
-
-    # Print the fields for graph and node_data
-    print(f"Fields for graph: {df_decks_filtered['graph'].iloc[0]}")
-    print(f"Fields for node_data: {df_decks_filtered['node_data'].iloc[0]}")
 
     # For column 'cardSetNo' replace the number 99 with 0 
     df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].astype(int).replace(99, 0)

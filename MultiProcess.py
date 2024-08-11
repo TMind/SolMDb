@@ -41,10 +41,13 @@ def create_fusion(dataChunk):
             fusionCrossFaction = deck2['faction']
             fusionObject = Fusion(FusionData(fusionName, fusionDeckNames, fusionFaction, fusionCrossFaction, deck1['forgebornId'], fusionBornIds, fusionId))  
             fusionData = fusionObject.to_data()  
+            print(f"Creating fusion: {fusionName} -> {fusionData}")
   
             fusionGraph = MyGraph()  
             fusionGraph.create_graph_children(fusionObject)  
-            fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G)  
+            fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G) 
+            print(f"Graph: {fusionGraphDict}")
+            print(f"Node Data: {fusionGraph.node_data}") 
             fusionData['graph'] = fusionGraphDict  
             fusionData['node_data'] = fusionGraph.node_data  
   

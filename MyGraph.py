@@ -74,6 +74,7 @@ class MyGraph:
             self._process_synergy_child(root, db_object, cls, child_name)
         else:
             child_object = cls.lookup(child_name)
+            print(f"Child Object = {child_object}")
             if child_object:
                 color = self._get_color_based_on_child_type(child_type, child_object)
                 self._add_child_to_graph(root, db_object, parent_object, child_object, color)
@@ -93,13 +94,14 @@ class MyGraph:
         #child_object = cls.load(child_name)
         child_object = cls.lookup(child_name)
         if child_object:
-
+            print(f"Interface Child Object = {child_object}")
             color = self._get_color_based_on_child_type(child_type, child_object)
             self._add_child_to_graph(root, db_object, parent_object, child_object, color)
             self.create_graph_children(child_object, parent_object=db_object, root=root)
 
     def _process_synergy_child(self, root, db_object, cls, child_name):
         child_object = cls.load(child_name)
+        print(f"Synergy Child Object = {child_object}")
         node_attributes = {'shape': 'diamond', 'color': 'greenyellow', 'label': self.get_node_id(child_object)}
         root.add_node(child_object, **node_attributes)
         root.add_edge(db_object, child_object)

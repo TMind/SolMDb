@@ -90,6 +90,7 @@ class DatabaseObject:
                     self.db_name = global_vars.username 
                 else:
                     self.db_name ='user_specific'
+                    raise ValueError("Database name not set. Call set_database_name first.")
             
             # Initialize the db_manager for this instance
             self._db_manager = DatabaseManager(self.db_name)
@@ -116,6 +117,7 @@ class DatabaseObject:
                 self.db_name = global_vars.username 
             else:
                 self.db_name ='user_specific'
+                raise ValueError("DatabaseObject:init() Database name not set. Set username first.")
         if self.db_manager:
                 self.db_manager.set_database_name(self.db_name)
 
@@ -199,7 +201,10 @@ class DatabaseObject:
         data = db_manager.find_one(collection_name, {type: name})
         
         if data:    return cls.from_data(data)
-        else:       return None    
+        else:       
+            dbname = db_manager.get_current_db_name()
+            print(f"{cls.__name__} with {type} = {name} not found in the database {dbname} .")
+            return None    
 
     @classmethod
     def load(cls, name, collection_name=None):

@@ -300,5 +300,5 @@ class Interface(DatabaseObject):
             return False
     
     def __str__(self):
-        string = f"{self.name} {self.tag} {self.value} {[synergyName for synergyName in self.synergyNames]}"
+        string = f"{self.tag} {self.value}"
         return string

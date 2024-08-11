@@ -65,6 +65,7 @@ display(HTML(custom_css))
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
+global_vars.username = 'sff'
 synergy_template = SynergyTemplate()    
 ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
 
@@ -200,23 +201,23 @@ all_column_definitions = {
 }
 
 qg_options ={ 'column_options' : {}, 'column_definitions' : all_column_definitions }   
-class StdErrRedirector(object):
-    global out_debug
-    def __init__(self, output_widget):
-        self.output_widget = output_widget
-        self._old_stderr = sys.stderr
+# class StdErrRedirector(object):
+#     global out_debug
+#     def __init__(self, output_widget):
+#         self.output_widget = output_widget
+#         self._old_stderr = sys.stderr
     
-    def write(self, message):
-        with self.output_widget:
-            self._old_stderr.write(message)
-            print(message, end='', file=self._old_stderr)  # Display in the original stderr as well
+#     def write(self, message):
+#         with self.output_widget:
+#             self._old_stderr.write(message)
+#             print(message, end='', file=self._old_stderr)  # Display in the original stderr as well
             
-    def flush(self):
-        self._old_stderr.flush()
+#     def flush(self):
+#         self._old_stderr.flush()
 
-import sys
+#import sys
 # Redirect stderr to the output widget
-sys.stderr = StdErrRedirector(out_debug)
+#sys.stderr = StdErrRedirector(out_debug)
 
 ######################
 # Network Operations #
@@ -266,6 +267,32 @@ def load_deck_data(args):
     deckCollection = DeckLibrary(net_decks, net_fusions, args.mode)
     return deckCollection
 
+def merge_by_adding_columns(df1, df2):
+    """
+    Merges two DataFrames by adding new columns from df2 to df1. 
+    Assumes the indices are the same and there are no new rows to add.
+    
+    Parameters:
+    - df1: First DataFrame.
+    - df2: Second DataFrame.
+    
+    Returns:
+    - A DataFrame that contains all columns from both df1 and df2, aligned by index.
+    """
+    # Ensure both DataFrames have the same index
+    if not df1.index.equals(df2.index):
+        raise ValueError("The indices of both DataFrames must be the same to merge by adding columns.")
+
+    # Merge DataFrames by concatenating columns
+    merged_df = pd.concat([df1, df2], axis=1)
+    
+    return merged_df
+
+def print_dataframe(df, name):
+    print(f'DataFrame: {name}')
+    print(f'Shape: {df.shape}')
+    print(df.index)    
+    display(qgrid.show_grid(df))    
 
 def clean_columns(df):
     """
@@ -287,7 +314,8 @@ def clean_columns(df):
     numeric_df = numeric_df.fillna(0).astype(int)
 
     # Convert the numeric DataFrame to strings, replacing '0' with ''
-    numeric_df = numeric_df.astype(str).replace('0', '')
+    #numeric_df = numeric_df.astype(str).replace('0', '')
+    numeric_df = numeric_df.replace('0', '')
 
     # Select non-numeric columns
     non_numeric_df = df.select_dtypes(exclude='number')
@@ -360,34 +388,7 @@ def generate_central_dataframe(force_new=False):
         else :
             print(f"Index intersection: {df1.index.intersection(df2.index)}")
         
-        return combined_df
-
-    def merge_by_adding_columns(df1, df2):
-        """
-        Merges two DataFrames by adding new columns from df2 to df1. 
-        Assumes the indices are the same and there are no new rows to add.
-        
-        Parameters:
-        - df1: First DataFrame.
-        - df2: Second DataFrame.
-        
-        Returns:
-        - A DataFrame that contains all columns from both df1 and df2, aligned by index.
-        """
-        # Ensure both DataFrames have the same index
-        if not df1.index.equals(df2.index):
-            raise ValueError("The indices of both DataFrames must be the same to merge by adding columns.")
-
-        # Merge DataFrames by concatenating columns
-        merged_df = pd.concat([df1, df2], axis=1)
-        
-        return merged_df
-
-    def print_dataframe(df, name):
-        print(f'DataFrame: {name}')
-        print(f'Shape: {df.shape}')
-        print(df.index)
-        display(df.head())        
+        return combined_df     
 
     username = global_vars.username
     identifier = f"Main DataFrame: {username}"
@@ -439,7 +440,7 @@ def generate_central_dataframe(force_new=False):
     
     # Generate fusion statistics and merge them into the central_df    
     fusion_stats_df = generate_fusion_statistics_dataframe()
-    #print_dataframe(fusion_stats_df, 'Fusion Stats')
+    print_dataframe(fusion_stats_df, 'Fusion Stats')
         
     central_df = merge_and_concat(central_df, fusion_stats_df)
     central_df = clean_columns(central_df)
@@ -753,15 +754,16 @@ def generate_fusion_statistics_dataframe():
     df_fusions = pd.DataFrame(list(fusion_cursor))
     global_vars.update_progress('Fusion Card Titles', 0, len(df_fusions) * 2, 'Fetching Card Titles')
     df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)    
-    df_fusions_filtered = df_fusions[['name', 'CreatedAt', 'UpdatedAt', 'deckRank', 'children_data', 'graph', 'node_data', 'tags', 'cardTitles']].copy()
+    df_fusions['forgebornId'] = df_fusions['currentForgebornId']
+    df_fusions_filtered = df_fusions[['name', 'id', 'faction', 'crossFaction', 'forgebornId', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'children_data', 'graph', 'node_data', 'tags']].copy()
     df_fusions_filtered['type'] = 'Fusion'
 
-    df_fusions_filtered.set_index('name', inplace=True)
+    #df_fusions_filtered.set_index('name', inplace=True)
 
     # Add new columns for Deck A, Deck B, and forgebornId
     df_fusions_filtered['Deck A'] = None
     df_fusions_filtered['Deck B'] = None
-    df_fusions_filtered['forgebornId'] = None
+    #df_fusions_filtered['forgebornId'] = None
 
     # Assign values before setting index
     total = len(df_fusions)
@@ -770,64 +772,18 @@ def generate_fusion_statistics_dataframe():
     all_interface_ids_df_list = []
     for fusion_data in df_fusions.itertuples():
         fusion_name = fusion_data.name
-        decks = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Deck')
-        my_decks = fusion_data.myDecks
-        
-        forgeborn_ids, factions = extract_forgeborn_ids_and_factions(my_decks, fusion_data)
-        
-        if not forgeborn_ids:
-            print(f"forgebornIds is empty for {fusion_name}")
-            continue
-        
-        current_forgeborn_id = forgeborn_ids[0] 
-        
-        if factions:
-            for i, field in enumerate(['faction', 'crossfaction']):
-                df_fusions_filtered.loc[fusion_name, field] = factions[i] if i < len(factions) else ''
-        
+        decks = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Deck')        
+              
         if len(decks) > 1:
             df_fusions_filtered.loc[fusion_name, 'Deck A'] = decks[0]
-            df_fusions_filtered.loc[fusion_name, 'Deck B'] = decks[1]
+            df_fusions_filtered.loc[fusion_name, 'Deck B'] = decks[1]        
         
-        if current_forgeborn_id:
-            df_fusions_filtered.loc[fusion_name, 'forgebornId'] = current_forgeborn_id
+        current_forgeborn_id = fusion_data.forgebornId
+        forgeborn_ids = fusion_data.ForgebornIds
         
         process_deck_forgeborn(fusion_name, current_forgeborn_id, forgeborn_ids, df_fusions_filtered)
         global_vars.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion_name}")
-
-        # Initialize an empty DataFrame to store the cumulative stats
-        # cumulative_stats_df = pd.DataFrame()
-
-        # for deckName in decks:
-        #     # Fetch the deck data from the database
-        #     deck = global_vars.myDB.find_one('Deck', {'name': deckName})
-            
-        #     if deck:
-        #         # Initialize card_types dictionary
-        #         card_types = {}
-                
-        #         # Check if 'stats' exists in the deck
-        #         if 'stats' in deck:
-        #             deck_stats = deck.get('stats', {})
-        #             card_types = deck_stats.get('card_types', {})
-                    
-        #         # Check if 'Creature' stats exist in card_types
-        #         if 'Creature' in card_types:
-        #             # Convert the card types for 'Creature' to a DataFrame
-        #             cardType_df = pd.DataFrame(card_types['Creature'], index=[fusion_name])  # Use fusion_name as the index
-        #             cardType_df.fillna(0, inplace=True)
-        #             cardType_df = cardType_df.astype('int64')
-
-        #             # If the fusion name already exists in cumulative_stats_df, add the new values to the existing row
-        #             if fusion_name in cumulative_stats_df.index:
-        #                 cumulative_stats_df.loc[fusion_name] += cardType_df.loc[fusion_name]
-        #             else:
-        #                 # If not, just append the new row
-        #                 cumulative_stats_df = pd.concat([cumulative_stats_df, cardType_df], axis=0)
-
-        # # Now you can merge cumulative_stats_df with df_fusions_filtered
-        # df_fusions_filtered = pd.concat([df_fusions_filtered, cumulative_stats_df], axis=1)
-                    
+   
         # Create synergy counts for each fusion 
         myGraph = MyGraph()
         myGraph.G = nx.from_dict_of_dicts(fusion_data.graph)
@@ -837,15 +793,14 @@ def generate_fusion_statistics_dataframe():
 
         # Add a new row to the interface_ids_df DataFrame with the index of deckName and the column of interface_id
         interface_ids_df = pd.DataFrame(interface_ids, index=[fusion_name])
-
-        all_interface_ids_df_list.append(interface_ids_df)
-        # Replace NaN values with 0 and convert to integer for only numeric columns        
-        # interface_ids_total_df = pd.concat([interface_ids_total_df, interface_ids_df])
+        all_interface_ids_df_list.append(interface_ids_df)        
 
     interface_ids_total_df = pd.concat(all_interface_ids_df_list)
     interface_ids_total_df = clean_columns(interface_ids_total_df)
 
+    print_dataframe(interface_ids_total_df, 'Interface IDs Total DF')
     df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)
+    print_dataframe(df_fusions_filtered, 'Fusion Stats DF')
 
     #display(df_fusions_filtered)
     return df_fusions_filtered
@@ -1103,6 +1058,9 @@ def reload_data_on_click(button, value):
                      '--mode', 'create' ]
         #print(f'Loading Fusions with arguments {arguments}')
         args = parse_arguments(arguments)    
+    elif value == 'Generate Dataframe':
+        generate_central_dataframe(force_new=True)
+        return
 
     load_deck_data(args)
     # Refresh db_list widget
@@ -1118,7 +1076,7 @@ def reload_data_on_click(button, value):
             #print(f'Setting db_list value to {username_value}')
             # Force update the central DataFrame for the username after reloading the data 
             #update_deck_and_fusion_counts()
-            generate_central_dataframe(force_new=True)
+            #generate_central_dataframe(force_new=True)
             db_list.value = username_value
         else:
             #print(f'Setting db_list value to {valid_db_names[0]} because {username_value} not in {valid_db_names}')
@@ -1371,7 +1329,7 @@ def setup_interface():
 
     # Toggle buttons to select load items
     loadToggle = widgets.ToggleButtons(
-        options=['Load Decks/Fusions', 'Create all Fusions'],
+        options=['Load Decks/Fusions', 'Create all Fusions', 'Generate Dataframe'],
         description='Action:',
         disabled=False,
         button_style='warning', # 'success', 'info', 'warning', 'danger' or ''

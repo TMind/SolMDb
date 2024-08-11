@@ -1,9 +1,7 @@
 from datetime import datetime
-from operator import or_
 import pandas as pd
 import qgrid
 import ipywidgets as widgets
-#from IPython.display import display, clear_output, HTML
 from GlobalVariables import global_vars as gv
 
 from DataSelectionManager import DataSelectionManager
@@ -13,7 +11,7 @@ from MongoDB.DatabaseManager import DatabaseManager
 
 data_selection_sets = {
   "Deck Stats": {
-    "name": True, "type": 'Deck',
+    "Name": True, "type": 'Deck',
     "registeredDate": True, "UpdatedAt": True, "pExpiry": True,
     "level": True,  "xp": True, "elo": True,
     "cardSetNo": True,  "faction": True,
@@ -23,28 +21,38 @@ data_selection_sets = {
     "A1": True,     "A2": True,     "A3": True,
     "H1": True,     "H2": True,     "H3": True
   },
+  "Fusion Stats": {
+    "Name": True, "type": 'Fusion',
+    "CreationDate": True, "UpdatedAt": True, 
+    "faction": True, "crossfaction": True,
+    "forgebornId": True, "cardTitles": True,
+    "FB2": True,    "FB3": True,    "FB4": True,
+    "Creatures": True,  "Spells": True, "Exalts": True,    
+    #"A1": True,     "A2": True,     "A3": True,
+    #"H1": True,     "H2": True,     "H3": True
+  },
   "Card Types": {
-    "name": True,
+    "Name": True,
     "type": 'Deck',
     "faction": True,
     "Creatures": True,
     "Spells": True,
     "Exalts": True,
     "Beast": True,
-    "Dinosaur": True,
-    "Mage": True,
-    "Robot": True,
-    "Scientist": True,
-    "Spirit": True,
-    "Warrior": True,
-    "Zombie": True,
-    "Minion": True,
+    "Dinosaur Type": True,
     "Dragon": True,
-    "Elemental": True,
-    "Plant": True
+    "Elemental Type": True,
+    "Mage": True,
+    "Plant Type": True,
+    "Robot Type": True,
+    "Scientist": True,
+    "Spirit Type": True,
+    "Warrior": True,
+    "Zombie Type": True,
+    "Minion": True,    
   },
-  "All Types": {
-    "name": True,
+  "Deck Tags": {
+    "Name": True,
     "type": 'Deck',
     "faction": True,
     "Beast": True,
@@ -120,8 +128,8 @@ data_selection_sets = {
     "Fun": True,
     "Annoying": True
   },
-  "Synergies": {
-    "name": True,
+  "Deck Synergies": {
+    "Name": True,
     "type": 'Deck',
     "faction": True,
     "Beast": True,
@@ -170,8 +178,8 @@ data_selection_sets = {
     "Exalts": True,
     "Exalt Synergy": True
   },
-  "Fusion Stats": {
-    "name": True,
+  "Fusion Tags": {
+    "Name": True,
     "type": 'Fusion',
     "Deck A": True,
     "Deck B": True,

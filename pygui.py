@@ -98,7 +98,7 @@ default_width = 150
 
 all_column_definitions = {
     'index':            {'width': 50},
-    'name':             {'width': 250},
+    'Name':             {'width': 250},
     'type':             {'width': 60},
     'Deck A':           {'width': 250},
     'Deck B':           {'width': 250},
@@ -110,6 +110,7 @@ all_column_definitions = {
     'pExpiry':          {'width': 200},
     'cardSetNo':        {'width': 50},
     'faction':          {'width': 100},
+    'crossFaction':     {'width': 100},
     'forgebornId':      {'width': 100},
     'cardTitles':       {'width': 200},
     'FB4':              {'width': default_width},
@@ -123,6 +124,7 @@ all_column_definitions = {
     'H3':               {'width': 50},
     'Creatures':        {'width': 80},
     'Spells':           {'width': 80},
+    'Exalts':           {'width': 80},   
     'Beast':            {'width': 80},
     'Beast Synergy':    {'width': default_width},
     'Dinosaur':         {'width': 80},
@@ -330,60 +332,35 @@ def generate_central_dataframe(force_new=False):
         - A DataFrame that is the result of merging and concatenating df1 and df2, 
         with overlapping columns combined.
         """
-        
-        print("Starting merge_and_concat...")
-        
-        # Standardize missing data: Convert empty strings and None to NaN
-        #df1 = df1.replace(['', None], np.nan)
-        #df2 = df2.replace(['', None], np.nan)
-        
+      
         # Identify overlapping columns
         overlapping_columns = df1.columns.intersection(df2.columns)
-        print(f"Overlapping columns: {list(overlapping_columns)}")
+        #print(f"Overlapping columns: {list(overlapping_columns)}")
         
-        # Handle overlapping columns
-        # for col in overlapping_columns:
-        #     # Count the number of non-NaN entries in both columns before combining
-        #     non_nan_df1 = df1[col].notna().sum()
-        #     non_nan_df2 = df2[col].notna().sum()
-        #     print(f"Combining column: {col} (non-NaN in df1: {non_nan_df1}, df2: {non_nan_df2})")
-            
-        #     # Combine the columns from both DataFrames, with df1 taking precedence over NaNs in df2
-        #     df1[col] = df1[col].combine_first(df2[col])
-            
-        #     # Remove the column from df2 to avoid duplicates during merge
-        #     df2 = df2.drop(columns=[col])
-        # Add any missing columns from df2 to df1
         missing_columns = df2.columns.difference(df1.columns)
         for col in missing_columns:
             df1[col] = np.nan  # Initialize the missing columns with NaN values in df1
-        print(f"Missing columns initialized : {list(missing_columns)}")
+        #print(f"Missing columns initialized : {list(missing_columns)}")
         
+        # Check for duplicate indices in both DataFrames
         for df in [df1, df2]:
-            duplicates = df.index[df.index.duplicated()].tolist()
-            if duplicates:
-                print("Duplicate indices found df:", duplicates)
-            else:
-                print("No duplicate indices found.")
-        
-        # Check for duplicate columns in both DataFrames
-        duplicate_columns_df1 = df1.columns[df1.columns.duplicated()].unique()
-        duplicate_columns_df2 = df2.columns[df2.columns.duplicated()].unique()
-
-        print(f"Duplicate columns in df1: {duplicate_columns_df1}")
-        print(f"Duplicate columns in df2: {duplicate_columns_df2}")
+            duplicate_indices = df.index[df.index.duplicated()].tolist()
+            duplicate_columns = df.columns[df.columns.duplicated()].unique()
+            
+            if duplicate_indices:
+                print("Duplicate indices found df:", duplicate_indices)
+            if not duplicate_columns.empty:
+                print(f"Duplicate columns in df: {duplicate_columns}")    
+                                            
         # Merge the DataFrames on their indices
         #merged_df = pd.merge(df1, df2, left_index=True, right_index=True, how='outer')
-        try:
-            if df1.index.intersection(df2.index).empty:
-                combined_df = pd.concat([df1, df2], axis=0)
-            else:
-                print("Duplicate indices found. Not merging!")
-        except Exception as e:
-            print(f"Error in merge_and_concat: {e}")
-                
+        combined_df = pd.DataFrame()
+        if df1.index.intersection(df2.index).empty:
+            combined_df = pd.concat([df1, df2], axis=0)        
+        else :
+            print(f"Index intersection: {df1.index.intersection(df2.index)}")
+        
         return combined_df
-
 
     def merge_by_adding_columns(df1, df2):
         """
@@ -406,6 +383,11 @@ def generate_central_dataframe(force_new=False):
         
         return merged_df
 
+    def print_dataframe(df, name):
+        print(f'DataFrame: {name}')
+        print(f'Shape: {df.shape}')
+        print(df.index)
+        display(df.head())        
 
     username = global_vars.username
     identifier = f"Main DataFrame: {username}"
@@ -445,36 +427,32 @@ def generate_central_dataframe(force_new=False):
     # Start with deck statistics which form the basis of the DataFrame
     global_vars.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
     deck_stats_df = generate_deck_statistics_dataframe()
-    print(f'Deck Stats DF: {deck_stats_df.shape}')
-    display(deck_stats_df.head())
-    print(deck_stats_df.index)
-    
+    #print_dataframe(deck_stats_df, 'Deck Stats')
+        
     global_vars.update_progress(identifier, 50, 100, 'Halfway there...')
     # Generate card type counts and merge them into the deck_stats_df
     card_type_counts_df = generate_cardType_count_dataframe()
-    print(f'Card Type Counts DF: {card_type_counts_df.shape}')
-    display(card_type_counts_df.head())
-    print(card_type_counts_df.index)
-    
+    #print_dataframe(card_type_counts_df, 'Card Type Counts')
+        
     central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
-    print(f'Central DF after merging with Card Type Counts: {central_df.shape}')
-    display(central_df.head())
-    print(central_df.index)
-
+    #print_dataframe(central_df, 'Central DF')
+    
     # Generate fusion statistics and merge them into the central_df    
     fusion_stats_df = generate_fusion_statistics_dataframe()
-    print(f'Fusion Stats DF: {fusion_stats_df.shape}')
-    display(fusion_stats_df.head())
-    print(fusion_stats_df.index)
-    
+    #print_dataframe(fusion_stats_df, 'Fusion Stats')
+        
     central_df = merge_and_concat(central_df, fusion_stats_df)
     central_df = clean_columns(central_df)
-    print(f'Central DF after concatenating with Fusion Stats: {central_df.shape}')
-    display(central_df.head())
+    #print_dataframe(central_df, 'Central DF after concatenating with Fusion Stats')
+
+    # Make a copy for defragmentation        
     central_frag_df = central_df.copy()
     
     # Reset the index to move the index to the 'name' column
-    central_frag_df.reset_index(inplace=True)
+    #print_dataframe(central_frag_df, 'Central Frag DF')
+    #central_frag_df.reset_index(inplace=True, )
+    central_frag_df.reset_index(inplace=True, names='Name')
+    #print_dataframe(central_frag_df, 'Central Frag DF after reset_index')    
     
     global_vars.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
 
@@ -482,15 +460,10 @@ def generate_central_dataframe(force_new=False):
     user_dataframes[username] = central_frag_df.copy()
 
     # Serialize the DataFrame to a bytes-like object and store it in GridFS
-    print(f'Storing DataFrame for {username} in GridFS...')
+    #print(f'Storing DataFrame for {username} in GridFS...')
     with global_vars.fs.new_file(filename='central_df') as file:
-        pickle.dump(central_df, file)
-
-    # Verify the creation date after storing
-    #file_record = global_vars.myDB.find_one('fs.files', {'filename': 'central_df'})
-    #if file_record:
-    #    print(f'New central_df stored for {username}. Upload Date: {file_record["uploadDate"]}')
-
+        pickle.dump(central_frag_df, file)
+    
     update_deck_and_fusion_counts()
     update_central_frame_tab(central_frag_df)
     return central_frag_df
@@ -794,6 +767,7 @@ def generate_fusion_statistics_dataframe():
     total = len(df_fusions)
     global_vars.update_progress('Fusion Stats', 0, total, 'Generating Fusion Dataframe...')    
     interface_ids_total_df = pd.DataFrame()
+    all_interface_ids_df_list = []
     for fusion_data in df_fusions.itertuples():
         fusion_name = fusion_data.name
         decks = get_items_from_child_data(fusion_data.children_data, 'CardLibrary.Deck')
@@ -864,9 +838,11 @@ def generate_fusion_statistics_dataframe():
         # Add a new row to the interface_ids_df DataFrame with the index of deckName and the column of interface_id
         interface_ids_df = pd.DataFrame(interface_ids, index=[fusion_name])
 
-        # Replace NaN values with 0 and convert to integer for only numeric columns
-        interface_ids_total_df = pd.concat([interface_ids_total_df, interface_ids_df])
+        all_interface_ids_df_list.append(interface_ids_df)
+        # Replace NaN values with 0 and convert to integer for only numeric columns        
+        # interface_ids_total_df = pd.concat([interface_ids_total_df, interface_ids_df])
 
+    interface_ids_total_df = pd.concat(all_interface_ids_df_list)
     interface_ids_total_df = clean_columns(interface_ids_total_df)
 
     df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)

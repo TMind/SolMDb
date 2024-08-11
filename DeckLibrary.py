@@ -116,7 +116,7 @@ class DeckLibrary:
         # Check if fusions exist already in the database and if not, create them
 
         if mode =='create':
-            print('Creating fusions...')
+            #print('Creating fusions...')
             deckCursor = self.dbmgr.find('Deck', {}, {'name': 1})                
             self.new_decks = [deck for deck in deckCursor]             
             self.make_fusions()

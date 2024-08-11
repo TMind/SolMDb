@@ -242,10 +242,12 @@ class Deck(DatabaseObject):
             if 'cardSubType' in card:
                 card_sub_types = card['cardSubType'].split(' ')
                 for card_sub_type in card_sub_types:
+                    card_sub_type = f"{card_sub_type} Type"
                     if card_sub_type not in card_types[card_type]:
                         card_types[card_type][card_sub_type] = 1
                     else:
-                        card_types[card_type][card_sub_type] += 1        
+                        card_types[card_type][card_sub_type] += 1    
+                            
         if not self.data.stats :
             self.data.stats = {}
         

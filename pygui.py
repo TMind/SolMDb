@@ -1,9 +1,13 @@
-import os, time, re
+import os, time, re, json
 import ipywidgets as widgets
-from numpy import isin
+import numpy as np
 from pyvis.network import Network
 import networkx as nx
 import pickle
+
+from datetime import datetime
+import pytz  
+from tzlocal import get_localzone  
 
 from GlobalVariables import global_vars
 from CardLibrary import Deck, FusionData, Fusion
@@ -261,6 +265,41 @@ def load_deck_data(args):
     return deckCollection
 
 
+def clean_columns(df):
+    """
+    Cleans both numeric and non-numeric columns of a DataFrame by:
+    1. Replacing NaN values with 0 in numeric columns and converting them to integers.
+    2. Replacing NaN values with empty strings in non-numeric columns.
+    3. Converting the numeric DataFrame to strings, replacing '0' with ''.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing columns to clean.
+
+    Returns:
+        pd.DataFrame: The cleaned DataFrame with both numeric and non-numeric columns processed.
+    """
+    # Select only the numeric columns
+    numeric_df = df.select_dtypes(include='number')
+
+    # Replace NaN values with 0 and convert to integer for only numeric columns
+    numeric_df = numeric_df.fillna(0).astype(int)
+
+    # Convert the numeric DataFrame to strings, replacing '0' with ''
+    numeric_df = numeric_df.astype(str).replace('0', '')
+
+    # Select non-numeric columns
+    non_numeric_df = df.select_dtypes(exclude='number')
+
+    # Replace NaN values with empty strings in non-numeric columns
+    non_numeric_df = non_numeric_df.fillna('')
+
+    # Update the original DataFrame with the cleaned numeric and non-numeric DataFrames
+    df[numeric_df.columns] = numeric_df
+    df[non_numeric_df.columns] = non_numeric_df
+
+    return df
+
+
 # Function to update the central data frame tab
 import qgridnext as qgrid
 def update_central_frame_tab(central_df):
@@ -278,19 +317,95 @@ user_dataframes = {}
 def generate_central_dataframe(force_new=False):
     # Get the current username from the global variables
 
-    def merge_on_index(df1, df2):
-        # Merge with suffixes to temporarily differentiate overlapping columns
-        merged_df = df1.merge(df2, left_index=True, right_index=True, how='left', suffixes=('', '_dup'))
+    def merge_and_concat(df1, df2):
+        """
+        Merges two DataFrames on their indices, handles overlapping columns by combining them
+        (non-NaN values take precedence), and then concatenates the DataFrames along rows.
+        
+        Parameters:
+        - df1: First DataFrame.
+        - df2: Second DataFrame.
+        
+        Returns:
+        - A DataFrame that is the result of merging and concatenating df1 and df2, 
+        with overlapping columns combined.
+        """
+        
+        print("Starting merge_and_concat...")
+        
+        # Standardize missing data: Convert empty strings and None to NaN
+        #df1 = df1.replace(['', None], np.nan)
+        #df2 = df2.replace(['', None], np.nan)
+        
+        # Identify overlapping columns
+        overlapping_columns = df1.columns.intersection(df2.columns)
+        print(f"Overlapping columns: {list(overlapping_columns)}")
+        
+        # Handle overlapping columns
+        # for col in overlapping_columns:
+        #     # Count the number of non-NaN entries in both columns before combining
+        #     non_nan_df1 = df1[col].notna().sum()
+        #     non_nan_df2 = df2[col].notna().sum()
+        #     print(f"Combining column: {col} (non-NaN in df1: {non_nan_df1}, df2: {non_nan_df2})")
+            
+        #     # Combine the columns from both DataFrames, with df1 taking precedence over NaNs in df2
+        #     df1[col] = df1[col].combine_first(df2[col])
+            
+        #     # Remove the column from df2 to avoid duplicates during merge
+        #     df2 = df2.drop(columns=[col])
+        # Add any missing columns from df2 to df1
+        missing_columns = df2.columns.difference(df1.columns)
+        for col in missing_columns:
+            df1[col] = np.nan  # Initialize the missing columns with NaN values in df1
+        print(f"Missing columns initialized : {list(missing_columns)}")
+        
+        for df in [df1, df2]:
+            duplicates = df.index[df.index.duplicated()].tolist()
+            if duplicates:
+                print("Duplicate indices found df:", duplicates)
+            else:
+                print("No duplicate indices found.")
+        
+        # Check for duplicate columns in both DataFrames
+        duplicate_columns_df1 = df1.columns[df1.columns.duplicated()].unique()
+        duplicate_columns_df2 = df2.columns[df2.columns.duplicated()].unique()
 
-        # Identify overlapping columns (those with '_dup' suffix)
-        overlap_cols = [col[:-4] for col in merged_df.columns if col.endswith('_dup')]
+        print(f"Duplicate columns in df1: {duplicate_columns_df1}")
+        print(f"Duplicate columns in df2: {duplicate_columns_df2}")
+        # Merge the DataFrames on their indices
+        #merged_df = pd.merge(df1, df2, left_index=True, right_index=True, how='outer')
+        try:
+            if df1.index.intersection(df2.index).empty:
+                combined_df = pd.concat([df1, df2], axis=0)
+            else:
+                print("Duplicate indices found. Not merging!")
+        except Exception as e:
+            print(f"Error in merge_and_concat: {e}")
+                
+        return combined_df
 
-        # Combine overlapping columns and drop duplicates
-        for col in overlap_cols:
-            merged_df[col] = merged_df[col].combine_first(merged_df[f'{col}_dup'])
-            merged_df.drop(columns=[f'{col}_dup'], inplace=True)
 
+    def merge_by_adding_columns(df1, df2):
+        """
+        Merges two DataFrames by adding new columns from df2 to df1. 
+        Assumes the indices are the same and there are no new rows to add.
+        
+        Parameters:
+        - df1: First DataFrame.
+        - df2: Second DataFrame.
+        
+        Returns:
+        - A DataFrame that contains all columns from both df1 and df2, aligned by index.
+        """
+        # Ensure both DataFrames have the same index
+        if not df1.index.equals(df2.index):
+            raise ValueError("The indices of both DataFrames must be the same to merge by adding columns.")
+
+        # Merge DataFrames by concatenating columns
+        merged_df = pd.concat([df1, df2], axis=1)
+        
         return merged_df
+
 
     username = global_vars.username
     identifier = f"Main DataFrame: {username}"
@@ -298,18 +413,24 @@ def generate_central_dataframe(force_new=False):
     file_record = global_vars.myDB.find_one('fs.files',  {'filename': 'central_df'})
     if not force_new:
         if username in user_dataframes:
-            update_central_frame_tab(user_dataframes[username])
-            return user_dataframes[username]
+            stored_df = user_dataframes[username]
+            if stored_df is not None:
+                update_deck_and_fusion_counts()
+                update_central_frame_tab(user_dataframes[username])
+                return user_dataframes[username]
 
         # Check if the DataFrame already exists in GridFS
         if file_record:
             # Retrieve the DataFrame from GridFS
             file_id = file_record['_id']
             with global_vars.fs.get(file_id) as file:
-                central_df = pickle.load(file)
-                user_dataframes[username] = central_df
-                update_central_frame_tab(central_df)
-                return central_df
+                stored_df = pickle.load(file)
+                user_dataframes[username] = stored_df
+                update_deck_and_fusion_counts()
+                update_central_frame_tab(stored_df)
+                return stored_df
+        #print(f'No stored DataFrame found for {username}. Generating a new DataFrame...')
+        
     else:
         # Clear the existing DataFrame from the user_dataframes dictionary
         if username in user_dataframes:
@@ -318,41 +439,61 @@ def generate_central_dataframe(force_new=False):
         # Delete the old DataFrame from GridFS
         if file_record:
             file_id = file_record['_id']
-            global_vars.fs.delete(file_id)                        
+            global_vars.fs.delete(file_id)
+            #print(f'Deleted existing central_df for {username}. File ID: {file_id}')
 
     # Start with deck statistics which form the basis of the DataFrame
     global_vars.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
     deck_stats_df = generate_deck_statistics_dataframe()
+    print(f'Deck Stats DF: {deck_stats_df.shape}')
+    display(deck_stats_df.head())
+    print(deck_stats_df.index)
     
     global_vars.update_progress(identifier, 50, 100, 'Halfway there...')
     # Generate card type counts and merge them into the deck_stats_df
     card_type_counts_df = generate_cardType_count_dataframe()
+    print(f'Card Type Counts DF: {card_type_counts_df.shape}')
+    display(card_type_counts_df.head())
+    print(card_type_counts_df.index)
     
+    central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
+    print(f'Central DF after merging with Card Type Counts: {central_df.shape}')
+    display(central_df.head())
+    print(central_df.index)
 
-    # Example usage    
-    central_df = merge_on_index(deck_stats_df, card_type_counts_df)
-
-#    central_df = deck_stats_df.merge(card_type_counts_df, left_index=True, right_index=True, how='left', suffixes=('', ''))
-
+    # Generate fusion statistics and merge them into the central_df    
     fusion_stats_df = generate_fusion_statistics_dataframe()
-
-    # Append the fusion_stats_df to the central_df
-    central_df = pd.concat([central_df, fusion_stats_df])
+    print(f'Fusion Stats DF: {fusion_stats_df.shape}')
+    display(fusion_stats_df.head())
+    print(fusion_stats_df.index)
+    
+    central_df = merge_and_concat(central_df, fusion_stats_df)
+    central_df = clean_columns(central_df)
+    print(f'Central DF after concatenating with Fusion Stats: {central_df.shape}')
+    display(central_df.head())
+    central_frag_df = central_df.copy()
     
     # Reset the index to move the index to the 'name' column
-    central_df.reset_index(inplace=True)
+    central_frag_df.reset_index(inplace=True)
     
     global_vars.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
 
     # Store the central_df in the user_dataframes dictionary
-    user_dataframes[username] = central_df.copy()
+    user_dataframes[username] = central_frag_df.copy()
 
-  # Serialize the DataFrame to a bytes-like object and store it in GridFS
+    # Serialize the DataFrame to a bytes-like object and store it in GridFS
+    print(f'Storing DataFrame for {username} in GridFS...')
     with global_vars.fs.new_file(filename='central_df') as file:
         pickle.dump(central_df, file)
 
-    update_central_frame_tab(central_df)
-    return central_df
+    # Verify the creation date after storing
+    #file_record = global_vars.myDB.find_one('fs.files', {'filename': 'central_df'})
+    #if file_record:
+    #    print(f'New central_df stored for {username}. Upload Date: {file_record["uploadDate"]}')
+
+    update_deck_and_fusion_counts()
+    update_central_frame_tab(central_frag_df)
+    return central_frag_df
 
 from CardLibrary import Forgeborn, ForgebornData
 def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds, df):
@@ -525,15 +666,10 @@ def generate_deck_content_dataframe(event = None):
                 print(f'No cards found in the database for {deckList}')
                 return pd.DataFrame()
 
-def generate_cardType_count_dataframe(existing_df=None):
+def generate_cardType_count_dataframe():
     # Initialize a list to accumulate the DataFrames for each deck
     all_decks_list = []
     identifier = 'CardType Count Data'
-
-    # Get interface ids from the database 
-    #interface_ids = global_vars.commonDB.find('Interface', {})
-    #interface_ids = [interface['_id'] for interface in interface_ids]
-    #print(f'Interface IDs: {interface_ids}')
     
     # Get the cardTypes from the stats array in the database
     deckIterator = global_vars.myDB.find('Deck', {})
@@ -556,7 +692,6 @@ def generate_cardType_count_dataframe(existing_df=None):
 
         # Add a new row to the interface_ids_df DataFrame with the index of deckName and the column of interface_id
         interface_ids_df = pd.DataFrame(interface_ids, index=[deckName])
-
         #display(interface_ids_df)
         if 'stats' in deck:
             stats = deck.get('stats', {})
@@ -567,10 +702,12 @@ def generate_cardType_count_dataframe(existing_df=None):
             cardType_df = cardType_df.combine_first(interface_ids_df)
 
             # Add 'faction' column to cardType_df
-            cardType_df['faction'] = deck.get('faction', 'None')  # Replace 'Unknown' with a default value if 'faction' is not in deck
+            #cardType_df['faction'] = deck.get('faction', 'None')  # Replace 'Unknown' with a default value if 'faction' is not in deck
 
             # Append cardType_df to all_decks_list
             all_decks_list.append(cardType_df)
+        else:
+            all_decks_list.append(interface_ids_df)
 
     # Concatenate all the DataFrames in all_decks_list, keeping the original index    
     if all_decks_list : 
@@ -580,40 +717,18 @@ def generate_cardType_count_dataframe(existing_df=None):
         print('No decks found in the database')
         all_decks_df = pd.DataFrame()
 
-    # Filter all_decks_df to only include rows that exist in existing_df ( not necessary anymore )
-    if existing_df is not None:
-        all_decks_df = all_decks_df[all_decks_df.index.isin(existing_df.index)]        
-
-    # Separate the 'faction' column from the rest of the DataFrame
-    if 'faction' in all_decks_df.columns:
-        faction_df = all_decks_df['faction']
-        #all_decks_df = all_decks_df.drop(columns=['faction'])
-    else:
-        faction_df = pd.Series()
-
     # Select only the numeric columns
     numeric_df = all_decks_df.select_dtypes(include='number')
 
     # Replace NaN values with 0 and convert to integer for only numeric columns
     numeric_df = numeric_df.fillna(0).astype(int)
 
-    # Drop columns where all values in specific rows are 0 or less
-    numeric_df = numeric_df.loc[:, ~(numeric_df <= 0).all(axis=0)]
-
-    # Reorder the columns by their total, highest first
-    numeric_df = numeric_df.reindex(numeric_df.sum().sort_values(ascending=False).index, axis=1)
-
     # Convert the DataFrame to strings, replacing '0' with ''
     numeric_df = numeric_df.astype(str).replace('0', '')
 
-    # Insert the 'faction' column to the second position
-    numeric_df.insert(0, 'faction', faction_df)
-
-    #numeric_df.reset_index(inplace=True)
-    #numeric_df.rename(columns={'index': 'name'}, inplace=True)
-
     #display(numeric_df)
-    return numeric_df
+    #return numeric_df
+    return all_decks_df
 
 deck_card_titles = {}
 def generate_fusion_statistics_dataframe():
@@ -706,6 +821,39 @@ def generate_fusion_statistics_dataframe():
         process_deck_forgeborn(fusion_name, current_forgeborn_id, forgeborn_ids, df_fusions_filtered)
         global_vars.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion_name}")
 
+        # Initialize an empty DataFrame to store the cumulative stats
+        # cumulative_stats_df = pd.DataFrame()
+
+        # for deckName in decks:
+        #     # Fetch the deck data from the database
+        #     deck = global_vars.myDB.find_one('Deck', {'name': deckName})
+            
+        #     if deck:
+        #         # Initialize card_types dictionary
+        #         card_types = {}
+                
+        #         # Check if 'stats' exists in the deck
+        #         if 'stats' in deck:
+        #             deck_stats = deck.get('stats', {})
+        #             card_types = deck_stats.get('card_types', {})
+                    
+        #         # Check if 'Creature' stats exist in card_types
+        #         if 'Creature' in card_types:
+        #             # Convert the card types for 'Creature' to a DataFrame
+        #             cardType_df = pd.DataFrame(card_types['Creature'], index=[fusion_name])  # Use fusion_name as the index
+        #             cardType_df.fillna(0, inplace=True)
+        #             cardType_df = cardType_df.astype('int64')
+
+        #             # If the fusion name already exists in cumulative_stats_df, add the new values to the existing row
+        #             if fusion_name in cumulative_stats_df.index:
+        #                 cumulative_stats_df.loc[fusion_name] += cardType_df.loc[fusion_name]
+        #             else:
+        #                 # If not, just append the new row
+        #                 cumulative_stats_df = pd.concat([cumulative_stats_df, cardType_df], axis=0)
+
+        # # Now you can merge cumulative_stats_df with df_fusions_filtered
+        # df_fusions_filtered = pd.concat([df_fusions_filtered, cumulative_stats_df], axis=1)
+                    
         # Create synergy counts for each fusion 
         myGraph = MyGraph()
         myGraph.G = nx.from_dict_of_dicts(fusion_data.graph)
@@ -719,41 +867,13 @@ def generate_fusion_statistics_dataframe():
         # Replace NaN values with 0 and convert to integer for only numeric columns
         interface_ids_total_df = pd.concat([interface_ids_total_df, interface_ids_df])
 
-    interface_ids_total_df = clean_numeric_columns(interface_ids_total_df)
+    interface_ids_total_df = clean_columns(interface_ids_total_df)
 
     df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)
 
     #display(df_fusions_filtered)
     return df_fusions_filtered
 
-def clean_numeric_columns(df):
-    """
-    Cleans the numeric columns of a DataFrame by:
-    1. Replacing NaN values with 0.
-    2. Converting the columns to integers.
-    3. Converting the DataFrame to strings, replacing '0' with ''.
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing numeric columns to clean.
-
-    Returns:
-        pd.DataFrame: The cleaned DataFrame with the numeric columns processed.
-    """
-    # Select only the numeric columns
-    numeric_df = df.select_dtypes(include='number')
-
-    # Replace NaN values with 0 and convert to integer for only numeric columns
-    numeric_df = numeric_df.fillna(0).astype(int)
-
-    # Convert the DataFrame to strings, replacing '0' with ''
-    numeric_df = numeric_df.astype(str).replace('0', '')
-
-    # Update the original DataFrame with the cleaned numeric DataFrame
-    df[numeric_df.columns] = numeric_df
-
-    return df
-
-    
 def extract_forgeborn_ids_and_factions(my_decks, fusion_data):
     forgeborn_ids = []
     factions = []
@@ -972,19 +1092,14 @@ def handle_db_list_change(change):
             change['type'] = 'username'
             # Update the Global Username Variable
             global_vars.username = new_username
-            #global_vars.myDB = DatabaseManager(new_username)
-            #global_vars.myDB.set_database_name(new_username)
 
             # Update Username Widget
             username_widget.value = new_username  # Reflect change in username widget
-            update_deck_and_fusion_counts()
-
-            # Update Interface for New Username
-            #update_filter_widget()
             
             grid_manager.refresh_gridbox(change)
         else:
-            print('No valid database selected.')
+            pass 
+            #print('No valid database selected.')
 
 def reload_data_on_click(button, value):
     global db_list, username_widget
@@ -1026,7 +1141,7 @@ def reload_data_on_click(button, value):
         if username_value in valid_db_names:
             #print(f'Setting db_list value to {username_value}')
             # Force update the central DataFrame for the username after reloading the data 
-            update_deck_and_fusion_counts()
+            #update_deck_and_fusion_counts()
             generate_central_dataframe(force_new=True)
             db_list.value = username_value
         else:
@@ -1243,17 +1358,29 @@ def update_deck_and_fusion_counts():
     db_manager = global_vars.myDB
     deck_count = db_manager.count_documents('Deck', {})
     fusion_count = db_manager.count_documents('Fusion', {})
-    
-    # Update the display widget with the new counts
-    if count_display:
-        count_display.value = f"Decks: {deck_count}, Fusions: {fusion_count}"
-    else:
-        print(f"Decks: {deck_count}, Fusions: {fusion_count}")
 
+    # Query the GridFS for the 'central_df' file
+    file_record = db_manager.find_one('fs.files', {'filename': 'central_df'})
+    
+    if file_record and 'uploadDate' in file_record:
+    # Get the local timezone from your system
+        utc_upload_date = file_record['uploadDate']
+        local_timezone = get_localzone()
+        # Convert UTC to your local timezone
+        creation_date = utc_upload_date.replace(tzinfo=pytz.utc).astimezone(local_timezone)
+        creation_date_str = creation_date.strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        creation_date_str = "No previous update found"
+    
+    # Update the display widget with the new counts and creation date
+    if count_display:
+        count_display.value = f"{creation_date_str} - Decks: {deck_count}, Fusions: {fusion_count}"
+    else:
+        print(f"{creation_date_str} - Decks: {deck_count}, Fusions: {fusion_count}")
+            
 ############################
 # Setup and Initialization #
 ############################
-import json
 def setup_interface():
     global db_list, button_load, card_title_widget, grid_manager, central_frame_output
     

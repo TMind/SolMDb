@@ -118,7 +118,7 @@ class SynergyTemplate(DatabaseObject):
         with open(filename, "r") as csvfile:
             reader = csv.DictReader(csvfile, delimiter=';')
             for row in reader:
-                name = row["name"]
+                name = f"{row['name']} Combo"
                 weight = float(row["weight"])
                 input_tags = [tag.strip() for tag in row["input_tags"].split(",")]
                 output_tags = [tag.strip() for tag in row["output_tags"].split(",")]

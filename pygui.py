@@ -65,7 +65,6 @@ display(HTML(custom_css))
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
-global_vars.username = 'sff'
 synergy_template = SynergyTemplate()    
 ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
 
@@ -292,7 +291,7 @@ def print_dataframe(df, name):
     print(f'DataFrame: {name}')
     print(f'Shape: {df.shape}')
     print(df.index)    
-    display(qgrid.show_grid(df))    
+    display(qgrid.show_grid(df, grid_options={'forceFitColumns': False}, column_definitions=all_column_definitions))    
 
 def clean_columns(df):
     """
@@ -342,9 +341,68 @@ def update_central_frame_tab(central_df):
     
     #print("Central DataFrame tab updated.")
 
+def merge_and_concat(df1, df2):
+    """
+    Efficiently merges two DataFrames by handling overlapping columns and concatenating them row-wise if indices overlap.
+    """
+    # Handle overlapping columns: combine with non-NaN values taking precedence
+    combined_df = pd.concat([df2, df1], axis=0, sort=False).groupby(level=0).first()
+    return combined_df
+
+
 user_dataframes = {}
 ### Dataframe Generation Functions ###
 def generate_central_dataframe(force_new=False):
+    username = global_vars.username
+    identifier = f"Main DataFrame: {username}"
+    file_record = global_vars.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
+    
+    # Manage the cached DataFrame
+    if not force_new and username in user_dataframes:
+        stored_df = user_dataframes[username]
+        if stored_df is not None:
+            update_deck_and_fusion_counts()
+            update_central_frame_tab(stored_df)
+            return stored_df
+
+    # Load or regenerate the DataFrame
+    if file_record and not force_new:
+        with global_vars.fs.get(file_record['_id']) as file:
+            stored_df = pickle.load(file)
+            user_dataframes[username] = stored_df
+            update_deck_and_fusion_counts()
+            update_central_frame_tab(stored_df)
+            return stored_df
+
+    if force_new or not file_record:
+        if username in user_dataframes:
+            del user_dataframes[username]
+        if file_record:
+            global_vars.fs.delete(file_record['_id'])
+
+    global_vars.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
+    deck_stats_df = generate_deck_statistics_dataframe()
+    card_type_counts_df = generate_cardType_count_dataframe()
+
+    central_df = merge_and_concat(deck_stats_df, card_type_counts_df)
+    fusion_stats_df = generate_fusion_statistics_dataframe()
+    central_df = merge_and_concat(central_df, fusion_stats_df)
+    central_df = clean_columns(central_df)
+    
+    central_df = central_df.copy()
+    central_df.reset_index(inplace=True, drop=False)
+    
+    global_vars.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
+    user_dataframes[username] = central_df
+
+    with global_vars.fs.new_file(filename=f'central_df_{username}') as file:
+        pickle.dump(central_df, file)
+    
+    update_deck_and_fusion_counts()
+    update_central_frame_tab(central_df)
+    return central_df
+
+def generate_central_dataframe2(force_new=False):
     # Get the current username from the global variables
 
     def merge_and_concat(df1, df2):
@@ -640,7 +698,7 @@ def generate_deck_content_dataframe(event = None):
                 print(f'No cards found in the database for {deckList}')
                 return pd.DataFrame()
 
-def generate_cardType_count_dataframe():
+def generate_cardType_count_dataframe2():
     # Initialize a list to accumulate the DataFrames for each deck
     all_decks_list = []
     identifier = 'CardType Count Data'
@@ -704,8 +762,122 @@ def generate_cardType_count_dataframe():
     #return numeric_df
     return all_decks_df
 
+def generate_cardType_count_dataframe():
+    identifier = 'CardType Count Data'
+    deck_iterator = global_vars.myDB.find('Deck', {})
+    total_decks = global_vars.myDB.count_documents('Deck', {})
+    global_vars.update_progress(identifier, 0, total_decks, 'Generating CardType Count Data...')
+    
+    all_decks_list = []
+    
+    for deck in deck_iterator:
+        global_vars.update_progress(identifier, message=f'Processing Deck: {deck["name"]}')
+        
+        # Initialize the network graph
+        myGraph = MyGraph()
+        myGraph.G = nx.from_dict_of_dicts(deck.get('graph', {}))
+        myGraph.node_data = deck.get('node_data', {})
+        interface_ids = myGraph.get_length_interface_ids()
+        
+        # Prepare DataFrame for interface IDs
+        interface_ids_df = pd.DataFrame(interface_ids, index=[deck['name']])
+        
+        # Check if the deck has statistics; if not, append only interface_ids_df
+        if 'stats' in deck and 'card_types' in deck['stats']:
+            cardType_df = pd.DataFrame(deck['stats']['card_types'].get('Creature', {}), index=[deck['name']])
+            combined_df = cardType_df.combine_first(interface_ids_df)
+            all_decks_list.append(combined_df)
+        else:
+            all_decks_list.append(interface_ids_df)
+
+    if all_decks_list:
+        all_decks_df = pd.concat(all_decks_list)
+        if 'name' in all_decks_df.columns:
+            all_decks_df.set_index('name', inplace=True)
+        all_decks_df.sort_index(axis=1, inplace=True)
+        numeric_df = all_decks_df.select_dtypes(include='number')
+        numeric_df = numeric_df.fillna(0).astype(int)
+        #numeric_df = numeric_df.astype(str).replace('0', '')
+        return numeric_df
+    else:
+        print('No decks found in the database')
+        return pd.DataFrame()
+
 deck_card_titles = {}
 def generate_fusion_statistics_dataframe():
+    def get_card_titles(card_ids):
+        titles = [cid[5:].replace('-', ' ').title() for cid in card_ids if cid[5:].replace('-', ' ').title()]
+        return sorted(titles)
+
+    def fetch_deck_titles(deck_names):
+        deck_titles = {}
+        for name in deck_names:
+            deck = deck_card_titles.get(name) or global_vars.myDB.find_one('Deck', {'name': name})
+            if deck:
+                card_ids = deck.get('cardIds', [])
+                deck_titles[name] = get_card_titles(card_ids)
+        return deck_titles
+
+    def get_card_titles_by_Ids(fusion_children_data):
+        deck_names = [name for name, dtype in fusion_children_data.items() if dtype == 'CardLibrary.Deck']
+        all_card_titles = {name: fetch_deck_titles([name]).get(name, []) for name in deck_names}
+        global_vars.update_progress('Fusion Card Titles', message='Fetching Card Titles')
+        return ', '.join(sorted(sum(all_card_titles.values(), [])))
+    
+    def get_items_from_child_data(children_data, item_type):
+        # Children data is a dictionary that contains the deck names as keys, where the value is the object type CardLibrary.Deck 
+        item_names = []
+        for name, data_type in children_data.items():
+            if data_type == item_type:
+                item_names.append(name)
+
+        return item_names
+
+    fusion_cursor = global_vars.myDB.find('Fusion', {})
+    df_fusions = pd.DataFrame(list(fusion_cursor))
+
+    global_vars.update_progress('Fusion Card Titles', 0, 2*len(df_fusions), 'Fetching Card Titles')
+    df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)
+    df_fusions['forgebornId'] = df_fusions['currentForgebornId']
+    df_fusions['type'] = 'Fusion'  
+
+    additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'node_data', 'tags']
+    df_fusions_filtered = df_fusions[additional_fields].copy()
+    
+
+    #df_fusions_filtered[['Deck A', 'Deck B']] = df_fusions.apply(lambda x: pd.Series(get_items_from_child_data(x.children_data, 'CardLibrary.Deck')[:2]), axis=1)
+    # Assign values to 'Deck A' and 'Deck B' using .loc
+    df_fusions_filtered.loc[:, ['Deck A', 'Deck B']] = df_fusions.apply(
+        lambda x: pd.Series(get_items_from_child_data(x.children_data, 'CardLibrary.Deck')[:2]),
+        axis=1
+    )
+    df_fusions_filtered.set_index('name', inplace=True)
+
+    global_vars.update_progress('Fusion Stats', 0, len(df_fusions), 'Generating Fusion Dataframe...')
+    interface_ids_total_df = pd.DataFrame()
+    all_interface_ids_df_list = []
+
+    for fusion in df_fusions.itertuples():
+        process_deck_forgeborn(fusion.name, fusion.forgebornId, getattr(fusion, 'ForgebornIds', []), df_fusions_filtered)
+        global_vars.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion.name}")
+
+        myGraph = MyGraph()
+        myGraph.G = nx.from_dict_of_dicts(fusion.graph)
+        myGraph.node_data = fusion.node_data
+        interface_ids = myGraph.get_length_interface_ids()
+        interface_ids_df = pd.DataFrame(interface_ids, index=[fusion.name])
+        all_interface_ids_df_list.append(interface_ids_df)
+
+    interface_ids_total_df = pd.concat(all_interface_ids_df_list)
+    interface_ids_total_df = clean_columns(interface_ids_total_df)
+
+    #print_dataframe(interface_ids_total_df, 'Interface IDs Total DF')
+    df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)
+    #print_dataframe(df_fusions_filtered, 'Fusion Stats DF')
+
+    return df_fusions_filtered
+
+def generate_fusion_statistics_dataframe2():
 
     def get_items_from_child_data(children_data, item_type):
         # Children data is a dictionary that contains the deck names as keys, where the value is the object type CardLibrary.Deck 
@@ -758,7 +930,7 @@ def generate_fusion_statistics_dataframe():
     df_fusions_filtered = df_fusions[['name', 'id', 'faction', 'crossFaction', 'forgebornId', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'children_data', 'graph', 'node_data', 'tags']].copy()
     df_fusions_filtered['type'] = 'Fusion'
 
-    #df_fusions_filtered.set_index('name', inplace=True)
+    #f_fusions_filtered.set_index('name', inplace=True)
 
     # Add new columns for Deck A, Deck B, and forgebornId
     df_fusions_filtered['Deck A'] = None
@@ -827,8 +999,63 @@ def extract_forgeborn_ids_and_factions(my_decks, fusion_data):
 
     return forgeborn_ids, factions
 
-# Data Handling and Transformation 
+
 def generate_deck_statistics_dataframe():
+    def get_card_titles(card_ids):
+        card_titles = [card_id[5:].replace('-', ' ').title() for card_id in card_ids]
+        return ', '.join(sorted(card_titles))
+
+    # Get all Decks from the database once and reuse this list
+    decks = list(global_vars.myDB.find('Deck', {}))
+    number_of_decks = len(decks)
+
+    df_decks = pd.DataFrame(decks)
+    df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
+    df_decks_filtered = df_decks[['name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph', 'node_data']].copy()
+    df_decks_filtered['type'] = 'Deck'
+    df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].astype(int).replace(99, 0)
+    df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
+    df_decks_filtered['elo'] = pd.to_numeric(df_decks_filtered['elo'], errors='coerce').fillna(-1).round(2)
+
+    additional_columns = {'Creatures': 0, 'Spells': 0, 'FB2': '', 'FB3': '', 'FB4': '', 'A1': 0.0, 'H1': 0.0, 'A2': 0.0, 'H2': 0.0, 'A3': 0.0, 'H3': 0.0}
+    for column, default_value in additional_columns.items():
+        df_decks_filtered[column] = default_value
+
+    df_decks_filtered.set_index('name', inplace=True)
+
+    # Process each deck
+    identifier = 'Forgeborn Data'
+    global_vars.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
+    for deck in decks:
+        global_vars.update_progress(identifier, message='Processing Deck Forgeborn: ' + deck['name'])
+        if 'forgebornId' in deck:
+            process_deck_forgeborn(deck['name'], deck['forgebornId'], [deck['forgebornId']], df_decks_filtered)
+
+    df_list = []
+    identifier = 'Stats Data'
+    global_vars.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
+    for deck in decks:
+        global_vars.update_progress(identifier, message='Processing Deck Stats: ' + deck['name'])
+        if 'stats' in deck:
+            stats = deck.get('stats', {})
+            card_type_count_dict = {'Creatures': stats['card_types']['Creature']['count'], 'Spells': stats['card_types']['Spell']['count']}
+            card_type_count_df = pd.DataFrame([card_type_count_dict], index=[deck['name']])
+            attack_dict = stats['creature_averages']['attack']
+            defense_dict = stats['creature_averages']['health']
+            attack_df = pd.DataFrame([attack_dict], index=[deck['name']])
+            defense_df = pd.DataFrame([defense_dict], index=[deck['name']])
+            attack_df.columns = ['A1', 'A2', 'A3']
+            defense_df.columns = ['H1', 'H2', 'H3']
+            deck_stats_df = pd.concat([card_type_count_df, attack_df, defense_df], axis=1).round(2)
+            df_list.append(deck_stats_df)
+
+    df_decks_list = pd.concat(df_list, axis=0)
+    df_decks_filtered.update(df_decks_list)
+
+    return df_decks_filtered
+
+# Data Handling and Transformation 
+def generate_deck_statistics_dataframe2():
 
     def get_card_titles(card_ids):
         card_titles = []
@@ -896,6 +1123,7 @@ def generate_deck_statistics_dataframe():
     identifier = 'Stats Data' 
     global_vars.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
     
+    df_list = []
     # Create a DataFrame from the 'stats' sub-dictionary
     for deck in global_vars.myDB.find('Deck', {}):
         global_vars.update_progress(identifier, message = 'Processing Deck Stats: ' + deck['name'])
@@ -907,7 +1135,10 @@ def generate_deck_statistics_dataframe():
             creature_count = stats['card_types']['Creature']['count']
             spell_count = stats['card_types']['Spell']['count']
             card_type_count_dict = {'Creatures': creature_count, 'Spells': spell_count}
-            card_type_count_df = pd.DataFrame([card_type_count_dict], columns=card_type_count_dict.keys())
+            #card_type_count_df = pd.DataFrame([card_type_count_dict], columns=card_type_count_dict.keys())
+            
+            # Set the index using deck['name'] right when creating the DataFrame
+            card_type_count_df = pd.DataFrame([card_type_count_dict], index=[deck['name']])
 
             # Flatten the 'creature_averages' sub-dictionaries into a single-row DataFrame
             attack_dict = stats['creature_averages']['attack']
@@ -925,17 +1156,21 @@ def generate_deck_statistics_dataframe():
             deck_stats_df = deck_stats_df.round(2)
 
             # Set the 'name' index for deck_stats_df
-            deck_stats_df['name'] = deck['name']
+            #deck_stats_df['name'] = deck['name']
 
             # Print out the columns of df_decks_filtered for debugging
             ic(df_decks_filtered.columns)
 
             # Set the common column as the index in both dataframes            
-            deck_stats_df.set_index('name', inplace=True)
+            #deck_stats_df.set_index('name', inplace=True)
 
             # Update the corresponding row in df_decks_filtered with the stats from deck_stats_df
-            df_decks_filtered.update(deck_stats_df)
+            #df_decks_filtered.update(deck_stats_df)
+            
+            df_list.append(deck_stats_df)
 
+    df_decks_list = pd.concat(df_list)
+    df_decks_filtered = pd.concat([df_decks_filtered, df_decks_list], axis=1)
     return df_decks_filtered
 
 

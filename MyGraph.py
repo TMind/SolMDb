@@ -59,7 +59,7 @@ class MyGraph:
     def _print_parent_and_db_object(self, parent_object, db_object):
         parent_type = parent_object.__class__.__name__
         self_type = db_object.__class__.__name__
-        print(f"Parent Object = {self.get_node_id(parent_object)}[{parent_type}], Db Object = {self.get_node_id(db_object)}[{self_type}]")
+        #print(f"Parent Object = {self.get_node_id(parent_object)}[{parent_type}], Db Object = {self.get_node_id(db_object)}[{self_type}]")
 
     def _process_child(self, root, db_object, parent_object, child_name, full_class_path):
         cls, child_type = get_class_from_path(full_class_path)
@@ -72,13 +72,27 @@ class MyGraph:
             self._process_interface_child(root, db_object, parent_object, child_name, full_class_path)
         elif child_type == 'Synergy':
             self._process_synergy_child(root, db_object, cls, child_name)
+        elif child_type == 'Forgeborn':
+            self._process_forgeborn_child(root, db_object, parent_object, child_name, full_class_path)                     
         else:
             child_object = cls.lookup(child_name)
-            print(f"Child Object = {child_object}")
+            #print(f"Child Object = {child_object}")
             if child_object:
                 color = self._get_color_based_on_child_type(child_type, child_object)
                 self._add_child_to_graph(root, db_object, parent_object, child_object, color)
                 self.create_graph_children(child_object, parent_object=db_object, root=root)
+
+    def _process_forgeborn_child(self, root, db_object, parent_object, child_name, full_class_path):
+        forgebornId = child_name[5:-3]
+        cls, child_type = get_class_from_path(full_class_path)
+        if not cls or not child_type:
+            return
+
+        forgeborn_object = cls.load(forgebornId)
+        forgeborn_object.get_permutation(forgebornId)
+        color = self._get_color_based_on_child_type(child_type, forgeborn_object)
+        self._add_child_to_graph(root, db_object, parent_object, forgeborn_object, color)
+        self.create_graph_children(forgeborn_object, db_object, root)
 
     def _process_interface_child(self, root, db_object, parent_object, child_name, full_class_path):
         cls, child_type = get_class_from_path(full_class_path)
@@ -94,14 +108,14 @@ class MyGraph:
         #child_object = cls.load(child_name)
         child_object = cls.lookup(child_name)
         if child_object:
-            print(f"Interface Child Object = {child_object}")
+            #print(f"Interface Child Object = {child_object}")
             color = self._get_color_based_on_child_type(child_type, child_object)
             self._add_child_to_graph(root, db_object, parent_object, child_object, color)
             self.create_graph_children(child_object, parent_object=db_object, root=root)
 
     def _process_synergy_child(self, root, db_object, cls, child_name):
         child_object = cls.load(child_name)
-        print(f"Synergy Child Object = {child_object}")
+        #print(f"Synergy Child Object = {child_object}")
         node_attributes = {'shape': 'diamond', 'color': 'greenyellow', 'label': self.get_node_id(child_object)}
         root.add_node(child_object, **node_attributes)
         root.add_edge(db_object, child_object)

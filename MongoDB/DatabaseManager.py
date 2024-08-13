@@ -25,12 +25,13 @@ class DatabaseManager:
             print(f"MongoDB is not available: {e}")  
             return False  
 
-    def __new__(cls, db_name: str = None, host='localhost', port=27017, uri=None, force_new=False):  
+    def __new__(cls, db_name = None, host='localhost', port=27017, uri=None, force_new=False):  
         if cls._credentials is None:  
             cls._credentials = {'host': host, 'port': port, 'uri': uri}  
   
         if db_name is None:  
             # Create an empty instance without a database name  
+            print("DatabaseManager:new() : Database name not set. Call set_database_name first.")
             return super().__new__(cls)  
   
         if force_new or db_name not in cls._instances:  
@@ -132,7 +133,7 @@ class DatabaseObject:
     @classmethod
     def _get_class_db_manager(cls):
         from GlobalVariables import global_vars
-        db_name = 'common' if cls.__name__ in ['Entity', 'Forgeborn', 'Interface', 'Synergy'] else global_vars.username or 'user_specific'
+        db_name = 'common' if cls.__name__ in ['Entity', 'Forgeborn', 'Interface', 'Synergy'] else global_vars.username
         return DatabaseManager(db_name)
 
 

@@ -4,7 +4,7 @@ from gridfs import GridFS
 
 class GlobalVariables:
     def __init__(self):
-        self._username = ''
+        self._username = 'enterUsernameHere'
         self.uri = "mongodb://localhost:27017"
         self.myDB = None
         self.fs = None 
@@ -19,7 +19,8 @@ class GlobalVariables:
     @username.setter
     def username(self, value):
         self._username = value
-        self.set_myDB()
+        if value == 'enterUsernameHere': return
+        self.set_myDB() 
 
     def set_myDB(self):
         from MongoDB.DatabaseManager import DatabaseManager

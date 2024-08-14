@@ -27,7 +27,12 @@ from GridManager import GridManager, DynamicGridManager, TemplateGrid
 from icecream import ic
 ic.disable()
 
-pd.set_option('future.no_silent_downcasting', True)
+try:  
+    # Try to set the option  
+    pd.set_option('future.no_silent_downcasting', True)  
+except KeyError:  
+    # Handle the case where the option does not exist  
+    print("Option 'future.no_silent_downcasting' is not neccessary in this version of pandas.")  
 
 # Custom CSS style
 

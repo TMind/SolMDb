@@ -591,8 +591,8 @@ class FilterGrid:
             'Creature': [''],
             'op2': [''],
             'Spell': [''],            
-            'Forgeborn Ability': ['Inspire + Enhance'],
-            'Data Set': ['Fusion Stats'],
+            'Forgeborn Ability': [''],
+            'Data Set': ['Fusion Tags'],
             'Active': [True],
         })
 
@@ -962,7 +962,7 @@ class DynamicGridManager:
         #print(f"DynamicGridManager::refresh_gridbox() - Refreshing grid box with change: {change}")
         
         collection_df = self.qm.get_default_data('collection')
-        if collection_df.empty or (change and 'type' in change and change['type'] == 'username'):            
+        if collection_df.empty or (change and 'type' in change and (change['type'] == 'username' or change['type'] == 'generation')):            
             collection_df = self.data_generate_function()
             self.qm.add_grid('collection', collection_df, options=self.qg_options)            
         

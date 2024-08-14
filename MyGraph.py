@@ -17,6 +17,9 @@ def get_class_from_path(full_class_path):
         return None, None
 
 class MyGraph:
+    
+    graph_cache = {}  # Class-level cache to store graphs
+    
     def __init__(self):
         self.G = nx.DiGraph()
         self.node_data =  { 'tags': {}}
@@ -42,12 +45,20 @@ class MyGraph:
         self.G.nodes[node_id].update(attributes)
 
     def create_graph_children(self, db_object, parent_object=None, root=None):
+        # # Use a unique identifier for caching, for example, the name or ID
+        # object_id = self.get_node_id(db_object)
+        # if object_id in MyGraph.graph_cache:
+        #     # Load the graph from cache
+        #     self.G, self.node_data = MyGraph.graph_cache[object_id]
+        #     return
+        
         root, parent_object = self._initialize_root_and_parent(db_object, parent_object, root)
-        #self._print_parent_and_db_object(parent_object, db_object)
-
         if db_object.children_data:
             for child_name, full_class_path in db_object.children_data.items():
                 self._process_child(root, db_object, parent_object, child_name, full_class_path)
+
+        # After graph is constructed, cache it
+        # MyGraph.graph_cache[object_id] = (self.G.copy(), dict(self.node_data))
 
     def _initialize_root_and_parent(self, db_object, parent_object, root):
         if not root or not parent_object:

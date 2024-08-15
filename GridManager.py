@@ -399,7 +399,7 @@ class GridManager:
 
     def update_visible_columns(self, event, widget):
         current_df = widget.get_changed_df()
-        zero_width_columns = [col for col in current_df.columns if not current_df[col].ne('').any()]
+        zero_width_columns = [col for col in current_df.columns if not current_df[col].ne(0).any()]
         if zero_width_columns:
             for grid_id, grid_info in self.grids.items():
                 if grid_info.main_widget == widget:

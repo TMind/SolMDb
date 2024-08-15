@@ -1285,9 +1285,10 @@ def update_deck_and_fusion_counts():
     db_manager = global_vars.myDB
     deck_count = db_manager.count_documents('Deck', {})
     fusion_count = db_manager.count_documents('Fusion', {})
+    username = db_manager.get_current_db_name()
 
     # Query the GridFS for the 'central_df' file
-    file_record = db_manager.find_one('fs.files', {'filename': 'central_df'})
+    file_record = db_manager.find_one('fs.files', {'filename': f"central_df_{username}"})
     
     if file_record and 'uploadDate' in file_record:
     # Get the local timezone from your system

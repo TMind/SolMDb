@@ -31,3 +31,4 @@ services:
     volumes:
       - ../:/home/jovyan/work  # Mount the parent directory of 'docker' (your project root) to /home/jovyan/work in the container
     command: start-notebook.sh --NotebookApp.notebook_dir=/home/jovyan/work  # Start Jupyter in the mounted directory
+  

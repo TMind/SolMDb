@@ -120,7 +120,8 @@ class DatabaseObject:
                 self.db_name ='user_specific'
                 raise ValueError("DatabaseObject:init() Database name not set. Set username first.")
         if self.db_manager:
-                self.db_manager.set_database_name(self.db_name)
+                from GlobalVariables import global_vars                
+                self.db_manager.set_database_name(self.db_name, uri=global_vars.uri)
 
     def get_data_class(self):
         if self.__class__.DataClass is None:

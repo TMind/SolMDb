@@ -22,7 +22,8 @@ from IPython.display import display, HTML
 
 from Synergy import SynergyTemplate
 import pandas as pd
-from GridManager import GridManager, DynamicGridManager, TemplateGrid
+from GridManager import GridManager, DynamicGridManager
+from CustomGrids import TemplateGrid
 
 from icecream import ic
 ic.disable()
@@ -141,18 +142,21 @@ all_column_definitions = {
     'Mage Combo':       {'width': default_width},
     'Robot':            {'width': 80},
     'Robot Synergy':    {'width': default_width},
+    'Robot Type':       {'width': default_width},
     'Robot Combo':      {'width': default_width},
     'Scientist':        {'width': 80},
     'Scientist Synergy': {'width': default_width},
     'Scientist Combo':  {'width': default_width},
     'Spirit':           {'width': 80},
     'Spirit Synergy':   {'width': default_width},
+    'Spirit Type' :     {'width': default_width},
     'Spirit Combo':     {'width': default_width},
     'Warrior':          {'width': 80},
     'Warrior Synergy':  {'width': default_width},
     'Warrior Combo':    {'width': default_width},
     'Zombie':           {'width': 80},
     'Zombie Synergy':   {'width': default_width},
+    'Zombie Type':      {'width': default_width},
     'Zombie Combo':     {'width': default_width},
     'Replace Setup':    {'width': default_width},
     'Replace Profit':   {'width': default_width},
@@ -210,6 +214,7 @@ all_column_definitions = {
     'Dargon Combo':     {'width': default_width},
     'Elemental':        {'width': 80},
     'Elemental Synergy':{'width': default_width},
+    'Elemental Type':   {'width': default_width},
     'Elemental Combo':  {'width': default_width},
     'Plant':            {'width': 80},
     'Plant Synergy':    {'width': default_width},
@@ -1309,6 +1314,7 @@ def update_deck_and_fusion_counts():
 ############################
 # Setup and Initialization #
 ############################
+from CustomGrids import TemplateGrid
 def setup_interface():
     global db_list, button_load, card_title_widget, grid_manager, central_frame_output
     

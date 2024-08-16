@@ -20,7 +20,7 @@ services:
       - "8081:8081"
 
   jupyter:
-    build: ./jupyter
+    build: ..
     container_name: 'jupyter'
     depends_on:
       - mongo

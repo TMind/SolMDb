@@ -5,7 +5,7 @@
     "settings": {  
         "terminal.integrated.shell.linux": "/bin/bash"  
     },
-    "forwardPorts": [27017, 8081, 8088],  
+    "forwardPorts": [27017, 8081, 8888],  
     "extensions": [  
         "mongodb.mongodb-vscode",  
         "ms-toolsai.jupyter",  

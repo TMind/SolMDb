@@ -1,9 +1,7 @@
 {  
     "name": "MongoDB Environment",  
-    "build": {  
-        "dockerfile": "Dockerfile",
-        "context": ".."  
-    },  
+    "dockerComposeFile": "../docker/docker-compose.yml",
+    "service": "jupyter",
     "settings": {  
         "terminal.integrated.shell.linux": "/bin/bash"  
     },
@@ -13,7 +11,5 @@
         "ms-toolsai.jupyter",  
         "ms-python.python"  
     ],  
-    "runArgs": ["--init"],      
-    "postCreateCommand": "/usr/local/bin/post-create.sh" ,  
-    "postStartCommand": "mongod --fork --logpath /tmp/mongod.log --dbpath /workspaces/mongodb/data/db"    
+    "runArgs": ["--init"]
 }  

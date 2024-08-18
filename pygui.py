@@ -1,3 +1,4 @@
+import glob
 import os, time, re, json
 import ipywidgets as widgets
 import numpy as np
@@ -92,168 +93,14 @@ deck_selection_widget = None
 qgrid_widget_options = {}
 data_generation_functions = {}
 
-out_debug = widgets.Output()
 central_frame_output = widgets.Output()
 
 # Manager Variables
 grid_manager = None 
-qm = GridManager(out_debug)
+qm = GridManager(global_vars.out_debug)
 
 # Widget original options for qgrid
-default_width = 150
-
-all_column_definitions = {
-    'index':            {'width': 50},
-    'Name':             {'width': 250},
-    'type':             {'width': 60},
-    'Deck A':           {'width': 250},
-    'Deck B':           {'width': 250},
-    'registeredDate':   {'width': 200},
-    'UpdatedAt':        {'width': 200},
-    'xp':               {'width': 50},
-    'elo':              {'width': 50},
-    'level':            {'width': 50},
-    'pExpiry':          {'width': 200},
-    'cardSetNo':        {'width': 50},
-    'faction':          {'width': 100},
-    'crossFaction':     {'width': 100},
-    'forgebornId':      {'width': 100},
-    'cardTitles':       {'width': 200},
-    'FB4':              {'width': default_width},
-    'FB2':              {'width': default_width},
-    'FB3':              {'width': default_width},
-    'A1':               {'width': 50},
-    'H1':               {'width': 50},
-    'A2':               {'width': 50},
-    'H2':               {'width': 50},
-    'A3':               {'width': 50},
-    'H3':               {'width': 50},
-    'Creatures':        {'width': 80},
-    'Spells':           {'width': 80},
-    'Exalts':           {'width': 80},   
-    'Beast':            {'width': 80},
-    'Beast Synergy':    {'width': default_width},
-    'Beast Combo':      {'width': default_width},
-    'Dinosaur':         {'width': 80},
-    'Dinosaur Synergy': {'width': default_width},
-    'Dinosaur Combo':   {'width': default_width},
-    'Mage':             {'width': 80},
-    'Mage Synergy':     {'width': default_width},
-    'Mage Combo':       {'width': default_width},
-    'Robot':            {'width': 80},
-    'Robot Synergy':    {'width': default_width},
-    'Robot Type':       {'width': default_width},
-    'Robot Combo':      {'width': default_width},
-    'Scientist':        {'width': 80},
-    'Scientist Synergy': {'width': default_width},
-    'Scientist Combo':  {'width': default_width},
-    'Spirit':           {'width': 80},
-    'Spirit Synergy':   {'width': default_width},
-    'Spirit Type' :     {'width': default_width},
-    'Spirit Combo':     {'width': default_width},
-    'Warrior':          {'width': 80},
-    'Warrior Synergy':  {'width': default_width},
-    'Warrior Combo':    {'width': default_width},
-    'Zombie':           {'width': 80},
-    'Zombie Synergy':   {'width': default_width},
-    'Zombie Type':      {'width': default_width},
-    'Zombie Combo':     {'width': default_width},
-    'Replace Setup':    {'width': default_width},
-    'Replace Profit':   {'width': default_width},
-    'Replace Combo':    {'width': default_width},
-    'Minion':           {'width': 80},
-    'Minion Synergy':   {'width': default_width},
-    'Minion Combo':     {'width': default_width},
-    'Spell':            {'width': 80},
-    'Spell Synergy':    {'width': default_width},
-    'Spell Combo':      {'width': default_width},
-    'Healing Source':   {'width': default_width},
-    'Healing Synergy':  {'width': default_width},
-    'Healing Combo':    {'width': default_width},
-    'Movement':         {'width': 80},
-    'Disruption':       {'width': 80},
-    'Movement Benefit': {'width': default_width},
-    'Movement Combo':   {'width': default_width},
-    'Armor':            {'width': 80},
-    'Armor Giver':      {'width': default_width},
-    'Armor Synergy':    {'width': default_width},
-    'Armor Combo':      {'width': default_width},
-    'Activate':         {'width': 80},
-    'Ready':            {'width': 80},
-    'Activate Combo':   {'width': default_width},
-    'Free':             {'width': 80},
-    'Upgrade':          {'width': 80},
-    'Upgrade Synergy':  {'width': default_width},
-    'Upgrade Combo':    {'width': default_width},
-    'Face Burn':        {'width': 80},
-    'Removal':          {'width': 80},
-    'Breakthrough':     {'width': default_width},
-    'Breakthrough Giver':{'width': default_width},
-    'Aggressive':       {'width': 80},
-    'Aggressive Giver': {'width': default_width},
-    'Defender':         {'width': 80},
-    'Defender Giver':   {'width': default_width},
-    'Stealth':          {'width': 80},
-    'Stealth Giver':    {'width': default_width},
-    'Stat Buff':        {'width': default_width},
-    'Attack Buff':      {'width': default_width},
-    'Health Buff':      {'width': default_width},
-    'Stat Debuff':      {'width': default_width},
-    'Attack Debuff':    {'width': default_width},
-    'Health Debuff':    {'width': default_width},
-    'Destruction Synergy':{'width': default_width},
-    'Destruction Activator':{'width': default_width},
-    'Destruction Combo': {'width': default_width},
-    'Self Damage Payoff':{'width': default_width},
-    'Self Damage Activator':{'width': default_width},
-    'Self Damage Combo': {'width': default_width},
-    'Silence':          {'width': 80},
-    'White Fang':       {'width': 80},
-    'Dragon':           {'width': 80},
-    'Dragon Synergy':   {'width': default_width},
-    'Dargon Combo':     {'width': default_width},
-    'Elemental':        {'width': 80},
-    'Elemental Synergy':{'width': default_width},
-    'Elemental Type':   {'width': default_width},
-    'Elemental Combo':  {'width': default_width},
-    'Plant':            {'width': 80},
-    'Plant Synergy':    {'width': default_width},
-    'Plant Combo':      {'width': default_width},
-    'Exalts':           {'width': 80},
-    'Exalt Synergy':    {'width': default_width},
-    'Exalt Combo':      {'width': default_width},
-    'Slay':             {'width': 80},
-    'Deploy':           {'width': 80},
-    'Ready Combo' :     {'width': 80},
-    'Deploy Combo' :    {'width': 80},
-    'Reanimate' :       {'width': 80},
-    'Reanimate Activator' : {'width': 80},
-    'Reanimate Combo' : {'width': 80},
-    'Last Winter':      {'width': default_width},
-    'Spicy':            {'width': 80},
-    'Cool':             {'width': 80},
-    'Fun':              {'width': 80},
-    'Annoying':         {'width': 80}
-}
-
-qg_options ={ 'column_options' : {}, 'column_definitions' : all_column_definitions }   
-# class StdErrRedirector(object):
-#     global out_debug
-#     def __init__(self, output_widget):
-#         self.output_widget = output_widget
-#         self._old_stderr = sys.stderr
-    
-#     def write(self, message):
-#         with self.output_widget:
-#             self._old_stderr.write(message)
-#             print(message, end='', file=self._old_stderr)  # Display in the original stderr as well
-            
-#     def flush(self):
-#         self._old_stderr.flush()
-
-#import sys
-# Redirect stderr to the output widget
-#sys.stderr = StdErrRedirector(out_debug)
+qg_options ={ 'column_options' : {}, 'column_definitions' : global_vars.all_column_definitions }   
 
 ######################
 # Network Operations #
@@ -509,7 +356,7 @@ def generate_deck_content_dataframe(event = None):
     #print(f'Generating Deck Content DataFrame : {event}')
     widget = deck_selection_widget
 
-    with out_debug:
+    with global_vars.out_debug:
         #Get the selection from the deck widget
         desired_fields = ['name', 'cardType', 'cardSubType', 'levels']    
         if widget:            
@@ -853,7 +700,7 @@ def generate_deck_statistics_dataframe2():
 
     # Iterate over the failed conversions to print/store the name and original 'elo' value
     for index, row in failed_conversions.iterrows():
-        with out_debug:
+        with global_vars.out_debug:
             print(f"Index: {index}, Name: {row['name']}, Failed Value: {row['elo']}")
 
     # Add additional columns to the DataFrame -> Count
@@ -1009,7 +856,7 @@ def handle_debug_toggle(change):
 def handle_db_list_change(change):
     global username_widget, grid_manager
 
-    with out_debug:
+    with global_vars.out_debug:
         print(f'DB List Change: {change}')
 
     if change['name'] == 'value' and change['old'] != change['new']:
@@ -1351,7 +1198,7 @@ def setup_interface():
     debug_toggle.observe(handle_debug_toggle, 'value')
     
     # Create an instance of the manager
-    grid_manager = DynamicGridManager(generate_central_dataframe, qg_options, out_debug)
+    grid_manager = DynamicGridManager(generate_central_dataframe, qg_options, global_vars.out_debug)
 
     # Update the filter grid on db change
     db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')
@@ -1362,8 +1209,8 @@ def setup_interface():
     db_tab   = widgets.VBox([loadToggle, button_load, count_display, username_widget, db_list])
     deck_tab = widgets.VBox([grid_manager.get_ui()])  # , qm_gridbox])
     fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph])
-    debug_tab = widgets.VBox([debug_toggle, out_debug])
-    template_tab = widgets.VBox([templateGrid.qgrid_filter])
+    debug_tab = widgets.VBox([debug_toggle, global_vars.out_debug])
+    template_tab = widgets.VBox([templateGrid.get_ui()])
     central_frame_tab = widgets.VBox([central_frame_output])
 
     tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, fusions_tab, debug_tab, central_frame_tab])
@@ -1376,8 +1223,3 @@ def setup_interface():
 
     tab.selected_index = 0
     display(tab)
-
-    #global_vars.tqdmBar = tqdm(total=100, desc='Loading...', bar_format='{desc}: {percentage:3.0f}% {bar}')
-    
-    # Display the Tab widget
-    #display(global_vars.intProgressBar)

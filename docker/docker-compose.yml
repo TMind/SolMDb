@@ -20,7 +20,7 @@ services:
       - "8081:8081"
 
   jupyter:
-    build: ./jupyter
+    build: ./jupyter  
     container_name: 'jupyter'
     depends_on:
       - mongo
@@ -28,3 +28,7 @@ services:
       - mongo
     ports:
       - "8888:8888"
+    volumes:
+      - ../:/home/jovyan/work  # Mount the parent directory of 'docker' (your project root) to /home/jovyan/work in the container
+    command: start-notebook.sh --NotebookApp.notebook_dir=/home/jovyan/work  # Start Jupyter in the mounted directory
+  

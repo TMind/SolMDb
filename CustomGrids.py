@@ -6,7 +6,6 @@ import ipywidgets as widgets
 from IPython.display import display, HTML
 from collections import OrderedDict
 
-from GridManager import data_selection_sets
 from DataSelectionManager import DataSelectionManager
 from GlobalVariables import global_vars
 from MongoDB.DatabaseManager import DatabaseManager
@@ -26,7 +25,6 @@ style = """
 display(HTML(style))
 
 class TemplateGrid:
-    global data_selection_sets
 
     def __init__(self):
         self.df = self.create_initial_dataframe()
@@ -116,14 +114,14 @@ class TemplateGrid:
         self.restore_button = widgets.Button(description='Restore')
         self.restore_button.on_click(self.restore_template_grid)
 
+        button_box_label = widgets.Label('Actions:')
+        button_box = widgets.VBox([button_box_label, self.select_all_button, self.apply_button, self.save_button, self.restore_button])
+
         # Layout widgets horizontally
         self.control_ui = widgets.HBox([
             group_selector_box, 
             columns_display_box,
-            self.select_all_button, 
-            self.apply_button, 
-            self.save_button,
-            self.restore_button
+            button_box
         ])
 
         # Observe changes in columns_display to update the button text
@@ -216,27 +214,8 @@ class TemplateGrid:
             self.qgrid_filter.change_selection(rows=[selected_index])
 
             # Optionally, sync the data selection sets
-            self.update_data_selection_sets()
-            DataSelectionManager.update_data({'index': selected_index, 'column': self.columns_display.value}, self.qgrid_filter)
-
-    # def apply_column_selection_to_grid(self):
-    #     """Apply the current column selection to the grid."""
-    #     selected_columns = self.columns_display.value
-    #     df = self.qgrid_filter.get_changed_df()
-    #     selected_indices = self.qgrid_filter.get_selected_rows()
-        
-    #     if not selected_indices:
-    #         return  # No row selected, nothing to apply
-
-    #     selected_index = selected_indices[0] if isinstance(selected_indices, list) else selected_indices
-
-    #     for column in self.columns_display.options:
-    #         df.at[selected_index, column] = column in selected_columns
-
-    #     # Update the grid's dataframe
-    #     self.qgrid_filter.df = df
-    #     self.qgrid_filter.change_selection(rows=[selected_index])
-    #     self.update_data_selection_sets()
+            #self.update_data_selection_sets()
+            #DataSelectionManager.update_data({'index': selected_index, 'column': self.columns_display.value}, self.qgrid_filter)
 
     def update_select_all_button(self, change):
         """Update the text of the select all button based on the selection."""
@@ -270,47 +249,11 @@ class TemplateGrid:
         # Adjust the visible columns based on the selected groups
         self.qgrid_filter.column_options = {col: {'visible': True} for col in columns_to_toggle}
 
-    # def toggle_visibility(self, change):
-    #     show = change.new == 'Show Selected'
-    #     selected_columns = self.columns_display.value
-        
-    #     # Get the currently selected row index
-    #     selected_indices = self.qgrid_filter.get_selected_rows()
-    #     if not selected_indices:
-    #         print("No row selected to update visibility.")
-    #         return
-        
-    #     selected_index = selected_indices[0] if isinstance(selected_indices, list) else selected_indices
-
-    #     # Get the DataFrame from the grid
-    #     df = self.qgrid_filter.get_changed_df()
-
-    #     # Update the selected columns in the DataFrame
-    #     df.loc[selected_index, selected_columns] = show
-        
-    #     # Update the DataFrame in the grid
-    #     self.qgrid_filter.df = df
-        
-    #     # Sync the data selection sets
-    #     self.update_data_selection_sets()
-    #     DataSelectionManager.update_data({'index': selected_index, 'column': selected_columns}, self.qgrid_filter)
-        
-    #     # Ensure the column selection reflects the updated state
-        
-    #     # Create a mock change event with the 'new' key
-    #     mock_change = {'new': self.group_selector.value}
-    #     self.update_columns_display(mock_change)
-        
-    #     self.update_group_selector_based_on_columns(selected_columns)
-        
-    #     # Re-select the edited row in the template grid
-    #     self.qgrid_filter.change_selection(rows=[selected_index])
-    #     self.qgrid_filter.df = self.qgrid_filter.get_changed_df()
 
     def create_initial_dataframe(self):
         rows = []
 
-        for template_name, template_set in data_selection_sets.items():
+        for template_name, template_set in global_vars.data_selection_sets.items():
             row = template_set.copy()
             row['Template Name'] = template_name
             rows.append(row)
@@ -395,8 +338,7 @@ class TemplateGrid:
             widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
             event['indices'].remove(0)        
         
-        self.update_data_selection_sets()
-        DataSelectionManager.update_data(event, widget)
+        self.update_data_selection_sets(event, widget)
 
     def grid_filter_on_row_added(self, event, widget):
         new_row_index = event['index']
@@ -408,8 +350,7 @@ class TemplateGrid:
                 df.at[new_row_index, 'Template Name'] = 'New Template'
             widget.df = df
 
-            self.update_data_selection_sets()
-            DataSelectionManager.update_data(event, widget)
+            self.update_data_selection_sets(event, widget)
             
 
     def grid_filter_on_cell_edit(self, event, widget):    
@@ -423,10 +364,6 @@ class TemplateGrid:
         df.loc[row_index, column_index] = event['new']
         widget.df = df
         
-        # Update the data selection sets to reflect the new values
-        self.update_data_selection_sets()
-        DataSelectionManager.update_data(event, widget)
-        
         # Ensure the group and column selection widgets are updated
         #self.update_columns_display({'new': self.group_selector.value})
         self.update_group_selector_based_on_active_columns(df.columns[df.loc[row_index] == True])
@@ -434,6 +371,9 @@ class TemplateGrid:
         print(f"Selected row index: {row_index}, column index: {column_index}")
         # Re-select the edited row in the template grid
         self.qgrid_filter.change_selection([row_index])
+        
+        # Update the data selection sets to reflect the new values
+        self.update_data_selection_sets(event, widget)
         
     def on_row_selected(self, event, qgrid_widget):
         try:
@@ -468,7 +408,11 @@ class TemplateGrid:
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
-    def update_data_selection_sets(self):
-        global data_selection_sets
+    def update_data_selection_sets(self, event, widget):
         template_df = self.qgrid_filter.get_changed_df()
-        data_selection_sets = {template_df.loc[template]['Template Name']: template_df.loc[template].index[template_df.loc[template] == True].tolist() for template in template_df.index}
+        global_vars.data_selection_sets = {template_df.loc[template]['Template Name']: template_df.loc[template].index[template_df.loc[template] == True].tolist() for template in template_df.index}
+        
+        DataSelectionManager.update_data(event, widget)
+        with global_vars.out_debug:
+            print(f"Data selection sets updated: {global_vars.data_selection_sets}")
+        

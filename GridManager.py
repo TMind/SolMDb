@@ -9,301 +9,6 @@ from MongoDB.DatabaseManager import DatabaseManager
 
 # module global variables 
 
-data_selection_sets = {
-  "Deck Stats": {
-    "Name": True, "type": 'Deck',
-    "registeredDate": True, "UpdatedAt": True, "pExpiry": True,
-    "level": True,  "xp": True, "elo": True,
-    "cardSetNo": True,  "faction": True,
-    "forgebornId": True, "cardTitles": True,
-    "Creatures": True,  "Spells": True,
-    "FB2": True,    "FB3": True,    "FB4": True,
-    "A1": True,     "A2": True,     "A3": True,
-    "H1": True,     "H2": True,     "H3": True
-  },
-  "Fusion Stats": {
-    "Name": True, "type": 'Fusion',
-    "CreationDate": True, "UpdatedAt": True, 
-    "faction": True, "crossfaction": True,
-    "forgebornId": True, "cardTitles": True,
-    "FB2": True,    "FB3": True,    "FB4": True,
-    "Creatures": True,  "Spells": True, "Exalts": True,    
-    #"A1": True,     "A2": True,     "A3": True,
-    #"H1": True,     "H2": True,     "H3": True
-  },
-  "Card Types": {
-    "Name": True,
-    "type": 'Deck',
-    "faction": True,
-    "Creatures": True,
-    "Spells": True,
-    "Exalts": True,
-    "Beast": True,
-    "Dinosaur Type": True,
-    "Dragon": True,
-    "Elemental Type": True,
-    "Mage": True,
-    "Plant Type": True,
-    "Robot Type": True,
-    "Scientist": True,
-    "Spirit Type": True,
-    "Warrior": True,
-    "Zombie Type": True,
-    "Minion": True,    
-  },
-  "Deck Tags": {
-    "Name": True,
-    "type": 'Deck',
-    "faction": True,
-    "Beast": True,
-    "Beast Synergy": True,
-    "Dinosaur": True,
-    "Dinosaur Synergy": True,
-    "Mage": True,
-    "Mage Synergy": True,
-    "Robot": True,
-    "Robot Synergy": True,
-    "Scientist": True,
-    "Scientist Synergy": True,
-    "Spirit": True,
-    "Spirit Synergy": True,
-    "Warrior": True,
-    "Warrior Synergy": True,
-    "Zombie": True,
-    "Zombie Synergy": True,
-    "Dragon": True,
-    "Dragon Synergy": True,
-    "Elemental": True,
-    "Elemental Synergy": True,
-    "Plant": True,
-    "Plant Synergy": True,
-    "Replace Setup": True,
-    "Replace Profit": True,
-    "Minion": True,
-    "Minion Synergy": True,
-    "Spell": True,
-    "Spell Synergy": True,
-    "Healing Source": True,
-    "Healing Synergy": True,
-    "Movement": True,
-    "Disruption": True,
-    "Movement Benefit": True,
-    "Armor": True,
-    "Armor Giver": True,
-    "Armor Synergy": True,
-    "Activate": True,
-    "Ready": True,
-    "Free": True,
-    "Upgrade": True,
-    "Upgrade Synergy": True,
-    "Face Burn": True,
-    "Removal": True,
-    "Breakthrough": True,
-    "Breakthrough Giver": True,
-    "Aggressive": True,
-    "Aggressive Giver": True,
-    "Defender": True,
-    "Defender Giver": True,
-    "Stealth": True,
-    "Stealth Giver": True,
-    "Stat Buff": True,
-    "Attack Buff": True,
-    "Health Buff": True,
-    "Stat Debuff": True,
-    "Attack Debuff": True,
-    "Health Debuff": True,
-    "Destruction Synergy": True,
-    "Destruction Activator": True,
-    "Self Damage Payoff": True,
-    "Self Damage Activator": True,
-    "Silence": True,
-    "Exalts": True,
-    "Exalt Synergy": True,
-    "Slay": True,
-    "Deploy": True,
-    "White Fang": True,
-    "Last Winter": True,
-    "Spicy": True,
-    "Cool": True,
-    "Fun": True,
-    "Annoying": True
-  },
-  "Deck Synergies": {
-    "Name": True,
-    "type": 'Deck',
-    "faction": True,
-    "Beast": True,
-    "Beast Synergy": True,
-    "Dinosaur": True,
-    "Dinosaur Synergy": True,
-    "Mage": True,
-    "Mage Synergy": True,
-    "Robot": True,
-    "Robot Synergy": True,
-    "Scientist": True,
-    "Scientist Synergy": True,
-    "Spirit": True,
-    "Spirit Synergy": True,
-    "Warrior": True,
-    "Warrior Synergy": True,
-    "Zombie": True,
-    "Zombie Synergy": True,
-    "Dragon": True,
-    "Dragon Synergy": True,
-    "Elemental": True,
-    "Elemental Synergy": True,
-    "Plant": True,
-    "Plant Synergy": True,
-    "Replace Setup": True,
-    "Replace Profit": True,
-    "Minion": True,
-    "Minion Synergy": True,
-    "Spell": True,
-    "Spell Synergy": True,
-    "Healing Source": True,
-    "Healing Synergy": True,
-    "Movement": True,
-    "Movement Benefit": True,
-    "Armor": True,
-    "Armor Giver": True,
-    "Armor Synergy": True,
-    "Activate": True,
-    "Ready": True,
-    "Upgrade": True,
-    "Upgrade Synergy": True,
-    "Destruction Activator": True,
-    "Destruction Synergy": True,
-    "Self Damage Activator": True,
-    "Self Damage Payoff": True,
-    "Exalts": True,
-    "Exalt Synergy": True
-  },
-  "Fusion Tags": {
-    "Name": True,
-    "type": 'Fusion',
-    "Deck A": True,
-    "Deck B": True,
-    "faction": True,
-    "crossfaction": True,
-    "forgebornId": True,
-    "FB2": True,
-    "FB3": True,
-    "FB4": True,
-    "cardTitles": True,
-    "Beast": True,
-    "Beast Synergy": True,
-    "Dinosaur": True,
-    "Dinosaur Synergy": True,
-    "Mage": True,
-    "Mage Synergy": True,
-    "Robot": True,
-    "Robot Synergy": True,
-    "Scientist": True,
-    "Scientist Synergy": True,
-    "Spirit": True,
-    "Spirit Synergy": True,
-    "Warrior": True,
-    "Warrior Synergy": True,
-    "Zombie": True,
-    "Zombie Synergy": True,
-    "Dragon": True,
-    "Dragon Synergy": True,
-    "Elemental": True,
-    "Elemental Synergy": True,
-    "Plant": True,
-    "Plant Synergy": True,
-    "Replace Setup": True,
-    "Replace Profit": True,
-    "Minion": True,
-    "Minion Synergy": True,
-    "Spell": True,
-    "Spell Synergy": True,
-    "Healing Source": True,
-    "Healing Synergy": True,
-    "Movement": True,
-    "Disruption": True,
-    "Movement Benefit": True,
-    "Armor": True,
-    "Armor Giver": True,
-    "Armor Synergy": True,
-    "Activate": True,
-    "Ready": True,
-    "Free": True,
-    "Upgrade": True,
-    "Upgrade Synergy": True,
-    "Face Burn": True,
-    "Removal": True,
-    "Breakthrough": True,
-    "Breakthrough Giver": True,
-    "Aggressive": True,
-    "Aggressive Giver": True,
-    "Defender": True,
-    "Defender Giver": True,
-    "Stealth": True,
-    "Stealth Giver": True,
-    "Stat Buff": True,
-    "Attack Buff": True,
-    "Health Buff": True,
-    "Stat Debuff": True,
-    "Attack Debuff": True,
-    "Health Debuff": True,
-    "Destruction Synergy": True,
-    "Destruction Activator": True,
-    "Self Damage Payoff": True,
-    "Self Damage Activator": True,
-    "Silence": True,
-    "Exalts": True,
-    "Exalt Synergy": True,
-    "Slay": True,
-    "Deploy": True,
-    "White Fang": True,
-    "Last Winter": True,
-    "Spicy": True,
-    "Cool": True,
-    "Fun": True,
-    "Annoying": True
-  },
-  "Fusion Combos" :  {
-    "Name": True,
-    "type": 'Fusion',
-    "Deck A": True,
-    "Deck B": True,
-    "faction": True,
-    "crossfaction": True,
-    "forgebornId": True,
-    "FB2": True,
-    "FB3": True,
-    "FB4": True,
-    "cardTitles": True,  
-    'Beast Combo':      True,
-    'Dinosaur Combo':   True,
-    'Mage Combo':       True,
-    'Robot Combo':      True,
-    'Scientist Combo':  True,
-    'Spirit Combo':     True,
-    'Warrior Combo':    True,
-    'Zombie Combo':     True,
-    'Replace Combo':    True,
-    'Minion Combo':     True,
-    'Spell Combo':      True,
-    'Healing Combo':    True,
-    'Movement Combo':   True,
-    'Armor Combo':      True,
-    'Activate Combo':   True,
-    'Upgrade Combo':    True,
-    'Destruction Combo': True,
-    'Self Damage Combo': True,
-    'Dargon Combo':     True,
-    'Elemental Combo':  True,
-    'Plant Combo':      True,
-    'Exalt Combo':      True,
-    'Ready Combo' :     True,
-    'Deploy Combo' :    True,
-    'Reanimate Combo' : True,
-  }
-
-}
-
 class GridManager:
     EVENT_DF_STATUS_CHANGED = 'df_status_changed'
 
@@ -572,7 +277,6 @@ class PandasGrid(BaseGrid):
 
 
 class FilterGrid:
-    global data_selection_sets
     """
     Manages the grid for filtering data based on user-defined criteria.
     """
@@ -584,7 +288,6 @@ class FilterGrid:
             update_decks_display (function): The function to call when the filter grid is updated.
         """
         self.refresh_function = function_refresh
-        self.data_selection_sets = data_selection_sets
         self.df = self.create_initial_dataframe()
         self.qgrid_filter = self.create_filter_qgrid()
         self.selection_box, self.selection_widgets = self.create_selection_box()
@@ -697,10 +400,9 @@ class FilterGrid:
         """
         Updates the filter grid based on changes in the data selection sets.
         """
-        global data_selection_sets
-
-        #print(f"FilterClass::update() -> Updating filter grid with new data selection sets: {data_selection_sets.keys()}")
-        self.selection_widgets['Data Set'].options = data_selection_sets.keys()
+        with gv.out_debug:
+            print(f"FilterClass::update() -> Updating filter grid with new data selection sets: {gv.data_selection_sets.keys()}")
+        self.selection_widgets['Data Set'].options = gv.data_selection_sets.keys()
 
     
     ### Selection Box Functions ###
@@ -751,7 +453,7 @@ class FilterGrid:
             'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),            
             'Forgeborn Ability': widgets.SelectMultiple(options=[''] + get_forgeborn_abilities(), description='', layout=widgets.Layout(width='300px', border='1px solid orange', align_items='center', justify_content='center')),
             'Data Set': widgets.Dropdown(
-                options=data_selection_sets.keys(),
+                options=gv.data_selection_sets.keys(),
                 description='',
                 layout=widgets.Layout(width='150px', border='1px solid purple', align_items='center', justify_content='center')
             ),
@@ -959,7 +661,6 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
 
 from MultiIndexDataFrame import MultiIndexDataFrame
 class DynamicGridManager:
-    global data_selection_sets
 
     def __init__(self, data_generate_function, qg_options, out_debug):
         self.out_debug = out_debug       
@@ -991,6 +692,16 @@ class DynamicGridManager:
         self.grid_layout = new_grid
         self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]  # Update UI children
 
+    def apply_filters(self, df, filter_row):
+        # Filter columns based on the data_selection_list, remove all values not in the list                
+        filtered_df = apply_cardname_filter_to_dataframe(df, pd.DataFrame([filter_row]))
+        data_set_type = filter_row['Data Set']
+        existing_columns = [col for col in gv.data_selection_sets[data_set_type] if col in filtered_df.columns]
+        filtered_df = filtered_df.loc[:, existing_columns]    
+        
+        return filtered_df            
+        
+
     def refresh_gridbox(self, change=None):
         #print(f"DynamicGridManager::refresh_gridbox() - Refreshing grid box with change: {change}")
         
@@ -1009,13 +720,14 @@ class DynamicGridManager:
             if filter_row['Active']:
                 data_set_type = filter_row['Data Set']
                 #print(f"Applying filter {filter_row} to data set {data_set_type}")
-                data_selection_list = data_selection_sets[data_set_type]
+                # data_selection_list = gv.data_selection_sets[data_set_type]
                 
-                filtered_df = apply_cardname_filter_to_dataframe(collection_df, pd.DataFrame([filter_row]))
+                # filtered_df = apply_cardname_filter_to_dataframe(collection_df, pd.DataFrame([filter_row]))
                                 
-                # Filter columns based on the data_selection_list, remove all values not in the list                
-                existing_columns = [col for col in data_selection_list if col in filtered_df.columns]
-                filtered_df = filtered_df.loc[:, existing_columns]                
+                # # Filter columns based on the data_selection_list, remove all values not in the list                
+                # existing_columns = [col for col in data_selection_list if col in filtered_df.columns]
+                # filtered_df = filtered_df.loc[:, existing_columns]                
+                filtered_df = self.apply_filters(collection_df, filter_row)
 
                 filter_widget = None
                 grid_widget  = None 

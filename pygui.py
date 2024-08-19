@@ -1,4 +1,3 @@
-import glob
 import os, time, re, json
 import ipywidgets as widgets
 import numpy as np
@@ -6,7 +5,6 @@ from pyvis.network import Network
 import networkx as nx
 import pickle
 
-from datetime import datetime
 import pytz  
 from tzlocal import get_localzone  
 
@@ -38,7 +36,7 @@ except KeyError:
 
 # Custom CSS style
 
-custom_css = '''
+custom_scrollbar_css = '''
 <style>
 /* Customizes the scrollbar within qgrid */
 .q-grid ::-webkit-scrollbar {
@@ -61,7 +59,7 @@ custom_css = '''
 }
 </style>
 '''
-display(HTML(custom_css))  
+display(HTML(custom_scrollbar_css))  
 
 
 # Enable qgrid to automatically display all DataFrame and Series instances
@@ -220,7 +218,7 @@ def update_central_frame_tab(central_df):
     # Update the content of the central_frame_tab
     central_frame_output.clear_output()  # Clear existing content
     with central_frame_output:
-        grid = qgrid.show_grid(central_df, grid_options={'forceFitColumns': False}, column_definitions=all_column_definitions)  # Create a qgrid grid from the DataFrame
+        grid = qgrid.show_grid(central_df, grid_options={'forceFitColumns': False}, column_definitions=global_vars.all_column_definitions)  # Create a qgrid grid from the DataFrame
         display(grid)  # Display the qgrid grid
     
     #print("Central DataFrame tab updated.")
@@ -1158,6 +1156,7 @@ def update_deck_and_fusion_counts():
     else:
         print(f"{creation_date_str} - Decks: {deck_count}, Fusions: {fusion_count}")
             
+            
 ############################
 # Setup and Initialization #
 ############################
@@ -1205,14 +1204,129 @@ def setup_interface():
 
     templateGrid = TemplateGrid()
 
-    # Create the Tab widget with children
-    db_tab   = widgets.VBox([loadToggle, button_load, count_display, username_widget, db_list])
-    deck_tab = widgets.VBox([grid_manager.get_ui()])  # , qm_gridbox])
-    fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph])
-    debug_tab = widgets.VBox([debug_toggle, global_vars.out_debug])
-    template_tab = widgets.VBox([templateGrid.get_ui()])
-    central_frame_tab = widgets.VBox([central_frame_output])
+    # # Create the Tab widget with children
+    # db_tab   = widgets.VBox([loadToggle, button_load, count_display, username_widget, db_list])
+    # deck_tab = widgets.VBox([grid_manager.get_ui()])  # , qm_gridbox])
+    # fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph])
+    # debug_tab = widgets.VBox([debug_toggle, global_vars.out_debug])
+    # template_tab = widgets.VBox([templateGrid.get_ui()])
+    # central_frame_tab = widgets.VBox([central_frame_output])
 
+    # tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, fusions_tab, debug_tab, central_frame_tab])
+    # tab.set_title(0, 'Database')
+    # tab.set_title(1, 'Decks')
+    # tab.set_title(2, 'Templates')
+    # tab.set_title(3, 'Graphs')
+    # tab.set_title(4, 'Debug')
+    # tab.set_title(5, 'CentralDataframe')
+
+    # tab.selected_index = 0
+    # display(tab)
+
+
+    import markdown as md
+    
+    # Function to create a styled HTML widget with a background color
+    def create_styled_html(text, text_color, bg_color, border_color):
+        html = widgets.HTML(
+            value=f"<div style='padding:10px; color:{text_color}; background-color:{bg_color};"
+                f" border:solid 2px {border_color}; border-radius:5px;'>"
+                f"<strong>{text}</strong></div>"
+        )
+        return html
+
+    # Create styled HTML widgets with background colors
+    db_helper = create_styled_html(
+        "Database Tab: This tab allows you to load and manage a database for a username on Solforge Fusion.",
+        text_color='white', bg_color='blue', border_color='blue'
+    )
+
+    # Create the guidance text
+    db_guide_text = """
+### **Creating a New Database**
+
+1. **Select a Database:**
+    - Use the "Databases" list to select an existing database or leave it empty if you want to create a new one.
+
+2. **Set Your Username:**
+    - Enter your username in the "Username" text box. This username will be associated with your Solforge Fusion account.
+
+3. **Choose an Action:**
+
+    - **Load Decks/Fusions:**  
+      Select this option to fetch and load decks and fusions from the network. This action is necessary to populate your database with existing data.
+    
+    - **Create All Fusions:**  
+      Choose this option to generate all possible fusions based on the decks currently available in the database. This is helpful for exploring new combinations and strategies.
+    
+    - **Generate Dataframe:**  
+      This option generates a comprehensive dataframe summarizing your decks, fusions, and other related statistics. The dataframe contains all relevant information in a non-structured format.
+
+4. **Execute the Action:**
+    - Once you’ve selected the desired action, click the "Execute" button to perform the operation. The system will process your request and update the database accordingly.
+
+5. **Review Data Counts:**
+    - The label below the action buttons will display the current counts of decks and fusions in your database, along with the timestamp of the last update. This helps you monitor the content of your database.
+
+### **Button Descriptions**
+
+- **Load Decks/Fusions:**  
+  Fetches and loads online decks and fusions into the selected database. Creates a new database if none exists.
+
+- **Create All Fusions:**  
+  Creates all possible fusions based on the decks in the database. Useful for exploring new combinations.
+
+- **Generate Dataframe:**  
+  Aggregates data from the database into a central dataframe, providing a summary of all relevant statistics.
+
+- **Execute:**  
+  Executes the selected action (loading data, creating fusions, or generating the dataframe).
+"""
+
+    # Convert Markdown to HTML using the markdown module
+    guide_html_content = md.markdown(db_guide_text)
+
+    # Create an HTML widget to display the converted Markdown
+    guide_html = widgets.HTML(value=guide_html_content)
+
+    # Create an Accordion widget with the guidance text
+    db_accordion = widgets.Accordion(children=[guide_html], selected_index=None)
+    db_accordion.set_title(0, 'Guide: How to Create and Manage a Database')
+
+    deck_helper = create_styled_html(
+        "Decks Tab: Manage and view decks in this section.",
+        text_color='white', bg_color='green', border_color='green'
+    )
+
+    template_helper = create_styled_html(
+        "Templates Tab: Manage templates in this section.",
+        text_color='white', bg_color='purple', border_color='purple'
+    )
+
+    fusions_helper = create_styled_html(
+        "Graphs Tab: Create and view graphs based on your data.",
+        text_color='white', bg_color='orange', border_color='orange'
+    )
+
+    debug_helper = create_styled_html(
+        "Debug Tab: Debug and monitor the system output here.",
+        text_color='white', bg_color='red', border_color='red'
+    )
+
+    central_frame_helper = create_styled_html(
+        "Central Dataframe Tab: View and manage the central dataframe.",
+        text_color='white', bg_color='teal', border_color='teal'
+    )
+
+    # Updated Tab content with styled text boxes
+    db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
+    deck_tab = widgets.VBox([deck_helper, grid_manager.get_ui()])
+    template_tab = widgets.VBox([template_helper, templateGrid.get_ui()])
+    fusions_tab = widgets.VBox([fusions_helper, *toggle_dropdown_pairs, button_graph])
+    debug_tab = widgets.VBox([debug_helper, debug_toggle, global_vars.out_debug])
+    central_frame_tab = widgets.VBox([central_frame_helper, central_frame_output])
+
+    # Create the Tab widget with children
     tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, fusions_tab, debug_tab, central_frame_tab])
     tab.set_title(0, 'Database')
     tab.set_title(1, 'Decks')
@@ -1221,5 +1335,6 @@ def setup_interface():
     tab.set_title(4, 'Debug')
     tab.set_title(5, 'CentralDataframe')
 
+    # Set the default selected tab
     tab.selected_index = 0
     display(tab)

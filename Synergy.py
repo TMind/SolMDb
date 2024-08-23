@@ -155,14 +155,5 @@ class Synergy(DatabaseObject):
 
     def __str__(self):
         return f"{self.data}"
-    
-    # def to_data(self):
-    #     # Convert the SynergyData dataclass to a dictionary
-    #     return self.data
-
-    # @classmethod
-    # def from_data(cls, data):
-    #     # Create a new Synergy instance using the unpacked data
-    #     return cls(data['name'], data['weight'], data['input_tags'], data['output_tags'])
 
     

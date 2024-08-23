@@ -1,3 +1,4 @@
+from distutils import extension
 import select
 import pandas as pd
 #import qgrid
@@ -65,9 +66,10 @@ class TemplateGrid:
             'Deck Stats': ['elo', 'level', 'xp', 'deckRank' ],
             'Fusion Stats' : ['CreatedAt', 'id' ],
             'Statistical Data': ['A1', 'H1', 'A2', 'H2', 'A3', 'H3'],
+            'Tags' : ['Beast', 'Dinosaur', 'Dragon', 'Elemental Type', 'Mage', 'Plant Type', 'Robot Type', 'Scientist', 'Spirit Type', 'Warrior', 'Zombie Type',
+                      'Spell', 'Exalts', 'Activate', 'Ready', 'Upgrade', 'Slay', 'Deploy', 'Reanimate', 'Destruction', 'Self Damage', 'Armor'],
             'Creatures': ['Beast', 'Dinosaur', 'Dragon', 'Elemental Type', 'Mage', 'Plant Type', 'Robot Type', 'Scientist', 'Spirit Type', 'Warrior', 'Zombie Type'],
-            'Extensions': ['Tag', 'Synergy', 'Combo'], 
-            'Spells': ['Spell', 'Exalt'], 
+            'Spells': ['Spell', 'Exalts'], 
             'Free' : [ 'Free' ],    
             'De/Buffs' : ['Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Attack Debuff', 'Health Buff'],
             'Utility' : ['Activate', 'Ready', 'Upgrade', 'Slay', 'Deploy', 'Reanimate'],
@@ -92,6 +94,15 @@ class TemplateGrid:
             description="", 
             layout=widgets.Layout(height='250px')
         )
+
+        # Widget to select extensions with label on top
+        self.extension_selector = widgets.SelectMultiple(
+            options=['Tag', 'Synergy', 'Combo'], 
+            description="", 
+            layout=widgets.Layout(height='auto')
+        )
+        extension_selector_label = widgets.Label('Column Extensions:')
+        extension_selector_box = widgets.VBox([extension_selector_label, self.extension_selector])        
         
         # Apply the custom CSS class to the widget
         self.columns_display.add_class('custom-select-multiple')
@@ -121,7 +132,7 @@ class TemplateGrid:
         self.control_ui = widgets.HBox([
             group_selector_box, 
             columns_display_box,
-            button_box
+            widgets.VBox([extension_selector_box,button_box])
         ])
 
         # Observe changes in columns_display to update the button text
@@ -129,6 +140,9 @@ class TemplateGrid:
 
         # Observe changes in group selector to update columns display
         self.group_selector.observe(self.update_columns_display, 'value')
+        
+        # Observe changes in extension selector to update columns display
+        self.extension_selector.observe(self.update_columns_display, 'value')
 
     def save_template_grid(self, _):
         """Save the current state of the template grid to MongoDB."""
@@ -146,7 +160,7 @@ class TemplateGrid:
                 identifier={'name': 'TemplateGrid'},  # Identifier for the document
                 data={'data': data}  # The data to be upserted
             )
-            print("Template grid saved to MongoDB.")
+            #print("Template grid saved to MongoDB.")
         except Exception as e:
             print(f"An error occurred while saving the template grid: {e}")
             
@@ -156,13 +170,14 @@ class TemplateGrid:
             # Retrieve the data from MongoDB
             data = global_vars.myDB.find_one('User Data', {'name': 'TemplateGrid'})
             if not data:
-                print("No data found in MongoDB.")
+                with global_vars.out_debug:
+                    print("No data found in MongoDB.")
                 return
             
             # Extract the data records
             data_records = data.get('data', [])
-            print("Data retrieved from MongoDB:")
-            print(data_records)
+            #print("Data retrieved from MongoDB:")
+            #print(data_records)
 
             if data_records:
                 # Remove the '_id' field from each record if present
@@ -174,15 +189,16 @@ class TemplateGrid:
                 df = pd.DataFrame(data_records)
                 
                 # Check the restored DataFrame
-                print("Restored DataFrame:")
-                print(df)
+                #print("Restored DataFrame:")
+                #print(df)
 
                 # Set the DataFrame to the qgrid widget
                 self.qgrid_filter.df = df
                 self.qgrid_filter.change_selection(rows=[0])  # Re-select the first row
-                print("Template grid restored from MongoDB.")
+                #print("Template grid restored from MongoDB.")
             else:
-                print("No data records found to restore.")
+                with global_vars.out_debug:
+                    print("No data records found to restore.")  
         except Exception as e:
             print(f"An error occurred while restoring the template grid: {e}")
             
@@ -212,10 +228,6 @@ class TemplateGrid:
             
             # Re-select the edited row in the template grid
             self.qgrid_filter.change_selection(rows=[selected_index])
-
-            # Optionally, sync the data selection sets
-            #self.update_data_selection_sets()
-            #DataSelectionManager.update_data({'index': selected_index, 'column': self.columns_display.value}, self.qgrid_filter)
 
     def update_select_all_button(self, change):
         """Update the text of the select all button based on the selection."""
@@ -270,9 +282,10 @@ class TemplateGrid:
 
     def update_columns_display(self, event):
         """Update the column display based on the selected groups."""
-        selected_groups = event['new']
+        #selected_groups = event['new']
+        selected_groups = self.group_selector.value
         
-        print(f"Selected groups: {selected_groups}")
+        #print(f"Selected groups: {selected_groups}")
         if selected_groups:
             all_columns = []
             for group in selected_groups:
@@ -289,21 +302,27 @@ class TemplateGrid:
 
             if selected_indices:
                 selected_index = selected_indices[0] if isinstance(selected_indices, list) else selected_indices
+                with global_vars.out_debug:
+                    if 0 <= selected_index < len(self.qgrid_filter.df):
+                        selected_row = self.qgrid_filter.df.iloc[selected_index]
+                        
+                        additional_columns = []
+                        for extension in self.extension_selector.value:            
+                            additional_columns.append([f"{selected_column} {extension}" for selected_column in self.columns_display.value if f"{selected_column} {extension}" in self.qgrid_filter.df.columns])
+                            
+                        # Maintain the order of columns as they appear in the selected row
+                        ordered_columns = [col for col in selected_row.index if col in unique_columns]
+                        ordered_columns.extend(additional_columns)
+                        self.columns_display.options = ordered_columns
 
-                if 0 <= selected_index < len(self.qgrid_filter.df):
-                    selected_row = self.qgrid_filter.df.iloc[selected_index]
-                    # Maintain the order of columns as they appear in the selected row
-                    ordered_columns = [col for col in selected_row.index if col in unique_columns]
-                    self.columns_display.options = ordered_columns
-
-                    # Update the active columns based on the selected row
-                    valid_active_columns = [col for col in ordered_columns if selected_row[col] == True]
-                    self.columns_display.value = tuple(valid_active_columns)
-                    
-                    # Update the color of the selected options
-                    self.update_columns_option_colors(valid_active_columns)
-                else:
-                    self.columns_display.value = ()
+                        # Update the active columns based on the selected row
+                        valid_active_columns = [col for col in ordered_columns if selected_row[col] == True]
+                        self.columns_display.value = tuple(valid_active_columns)
+                        
+                        # Update the color of the selected options
+                        self.update_columns_option_colors(valid_active_columns)
+                    else:
+                        self.columns_display.value = ()
             else:
                 self.columns_display.value = ()
         else:
@@ -355,7 +374,7 @@ class TemplateGrid:
 
     def grid_filter_on_cell_edit(self, event, widget):    
         row_index, column_index = event['index'], event['column']        
-        print(f"Cell edit event: {event}")
+        #print(f"Cell edit event: {event}")
         
         # Get the current grid's DataFrame
         df = widget.get_changed_df()
@@ -368,7 +387,7 @@ class TemplateGrid:
         #self.update_columns_display({'new': self.group_selector.value})
         self.update_group_selector_based_on_active_columns(df.columns[df.loc[row_index] == True])
         
-        print(f"Selected row index: {row_index}, column index: {column_index}")
+        #print(f"Selected row index: {row_index}, column index: {column_index}")
         # Re-select the edited row in the template grid
         self.qgrid_filter.change_selection([row_index])
         
@@ -378,25 +397,27 @@ class TemplateGrid:
     def on_row_selected(self, event, qgrid_widget):
         try:
             selected_indices = event['new']
-            print(f"Selected indices: {selected_indices}")
-            print(f"DataFrame index: {qgrid_widget.df.index.tolist()}")
+            #print(f"Selected indices: {selected_indices}")
+            #print(f"DataFrame index: {qgrid_widget.df.index.tolist()}")
 
             if selected_indices is None or len(selected_indices) == 0:
-                print("No row is selected.")
+                with global_vars.out_debug:
+                    print("No row is selected.")
                 return
 
             selected_index = selected_indices[0] if isinstance(selected_indices, list) else selected_indices
 
             if not (0 <= selected_index < len(qgrid_widget.df)):
-                print(f"Invalid index selected: {selected_index}. DataFrame length: {len(qgrid_widget.df)}")
+                with global_vars.out_debug:
+                    print(f"Invalid index selected: {selected_index}. DataFrame length: {len(qgrid_widget.df)}")
                 return
 
             selected_row = qgrid_widget.df.iloc[selected_index]
-            print(f"Selected row data: {selected_row}")
+            #print(f"Selected row data: {selected_row}")
 
             # Identify all active columns directly from the selected row
             active_columns = [col for col in selected_row.index if selected_row[col] == True]
-            print(f"Active columns: {active_columns}")
+            #print(f"Active columns: {active_columns}")
 
             # Update the group selector based on the active columns
             self.update_group_selector_based_on_active_columns(active_columns)

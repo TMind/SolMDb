@@ -173,7 +173,7 @@ def print_dataframe(df, name):
     print(f'DataFrame: {name}')
     print(f'Shape: {df.shape}')
     print(df.index)    
-    display(qgrid.show_grid(df, grid_options={'forceFitColumns': False}, column_definitions=all_column_definitions))    
+    display(qgrid.show_grid(df, grid_options={'forceFitColumns': False}, column_definitions=global_vars.all_column_definitions))    
 
 def clean_columns(df):
     """
@@ -192,11 +192,13 @@ def clean_columns(df):
     numeric_df = df.select_dtypes(include='number')
 
     # Replace NaN values with 0 and convert to integer for only numeric columns
-    numeric_df = numeric_df.fillna(0).astype(int)
-
+    #numeric_df = numeric_df.fillna(0).astype(int)
+    # Convert to integers and replace 0 with empty strings
+    numeric_df = numeric_df.fillna(0).astype(int).replace(0, '').astype(str)
+    
     # Convert the numeric DataFrame to strings, replacing '0' with ''
     #numeric_df = numeric_df.astype(str).replace('0', '')
-    numeric_df = numeric_df.replace('0', '')
+    #numeric_df = numeric_df.replace('0', '')
 
     # Select non-numeric columns
     non_numeric_df = df.select_dtypes(exclude='number')
@@ -348,120 +350,102 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds, df):
         print(f"Index: {item_name}, ForgebornId key: {forgebornIds}")
         print(df.head())
 
-def generate_deck_content_dataframe(event = None):
-    global deck_selection_widget
-    ic(generate_deck_content_dataframe)
-    #print(f'Generating Deck Content DataFrame : {event}')
-    widget = deck_selection_widget
-
+def generate_deck_content_dataframe(deckNames):
+    from CardLibrary import Card , CardData
     with global_vars.out_debug:
-        #Get the selection from the deck widget
-        desired_fields = ['name', 'cardType', 'cardSubType', 'levels']    
-        if widget:            
-            all_decks_df_list = []
-            old_selection = set(event['old'])
-            new_selection = set(event['new'])
-            deselected_rows = old_selection - new_selection
-
-            # Get the selected rows from the DataFrame based on the indices
-            changed_df = widget.get_changed_df()
-            selectList = changed_df.iloc[list(new_selection)].index        
-            deselectList = changed_df.iloc[list(deselected_rows)].index
-            old_df = qm.get_grid_df('deck')            
-            # Ensure old_df is not None before proceeding
-            if old_df is None:
-                print('No previous data found in the deck grid.')
-                unique_deckNames = []
-            else:
-                # Get the unique values from the deckName column in old_df
-                unique_deckNames = old_df['DeckName'].unique().tolist()
         
-            # Add the deckList to the unique_deckNames and remove the deselectList
-            print(f'Select: {selectList} \nDeselect: {deselectList}\nUnique: {unique_deckNames}')
-            union_set = set(unique_deckNames) | set(selectList)
-            deckList =  list(union_set - set(deselectList))            
-            #deckList = ['The Reeves of Loss', 'The People of Bearing']                
-            card_dfs_list = []  # List to store DataFrames for each card
+        # Get the data set from the global variables
+        desired_fields = global_vars.data_selection_sets['Deck Content']
 
-            from CardLibrary import Card , CardData
+        card_dfs_list = []
 
-            for deckName in deckList:
-                print(f'DeckName: {deckName}')
-                #Get the Deck from the Database 
-                deck = global_vars.myDB.find_one('Deck', {'name': deckName})
-                if deck:
-                    #print(f'Found deck: {deck}')
-                    #Get the cardIds from the Deck
-                    cardIds = deck['cardIds']
-                    deck_df_list = pd.DataFrame([deck])  # Create a single row DataFrame from deck                    
-                    for cardId in cardIds:
-                        card = global_vars.myDB.find_one('Card', {'_id': cardId})
-                        if card:
-                            fullCard = card 
+        for deckName in deckNames:
+            print(f'DeckName: {deckName}')
+            #Get the Deck from the Database 
+            deck = global_vars.myDB.find_one('Deck', {'name': deckName})
+            if deck:
+                #print(f'Found deck: {deck}')
+                #Get the cardIds from the Deck
+                cardIds = deck['cardIds']
+                deck_df_list = pd.DataFrame([deck])  # Create a single row DataFrame from deck                    
+                for cardId in cardIds:
+                    card = global_vars.myDB.find_one('Card', {'_id': cardId})
+                    if card:
+                        fullCard = card 
 
-                            # Create Graph for Card 
-                            myGraph = MyGraph()
-                            data = CardData(**fullCard)
-                            myGraph.create_graph_children(Card(data))
-                            interface_ids = myGraph.get_length_interface_ids()
+                        # Create Graph for Card 
+                        myGraph = MyGraph()
+                        data = CardData(**fullCard)
+                        myGraph.create_graph_children(Card(data))
+                        interface_ids = myGraph.get_length_interface_ids()
 
-                            # Select only the desired fields from the card document
-                            card = {field: card[field] for field in desired_fields if field in card}
+                        # Select only the desired fields from the card document
+                        card = {field: card[field] for field in desired_fields if field in card}
 
-                            # Add 'provides' and 'seeks' information
-                            providers = re.split(', |,', fullCard.get('provides', ''))
-                            seekers = re.split(', |,', fullCard.get('seeks', ''))
+                        # Add 'provides' and 'seeks' information
+                        providers = re.split(', |,', fullCard.get('provides', ''))
+                        seekers = re.split(', |,', fullCard.get('seeks', ''))
 
-                            # Create a dictionary with keys as item and values as True
-                            provides_dict = {item: ['provides'] for item in providers if item}
-                            seeks_dict = {item: ['seeks'] for item in seekers if item}
-                            
-                            # Create a DataFrame from the dictionary
-                            #single_card_data_row = pd.DataFrame(card_dict, index=card['name'])
+                        # Create a dictionary with keys as item and values as True
+                        provides_dict = {item: ['provides'] for item in providers if item}
+                        seeks_dict = {item: ['seeks'] for item in seekers if item}
+                        
+                        # Create a DataFrame from the dictionary
+                        #single_card_data_row = pd.DataFrame(card_dict, index=card['name'])
 
-                            # Flatten the 'levels' dictionary
-                            if 'levels' in card and card['levels']:
-                                levels = card.pop('levels')
-                                for level, level_data in levels.items():
-                                    card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
-                                    card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
+                        # Flatten the 'levels' dictionary
+                        if 'levels' in card and card['levels']:
+                            levels = card.pop('levels')
+                            for level, level_data in levels.items():
+                                card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
+                                card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
 
-                            # Merge the dictionaries
-                            card_dict = {**card, **interface_ids}
-                            
-                            # Insert 'DeckName' at the beginning of the card dictionary
-                            card = {'DeckName': deckName, **card_dict}
+                        # Merge the dictionaries
+                        card_dict = {**card, **interface_ids}
+                        
+                        # Insert 'DeckName' at the beginning of the card dictionary
+                        card = {'DeckName': deckName, **card_dict}
 
-                            # Create a DataFrame from the remaining card fields      
-                            card_df = pd.DataFrame([card])                                             
-                            card_dfs_list.append(card_df)  # Add full_card_df to the list                            
-                    
-            # Concatenate the header DataFrame with the deck DataFrames
-            if card_dfs_list:
-                final_df = pd.concat(card_dfs_list, ignore_index=True, axis=0)        
-
-                # Replace empty values in the 'cardSubType' column with 'Spell'
-                if 'cardSubType' in final_df.columns:
-                    final_df['cardSubType'] = final_df['cardSubType'].replace(['', '0', 0], 'Spell')
-                    final_df['cardSubType'] = final_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
-
-                # Sort all columns alphabetically
-                sorted_columns = sorted(final_df.columns)
+                        # Create a DataFrame from the remaining card fields      
+                        card_df = pd.DataFrame([card])                                             
+                        card_dfs_list.append(card_df)  # Add full_card_df to the list                            
                 
-                # Ensure 'DeckName' is first, followed by the specified order for other columns
-                fixed_order = ['DeckName', 'name', 'cardType', 'cardSubType', 'A1', 'H1', 'A2', 'H2', 'A3', 'H3']
-                # Remove the fixed order columns from the sorted list
-                sorted_columns = [col for col in sorted_columns if col not in fixed_order]
-                # Concatenate the fixed order columns with the rest of the sorted columns
-                final_order = fixed_order + sorted_columns
-                
-                # Reindex the DataFrame with the new column order
-                final_df = final_df.reindex(columns=final_order)
-                
-                return final_df.fillna('')
-            else:
-                print(f'No cards found in the database for {deckList}')
-                return pd.DataFrame()
+        # Concatenate the header DataFrame with the deck DataFrames
+        if card_dfs_list:
+            final_df = pd.concat(card_dfs_list, ignore_index=True, axis=0)        
+
+            # Replace empty values in the 'cardSubType' column with 'Spell'
+            if 'cardSubType' in final_df.columns:
+                final_df['cardSubType'] = final_df['cardSubType'].replace(['', '0', 0], 'Spell')
+                final_df['cardSubType'] = final_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
+
+            # Sort all columns alphabetically
+            sorted_columns = sorted(final_df.columns)
+            
+            # Ensure 'DeckName' is first, followed by the specified order for other columns
+            fixed_order = ['DeckName', 'name', 'faction', 'cardType', 'cardSubType']
+            # Remove the fixed order columns from the sorted list
+            sorted_columns = [col for col in sorted_columns if col not in fixed_order]
+            # Concatenate the fixed order columns with the rest of the sorted columns
+            final_order = fixed_order + sorted_columns
+            
+            # Reindex the DataFrame with the new column order
+            final_df = final_df.reindex(columns=final_order)
+            #df_numeric = final_df.select_dtypes(include='number')
+            # Convert to integers and replace 0 with empty strings
+            #df_numeric = df_numeric.fillna(0).astype(int).replace(0, '').astype(str)            
+            
+            # Select numeric columns and convert them to strings, replacing '0' with an empty string
+            df_numeric = final_df.select_dtypes(include='number').astype(str)
+            # Replace '0' with an empty string and NaN with an empty string
+            df_numeric = df_numeric.replace('0', '').replace('nan', '')
+            # Ensure the columns in final_df are of type object to handle the update properly
+            final_df[df_numeric.columns] = final_df[df_numeric.columns].astype(object)
+            final_df.update(df_numeric)
+            return clean_columns(final_df)
+        else:
+            print(f'No cards found in the database for {deckNames}')
+            return pd.DataFrame()
 
 
 def generate_cardType_count_dataframe():
@@ -659,125 +643,6 @@ def generate_deck_statistics_dataframe():
     df_decks_list = pd.concat(df_list, axis=0)
     df_decks_filtered.update(df_decks_list)
 
-    return df_decks_filtered
-
-# Data Handling and Transformation 
-def generate_deck_statistics_dataframe2():
-
-    def get_card_titles(card_ids):
-        card_titles = []
-        for card_id in card_ids:
-            card_title = card_id[5:].replace('-', ' ').title()
-            #card_title = get_card_title(card_id)
-
-            if card_title:  # Check if card_title is not empty
-                card_titles.append(card_title)
-        # Join the list of titles into a single string separated by commas
-        return ', '.join(sorted(card_titles))
-
-    # Get all Decks from the database
-    deck_cursor = global_vars.myDB.find('Deck', {}) 
-    deck_list = list(deck_cursor)       
-    df_decks = pd.DataFrame(deck_list)
-    df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
-    df_decks_filtered = df_decks[[ 'name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph', 'node_data']].copy()
-    df_decks_filtered['type'] = 'Deck'
-
-    # For column 'cardSetNo' replace the number 99 with 0 
-    df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].astype(int).replace(99, 0)
-    df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
-
-    # Assuming 'name' is the column with names and 'elo' originally contains the values to convert
-
-    # Convert 'elo' to numeric, coercing errors to NaN
-    df_decks_filtered['elo'] = pd.to_numeric(df_decks_filtered['elo'], errors='coerce').astype(float).round(2)
-    df_decks_filtered['elo'] = df_decks_filtered['elo'].fillna(-1)
-
-    # Identify rows where conversion failed
-    failed_conversions = df_decks_filtered[df_decks_filtered['elo'].isna()]
-
-    # Iterate over the failed conversions to print/store the name and original 'elo' value
-    for index, row in failed_conversions.iterrows():
-        with global_vars.out_debug:
-            print(f"Index: {index}, Name: {row['name']}, Failed Value: {row['elo']}")
-
-    # Add additional columns to the DataFrame -> Count
-    additional_columns_count = ['Creatures', 'Spells']
-    for column in additional_columns_count:
-        df_decks_filtered.loc[:,column] = 0
-
-    # Add additional columns to the DataFrame -> FB
-    additional_columns_fb = ['FB2', 'FB3', 'FB4']
-    for column in additional_columns_fb:
-        df_decks_filtered.loc[:,column] = ''
-
-    # Add additional columns to the DataFrame -> Stats
-    additional_columns_stats = ['A1', 'H1', 'A2', 'H2', 'A3', 'H3']
-    for column in additional_columns_stats:
-        df_decks_filtered.loc[:,column] = 0.0
-            
-    df_decks_filtered.set_index('name', inplace=True)
-    
-    identifier = 'Forgeborn Data'
-
-    # Create a DataFrame from the fb_abilities sub-dictionary  
-    number_of_decks = global_vars.myDB.count_documents('Deck', {})
-    global_vars.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
-    for deck in global_vars.myDB.find('Deck', {}) :
-        global_vars.update_progress(identifier, message = 'Processing Deck Forgeborn: ' + deck['name'])
-        if 'forgebornId' in deck:   process_deck_forgeborn(deck['name'], deck['forgebornId'] ,[deck['forgebornId']], df_decks_filtered)
-
-    identifier = 'Stats Data' 
-    global_vars.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
-    
-    df_list = []
-    # Create a DataFrame from the 'stats' sub-dictionary
-    for deck in global_vars.myDB.find('Deck', {}):
-        global_vars.update_progress(identifier, message = 'Processing Deck Stats: ' + deck['name'])
-
-        if 'stats' in deck:
-            stats = deck.get('stats', {})
-
-            # Create a DataFrame with the 'Creatures' and 'Spells' columns
-            creature_count = stats['card_types']['Creature']['count']
-            spell_count = stats['card_types']['Spell']['count']
-            card_type_count_dict = {'Creatures': creature_count, 'Spells': spell_count}
-            #card_type_count_df = pd.DataFrame([card_type_count_dict], columns=card_type_count_dict.keys())
-            
-            # Set the index using deck['name'] right when creating the DataFrame
-            card_type_count_df = pd.DataFrame([card_type_count_dict], index=[deck['name']])
-
-            # Flatten the 'creature_averages' sub-dictionaries into a single-row DataFrame
-            attack_dict = stats['creature_averages']['attack']
-            attack_df = pd.DataFrame([attack_dict], columns=attack_dict.keys())
-            attack_df.columns = ['A1', 'A2', 'A3']
-
-            defense_dict = stats['creature_averages']['health']
-            defense_df = pd.DataFrame([defense_dict], columns=defense_dict.keys())
-            defense_df.columns = ['H1', 'H2', 'H3']
-
-            # Combine the new DataFrame with the attack and defense DataFrames
-            deck_stats_df = pd.concat([card_type_count_df, attack_df, defense_df], axis=1)
-
-            # Round each value in the DataFrame
-            deck_stats_df = deck_stats_df.round(2)
-
-            # Set the 'name' index for deck_stats_df
-            #deck_stats_df['name'] = deck['name']
-
-            # Print out the columns of df_decks_filtered for debugging
-            ic(df_decks_filtered.columns)
-
-            # Set the common column as the index in both dataframes            
-            #deck_stats_df.set_index('name', inplace=True)
-
-            # Update the corresponding row in df_decks_filtered with the stats from deck_stats_df
-            #df_decks_filtered.update(deck_stats_df)
-            
-            df_list.append(deck_stats_df)
-
-    df_decks_list = pd.concat(df_list)
-    df_decks_filtered = pd.concat([df_decks_filtered, df_decks_list], axis=1)
     return df_decks_filtered
 
 
@@ -1196,33 +1061,15 @@ def setup_interface():
     debug_toggle = widgets.Checkbox(value=False, description='Debugging', disabled=False)    
     debug_toggle.observe(handle_debug_toggle, 'value')
     
+    data_generation_functions = {'central_dataframe' : generate_central_dataframe, 'deck_content' : generate_deck_content_dataframe}
+    
     # Create an instance of the manager
-    grid_manager = DynamicGridManager(generate_central_dataframe, qg_options, global_vars.out_debug)
+    grid_manager = DynamicGridManager(data_generation_functions, qg_options, global_vars.out_debug)
 
     # Update the filter grid on db change
     db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')
 
     templateGrid = TemplateGrid()
-
-    # # Create the Tab widget with children
-    # db_tab   = widgets.VBox([loadToggle, button_load, count_display, username_widget, db_list])
-    # deck_tab = widgets.VBox([grid_manager.get_ui()])  # , qm_gridbox])
-    # fusions_tab = widgets.VBox([*toggle_dropdown_pairs,button_graph])
-    # debug_tab = widgets.VBox([debug_toggle, global_vars.out_debug])
-    # template_tab = widgets.VBox([templateGrid.get_ui()])
-    # central_frame_tab = widgets.VBox([central_frame_output])
-
-    # tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, fusions_tab, debug_tab, central_frame_tab])
-    # tab.set_title(0, 'Database')
-    # tab.set_title(1, 'Decks')
-    # tab.set_title(2, 'Templates')
-    # tab.set_title(3, 'Graphs')
-    # tab.set_title(4, 'Debug')
-    # tab.set_title(5, 'CentralDataframe')
-
-    # tab.selected_index = 0
-    # display(tab)
-
 
     import markdown as md
     
@@ -1283,21 +1130,73 @@ def setup_interface():
   Executes the selected action (loading data, creating fusions, or generating the dataframe).
 """
 
+    deck_guide_text = """
+### **FilterGrid Guide**
+
+The **FilterGrid** is a dynamic filtering tool that allows you to apply custom filters to your data and view the results in an interactive grid. Below is a guide on how to use the FilterGrid and its features.
+
+---
+
+#### **Using the FilterGrid**
+
+1. **Creating and Managing Filters:**
+   - The FilterGrid allows you to create multiple filters by defining criteria across different columns of your dataset. Each filter is represented by a row in the filter grid.
+   - You can specify conditions for different types of data (e.g., `Creature`, `Spell`, `Forgeborn Ability`) and combine them using logical operators such as `AND`, `OR`, and `+`.
+     - **`AND`**: Filters will match only if both surrounding fields are met (mandatory).
+     - **`OR`**: Filters will match if either of the surrounding fields is met (optional).
+   - Within each field, you can make specific items mandatory or optional:
+     - **`+`**: Use `+` to delimit items that must be included in the filter. For example, `+Dragon+` will make "Dragon" a mandatory match.
+     - **`-`**: Use `-` to delimit items that are optional. For example, `-Elf-` will make "Elf" an optional match.
+   - The **Forgeborn Ability** field is mandatory in every filter row and must be filled in to apply the filter.
+   - For each filter, you can decide whether it is active or not by toggling the **Active** checkbox. Only active filters will be applied to the data.
+
+2. **Adding a New Filter Row:**
+   - To add a new filter row, click the **"Add Row"** button. A new row will appear in the filter grid where you can define your filter criteria.
+   - The available fields include:
+     - **Type**: Choose between `Deck` and `Fusion`.
+     - **Modifier**, **Creature**, **Spell**: Select the entities or card types that you want to filter.
+     - **Forgeborn Ability**: Select specific abilities from the Forgeborn cards.
+     - **Data Set**: Choose the dataset to apply the filter to (e.g., `Fusion Tags`).
+
+3. **Removing a Filter Row:**
+   - To remove a filter row, select the row you want to remove and click the **"Remove Row"** button. The row will be deleted, and the remaining filters will be automatically adjusted.
+
+4. **Editing Filters:**
+   - You can edit any existing filter by clicking on its cells and modifying the content. The filter will be applied in real-time as you make changes.
+
+5. **Visualizing Filtered Data:**
+   - Once the filters are applied, the FilterGrid will dynamically generate and display the filtered datasets in individual grids below the filter row. Each grid corresponds to the specific filter applied to the data, bearing the same number.
+   - The filtered results are shown in a tabular format, allowing you to analyze the data that meets your specified criteria.
+
+"""
+
+
     # Convert Markdown to HTML using the markdown module
     guide_html_content = md.markdown(db_guide_text)
-
     # Create an HTML widget to display the converted Markdown
     guide_html = widgets.HTML(value=guide_html_content)
-
     # Create an Accordion widget with the guidance text
     db_accordion = widgets.Accordion(children=[guide_html], selected_index=None)
-    db_accordion.set_title(0, 'Guide: How to Create and Manage a Database')
+    db_accordion.set_title(0, 'Guide: How to Create and Manage your Database')
 
     deck_helper = create_styled_html(
         "Decks Tab: Manage and view decks in this section.",
-        text_color='white', bg_color='green', border_color='green'
+        text_color='white', bg_color='#3D2B56', border_color='#4A3E6D'  # Slightly lighter purple to match the background
     )
 
+    deck_filter_bar = create_styled_html(
+        "Filter Selection: Set custom filters to your deck base.",
+        text_color='white', bg_color='#2E86AB', border_color='#205E86'  # Darker blue for contrast
+    )
+
+    # Convert Markdown to HTML using the markdown module
+    guide_html_content = md.markdown(deck_guide_text)
+    # Create an HTML widget to display the converted Markdown
+    guide_html = widgets.HTML(value=guide_html_content)
+    # Create an Accordion widget with the guidance text
+    deck_accordion = widgets.Accordion(children=[guide_html], selected_index=None)
+    deck_accordion.set_title(0, 'Guide: How to filter Decks and Fusions')
+    
     template_helper = create_styled_html(
         "Templates Tab: Manage templates in this section.",
         text_color='white', bg_color='purple', border_color='purple'
@@ -1320,7 +1219,7 @@ def setup_interface():
 
     # Updated Tab content with styled text boxes
     db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
-    deck_tab = widgets.VBox([deck_helper, grid_manager.get_ui()])
+    deck_tab = widgets.VBox([deck_helper, deck_accordion, deck_filter_bar, grid_manager.get_ui()])
     template_tab = widgets.VBox([template_helper, templateGrid.get_ui()])
     fusions_tab = widgets.VBox([fusions_helper, *toggle_dropdown_pairs, button_graph])
     debug_tab = widgets.VBox([debug_helper, debug_toggle, global_vars.out_debug])

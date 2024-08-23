@@ -1,4 +1,5 @@
 from datetime import datetime
+from email import header
 import pandas as pd
 import qgrid
 import ipywidgets as widgets
@@ -161,8 +162,10 @@ class GridManager:
     def on(self, identifier, event_name, callback):
         grid = self.grids.get(identifier)
         if grid:
-            grid.main_widget.on(event_name, callback)
-            self.qgrid_callbacks.setdefault(identifier, {}).setdefault(event_name, []).append(callback)
+            # Check if Callback is already registered
+            if callback not in self.qgrid_callbacks.get(identifier, {}).get(event_name, []):
+                grid.main_widget.on(event_name, callback)
+                self.qgrid_callbacks.setdefault(identifier, {}).setdefault(event_name, []).append(callback)
 
     def reapply_callbacks(self, identifier):
         grid = self.grids.get(identifier)
@@ -215,8 +218,6 @@ class BaseGrid:
         self.main_widget = None
         self.toggle_widget = self.create_toggle_widget(df)
         self.create_main_widget(df)
-        #self.progress_bar = widgets.IntProgress(min=0, max=100)  # Create progress bar
-        #self.progress_label = widgets.Label('Initialised!')  # Label for progress bar
 
     def create_main_widget(self, df):
         raise NotImplementedError("Subclasses should implement this method.")
@@ -228,17 +229,7 @@ class BaseGrid:
         return toggle_grid
 
     def get_grid_box(self):
-        # Add the progress bar and label to an HBox to position them nicely
-        #progress_container = widgets.HBox([self.progress_label, self.progress_bar])
-        # Return a VBox with the toggle widget, the main widget, and the progress bar
-        #return widgets.VBox([self.toggle_widget, self.main_widget, progress_container])
         return widgets.VBox([self.toggle_widget, self.main_widget])
-    
-
-    #def update_progress(self, value, description=None):
-    #    self.progress_bar.value = value
-    #    if description:         
-    #        self.progress_label.value = description
 
     def update_main_widget(self, new_df):
         raise NotImplementedError("Subclasses should implement this method.")
@@ -342,7 +333,17 @@ class FilterGrid:
         """
         active_rows = []
         if 0 in event['indices']:
-            df = self.create_initial_dataframe()
+            df = pd.DataFrame({
+                'Type': [''],
+                'Modifier': [''],
+                'op1': [''],
+                'Creature': [''],
+                'op2': [''],
+                'Spell': [''],            
+                'Forgeborn Ability': [''],
+                'Data Set': [''],
+                'Active': [False],
+            })
             widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
             event['indices'].remove(0)
         
@@ -660,27 +661,54 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=
     return df_filtered
 
 from MultiIndexDataFrame import MultiIndexDataFrame
+
+# Function to create a styled HTML widget with a background color
+def create_styled_html(text, text_color, bg_color, border_color):
+    html = widgets.HTML(
+        value=f"<div style='padding:10px; color:{text_color}; background-color:{bg_color};"
+            f" border:solid 2px {border_color}; border-radius:5px;'>"
+            f"<strong>{text}</strong></div>"
+    )
+    return html
+
+filter_grid_bar = create_styled_html(
+    "Filter Grid: Apply your custom filter to the deck base.",
+    text_color='white', bg_color='#FFA630', border_color='#CC7A00'  # A darker orange to complement the background
+)
+
+filter_results_bar = create_styled_html(
+    "Filter Results: Displays the results of the filters applied to the deck base.",
+    text_color='#2E2E2E', bg_color='#CFF27E', border_color='#B2D38A'  # A more muted green to blend with the background
+)
+
+deck_content_bar = create_styled_html(
+    "Deck / Fusion Content: Displays the last selected item",
+    text_color='white', bg_color='#AA4465', border_color='#4A4A4A'  
+)
+
 class DynamicGridManager:
 
-    def __init__(self, data_generate_function, qg_options, out_debug):
+    def __init__(self, data_generate_functions, qg_options, out_debug):
         self.out_debug = out_debug       
-        self.data_generate_function = data_generate_function
+        self.data_generate_functions = data_generate_functions
         self.qg_options = qg_options
         self.qm = GridManager(out_debug)
         self.grid_layout = widgets.GridspecLayout(1, 1)        
-        self.filterGridObject = FilterGrid(self.refresh_gridbox)        
+        self.filterGridObject = FilterGrid(self.refresh_gridbox)
+        self.deck_content_grid = qgrid.show_grid(pd.DataFrame(), show_toolbar=False, grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True})
 
         # UI elements
         self.selectionGrid, self.filterGrid = self.filterGridObject.get_widgets()
-        self.ui = widgets.VBox([self.selectionGrid, self.filterGrid, self.grid_layout])
-        
+        #self.ui = widgets.VBox([self.selectionGrid, filter_grid_bar, self.filterGrid, filter_results_bar, self.grid_layout, deck_content_bar])
+        self.ui = widgets.VBox([])
+        self.update_ui()
         self.update_grid_layout()
 
     def reset_grid_layout(self, new_size):
         self.ui.children = [self.selectionGrid, self.filterGrid] 
         self.grid_layout = widgets.GridspecLayout(new_size, 1)
         #print(f"Resetting grid layout to size {new_size} : {self.grid_layout}")
-        self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]
+        self.update_ui()
 
     def update_grid_layout(self):
         filter_df = self.filterGridObject.get_changed_df()
@@ -690,7 +718,7 @@ class DynamicGridManager:
             if idx < active_filters_count:
                 new_grid[idx, 0] = child
         self.grid_layout = new_grid
-        self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]  # Update UI children
+        self.update_ui()
 
     def apply_filters(self, df, filter_row):
         # Filter columns based on the data_selection_list, remove all values not in the list                
@@ -704,10 +732,10 @@ class DynamicGridManager:
 
     def refresh_gridbox(self, change=None):
         #print(f"DynamicGridManager::refresh_gridbox() - Refreshing grid box with change: {change}")
-        
+        gv.update_progress('Gridbox', 0, message="Refreshing Gridbox")
         collection_df = self.qm.get_default_data('collection')
         if collection_df.empty or (change and 'type' in change and (change['type'] == 'username' or change['type'] == 'generation')):            
-            collection_df = self.data_generate_function()
+            collection_df = self.data_generate_functions['central_dataframe']()
             self.qm.add_grid('collection', collection_df, options=self.qg_options)            
         
         # Filter the DataFrame to include only active filters
@@ -716,17 +744,10 @@ class DynamicGridManager:
         #print(f"{len(active_filters_df)} Active Filters: {active_filters_df} ")
         self.reset_grid_layout(len(active_filters_df))
 
-        for index, (row_index, filter_row) in enumerate(active_filters_df.iterrows()):
+        gv.update_progress('Gridbox', 0, len(active_filters_df), "Refreshing Gridbox - Applying Filters")
+        for index, (row_index, filter_row) in enumerate(active_filters_df.iterrows()):            
             if filter_row['Active']:
-                data_set_type = filter_row['Data Set']
-                #print(f"Applying filter {filter_row} to data set {data_set_type}")
-                # data_selection_list = gv.data_selection_sets[data_set_type]
-                
-                # filtered_df = apply_cardname_filter_to_dataframe(collection_df, pd.DataFrame([filter_row]))
-                                
-                # # Filter columns based on the data_selection_list, remove all values not in the list                
-                # existing_columns = [col for col in data_selection_list if col in filtered_df.columns]
-                # filtered_df = filtered_df.loc[:, existing_columns]                
+                gv.update_progress("Gridbox", message = f"Applying filter {index+1}/{len(active_filters_df)} {filter_row['Type']} {filter_row['Modifier']} {filter_row['Creature']} {filter_row['Spell']} {filter_row['Forgeborn Ability']} {filter_row['Data Set']}")
                 filtered_df = self.apply_filters(collection_df, filter_row)
 
                 filter_widget = None
@@ -735,19 +756,152 @@ class DynamicGridManager:
                 grid_identifier = f"filtered_grid_{index}"
                 grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options)
                 
+                # Register selection event callback using GridManager's register_callback
+                with self.out_debug:
+                    print(f"Registering selection_changed callback for grid {grid_identifier}")
+                self.qm.on(grid_identifier, 'selection_changed', self.update_deck_content)
+                self.qm.display_registered_events()
+
                 filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
                 filter_row_widget.layout = widgets.Layout(height='70px') #, border='1px solid blue')
 
                 filter_widget = filter_row_widget
                 grid_widget = grid.get_grid_box()
                 
-                self.grid_layout[index, 0] = widgets.VBox([filter_widget, grid_widget], layout=widgets.Layout(border='1px solid red'))
+                self.grid_layout[index, 0] = widgets.VBox([filter_widget, grid_widget], layout=widgets.Layout(border='2px solid black'))
         
         # After updating, reassign children to trigger update
         #print(f"Refresh Gridbox. Layout = {self.grid_layout}")
-        self.ui.children = [self.selectionGrid, self.filterGrid, self.grid_layout]
+        self.update_ui()
+
+    def update_deck_content(self, event, widget):
+        """Update the deck content DataFrame based on the selected item in the grid."""
+        selected_indices = event['new']
+        grid_df = widget.get_changed_df()            
+
+        if grid_df is not None and selected_indices:
+            # Get the selected rows based on indices
+            selected_rows = grid_df.iloc[selected_indices]
+
+            # Fetch the 'collection' DataFrame
+            collection_df = self.qm.get_default_data('collection')
+
+            # Initialize a list to collect all selected deck names
+            selected_deck_names = []
+
+            for _, row in selected_rows.iterrows():
+                # Find the corresponding row in the collection DataFrame
+                collection_row = collection_df.loc[collection_df['Name'] == row['Name']]
+
+                if not collection_row.empty:
+                    item_type = collection_row['type'].values[0]
+
+                    if item_type.lower() == 'fusion':
+                        # If it's a fusion, add both Deck A and Deck B names
+                        if 'Deck A' in collection_row and 'Deck B' in collection_row:
+                            selected_deck_names.extend([collection_row['Deck A'].values[0], collection_row['Deck B'].values[0]])
+                    elif item_type.lower() == 'deck':
+                        # If it's a deck, add the Name
+                        selected_deck_names.append(collection_row['Name'].values[0])
+
+            # Remove any duplicates in the selected deck names
+            selected_deck_names = list(set(selected_deck_names))
+                            
+            # Generate the deck content DataFrame using the provided function
+            deck_content_df = self.data_generate_functions['deck_content'](selected_deck_names)
+
+            # Create a new grid for the deck content and update the UI
+            self.deck_content_grid = qgrid.show_grid(
+                deck_content_df,
+                show_toolbar=False,
+                column_definitions=gv.all_column_definitions,
+                grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True}
+            )
+            apply_rotation_css_to_qgrid(self.deck_content_grid, 7, header_height=150)
+                            
+            # Update the UI
+            self.update_ui()
+
+    def update_ui(self):
+        """Helper method to update the self.ui.children with the common layout."""
+        self.ui.children = [
+            self.selectionGrid, 
+            filter_grid_bar, 
+            self.filterGrid, 
+            filter_results_bar, 
+            self.grid_layout, 
+            deck_content_bar,
+            self.deck_content_grid
+        ]
 
     def get_ui(self):
         return self.ui
 
 
+from IPython.display import display, HTML
+
+# def apply_rotation_css_to_qgrid(qgrid_widget, start_column, header_height=80, row_height=40):
+#     # Retrieve the unique element ID of the qgrid widget
+#     qgrid_id = qgrid_widget.grid_options.get('gridId')
+
+#     if not qgrid_id:
+#         raise AttributeError("Could not find gridId for the qgrid widget.")
+
+#     # Generate the CSSs
+#     css = f"""
+#     <style>
+#         #{qgrid_id} .slick-header-column {{
+#             height: {header_height}px !important; /* Set the header height */
+#             vertical-align: bottom; /* Align the text to the bottom */
+#         }}
+#         #{qgrid_id} .slick-header-column .slick-column-name {{
+#             transform: rotate(90deg);
+#             transform-origin: left bottom;
+#             white-space: nowrap;
+#             margin-left: 0px; /* Adjust spacing */
+#             margin-top: 0px; /* Fine-tune text placement */
+#         }}
+#         #{qgrid_id} .slick-cell {{
+#             height: {row_height}px; /* Adjust row height to match rotated header */
+#         }}
+#     </style>
+#     """
+
+#     # Apply the CSS
+#     display(HTML(css))
+    
+    
+def apply_rotation_css_to_qgrid(qgrid_widget, start_column=2, header_height=80, custom_class='custom-qgrid'):
+    """
+    Applies CSS to rotate the headers of specific columns in a qgrid widget.
+
+    Parameters:
+    - qgrid_widget: The qgrid widget to which the CSS will be applied.
+    - start_column: The column number to start rotating headers from (1-based index).
+    - header_height: The height of the header row (in pixels).
+    - row_height: The height of the data rows (in pixels).
+    - custom_class: The custom CSS class to be applied to the qgrid widget.
+    """
+    # Add a custom class to the qgrid widget
+    qgrid_widget.add_class(custom_class)
+    
+    # Generate CSS for the rotation
+    style = f"""
+    <style>
+        /* Apply rotation to the header of all columns starting from the specified column */
+        .{custom_class} .slick-header-column:nth-child(n+{start_column}) {{
+            height: {header_height}px !important; /* Set header height */
+            vertical-align: bottom; /* Align the text to the bottom */
+        }}
+        .{custom_class} .slick-header-column:nth-child(n+{start_column}) .slick-column-name {{
+            transform: rotate(90deg);
+            transform-origin: left bottom;
+            white-space: nowrap;
+            margin-left: 0px; /* Adjust spacing */
+            margin-top:  10px; /* Adjust text placement */
+        }}
+    </style>
+    """
+
+    # Inject the CSS into the notebook
+    display(HTML(style))

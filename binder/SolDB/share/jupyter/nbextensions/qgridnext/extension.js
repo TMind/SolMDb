@@ -1,1 +1,0 @@
-define((()=>{return e={992:e=>{window.require&&window.require.config({map:{"*":{qgrid:"nbextensions/qgridnext/index"}}}),e.exports={load_ipython_extension:function(){}}}},r={},function n(i){var o=r[i];if(void 0!==o)return o.exports;var t=r[i]={exports:{}};return e[i](t,t.exports,n),t.exports}(992);var e,r}));

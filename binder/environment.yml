@@ -1,4 +1,4 @@
-name: SolDB
+name: SolDB-Conda
 channels:  
   - conda-forge  
   - defaults  
@@ -22,4 +22,7 @@ dependencies:
     - pyvis # If pyvis is not available in conda channels  
     - jupyter-server-proxy # If jupyter-server-proxy is not available in conda channels  
     - qgridnext==2.0.0rc0 # If qgridnext is not available in conda channels  
-    - icecream # If icecream is not available in conda channels  
+    - icecream # If icecrls -eam is not available in conda channels  
+    - tzlocal
+
+

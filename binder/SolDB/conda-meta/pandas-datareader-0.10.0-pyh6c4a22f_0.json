@@ -1,0 +1,1142 @@
+{
+  "build": "pyh6c4a22f_0",
+  "build_number": 0,
+  "channel": "https://conda.anaconda.org/conda-forge/noarch",
+  "constrains": [],
+  "depends": [
+    "lxml",
+    "pandas >=1.0",
+    "python >=3.6",
+    "requests >=2.3.0"
+  ],
+  "extracted_package_dir": "/opt/homebrew/Caskroom/miniconda/base/pkgs/pandas-datareader-0.10.0-pyh6c4a22f_0",
+  "files": [
+    "lib/python3.11/site-packages/pandas_datareader-0.10.0.dist-info/INSTALLER",
+    "lib/python3.11/site-packages/pandas_datareader-0.10.0.dist-info/LICENSE.md",
+    "lib/python3.11/site-packages/pandas_datareader-0.10.0.dist-info/METADATA",
+    "lib/python3.11/site-packages/pandas_datareader-0.10.0.dist-info/RECORD",
+    "lib/python3.11/site-packages/pandas_datareader-0.10.0.dist-info/REQUESTED",
+    "lib/python3.11/site-packages/pandas_datareader-0.10.0.dist-info/WHEEL",
+    "lib/python3.11/site-packages/pandas_datareader-0.10.0.dist-info/direct_url.json",
+    "lib/python3.11/site-packages/pandas_datareader-0.10.0.dist-info/top_level.txt",
+    "lib/python3.11/site-packages/pandas_datareader/__init__.py",
+    "lib/python3.11/site-packages/pandas_datareader/_testing.py",
+    "lib/python3.11/site-packages/pandas_datareader/_utils.py",
+    "lib/python3.11/site-packages/pandas_datareader/_version.py",
+    "lib/python3.11/site-packages/pandas_datareader/av/__init__.py",
+    "lib/python3.11/site-packages/pandas_datareader/av/forex.py",
+    "lib/python3.11/site-packages/pandas_datareader/av/quotes.py",
+    "lib/python3.11/site-packages/pandas_datareader/av/sector.py",
+    "lib/python3.11/site-packages/pandas_datareader/av/time_series.py",
+    "lib/python3.11/site-packages/pandas_datareader/bankofcanada.py",
+    "lib/python3.11/site-packages/pandas_datareader/base.py",
+    "lib/python3.11/site-packages/pandas_datareader/compat/__init__.py",
+    "lib/python3.11/site-packages/pandas_datareader/conftest.py",
+    "lib/python3.11/site-packages/pandas_datareader/data.py",
+    "lib/python3.11/site-packages/pandas_datareader/econdb.py",
+    "lib/python3.11/site-packages/pandas_datareader/enigma.py",
+    "lib/python3.11/site-packages/pandas_datareader/eurostat.py",
+    "lib/python3.11/site-packages/pandas_datareader/exceptions.py",
+    "lib/python3.11/site-packages/pandas_datareader/famafrench.py",
+    "lib/python3.11/site-packages/pandas_datareader/fred.py",
+    "lib/python3.11/site-packages/pandas_datareader/iex/__init__.py",
+    "lib/python3.11/site-packages/pandas_datareader/iex/daily.py",
+    "lib/python3.11/site-packages/pandas_datareader/iex/deep.py",
+    "lib/python3.11/site-packages/pandas_datareader/iex/market.py",
+    "lib/python3.11/site-packages/pandas_datareader/iex/ref.py",
+    "lib/python3.11/site-packages/pandas_datareader/iex/stats.py",
+    "lib/python3.11/site-packages/pandas_datareader/iex/tops.py",
+    "lib/python3.11/site-packages/pandas_datareader/io/__init__.py",
+    "lib/python3.11/site-packages/pandas_datareader/io/jsdmx.py",
+    "lib/python3.11/site-packages/pandas_datareader/io/sdmx.py",
+    "lib/python3.11/site-packages/pandas_datareader/io/util.py",
+    "lib/python3.11/site-packages/pandas_datareader/moex.py",
+    "lib/python3.11/site-packages/pandas_datareader/nasdaq_trader.py",
+    "lib/python3.11/site-packages/pandas_datareader/naver.py",
+    "lib/python3.11/site-packages/pandas_datareader/oecd.py",
+    "lib/python3.11/site-packages/pandas_datareader/quandl.py",
+    "lib/python3.11/site-packages/pandas_datareader/stooq.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__init__.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/av/__init__.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/av/test_av_forex.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/av/test_av_quotes.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/av/test_av_sector.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/av/test_av_time_series.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/io/__init__.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/io/test_jsdmx.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/io/test_sdmx.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_bankofcanada.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_base.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_data.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_econdb.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_enigma.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_eurostat.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_famafrench.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_fred.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_iex.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_iex_daily.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_moex.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_nasdaq.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_naver.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_oecd.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_quandl.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_stooq.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_tiingo.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_tsp.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_utils.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/test_wb.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/yahoo/__init__.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/yahoo/test_options.py",
+    "lib/python3.11/site-packages/pandas_datareader/tests/yahoo/test_yahoo.py",
+    "lib/python3.11/site-packages/pandas_datareader/tiingo.py",
+    "lib/python3.11/site-packages/pandas_datareader/tsp.py",
+    "lib/python3.11/site-packages/pandas_datareader/wb.py",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/__init__.py",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/actions.py",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/components.py",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/daily.py",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/fx.py",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/headers.py",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/options.py",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/quotes.py",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/_testing.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/_utils.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/_version.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/av/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/av/__pycache__/forex.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/av/__pycache__/quotes.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/av/__pycache__/sector.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/av/__pycache__/time_series.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/bankofcanada.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/base.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/compat/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/conftest.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/data.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/econdb.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/enigma.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/eurostat.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/exceptions.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/famafrench.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/fred.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/daily.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/deep.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/market.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/ref.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/stats.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/tops.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/io/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/io/__pycache__/jsdmx.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/io/__pycache__/sdmx.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/io/__pycache__/util.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/moex.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/nasdaq_trader.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/naver.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/oecd.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/quandl.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/stooq.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/av/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/av/__pycache__/test_av_forex.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/av/__pycache__/test_av_quotes.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/av/__pycache__/test_av_sector.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/av/__pycache__/test_av_time_series.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/io/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/io/__pycache__/test_jsdmx.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/io/__pycache__/test_sdmx.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_bankofcanada.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_base.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_data.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_econdb.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_enigma.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_eurostat.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_famafrench.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_fred.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_iex.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_iex_daily.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_moex.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_nasdaq.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_naver.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_oecd.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_quandl.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_stooq.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_tiingo.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_tsp.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_utils.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_wb.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/yahoo/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/yahoo/__pycache__/test_options.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/tests/yahoo/__pycache__/test_yahoo.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/tiingo.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/tsp.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/__pycache__/wb.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/actions.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/components.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/daily.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/fx.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/headers.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/options.cpython-311.pyc",
+    "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/quotes.cpython-311.pyc"
+  ],
+  "fn": "pandas-datareader-0.10.0-pyh6c4a22f_0.tar.bz2",
+  "license": "BSD-3-Clause",
+  "link": {
+    "source": "/opt/homebrew/Caskroom/miniconda/base/pkgs/pandas-datareader-0.10.0-pyh6c4a22f_0",
+    "type": 1
+  },
+  "md5": "1d3e50c28e6ff44f58ab16295bc9f7af",
+  "name": "pandas-datareader",
+  "noarch": "python",
+  "package_tarball_full_path": "/opt/homebrew/Caskroom/miniconda/base/pkgs/pandas-datareader-0.10.0-pyh6c4a22f_0.tar.bz2",
+  "package_type": "noarch_python",
+  "paths_data": {
+    "paths": [
+      {
+        "_path": "site-packages/pandas_datareader-0.10.0.dist-info/INSTALLER",
+        "path_type": "hardlink",
+        "sha256": "d0edee15f91b406f3f99726e44eb990be6e34fd0345b52b910c568e0eef6a2a8",
+        "sha256_in_prefix": "d0edee15f91b406f3f99726e44eb990be6e34fd0345b52b910c568e0eef6a2a8",
+        "size_in_bytes": 5
+      },
+      {
+        "_path": "site-packages/pandas_datareader-0.10.0.dist-info/LICENSE.md",
+        "path_type": "hardlink",
+        "sha256": "1114ad27e18866954fd63f8a9c0bc4bf0ef77f17376de066b797d202fd107213",
+        "sha256_in_prefix": "1114ad27e18866954fd63f8a9c0bc4bf0ef77f17376de066b797d202fd107213",
+        "size_in_bytes": 3769
+      },
+      {
+        "_path": "site-packages/pandas_datareader-0.10.0.dist-info/METADATA",
+        "path_type": "hardlink",
+        "sha256": "e7247d6f5093bb2b0af918e1c2503525498d1eb7e13848db1cf423a601b9328e",
+        "sha256_in_prefix": "e7247d6f5093bb2b0af918e1c2503525498d1eb7e13848db1cf423a601b9328e",
+        "size_in_bytes": 2861
+      },
+      {
+        "_path": "site-packages/pandas_datareader-0.10.0.dist-info/RECORD",
+        "path_type": "hardlink",
+        "sha256": "ea4d9761254ca0b985a0df3bba4d384ff14444afa88b0c5d39f9b841747ce349",
+        "sha256_in_prefix": "ea4d9761254ca0b985a0df3bba4d384ff14444afa88b0c5d39f9b841747ce349",
+        "size_in_bytes": 12954
+      },
+      {
+        "_path": "site-packages/pandas_datareader-0.10.0.dist-info/REQUESTED",
+        "path_type": "hardlink",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sha256_in_prefix": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_in_bytes": 0
+      },
+      {
+        "_path": "site-packages/pandas_datareader-0.10.0.dist-info/WHEEL",
+        "path_type": "hardlink",
+        "sha256": "3aa464174798e461ecb0ca2b16395b4c8ab4ef6be91e917ad1f21003a952f710",
+        "sha256_in_prefix": "3aa464174798e461ecb0ca2b16395b4c8ab4ef6be91e917ad1f21003a952f710",
+        "size_in_bytes": 92
+      },
+      {
+        "_path": "site-packages/pandas_datareader-0.10.0.dist-info/direct_url.json",
+        "path_type": "hardlink",
+        "sha256": "9d8ec38b91b64dab2350331b670f10ee7135075b6ba78a143a5ae5fc609b2642",
+        "sha256_in_prefix": "9d8ec38b91b64dab2350331b670f10ee7135075b6ba78a143a5ae5fc609b2642",
+        "size_in_bytes": 113
+      },
+      {
+        "_path": "site-packages/pandas_datareader-0.10.0.dist-info/top_level.txt",
+        "path_type": "hardlink",
+        "sha256": "f200a9f9fa21528b7c2a3f1f0e5db2f7a46bab302c856ee101c1b522b5ab8de4",
+        "sha256_in_prefix": "f200a9f9fa21528b7c2a3f1f0e5db2f7a46bab302c856ee101c1b522b5ab8de4",
+        "size_in_bytes": 18
+      },
+      {
+        "_path": "site-packages/pandas_datareader/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "46c4510520ea378fda053930e26fcc7c141d4c27efc8316d08583added5d6505",
+        "sha256_in_prefix": "46c4510520ea378fda053930e26fcc7c141d4c27efc8316d08583added5d6505",
+        "size_in_bytes": 2006
+      },
+      {
+        "_path": "site-packages/pandas_datareader/_testing.py",
+        "path_type": "hardlink",
+        "sha256": "dadf04687c3e058f1764b8436754adb71396f8465aac53bf5d8ec1604d7401f2",
+        "sha256_in_prefix": "dadf04687c3e058f1764b8436754adb71396f8465aac53bf5d8ec1604d7401f2",
+        "size_in_bytes": 615
+      },
+      {
+        "_path": "site-packages/pandas_datareader/_utils.py",
+        "path_type": "hardlink",
+        "sha256": "29a98516372f4f66eb60289accfb9a6fcc2ff3667d55f9343154f9d8d814121b",
+        "sha256_in_prefix": "29a98516372f4f66eb60289accfb9a6fcc2ff3667d55f9343154f9d8d814121b",
+        "size_in_bytes": 1609
+      },
+      {
+        "_path": "site-packages/pandas_datareader/_version.py",
+        "path_type": "hardlink",
+        "sha256": "ec24d384273d2c758972e24e9ee659e2e9bc5ca8bbd4831cd9c319ff353573eb",
+        "sha256_in_prefix": "ec24d384273d2c758972e24e9ee659e2e9bc5ca8bbd4831cd9c319ff353573eb",
+        "size_in_bytes": 498
+      },
+      {
+        "_path": "site-packages/pandas_datareader/av/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "2bb6534ffd94757766c4a306b01c96b11229c7879aa8215d85abf656bdae2963",
+        "sha256_in_prefix": "2bb6534ffd94757766c4a306b01c96b11229c7879aa8215d85abf656bdae2963",
+        "size_in_bytes": 2349
+      },
+      {
+        "_path": "site-packages/pandas_datareader/av/forex.py",
+        "path_type": "hardlink",
+        "sha256": "1216035e027feb66189b3ced1bc3305376b79164e9ba784700007cf4c5476681",
+        "sha256_in_prefix": "1216035e027feb66189b3ced1bc3305376b79164e9ba784700007cf4c5476681",
+        "size_in_bytes": 2991
+      },
+      {
+        "_path": "site-packages/pandas_datareader/av/quotes.py",
+        "path_type": "hardlink",
+        "sha256": "4032e40adeae15366aee9d9b89976f46386da1a9ec8252e0294f4fdeb01088d0",
+        "sha256_in_prefix": "4032e40adeae15366aee9d9b89976f46386da1a9ec8252e0294f4fdeb01088d0",
+        "size_in_bytes": 2645
+      },
+      {
+        "_path": "site-packages/pandas_datareader/av/sector.py",
+        "path_type": "hardlink",
+        "sha256": "24920a53e90c402bc9854fce90a99e9ee4e06acdf82823d10bef84113ea26688",
+        "sha256_in_prefix": "24920a53e90c402bc9854fce90a99e9ee4e06acdf82823d10bef84113ea26688",
+        "size_in_bytes": 1348
+      },
+      {
+        "_path": "site-packages/pandas_datareader/av/time_series.py",
+        "path_type": "hardlink",
+        "sha256": "65080697f0185f0792a68c14f44df1346298aa66da9959eee0f719ab5f23269d",
+        "sha256_in_prefix": "65080697f0185f0792a68c14f44df1346298aa66da9959eee0f719ab5f23269d",
+        "size_in_bytes": 4118
+      },
+      {
+        "_path": "site-packages/pandas_datareader/bankofcanada.py",
+        "path_type": "hardlink",
+        "sha256": "61dd0678fcf8be662f82213e24acd298b0eb93737f92b469661059fd3a8ce704",
+        "sha256_in_prefix": "61dd0678fcf8be662f82213e24acd298b0eb93737f92b469661059fd3a8ce704",
+        "size_in_bytes": 1055
+      },
+      {
+        "_path": "site-packages/pandas_datareader/base.py",
+        "path_type": "hardlink",
+        "sha256": "0e97247bf817d76f04db6d7f9d580d62d6fcd32b94747a575fe5e078c8ce8ff2",
+        "sha256_in_prefix": "0e97247bf817d76f04db6d7f9d580d62d6fcd32b94747a575fe5e078c8ce8ff2",
+        "size_in_bytes": 11411
+      },
+      {
+        "_path": "site-packages/pandas_datareader/compat/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "2b579007725132e2a88ebc231ab696a0cc5cf4d181167be523a0b2109ab51c4e",
+        "sha256_in_prefix": "2b579007725132e2a88ebc231ab696a0cc5cf4d181167be523a0b2109ab51c4e",
+        "size_in_bytes": 2044
+      },
+      {
+        "_path": "site-packages/pandas_datareader/conftest.py",
+        "path_type": "hardlink",
+        "sha256": "3178d17472415f63a0c88d92c7b8c8a563d23cfab76340a72f6a184fbd2c5039",
+        "sha256_in_prefix": "3178d17472415f63a0c88d92c7b8c8a563d23cfab76340a72f6a184fbd2c5039",
+        "size_in_bytes": 1664
+      },
+      {
+        "_path": "site-packages/pandas_datareader/data.py",
+        "path_type": "hardlink",
+        "sha256": "46f518352402eed92b98f2924caa05f61c798fbded7c3d3e324a52597d321a81",
+        "sha256_in_prefix": "46f518352402eed92b98f2924caa05f61c798fbded7c3d3e324a52597d321a81",
+        "size_in_bytes": 19449
+      },
+      {
+        "_path": "site-packages/pandas_datareader/econdb.py",
+        "path_type": "hardlink",
+        "sha256": "7473e2cbf187afff91199630c07b93e2d04b7e9df4d83db53340a4d6d8e6ef97",
+        "sha256_in_prefix": "7473e2cbf187afff91199630c07b93e2d04b7e9df4d83db53340a4d6d8e6ef97",
+        "size_in_bytes": 2228
+      },
+      {
+        "_path": "site-packages/pandas_datareader/enigma.py",
+        "path_type": "hardlink",
+        "sha256": "e65771d4c46dbdc51a64ca6a8adbac855d87a98d986fd06d2f25ab0cd541a387",
+        "sha256_in_prefix": "e65771d4c46dbdc51a64ca6a8adbac855d87a98d986fd06d2f25ab0cd541a387",
+        "size_in_bytes": 4744
+      },
+      {
+        "_path": "site-packages/pandas_datareader/eurostat.py",
+        "path_type": "hardlink",
+        "sha256": "e528e4867f4cafb02db97ed28a148c2723e5e59c51014fc4f11a715f31cb7830",
+        "sha256_in_prefix": "e528e4867f4cafb02db97ed28a148c2723e5e59c51014fc4f11a715f31cb7830",
+        "size_in_bytes": 1452
+      },
+      {
+        "_path": "site-packages/pandas_datareader/exceptions.py",
+        "path_type": "hardlink",
+        "sha256": "1e61ed013924ec54a1ad1686f99615402002a20cb9f21938867e7aa938ca65f9",
+        "sha256_in_prefix": "1e61ed013924ec54a1ad1686f99615402002a20cb9f21938867e7aa938ca65f9",
+        "size_in_bytes": 399
+      },
+      {
+        "_path": "site-packages/pandas_datareader/famafrench.py",
+        "path_type": "hardlink",
+        "sha256": "7b3902b7e68f1c26dc984c0c7b43f5df8a7a837226ce57469a1e5a4643e0d097",
+        "sha256_in_prefix": "7b3902b7e68f1c26dc984c0c7b43f5df8a7a837226ce57469a1e5a4643e0d097",
+        "size_in_bytes": 4944
+      },
+      {
+        "_path": "site-packages/pandas_datareader/fred.py",
+        "path_type": "hardlink",
+        "sha256": "af865a19f29514318ee6a400dca39a419e3dcbcf079010b6b716b68105026094",
+        "sha256_in_prefix": "af865a19f29514318ee6a400dca39a419e3dcbcf079010b6b716b68105026094",
+        "size_in_bytes": 1833
+      },
+      {
+        "_path": "site-packages/pandas_datareader/iex/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "aa0eaa09fc5af76e7ea4295bee28ac07b707a30d5db4491582127b1a2ecc3961",
+        "sha256_in_prefix": "aa0eaa09fc5af76e7ea4295bee28ac07b707a30d5db4491582127b1a2ecc3961",
+        "size_in_bytes": 2805
+      },
+      {
+        "_path": "site-packages/pandas_datareader/iex/daily.py",
+        "path_type": "hardlink",
+        "sha256": "64d5cc1eda5f395efcf92ba0eed37ee12be76626457bab8b4c021bdfecdff9b1",
+        "sha256_in_prefix": "64d5cc1eda5f395efcf92ba0eed37ee12be76626457bab8b4c021bdfecdff9b1",
+        "size_in_bytes": 5477
+      },
+      {
+        "_path": "site-packages/pandas_datareader/iex/deep.py",
+        "path_type": "hardlink",
+        "sha256": "2a70d61d6692deb29381bf4e228f31f82ef61c6fb5532992c761e9c5c512f23a",
+        "sha256_in_prefix": "2a70d61d6692deb29381bf4e228f31f82ef61c6fb5532992c761e9c5c512f23a",
+        "size_in_bytes": 5144
+      },
+      {
+        "_path": "site-packages/pandas_datareader/iex/market.py",
+        "path_type": "hardlink",
+        "sha256": "fcd9a3638077f7156db4a4430755a98458bb66487dd0d19ca06597efe39653d1",
+        "sha256_in_prefix": "fcd9a3638077f7156db4a4430755a98458bb66487dd0d19ca06597efe39653d1",
+        "size_in_bytes": 1029
+      },
+      {
+        "_path": "site-packages/pandas_datareader/iex/ref.py",
+        "path_type": "hardlink",
+        "sha256": "87baca9454f2cfd05758b101b0fd502f6518d83fb97f242475f3e2cd2f9e81c4",
+        "sha256_in_prefix": "87baca9454f2cfd05758b101b0fd502f6518d83fb97f242475f3e2cd2f9e81c4",
+        "size_in_bytes": 1035
+      },
+      {
+        "_path": "site-packages/pandas_datareader/iex/stats.py",
+        "path_type": "hardlink",
+        "sha256": "4fef672e9e9dc6bca616ba9839fccd14f863ba00c1c6f58c3ea13bfadc161463",
+        "sha256_in_prefix": "4fef672e9e9dc6bca616ba9839fccd14f863ba00c1c6f58c3ea13bfadc161463",
+        "size_in_bytes": 5583
+      },
+      {
+        "_path": "site-packages/pandas_datareader/iex/tops.py",
+        "path_type": "hardlink",
+        "sha256": "7598f04b3beac9cbbc28510423fefc48f52ab6392a6ada7d27d285ab628ee416",
+        "sha256_in_prefix": "7598f04b3beac9cbbc28510423fefc48f52ab6392a6ada7d27d285ab628ee416",
+        "size_in_bytes": 1630
+      },
+      {
+        "_path": "site-packages/pandas_datareader/io/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "eba2b3326a64e457e869e1f2f8521fa1e79e805721d3ed860141191cea0325bd",
+        "sha256_in_prefix": "eba2b3326a64e457e869e1f2f8521fa1e79e805721d3ed860141191cea0325bd",
+        "size_in_bytes": 114
+      },
+      {
+        "_path": "site-packages/pandas_datareader/io/jsdmx.py",
+        "path_type": "hardlink",
+        "sha256": "ac077ed76b62ca857428899143eda6b4bcbbbcb8014b8ab7faf4328fba5b9325",
+        "sha256_in_prefix": "ac077ed76b62ca857428899143eda6b4bcbbbcb8014b8ab7faf4328fba5b9325",
+        "size_in_bytes": 3169
+      },
+      {
+        "_path": "site-packages/pandas_datareader/io/sdmx.py",
+        "path_type": "hardlink",
+        "sha256": "c0b175d237175ec474689d80f6bf7b964e47b21765b038b098fbfebfbbc3ad53",
+        "sha256_in_prefix": "c0b175d237175ec474689d80f6bf7b964e47b21765b038b098fbfebfbbc3ad53",
+        "size_in_bytes": 7084
+      },
+      {
+        "_path": "site-packages/pandas_datareader/io/util.py",
+        "path_type": "hardlink",
+        "sha256": "2e8c1660ebf930f687ce221b36304695bb1004b97e1b3c24eb0777f9ece783be",
+        "sha256_in_prefix": "2e8c1660ebf930f687ce221b36304695bb1004b97e1b3c24eb0777f9ece783be",
+        "size_in_bytes": 798
+      },
+      {
+        "_path": "site-packages/pandas_datareader/moex.py",
+        "path_type": "hardlink",
+        "sha256": "4d2be1ad2502404cbb11faf22d3707a9959d40d5b79578435fc54f60fd1f30da",
+        "sha256_in_prefix": "4d2be1ad2502404cbb11faf22d3707a9959d40d5b79578435fc54f60fd1f30da",
+        "size_in_bytes": 8934
+      },
+      {
+        "_path": "site-packages/pandas_datareader/nasdaq_trader.py",
+        "path_type": "hardlink",
+        "sha256": "85b78868ec04340bde71beede95f015bc3499dc9684ed473d431009ea5ccb6b3",
+        "sha256_in_prefix": "85b78868ec04340bde71beede95f015bc3499dc9684ed473d431009ea5ccb6b3",
+        "size_in_bytes": 3283
+      },
+      {
+        "_path": "site-packages/pandas_datareader/naver.py",
+        "path_type": "hardlink",
+        "sha256": "8901dcde8feb6a73d07e0ec7bdd4bae6a41397ff471fe59334dbe52ba36c39ff",
+        "sha256_in_prefix": "8901dcde8feb6a73d07e0ec7bdd4bae6a41397ff471fe59334dbe52ba36c39ff",
+        "size_in_bytes": 3649
+      },
+      {
+        "_path": "site-packages/pandas_datareader/oecd.py",
+        "path_type": "hardlink",
+        "sha256": "19b69c02e045569b6fac22969f575501084f9f4dbbaaeca5e299c4eea05cbda1",
+        "sha256_in_prefix": "19b69c02e045569b6fac22969f575501084f9f4dbbaaeca5e299c4eea05cbda1",
+        "size_in_bytes": 1141
+      },
+      {
+        "_path": "site-packages/pandas_datareader/quandl.py",
+        "path_type": "hardlink",
+        "sha256": "1239416b5ce6f1776b38c6ca481c94038b3d3d42e6d906a9b56cca29e642a791",
+        "sha256_in_prefix": "1239416b5ce6f1776b38c6ca481c94038b3d3d42e6d906a9b56cca29e642a791",
+        "size_in_bytes": 5383
+      },
+      {
+        "_path": "site-packages/pandas_datareader/stooq.py",
+        "path_type": "hardlink",
+        "sha256": "39edf4062bc7660768856f46ba8848565ae39b5e3180b6e719c9f4583b6ad3cd",
+        "sha256_in_prefix": "39edf4062bc7660768856f46ba8848565ae39b5e3180b6e719c9f4583b6ad3cd",
+        "size_in_bytes": 2332
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sha256_in_prefix": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_in_bytes": 0
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/av/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sha256_in_prefix": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_in_bytes": 0
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/av/test_av_forex.py",
+        "path_type": "hardlink",
+        "sha256": "b0907f9208bcbbeafe59eeb8b5bff37f5e252ab097de6bebf093718b2723e4ca",
+        "sha256_in_prefix": "b0907f9208bcbbeafe59eeb8b5bff37f5e252ab097de6bebf093718b2723e4ca",
+        "size_in_bytes": 1593
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/av/test_av_quotes.py",
+        "path_type": "hardlink",
+        "sha256": "3f16c9f7dc6f78d64254ce9e9870536fc9e7559c37c054b217c120bdcb34239c",
+        "sha256_in_prefix": "3f16c9f7dc6f78d64254ce9e9870536fc9e7559c37c054b217c120bdcb34239c",
+        "size_in_bytes": 1105
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/av/test_av_sector.py",
+        "path_type": "hardlink",
+        "sha256": "9250eb542f6a6379baa641af158e1efadda20cabdcd8faa40c2345420ccdb662",
+        "sha256_in_prefix": "9250eb542f6a6379baa641af158e1efadda20cabdcd8faa40c2345420ccdb662",
+        "size_in_bytes": 876
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/av/test_av_time_series.py",
+        "path_type": "hardlink",
+        "sha256": "37b78634835692c754e5dd84936eed0b30acd33adebb694a6c2c1e6a61f4d822",
+        "sha256_in_prefix": "37b78634835692c754e5dd84936eed0b30acd33adebb694a6c2c1e6a61f4d822",
+        "size_in_bytes": 6032
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/io/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sha256_in_prefix": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_in_bytes": 0
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/io/test_jsdmx.py",
+        "path_type": "hardlink",
+        "sha256": "6b2bbd86d7a62d1bd38b8e5fa5a980ad0c45db2e33e78b8f30c4128ab55c327a",
+        "sha256_in_prefix": "6b2bbd86d7a62d1bd38b8e5fa5a980ad0c45db2e33e78b8f30c4128ab55c327a",
+        "size_in_bytes": 5029
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/io/test_sdmx.py",
+        "path_type": "hardlink",
+        "sha256": "8556fa2c4881f1afa0ea52dce0d85c72ace43b35c4ced1e6a027a581168a406d",
+        "sha256_in_prefix": "8556fa2c4881f1afa0ea52dce0d85c72ace43b35c4ced1e6a027a581168a406d",
+        "size_in_bytes": 1207
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_bankofcanada.py",
+        "path_type": "hardlink",
+        "sha256": "ac4d5e31a8c72c585714790d1a388dce9d9d46d334c858cb07cc6eea62b11c7d",
+        "sha256_in_prefix": "ac4d5e31a8c72c585714790d1a388dce9d9d46d334c858cb07cc6eea62b11c7d",
+        "size_in_bytes": 2550
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_base.py",
+        "path_type": "hardlink",
+        "sha256": "a557e32f12fb93b7667e08ffaf5b20609aaeef20ef242c596f04f7e5e51aac10",
+        "sha256_in_prefix": "a557e32f12fb93b7667e08ffaf5b20609aaeef20ef242c596f04f7e5e51aac10",
+        "size_in_bytes": 1163
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_data.py",
+        "path_type": "hardlink",
+        "sha256": "0410a9c14286eb21c63d41f3ada27e0443910392b1cef0b1329eff505e4f7751",
+        "sha256_in_prefix": "0410a9c14286eb21c63d41f3ada27e0443910392b1cef0b1329eff505e4f7751",
+        "size_in_bytes": 504
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_econdb.py",
+        "path_type": "hardlink",
+        "sha256": "4478a1fa70ebe525252b85f03dd62d67a4a2c5ae8656af3c694551913aadaa78",
+        "sha256_in_prefix": "4478a1fa70ebe525252b85f03dd62d67a4a2c5ae8656af3c694551913aadaa78",
+        "size_in_bytes": 3889
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_enigma.py",
+        "path_type": "hardlink",
+        "sha256": "d00a904cdd89e9a79ad727c75573e778f7443b84eadfdfce9e0d4b64ebeda01c",
+        "sha256_in_prefix": "d00a904cdd89e9a79ad727c75573e778f7443b84eadfdfce9e0d4b64ebeda01c",
+        "size_in_bytes": 1548
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_eurostat.py",
+        "path_type": "hardlink",
+        "sha256": "ea84343ee3d207c823e5a7131c6b7abaa4569fdd0e096579d8087f242777975b",
+        "sha256_in_prefix": "ea84343ee3d207c823e5a7131c6b7abaa4569fdd0e096579d8087f242777975b",
+        "size_in_bytes": 4579
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_famafrench.py",
+        "path_type": "hardlink",
+        "sha256": "96d210621cdd53af6ee6b2e535f1c0b399de45ee3cd6eb3dc7d7babd02c50e1b",
+        "sha256_in_prefix": "96d210621cdd53af6ee6b2e535f1c0b399de45ee3cd6eb3dc7d7babd02c50e1b",
+        "size_in_bytes": 5432
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_fred.py",
+        "path_type": "hardlink",
+        "sha256": "0911f31f33a0cb8ef981512c06a2c458455918a98fdd859604bdb8ea35aad29a",
+        "sha256_in_prefix": "0911f31f33a0cb8ef981512c06a2c458455918a98fdd859604bdb8ea35aad29a",
+        "size_in_bytes": 2734
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_iex.py",
+        "path_type": "hardlink",
+        "sha256": "2f0b0fa92df6f8984f87d7873c07475c17a9d33e18c707aea13e8ec06ab1ae1c",
+        "sha256_in_prefix": "2f0b0fa92df6f8984f87d7873c07475c17a9d33e18c707aea13e8ec06ab1ae1c",
+        "size_in_bytes": 1660
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_iex_daily.py",
+        "path_type": "hardlink",
+        "sha256": "e73997e5691a58a2af9f6c187d92ac37f5d9079b05ea7740a1569d009f870204",
+        "sha256_in_prefix": "e73997e5691a58a2af9f6c187d92ac37f5d9079b05ea7740a1569d009f870204",
+        "size_in_bytes": 3898
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_moex.py",
+        "path_type": "hardlink",
+        "sha256": "421a949aee8b98ec4010e42bcd02e843d986ae7aa10fb47e84d4b4c69703cfbb",
+        "sha256_in_prefix": "421a949aee8b98ec4010e42bcd02e843d986ae7aa10fb47e84d4b4c69703cfbb",
+        "size_in_bytes": 935
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_nasdaq.py",
+        "path_type": "hardlink",
+        "sha256": "e0e410c8924d76968a6f359a3731ab3b165a0c2f69304bd4ff66ca0b6c82b6bb",
+        "sha256_in_prefix": "e0e410c8924d76968a6f359a3731ab3b165a0c2f69304bd4ff66ca0b6c82b6bb",
+        "size_in_bytes": 351
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_naver.py",
+        "path_type": "hardlink",
+        "sha256": "c2dfe2a3b94a6f7cc5171594ef06e5dc47d5901bc3af9bed83fea1b8eec168dd",
+        "sha256_in_prefix": "c2dfe2a3b94a6f7cc5171594ef06e5dc47d5901bc3af9bed83fea1b8eec168dd",
+        "size_in_bytes": 786
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_oecd.py",
+        "path_type": "hardlink",
+        "sha256": "9352b32be3bd14d018d38e357b207f3beff0ba0d18a8bd9666276d442f35ca48",
+        "sha256_in_prefix": "9352b32be3bd14d018d38e357b207f3beff0ba0d18a8bd9666276d442f35ca48",
+        "size_in_bytes": 5798
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_quandl.py",
+        "path_type": "hardlink",
+        "sha256": "d87433fb72b79a6d4410bb13f0112de0254bddbfc37c97d4e7f77ce7f922f88d",
+        "sha256_in_prefix": "d87433fb72b79a6d4410bb13f0112de0254bddbfc37c97d4e7f77ce7f922f88d",
+        "size_in_bytes": 5765
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_stooq.py",
+        "path_type": "hardlink",
+        "sha256": "228c420ad88c8cf65f1e6eda601ee77337afe8224ab90d9996575b4f171e793d",
+        "sha256_in_prefix": "228c420ad88c8cf65f1e6eda601ee77337afe8224ab90d9996575b4f171e793d",
+        "size_in_bytes": 911
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_tiingo.py",
+        "path_type": "hardlink",
+        "sha256": "77a7d412dfcf685696fc02c325e125c6a8fc52892b2f5fb964626445c786ccc5",
+        "sha256_in_prefix": "77a7d412dfcf685696fc02c325e125c6a8fc52892b2f5fb964626445c786ccc5",
+        "size_in_bytes": 2307
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_tsp.py",
+        "path_type": "hardlink",
+        "sha256": "3fd2fa615c4a757e56b3860c8ddf1402efffcd772e4b026fb89d1dd7f9d5bf9e",
+        "sha256_in_prefix": "3fd2fa615c4a757e56b3860c8ddf1402efffcd772e4b026fb89d1dd7f9d5bf9e",
+        "size_in_bytes": 926
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_utils.py",
+        "path_type": "hardlink",
+        "sha256": "4b590e7f4248ac715fe7f663d20c7eee5249017e8aab9e43990784e324d79cbc",
+        "sha256_in_prefix": "4b590e7f4248ac715fe7f663d20c7eee5249017e8aab9e43990784e324d79cbc",
+        "size_in_bytes": 1512
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/test_wb.py",
+        "path_type": "hardlink",
+        "sha256": "a64fda1031bbc339b1fe0e330dac5dac83407e55b14b93b9b7d1419504b626a3",
+        "sha256_in_prefix": "a64fda1031bbc339b1fe0e330dac5dac83407e55b14b93b9b7d1419504b626a3",
+        "size_in_bytes": 12163
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/yahoo/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sha256_in_prefix": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_in_bytes": 0
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/yahoo/test_options.py",
+        "path_type": "hardlink",
+        "sha256": "2948e3e1bfdc006ca50ef651faba0f85b3f591915dd657ee2eed30ea22be5dc3",
+        "sha256_in_prefix": "2948e3e1bfdc006ca50ef651faba0f85b3f591915dd657ee2eed30ea22be5dc3",
+        "size_in_bytes": 6269
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tests/yahoo/test_yahoo.py",
+        "path_type": "hardlink",
+        "sha256": "c00a66d39434c785efb0da0194f58897a466841c9ed9a4331dfe6b740cd1ecc5",
+        "sha256_in_prefix": "c00a66d39434c785efb0da0194f58897a466841c9ed9a4331dfe6b740cd1ecc5",
+        "size_in_bytes": 12363
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tiingo.py",
+        "path_type": "hardlink",
+        "sha256": "c8e1cf2ab2873e140057dbc06778d9c567080d7d49de98f3a204b8a7a3535e2f",
+        "sha256_in_prefix": "c8e1cf2ab2873e140057dbc06778d9c567080d7d49de98f3a204b8a7a3535e2f",
+        "size_in_bytes": 9948
+      },
+      {
+        "_path": "site-packages/pandas_datareader/tsp.py",
+        "path_type": "hardlink",
+        "sha256": "e6d565e42bf8a48f2198c67f008ba693b9bc22bdb5e37ab2c5c7c970dcb8228a",
+        "sha256_in_prefix": "e6d565e42bf8a48f2198c67f008ba693b9bc22bdb5e37ab2c5c7c970dcb8228a",
+        "size_in_bytes": 2822
+      },
+      {
+        "_path": "site-packages/pandas_datareader/wb.py",
+        "path_type": "hardlink",
+        "sha256": "17a6c2a75af5c5bb932c4417077729c36b7dbd0b0e53c8672d8092f8f014c8f2",
+        "sha256_in_prefix": "17a6c2a75af5c5bb932c4417077729c36b7dbd0b0e53c8672d8092f8f014c8f2",
+        "size_in_bytes": 18776
+      },
+      {
+        "_path": "site-packages/pandas_datareader/yahoo/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sha256_in_prefix": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_in_bytes": 0
+      },
+      {
+        "_path": "site-packages/pandas_datareader/yahoo/actions.py",
+        "path_type": "hardlink",
+        "sha256": "f7101791c4cc15afec0dcaae39bae579c8ca1755e2115a3a8db09097acd427bb",
+        "sha256_in_prefix": "f7101791c4cc15afec0dcaae39bae579c8ca1755e2115a3a8db09097acd427bb",
+        "size_in_bytes": 1996
+      },
+      {
+        "_path": "site-packages/pandas_datareader/yahoo/components.py",
+        "path_type": "hardlink",
+        "sha256": "b98ba9b529cb11276dada98a95aa0cd05e548533c53f9f4fdf68ea67215cc84f",
+        "sha256_in_prefix": "b98ba9b529cb11276dada98a95aa0cd05e548533c53f9f4fdf68ea67215cc84f",
+        "size_in_bytes": 1843
+      },
+      {
+        "_path": "site-packages/pandas_datareader/yahoo/daily.py",
+        "path_type": "hardlink",
+        "sha256": "49d2dc4eb09ac4a59512e497d7a8872ac4f65acfa1326b822ef663b5ef2637fa",
+        "sha256_in_prefix": "49d2dc4eb09ac4a59512e497d7a8872ac4f65acfa1326b822ef663b5ef2637fa",
+        "size_in_bytes": 9337
+      },
+      {
+        "_path": "site-packages/pandas_datareader/yahoo/fx.py",
+        "path_type": "hardlink",
+        "sha256": "17c23276dcd5bd42ee6f5c460b50a5ff87da67d27f73d0828ec2ef7cb985959e",
+        "sha256_in_prefix": "17c23276dcd5bd42ee6f5c460b50a5ff87da67d27f73d0828ec2ef7cb985959e",
+        "size_in_bytes": 4181
+      },
+      {
+        "_path": "site-packages/pandas_datareader/yahoo/headers.py",
+        "path_type": "hardlink",
+        "sha256": "e703f34dbba0fc670f23a7302768ec00328d4791eee6358cf3263770344905ba",
+        "sha256_in_prefix": "e703f34dbba0fc670f23a7302768ec00328d4791eee6358cf3263770344905ba",
+        "size_in_bytes": 327
+      },
+      {
+        "_path": "site-packages/pandas_datareader/yahoo/options.py",
+        "path_type": "hardlink",
+        "sha256": "68c77ccca8ad5eb701773f8f0fbb049fb62e9189e40afed00889496bd1c4d15a",
+        "sha256_in_prefix": "68c77ccca8ad5eb701773f8f0fbb049fb62e9189e40afed00889496bd1c4d15a",
+        "size_in_bytes": 31631
+      },
+      {
+        "_path": "site-packages/pandas_datareader/yahoo/quotes.py",
+        "path_type": "hardlink",
+        "sha256": "eb96b8a8873b6f8eceb3d112baba9f744889ffc689bd9853187f7d953704a3b5",
+        "sha256_in_prefix": "eb96b8a8873b6f8eceb3d112baba9f744889ffc689bd9853187f7d953704a3b5",
+        "size_in_bytes": 1893
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/_testing.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/_utils.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/_version.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/av/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/av/__pycache__/forex.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/av/__pycache__/quotes.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/av/__pycache__/sector.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/av/__pycache__/time_series.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/bankofcanada.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/base.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/compat/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/conftest.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/data.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/econdb.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/enigma.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/eurostat.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/exceptions.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/famafrench.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/fred.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/daily.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/deep.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/market.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/ref.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/stats.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/iex/__pycache__/tops.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/io/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/io/__pycache__/jsdmx.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/io/__pycache__/sdmx.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/io/__pycache__/util.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/moex.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/nasdaq_trader.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/naver.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/oecd.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/quandl.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/stooq.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/av/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/av/__pycache__/test_av_forex.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/av/__pycache__/test_av_quotes.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/av/__pycache__/test_av_sector.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/av/__pycache__/test_av_time_series.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/io/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/io/__pycache__/test_jsdmx.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/io/__pycache__/test_sdmx.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_bankofcanada.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_base.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_data.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_econdb.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_enigma.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_eurostat.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_famafrench.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_fred.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_iex.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_iex_daily.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_moex.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_nasdaq.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_naver.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_oecd.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_quandl.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_stooq.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_tiingo.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_tsp.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_utils.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/__pycache__/test_wb.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/yahoo/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/yahoo/__pycache__/test_options.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/tests/yahoo/__pycache__/test_yahoo.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/tiingo.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/tsp.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/__pycache__/wb.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/actions.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/components.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/daily.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/fx.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/headers.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/options.cpython-311.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "lib/python3.11/site-packages/pandas_datareader/yahoo/__pycache__/quotes.cpython-311.pyc",
+        "path_type": "pyc_file"
+      }
+    ],
+    "paths_version": 1
+  },
+  "requested_spec": "pandas-datareader",
+  "sha256": "02221d745ef4f7c57d03c4b803e5d46800ac7bcdcfe91f37f2c11ae000a7cae3",
+  "size": 72440,
+  "subdir": "noarch",
+  "timestamp": 1626254302000,
+  "url": "https://conda.anaconda.org/conda-forge/noarch/pandas-datareader-0.10.0-pyh6c4a22f_0.tar.bz2",
+  "version": "0.10.0"
+}

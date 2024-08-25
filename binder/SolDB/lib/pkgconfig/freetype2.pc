@@ -1,0 +1,14 @@
+prefix=/opt/homebrew/Caskroom/miniconda/base/envs/SolDB
+exec_prefix=/opt/homebrew/Caskroom/miniconda/base/envs/SolDB
+libdir=/opt/homebrew/Caskroom/miniconda/base/envs/SolDB/lib
+includedir=/opt/homebrew/Caskroom/miniconda/base/envs/SolDB/include
+
+Name: FreeType 2
+URL: https://freetype.org
+Description: A free, high-quality, and portable font engine.
+Version: 24.3.18
+Requires: 
+Requires.private: 
+Libs: -L/opt/homebrew/Caskroom/miniconda/base/envs/SolDB/lib -lfreetype
+Libs.private: -lz -L/opt/homebrew/Caskroom/miniconda/base/envs/SolDB/lib -lpng16 -lz
+Cflags: -I${includedir}/freetype2

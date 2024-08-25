@@ -1,0 +1,41 @@
+{
+  "build": "h27ca646_1001",
+  "build_number": 1001,
+  "channel": "https://conda.anaconda.org/conda-forge/osx-arm64",
+  "constrains": [],
+  "depends": [],
+  "extracted_package_dir": "/opt/homebrew/Caskroom/miniconda/base/pkgs/pthread-stubs-0.4-h27ca646_1001",
+  "files": [
+    "lib/pkgconfig/pthread-stubs.pc"
+  ],
+  "fn": "pthread-stubs-0.4-h27ca646_1001.tar.bz2",
+  "license": "MIT",
+  "link": {
+    "source": "/opt/homebrew/Caskroom/miniconda/base/pkgs/pthread-stubs-0.4-h27ca646_1001",
+    "type": 1
+  },
+  "md5": "d3f26c6494d4105d4ecb85203d687102",
+  "name": "pthread-stubs",
+  "package_tarball_full_path": "/opt/homebrew/Caskroom/miniconda/base/pkgs/pthread-stubs-0.4-h27ca646_1001.tar.bz2",
+  "paths_data": {
+    "paths": [
+      {
+        "_path": "lib/pkgconfig/pthread-stubs.pc",
+        "file_mode": "text",
+        "path_type": "hardlink",
+        "prefix_placeholder": "/Users/runner/miniforge3/conda-bld/pthread-stubs_1606147512774/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_place",
+        "sha256": "876334443961491f838a83f81f019e54ef99de5f3251ce8aeb31b40bbc2aeb06",
+        "sha256_in_prefix": "8a720fa37d467ca1315a90c49daf04f8231bd7bf4b0864f52ca4e1caeffcb116",
+        "size_in_bytes": 490
+      }
+    ],
+    "paths_version": 1
+  },
+  "requested_spec": "None",
+  "sha256": "9da9e6f5d51dff6ad2e4ee0874791437ba952e0a6249942273f0fedfd07ea826",
+  "size": 5696,
+  "subdir": "osx-arm64",
+  "timestamp": 1606147608000,
+  "url": "https://conda.anaconda.org/conda-forge/osx-arm64/pthread-stubs-0.4-h27ca646_1001.tar.bz2",
+  "version": "0.4"
+}

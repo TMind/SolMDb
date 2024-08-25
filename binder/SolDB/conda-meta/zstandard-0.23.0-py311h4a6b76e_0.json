@@ -1,0 +1,143 @@
+{
+  "build": "py311h4a6b76e_0",
+  "build_number": 0,
+  "channel": "https://conda.anaconda.org/conda-forge/osx-arm64",
+  "constrains": [],
+  "depends": [
+    "__osx >=11.0",
+    "cffi >=1.11",
+    "python >=3.11,<3.12.0a0",
+    "python >=3.11,<3.12.0a0 *_cpython",
+    "python_abi 3.11.* *_cp311",
+    "zstd >=1.5.6,<1.5.7.0a0",
+    "zstd >=1.5.6,<1.6.0a0"
+  ],
+  "extracted_package_dir": "/opt/homebrew/Caskroom/miniconda/base/pkgs/zstandard-0.23.0-py311h4a6b76e_0",
+  "files": [
+    "lib/python3.11/site-packages/zstandard-0.23.0-py3.11.egg-info/PKG-INFO",
+    "lib/python3.11/site-packages/zstandard-0.23.0-py3.11.egg-info/SOURCES.txt",
+    "lib/python3.11/site-packages/zstandard-0.23.0-py3.11.egg-info/dependency_links.txt",
+    "lib/python3.11/site-packages/zstandard-0.23.0-py3.11.egg-info/requires.txt",
+    "lib/python3.11/site-packages/zstandard-0.23.0-py3.11.egg-info/top_level.txt",
+    "lib/python3.11/site-packages/zstandard/__init__.py",
+    "lib/python3.11/site-packages/zstandard/__init__.pyi",
+    "lib/python3.11/site-packages/zstandard/__pycache__/__init__.cpython-311.pyc",
+    "lib/python3.11/site-packages/zstandard/__pycache__/backend_cffi.cpython-311.pyc",
+    "lib/python3.11/site-packages/zstandard/_cffi.cpython-311-darwin.so",
+    "lib/python3.11/site-packages/zstandard/backend_c.cpython-311-darwin.so",
+    "lib/python3.11/site-packages/zstandard/backend_cffi.py",
+    "lib/python3.11/site-packages/zstandard/py.typed"
+  ],
+  "fn": "zstandard-0.23.0-py311h4a6b76e_0.conda",
+  "license": "BSD-3-Clause",
+  "link": {
+    "source": "/opt/homebrew/Caskroom/miniconda/base/pkgs/zstandard-0.23.0-py311h4a6b76e_0",
+    "type": 1
+  },
+  "md5": "0571c2ddfd8f08fbf08f3333ac826b2d",
+  "name": "zstandard",
+  "package_tarball_full_path": "/opt/homebrew/Caskroom/miniconda/base/pkgs/zstandard-0.23.0-py311h4a6b76e_0.conda",
+  "paths_data": {
+    "paths": [
+      {
+        "_path": "lib/python3.11/site-packages/zstandard-0.23.0-py3.11.egg-info/PKG-INFO",
+        "path_type": "hardlink",
+        "sha256": "4ba55fc2d54b750cd752a2b087aedcf205d1e08cc77fa54c9b8a9ccde9ce79c4",
+        "sha256_in_prefix": "4ba55fc2d54b750cd752a2b087aedcf205d1e08cc77fa54c9b8a9ccde9ce79c4",
+        "size_in_bytes": 2956
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard-0.23.0-py3.11.egg-info/SOURCES.txt",
+        "path_type": "hardlink",
+        "sha256": "2902c4078db8dc1081804d32ed07d8472efcde5971844f7a10624f60a8224299",
+        "sha256_in_prefix": "2902c4078db8dc1081804d32ed07d8472efcde5971844f7a10624f60a8224299",
+        "size_in_bytes": 2739
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard-0.23.0-py3.11.egg-info/dependency_links.txt",
+        "path_type": "hardlink",
+        "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        "sha256_in_prefix": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        "size_in_bytes": 1
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard-0.23.0-py3.11.egg-info/requires.txt",
+        "path_type": "hardlink",
+        "sha256": "11409f2a84863ef7a7294f76de5f540c867eb619e0070540b5f1213827a5f87b",
+        "sha256_in_prefix": "11409f2a84863ef7a7294f76de5f540c867eb619e0070540b5f1213827a5f87b",
+        "size_in_bytes": 75
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard-0.23.0-py3.11.egg-info/top_level.txt",
+        "path_type": "hardlink",
+        "sha256": "27ec23f78a4f69d6388a915a6a7ad8065acc6e53927a01184bca3f2dda20ae95",
+        "sha256_in_prefix": "27ec23f78a4f69d6388a915a6a7ad8065acc6e53927a01184bca3f2dda20ae95",
+        "size_in_bytes": 10
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard/__init__.py",
+        "path_type": "hardlink",
+        "sha256": "c7debceb9c9bc6fef625ee1958501e841ce46db5dc696858b2aeb764036b8164",
+        "sha256_in_prefix": "c7debceb9c9bc6fef625ee1958501e841ce46db5dc696858b2aeb764036b8164",
+        "size_in_bytes": 7102
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard/__init__.pyi",
+        "path_type": "hardlink",
+        "sha256": "92f3fa52cf483d7e12b1f839070684dff13bbae135633554a3d853cd851c3470",
+        "sha256_in_prefix": "92f3fa52cf483d7e12b1f839070684dff13bbae135633554a3d853cd851c3470",
+        "size_in_bytes": 13938
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard/__pycache__/__init__.cpython-311.pyc",
+        "path_type": "hardlink",
+        "sha256": "fb50a8d65725fd17f96671a1632c057607e8302e56598b31c7378bf705c33c5c",
+        "sha256_in_prefix": "fb50a8d65725fd17f96671a1632c057607e8302e56598b31c7378bf705c33c5c",
+        "size_in_bytes": 6815
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard/__pycache__/backend_cffi.cpython-311.pyc",
+        "path_type": "hardlink",
+        "sha256": "3264d3d4cfe7e9516728c260c8261da7d0ceb1c4dcc8d6dd778adb03eca032d5",
+        "sha256_in_prefix": "3264d3d4cfe7e9516728c260c8261da7d0ceb1c4dcc8d6dd778adb03eca032d5",
+        "size_in_bytes": 179131
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard/_cffi.cpython-311-darwin.so",
+        "path_type": "hardlink",
+        "sha256": "5e2d320e599da64a481f07e74882c72783659861f09ffa154b915e042f6909f5",
+        "sha256_in_prefix": "5e2d320e599da64a481f07e74882c72783659861f09ffa154b915e042f6909f5",
+        "size_in_bytes": 742784
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard/backend_c.cpython-311-darwin.so",
+        "path_type": "hardlink",
+        "sha256": "4652a27ec437d84c79a71181bd6e3e019b115bc3814a23fd4b086ec54b337104",
+        "sha256_in_prefix": "4652a27ec437d84c79a71181bd6e3e019b115bc3814a23fd4b086ec54b337104",
+        "size_in_bytes": 127936
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard/backend_cffi.py",
+        "path_type": "hardlink",
+        "sha256": "db6751fcd4fcc5bd283a2b94e414bb6250c11269669d47c42b94719744cd4e29",
+        "sha256_in_prefix": "db6751fcd4fcc5bd283a2b94e414bb6250c11269669d47c42b94719744cd4e29",
+        "size_in_bytes": 152504
+      },
+      {
+        "_path": "lib/python3.11/site-packages/zstandard/py.typed",
+        "path_type": "hardlink",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sha256_in_prefix": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_in_bytes": 0
+      }
+    ],
+    "paths_version": 1
+  },
+  "requested_spec": "None",
+  "sha256": "c372898778c58816cf8ad0031504ffb9a451d92c8547e2e524e6e61c1df5d9a3",
+  "size": 332378,
+  "subdir": "osx-arm64",
+  "timestamp": 1721044254000,
+  "url": "https://conda.anaconda.org/conda-forge/osx-arm64/zstandard-0.23.0-py311h4a6b76e_0.conda",
+  "version": "0.23.0"
+}

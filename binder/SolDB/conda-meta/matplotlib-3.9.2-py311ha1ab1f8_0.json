@@ -1,0 +1,34 @@
+{
+  "build": "py311ha1ab1f8_0",
+  "build_number": 0,
+  "channel": "https://conda.anaconda.org/conda-forge/osx-arm64",
+  "constrains": [],
+  "depends": [
+    "matplotlib-base >=3.9.2,<3.9.3.0a0",
+    "python >=3.11,<3.12.0a0",
+    "python_abi 3.11.* *_cp311",
+    "tornado >=5"
+  ],
+  "extracted_package_dir": "/opt/homebrew/Caskroom/miniconda/base/pkgs/matplotlib-3.9.2-py311ha1ab1f8_0",
+  "files": [],
+  "fn": "matplotlib-3.9.2-py311ha1ab1f8_0.conda",
+  "license": "PSF-2.0",
+  "link": {
+    "source": "/opt/homebrew/Caskroom/miniconda/base/pkgs/matplotlib-3.9.2-py311ha1ab1f8_0",
+    "type": 1
+  },
+  "md5": "83bc1e0bd28024ac8b68cab2302b9962",
+  "name": "matplotlib",
+  "package_tarball_full_path": "/opt/homebrew/Caskroom/miniconda/base/pkgs/matplotlib-3.9.2-py311ha1ab1f8_0.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "matplotlib",
+  "sha256": "92a44ed20c3519d9fce28484e574a7d5fc268da77cfa1f904df1329847b1cc39",
+  "size": 8844,
+  "subdir": "osx-arm64",
+  "timestamp": 1723759826000,
+  "url": "https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-3.9.2-py311ha1ab1f8_0.conda",
+  "version": "3.9.2"
+}

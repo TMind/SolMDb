@@ -1,0 +1,192 @@
+Metadata-Version: 2.1
+Name: qgridnext
+Version: 2.0.0rc0
+Summary: An Interactive Grid for Sorting and Filtering DataFrames in Jupyter
+Home-page: https://github.com/zhihanyue/qgridnext
+Author: QgridNext
+License: Apache-2.0
+Keywords: ipython,jupyter,widgets
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Office/Business :: Financial
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Topic :: Multimedia :: Graphics
+Classifier: Framework :: Jupyter
+Classifier: Framework :: Jupyter :: JupyterLab
+Classifier: Framework :: Jupyter :: JupyterLab :: 4
+Classifier: Framework :: Jupyter :: JupyterLab :: Extensions
+Classifier: Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pandas (>=0.20.0)
+Requires-Dist: ipywidgets (>=7.0.0)
+Requires-Dist: numpy (<2)
+Requires-Dist: traitlets (<6)
+Provides-Extra: test
+Requires-Dist: pytest (>=2.8.5) ; extra == 'test'
+Requires-Dist: flake8 (>=3.6.0) ; extra == 'test'
+
+<h1 align="center">
+  <img width="230px" src="https://raw.githubusercontent.com/zhihanyue/QgridNext/main/docs/_static/qgridnext_logo.png">
+</h1>
+<div align="center">
+
+[Documentation](https://qgridnext.readthedocs.io) | [Demos](https://github.com/zhihanyue/qgridnext-demos) | [Presentation](https://www.youtube.com/watch?v=AsJJpgwIX0Q) | [Changelog](https://qgridnext.readthedocs.io/en/latest/changelog.html)
+
+</div>
+
+<br>
+
+## Under active testing and will be released soon.
+
+Qgrid is a Jupyter widget which uses [SlickGrid](https://github.com/mleibman/SlickGrid) to render pandas DataFrames within JupyterLab/Notebook. This allows you to explore your DataFrames with intuitive scrolling, sorting, and filtering controls, as well as edit your DataFrames by double clicking cells. Qgrid was developed by Quantopian and [its repo](https://github.com/quantopian/qgrid) has stopped maintenance in 2020. QgridNext aims to continue maintaining and improving it for future Jupyter versions.
+
+
+## Compatibility
+
+QgridNext works with the recent versions of Jupyter:
+
+| QgridNext |  JupyterLab  | Notebook |    Voila    |
+|:---------:|:------------:|:--------:|:-----------:|
+|  v2.0.0   |   v3 - v4    | v5 - v7  | v0.2 - v0.5 |
+
+The test environments are provided in [test_envs](https://github.com/zhihanyue/QgridNext/tree/main/test_envs) folder. You can try the widget in these environments easily.
+
+
+## QgridNext V2.0.0
+
+The first release (v2.0.0) greatly improves compatibility and fixes bugs in Qgrid v1.3.1.
+* Support for JupyterLab 4;
+* Release as a prebuilt extension (now can be installed with one step);
+* UI improvements:
+  * Fix infinitely expanding width of the container in voila <= 0.3;
+  * Prevent unexpected scrolling when clicking rows in Chrome for JupyterLab;
+  * Adapt canvas size when the sidebar width changes in JupyterLab;
+  * Fix poorly displayed left/right button of date picker;
+  * Correct text color in dark mode;
+  * Standardize HTML tags to fix poorly displayed filters;
+* Building bug fixes:
+  * Fix inconsistent pkg name for embeddable qgrid bundle;
+  * Fix data_files finding that results in incomplete extension setup;
+  * Fix building errors for Node >= 18;
+* Others:
+  * Fix: Defaults.grid_option dict instance is shared across widget instances;
+  * Remove full screen mode for voila compatibility;
+  * Remove deprecated QGridWidget alias, only QgridWidget is allowed;
+  * Replace deprecated usages for traitlets, pandas and jquery;
+
+## Installation
+
+Installing with pip:
+
+```bash
+pip install qgridnext
+```
+
+
+### Requirements
+
+QgridNext supports Python 3.7+ and depends on the following packages:
+
+* [pandas](https://github.com/pandas-dev/pandas) >= 0.20
+* [ipywidgets](https://github.com/jupyter-widgets/ipywidgets) >= 7
+* [numpy](https://github.com/numpy/numpy)
+* [traitlets](https://github.com/ipython/traitlets)
+
+
+## Usage
+
+### Exploring Dataframes
+
+**Basic usage:**
+```py
+from qgrid import show_grid
+show_grid(your_df)
+```
+
+Qgrid displays multi-indexed DataFrames with some of the index cells merged for readability.
+
+
+**Column-specific options:** Qgrid have the ability to set a number of options on a per column basis. This allows you to do things like explicitly specify which column should be sortable, editable, etc. For example, if you wanted to prevent editing on all columns except for a column named 'A', you could do the following:
+
+```py
+col_opts = { 'editable': False }
+col_defs = { 'A': { 'editable': True } }
+show_grid(df, column_options=col_opts, column_definitions=col_defs)
+```
+
+**Row-specific options:** Disable editing on a per-row basis is the only row-specific option that Qgrid supports. This allows users to specify whether or not a particular row should be editable. For example, to make it so only rows in the grid where the 'status' column is set to 'active' are editable, you might use the following code:
+
+```py
+def can_edit_row(row):
+    return row['status'] == 'active'
+show_grid(df, row_edit_callback=can_edit_row)
+```
+
+**Updating an existing Qgrid widget**: The state of an existing Qgrid widget can be updated with APIs such as [edit_cell](https://qgridnext.readthedocs.io/en/latest/api.html#qgrid.QgridWidget.edit_cell), [change_selection](https://qgridnext.readthedocs.io/en/latest/api.html#qgrid.QgridWidget.change_selection), [toggle_editable](https://qgridnext.readthedocs.io/en/latest/api.html#qgrid.QgridWidget.toggle_editable), and [change_grid_option](https://qgridnext.readthedocs.io/en/latest/api.html#qgrid.QgridWidget.change_grid_option).
+
+
+### Event API
+
+There are `on` and `off` methods in Qgrid which can be used to attach/detach event handlers. They're available on both the `qgrid` module (see [qgrid.on](https://qgridnext.readthedocs.io/en/latest/api.html#qgrid.on)), and on individual QgridWidget instances (see [qgrid.QgridWidget.on](https://qgridnext.readthedocs.io/en/latest/api.html#qgrid.QgridWidget.on)).
+
+Example:
+```py
+def handle_json_updated(event, qgrid_widget):
+    # exclude 'viewport_changed' events since that doesn't change the DataFrame
+    if (event['triggered_by'] != 'viewport_changed'):
+        print(qgrid_widget.get_changed_df())
+
+# qgrid_widget = show_grid(...)
+qgrid_widget.on('json_updated', handle_json_updated)
+```
+
+Alternatively, you can also use the traditional `observe` method, which is not recommended because `on` have more granular control over which events you do and don't listen to.
+```py
+def handle_df_change(change):
+    print(change['new'])
+
+qgrid_widget.observe(handle_df_change, names=['_df'])
+```
+
+Having the ability to attach event handlers allows us to do some interesting things in terms of using qgrid in conjunction with other widgets/visualizations. One example is using qgrid to filter a DataFrame that's also being displayed by another visualization.
+
+See the [events notebook](https://github.com/zhihanyue/qgridnext-demos/blob/master/events.ipynb) for more examples of using these new API methods.
+
+
+
+## Troubleshoot
+
+If you are not seeing the extension, check the extension is installed and enabled:
+
+```bash
+jupyter lab extension list
+```
+
+## Testing
+
+Multiple test environments are provided in [test_envs](https://github.com/zhihanyue/QgridNext/tree/main/test_envs). You can perform simple tests by pytest, or manually test it in your browser.
+
+## Development install
+
+Note: You will need JupyterLab 4 and NodeJS to build the extension package.
+
+```bash
+git clone https://github.com/zhihanyue/QgridNext
+cd QgridNext
+pip install -e .  # Install package in development mode
+jupyter labextension develop . --overwrite  # Link your development version of the extension with JupyterLab
+
+# Rebuild extension JS source after making changes
+npm --prefix ./js
+```
+## Contributing
+
+All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. 

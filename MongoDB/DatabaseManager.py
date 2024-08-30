@@ -27,6 +27,8 @@ class DatabaseManager:
 
     def __new__(cls, db_name = None, host='localhost', port=27017, uri=None, force_new=False):  
         if cls._credentials is None:  
+            from GlobalVariables import global_vars
+            uri = uri or global_vars.uri
             cls._credentials = {'host': host, 'port': port, 'uri': uri}  
   
         if db_name is None:  

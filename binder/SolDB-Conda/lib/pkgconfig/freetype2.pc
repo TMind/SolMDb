@@ -1,0 +1,14 @@
+prefix=/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda
+exec_prefix=/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda
+libdir=/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda/lib
+includedir=/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda/include
+
+Name: FreeType 2
+URL: https://freetype.org
+Description: A free, high-quality, and portable font engine.
+Version: 24.3.18
+Requires: 
+Requires.private: 
+Libs: -L/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda/lib -lfreetype
+Libs.private: -lz -L/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda/lib -lpng16 -lz
+Cflags: -I${includedir}/freetype2

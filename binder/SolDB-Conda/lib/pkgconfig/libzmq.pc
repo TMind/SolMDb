@@ -1,0 +1,12 @@
+prefix=/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libzmq
+Description: 0MQ c++ library
+Version: 4.3.5
+Libs: -L${libdir} -lzmq
+Libs.private: -lstdc++  -lpthread
+Requires.private:  krb5-gssapi libsodium
+Cflags: -I${includedir} -DZMQ_BUILD_DRAFT_API=1

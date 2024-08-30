@@ -1,0 +1,10 @@
+prefix=/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda
+exec_prefix=/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda
+libdir=/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda/lib
+includedir=/Users/kaikaesinger/Desktop/Code/SolMDb/binder/SolDB-Conda/include
+
+Name: libjpeg
+Description: A SIMD-accelerated JPEG codec that provides the libjpeg API
+Version: 3.0.0
+Libs: -L${libdir} -ljpeg
+Cflags: -I${includedir}

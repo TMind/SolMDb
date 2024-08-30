@@ -1,34 +1,23 @@
-import importlib
+import importlib, os
 from MongoDB.MongoDB import MongoDB
 import pymongo
 import pymongo.errors
 from dataclasses import dataclass, fields, asdict
 from typing import Any, Dict
-from time import sleep
-
 class DatabaseManager:
     _instances = {}
     _credentials = None
 
-    # New method to check MongoDB availability  
-    @staticmethod  
-    def check_mongo_availability(host='localhost', port=27017, uri=None):  
-        try:  
-            if uri:  
-                client = pymongo.MongoClient(uri)  
-            else:  
-                client = pymongo.MongoClient(host, port)  
-            client.admin.command('ping')  
-            #print("MongoDB is available")  
-            return True  
-        except pymongo.errors.ConnectionFailure as e:  
-            print(f"MongoDB is not available: {e}")  
-            return False  
-
     def __new__(cls, db_name = None, host='localhost', port=27017, uri=None, force_new=False):  
         if cls._credentials is None:  
-            from GlobalVariables import global_vars
-            uri = uri or global_vars.uri
+            # Load from environment variables if not provided
+            if host is None:
+                host = os.getenv('MONGO_HOST', 'localhost')
+            if port is None:
+                port = int(os.getenv('MONGO_PORT', 27017))
+            if uri is None:
+                uri = os.getenv('MONGO_URI')
+                
             cls._credentials = {'host': host, 'port': port, 'uri': uri}  
   
         if db_name is None:  
@@ -40,16 +29,10 @@ class DatabaseManager:
             host, port, uri = cls._credentials.values()  
             if force_new:  
                 new_instance = super().__new__(cls)  
-                while not cls.check_mongo_availability(host, port, uri):  
-                    print("MongoDB ist nicht verfügbar. Warte...")  
-                    sleep(1)  
                 new_instance.mdb = MongoDB(db_name, host, port, uri)  
                 return new_instance  
             else:  
                 cls._instances[db_name] = super().__new__(cls)  
-                while not cls.check_mongo_availability(host, port, uri):  
-                    print("MongoDB ist nicht verfügbar. Warte...")  
-                    sleep(1)  
                 cls._instances[db_name].mdb = MongoDB(db_name, host, port, uri)  
           
         return cls._instances[db_name]  
@@ -77,6 +60,30 @@ class DatabaseManager:
         #print(f"Getting record by name: {name} from db - collection: {self.get_current_db_name()} - {collection_name}")
         return self.find_one(collection_name, {'name': name})
 
+class BufferManager:  
+        
+    def __init__(self, uri):  
+        self.uri = uri
+        self.buffers = {}  
+  
+    def add_to_buffer(self, database_name, collection_name, identifier, data_to_save):  
+        # Use a tuple of database and collection names as the key  
+        buffer_key = (database_name, collection_name)  
+          
+        if buffer_key not in self.buffers:  
+            self.buffers[buffer_key] = []  
+          
+        operation = pymongo.UpdateOne(identifier, {'$set': data_to_save}, upsert=True)  
+        self.buffers[buffer_key].append(operation)  
+  
+    def write_buffers(self):  
+        for (database_name, collection_name), operations in self.buffers.items():  
+            if operations:  
+                # Get the appropriate DatabaseManager
+                db = DatabaseManager(database_name, uri=self.uri)
+                db.bulk_write(collection_name, operations)                
+                self.buffers[(database_name, collection_name)] = []  # Clear the buffer after writing  
+
 class DatabaseObject:
     _db_manager = None
 
@@ -88,10 +95,8 @@ class DatabaseObject:
             if data_class.__name__ in ['EntityData', 'ForgebornData', 'InterfaceData','SynergyData']:
                 self.db_name = 'common'
             else:
-                from GlobalVariables import global_vars
-                if global_vars.username: 
-                    self.db_name = global_vars.username 
-                else:
+                self.db_name = os.getenv('SFF_USERNAME', None)
+                if self.db_name is None:
                     self.db_name ='user_specific'
                     raise ValueError("Database name not set. Call set_database_name first.")
             
@@ -115,15 +120,14 @@ class DatabaseObject:
         if data_class.__name__ in ['EntityData', 'ForgebornData', 'InterfaceData', 'SynergyData']:
             self.db_name = 'common'
         else:
-            from GlobalVariables import global_vars
-            if global_vars.username: 
-                self.db_name = global_vars.username 
-            else:
+            self.db_name = os.getenv('SFF_USERNAME', None)
+            
+            if self.db_name is None:
                 self.db_name ='user_specific'
                 raise ValueError("DatabaseObject:init() Database name not set. Set username first.")
+            
         if self.db_manager:
-                from GlobalVariables import global_vars                
-                self.db_manager.set_database_name(self.db_name, uri=global_vars.uri)
+                self.db_manager.set_database_name(self.db_name)
 
     def get_data_class(self):
         if self.__class__.DataClass is None:
@@ -135,15 +139,13 @@ class DatabaseObject:
 
     @classmethod
     def _get_class_db_manager(cls):
-        from GlobalVariables import global_vars
-        db_name = 'common' if cls.__name__ in ['Entity', 'Forgeborn', 'Interface', 'Synergy'] else global_vars.username
+        username = os.getenv('SFF_USERNAME', None)
+        db_name = 'common' if cls.__name__ in ['Entity', 'Forgeborn', 'Interface', 'Synergy'] else username
         return DatabaseManager(db_name)
 
 
     @classmethod
     def from_data(cls, data: Dict[str, Any]):
-        if not isinstance(data, dict):
-            raise TypeError("data must be a dict")
         
         # Get DataClass and get the fields from the dataclass
         dataclass = cls(None).get_data_class()
@@ -207,9 +209,7 @@ class DatabaseObject:
         if data:    return cls.from_data(data)
         else:       
             dbname = db_manager.get_current_db_name()
-            from GlobalVariables import global_vars
-            with global_vars.out_debug:
-                print(f"{cls.__name__} with {type} = {name} not found in the database {dbname} .")
+            print(f"{cls.__name__} with {type} = {name} not found in the database {dbname} .")
             return None    
 
     @classmethod

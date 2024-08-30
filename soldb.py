@@ -1,18 +1,14 @@
 from DeckLibrary    import DeckLibrary
 from UniversalLibrary import UniversalLibrary
-#from CacheManager   import CacheManager
 from Synergy        import SynergyTemplate
 from NetApi         import NetApi
-import argparse
-from tqdm import tqdm 
-import os, time, re
-from pathlib import Path
-from multiprocessing import Pool, cpu_count,Event
+import argparse 
+import os, re
 from MongoDB.DatabaseManager import DatabaseManager
-import GlobalVariables as gv
+from GlobalVariables import global_vars as gv
 
-def main(args):    
-    gv.username = args.username or 'Default'
+def main(args):
+    os.environ['SFF_USERNAME'] = args.username    
 
     #uri = "mongodb+srv://solDB:uHrpfYD1TXVzf3DR@soldb.fkq8rio.mongodb.net/?retryWrites=true&w=majority&appName=SolDB"
     gv.myDB = DatabaseManager(gv.username, uri=gv.uri)
@@ -84,7 +80,8 @@ def get_col_filter(args):
             'A': ('abilities', dict, 'keys'),
             'K': ('composition', dict, None),
         }
-        return Filter(query, attribute_map)
+        #return Filter(query, attribute_map)
+        return None
 
 # def evaluate_fusions(args, DeckCollection):
 #     eval_filename = None

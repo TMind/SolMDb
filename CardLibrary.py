@@ -3,8 +3,6 @@ from MongoDB.DatabaseManager import DatabaseManager, DatabaseObject
 from copy import copy
 from dataclasses import dataclass, field
 
-from GlobalVariables import global_vars
-
 @dataclass
 class EntityData:
     name: str    = ''

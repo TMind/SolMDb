@@ -332,8 +332,9 @@ class FilterGrid:
             event (dict): The event data.
             widget (qgrid.QGridWidget): The filter grid widget.
         """
-        with gv.out_debug:
-            print(f"FilterClass::grid_filter_on_row_removed() - Removing row {event['index']} from filter grid")
+        if gv.out_debug:
+            with gv.out_debug:
+                print(f"FilterClass::grid_filter_on_row_removed() - Removing row {event['index']} from filter grid")
         active_rows = []
         if 0 in event['indices']:
             df = pd.DataFrame({
@@ -363,8 +364,9 @@ class FilterGrid:
             event (dict): The event data.
             widget (qgrid.QGridWidget): The filter grid widget.
         """
-        with gv.out_debug:
-            print(f"FilterClass::grid_filter_on_row_added() - Adding new row to filter grid")
+        if gv.out_debug:
+            with gv.out_debug:
+                print(f"FilterClass::grid_filter_on_row_added() - Adding new row to filter grid")
         new_row_index = event['index']
         df = widget.get_changed_df()
 
@@ -395,15 +397,17 @@ class FilterGrid:
             event (dict): The event data.
             widget (qgrid.QGridWidget): The filter grid widget.
         """
-        with gv.out_debug:
-            print(f"FilterClass::grid_filter_on_cell_edit() - Editing cell in filter grid")
+        if gv.out_debug:
+            with gv.out_debug:
+                print(f"FilterClass::grid_filter_on_cell_edit() - Editing cell in filter grid")
         row_index, column_index = event['index'], event['column']
         widget.df.loc[row_index, column_index] = event['new']
         
         widget.df = widget.df
         #Print the edited row from the widget
-        with gv.out_debug:
-            print(f"Edited row: {widget.df.loc[row_index]}")
+        if gv.out_debug:
+            with gv.out_debug:
+                print(f"Edited row: {widget.df.loc[row_index]}")
         #if column_index == 'Active' or widget.df.loc[row_index, 'Active']:
         self.refresh_function({'new': row_index, 'old': None, 'owner': 'filter'})
 
@@ -411,8 +415,9 @@ class FilterGrid:
         """
         Updates the filter grid based on changes in the data selection sets.
         """
-        with gv.out_debug:
-            print(f"FilterClass::update() -> Updating filter grid with new data selection sets: {gv.data_selection_sets.keys()}")
+        if gv.out_debug:
+            with gv.out_debug:
+                print(f"FilterClass::update() -> Updating filter grid with new data selection sets: {gv.data_selection_sets.keys()}")
         self.selection_widgets['Data Set'].options = gv.data_selection_sets.keys()
 
     

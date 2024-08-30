@@ -1,3 +1,4 @@
+import glob
 import os, time, re, json
 import ipywidgets as widgets
 import numpy as np
@@ -9,6 +10,12 @@ import pytz
 from tzlocal import get_localzone  
 
 from GlobalVariables import global_vars
+global_vars._initialize_objects()
+
+# Ensure global_vars is initialized before using it
+if global_vars is None:
+    raise RuntimeError("global_vars was not initialized properly.")
+
 from CardLibrary import Deck, FusionData, Fusion
 from UniversalLibrary import UniversalLibrary
 from DeckLibrary import DeckLibrary
@@ -74,7 +81,7 @@ synergy_template = SynergyTemplate()
 ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
 
 #Read Entities and Forgeborns from Files into Database
-myUCL = UniversalLibrary(global_vars.username, *ucl_paths)
+myUCL = UniversalLibrary(os.getenv('SFF_USERNAME'), *ucl_paths)
 deckCollection = None
 
 # Widget Variables
@@ -82,7 +89,7 @@ factionToggles = []
 dropdowns = []
 factionNames = ['Alloyin', 'Nekrium', 'Tempys', 'Uterra']
 types = ['Decks', 'Fusions']
-username_widget = widgets.Text(value=global_vars.username, description='Username:', disabled=False)
+username_widget = widgets.Text(value=os.getenv('SFF_USERNAME', 'sff'), description='Username:', disabled=False)
 button_load = None
 db_list = None 
 cardTypes_names_widget = {}
@@ -237,9 +244,11 @@ def merge_and_concat(df1, df2):
 user_dataframes = {}
 ### Dataframe Generation Functions ###
 def generate_central_dataframe(force_new=False):
-    username = global_vars.username
+    username = os.getenv('SFF_USERNAME')
     identifier = f"Main DataFrame: {username}"
-    file_record = global_vars.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
+    file_record = None
+    if global_vars.myDB:
+        file_record = global_vars.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
     
     # Manage the cached DataFrame
     if not force_new and username in user_dataframes:
@@ -251,18 +260,20 @@ def generate_central_dataframe(force_new=False):
 
     # Load or regenerate the DataFrame
     if file_record and not force_new:
-        with global_vars.fs.get(file_record['_id']) as file:
-            stored_df = pickle.load(file)
-            user_dataframes[username] = stored_df
-            update_deck_and_fusion_counts()
-            update_central_frame_tab(stored_df)
-            return stored_df
+        if global_vars.fs:
+            with global_vars.fs.get(file_record['_id']) as file:
+                stored_df = pickle.load(file)
+                user_dataframes[username] = stored_df
+                update_deck_and_fusion_counts()
+                update_central_frame_tab(stored_df)
+                return stored_df
 
     if force_new or not file_record:
         if username in user_dataframes:
             del user_dataframes[username]
         if file_record:
-            global_vars.fs.delete(file_record['_id'])
+            if global_vars.fs:
+                global_vars.fs.delete(file_record['_id'])
 
     global_vars.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
     deck_stats_df = generate_deck_statistics_dataframe()
@@ -285,9 +296,10 @@ def generate_central_dataframe(force_new=False):
     global_vars.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
     user_dataframes[username] = central_df
 
-    with global_vars.fs.new_file(filename=f'central_df_{username}') as file:
-        pickle.dump(central_df, file)
-    
+    if global_vars.fs:
+        with global_vars.fs.new_file(filename=f'central_df_{username}') as file:
+            pickle.dump(central_df, file)
+        
     update_deck_and_fusion_counts()
     update_central_frame_tab(central_df)
     return central_df
@@ -352,106 +364,113 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds, df):
 
 def generate_deck_content_dataframe(deckNames):
     from CardLibrary import Card , CardData
-    with global_vars.out_debug:
+    
         
-        # Get the data set from the global variables
-        desired_fields = global_vars.data_selection_sets['Deck Content']
+    # Get the data set from the global variables
+    desired_fields = global_vars.data_selection_sets['Deck Content']
 
-        card_dfs_list = []
+    card_dfs_list = []
 
-        for deckName in deckNames:
-            print(f'DeckName: {deckName}')
-            #Get the Deck from the Database 
+    for deckName in deckNames:
+        print(f'DeckName: {deckName}')
+        #Get the Deck from the Database 
+        deck = None 
+        if global_vars.myDB:
             deck = global_vars.myDB.find_one('Deck', {'name': deckName})
-            if deck:
-                #print(f'Found deck: {deck}')
-                #Get the cardIds from the Deck
-                cardIds = deck['cardIds']
-                deck_df_list = pd.DataFrame([deck])  # Create a single row DataFrame from deck                    
-                for cardId in cardIds:
+        if deck:
+            #print(f'Found deck: {deck}')
+            #Get the cardIds from the Deck
+            cardIds = deck['cardIds']
+            deck_df_list = pd.DataFrame([deck])  # Create a single row DataFrame from deck                    
+            for cardId in cardIds:
+                card = None
+                if global_vars.myDB:
                     card = global_vars.myDB.find_one('Card', {'_id': cardId})
-                    if card:
-                        fullCard = card 
+                if card:
+                    fullCard = card 
 
-                        # Create Graph for Card 
-                        myGraph = MyGraph()
-                        data = CardData(**fullCard)
-                        myGraph.create_graph_children(Card(data))
-                        interface_ids = myGraph.get_length_interface_ids()
+                    # Create Graph for Card 
+                    myGraph = MyGraph()
+                    data = CardData(**fullCard)
+                    myGraph.create_graph_children(Card(data))
+                    interface_ids = myGraph.get_length_interface_ids()
 
-                        # Select only the desired fields from the card document
-                        card = {field: card[field] for field in desired_fields if field in card}
+                    # Select only the desired fields from the card document
+                    card = {field: card[field] for field in desired_fields if field in card}
 
-                        # Add 'provides' and 'seeks' information
-                        providers = re.split(', |,', fullCard.get('provides', ''))
-                        seekers = re.split(', |,', fullCard.get('seeks', ''))
+                    # Add 'provides' and 'seeks' information
+                    providers = re.split(', |,', fullCard.get('provides', ''))
+                    seekers = re.split(', |,', fullCard.get('seeks', ''))
 
-                        # Create a dictionary with keys as item and values as True
-                        provides_dict = {item: ['provides'] for item in providers if item}
-                        seeks_dict = {item: ['seeks'] for item in seekers if item}
-                        
-                        # Create a DataFrame from the dictionary
-                        #single_card_data_row = pd.DataFrame(card_dict, index=card['name'])
+                    # Create a dictionary with keys as item and values as True
+                    provides_dict = {item: ['provides'] for item in providers if item}
+                    seeks_dict = {item: ['seeks'] for item in seekers if item}
+                    
+                    # Create a DataFrame from the dictionary
+                    #single_card_data_row = pd.DataFrame(card_dict, index=card['name'])
 
-                        # Flatten the 'levels' dictionary
-                        if 'levels' in card and card['levels']:
-                            levels = card.pop('levels')
-                            for level, level_data in levels.items():
-                                card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
-                                card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
+                    # Flatten the 'levels' dictionary
+                    if 'levels' in card and card['levels']:
+                        levels = card.pop('levels')
+                        for level, level_data in levels.items():
+                            card[f'A{level}'] = int(level_data['attack']) if 'attack' in level_data else ''
+                            card[f'H{level}'] = int(level_data['health']) if 'health' in level_data else ''
 
-                        # Merge the dictionaries
-                        card_dict = {**card, **interface_ids}
-                        
-                        # Insert 'DeckName' at the beginning of the card dictionary
-                        card = {'DeckName': deckName, **card_dict}
+                    # Merge the dictionaries
+                    card_dict = {**card, **interface_ids}
+                    
+                    # Insert 'DeckName' at the beginning of the card dictionary
+                    card = {'DeckName': deckName, **card_dict}
 
-                        # Create a DataFrame from the remaining card fields      
-                        card_df = pd.DataFrame([card])                                             
-                        card_dfs_list.append(card_df)  # Add full_card_df to the list                            
-                
-        # Concatenate the header DataFrame with the deck DataFrames
-        if card_dfs_list:
-            final_df = pd.concat(card_dfs_list, ignore_index=True, axis=0)        
-
-            # Replace empty values in the 'cardSubType' column with 'Spell'
-            if 'cardSubType' in final_df.columns:
-                final_df['cardSubType'] = final_df['cardSubType'].replace(['', '0', 0], 'Spell')
-                final_df['cardSubType'] = final_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
-
-            # Sort all columns alphabetically
-            sorted_columns = sorted(final_df.columns)
+                    # Create a DataFrame from the remaining card fields      
+                    card_df = pd.DataFrame([card])                                             
+                    card_dfs_list.append(card_df)  # Add full_card_df to the list                            
             
-            # Ensure 'DeckName' is first, followed by the specified order for other columns
-            fixed_order = ['DeckName', 'name', 'faction', 'cardType', 'cardSubType']
-            # Remove the fixed order columns from the sorted list
-            sorted_columns = [col for col in sorted_columns if col not in fixed_order]
-            # Concatenate the fixed order columns with the rest of the sorted columns
-            final_order = fixed_order + sorted_columns
-            
-            # Reindex the DataFrame with the new column order
-            final_df = final_df.reindex(columns=final_order)
-            #df_numeric = final_df.select_dtypes(include='number')
-            # Convert to integers and replace 0 with empty strings
-            #df_numeric = df_numeric.fillna(0).astype(int).replace(0, '').astype(str)            
-            
-            # Select numeric columns and convert them to strings, replacing '0' with an empty string
-            df_numeric = final_df.select_dtypes(include='number').astype(str)
-            # Replace '0' with an empty string and NaN with an empty string
-            df_numeric = df_numeric.replace('0', '').replace('nan', '')
-            # Ensure the columns in final_df are of type object to handle the update properly
-            final_df[df_numeric.columns] = final_df[df_numeric.columns].astype(object)
-            final_df.update(df_numeric)
-            return clean_columns(final_df)
-        else:
-            print(f'No cards found in the database for {deckNames}')
-            return pd.DataFrame()
+    # Concatenate the header DataFrame with the deck DataFrames
+    if card_dfs_list:
+        final_df = pd.concat(card_dfs_list, ignore_index=True, axis=0)        
+
+        # Replace empty values in the 'cardSubType' column with 'Spell'
+        if 'cardSubType' in final_df.columns:
+            final_df['cardSubType'] = final_df['cardSubType'].replace(['', '0', 0], 'Spell')
+            final_df['cardSubType'] = final_df['cardSubType'].replace(['Exalt'], 'Spell Exalt')
+
+        # Sort all columns alphabetically
+        sorted_columns = sorted(final_df.columns)
+        
+        # Ensure 'DeckName' is first, followed by the specified order for other columns
+        fixed_order = ['DeckName', 'name', 'faction', 'cardType', 'cardSubType']
+        # Remove the fixed order columns from the sorted list
+        sorted_columns = [col for col in sorted_columns if col not in fixed_order]
+        # Concatenate the fixed order columns with the rest of the sorted columns
+        final_order = fixed_order + sorted_columns
+        
+        # Reindex the DataFrame with the new column order
+        final_df = final_df.reindex(columns=final_order)
+        #df_numeric = final_df.select_dtypes(include='number')
+        # Convert to integers and replace 0 with empty strings
+        #df_numeric = df_numeric.fillna(0).astype(int).replace(0, '').astype(str)            
+        
+        # Select numeric columns and convert them to strings, replacing '0' with an empty string
+        df_numeric = final_df.select_dtypes(include='number').astype(str)
+        # Replace '0' with an empty string and NaN with an empty string
+        df_numeric = df_numeric.replace('0', '').replace('nan', '')
+        # Ensure the columns in final_df are of type object to handle the update properly
+        final_df[df_numeric.columns] = final_df[df_numeric.columns].astype(object)
+        final_df.update(df_numeric)
+        return clean_columns(final_df)
+    else:
+        print(f'No cards found in the database for {deckNames}')
+        return pd.DataFrame()
 
 
 def generate_cardType_count_dataframe():
     identifier = 'CardType Count Data'
-    deck_iterator = global_vars.myDB.find('Deck', {})
-    total_decks = global_vars.myDB.count_documents('Deck', {})
+    deck_iterator = []
+    total_decks = 0 
+    if global_vars.myDB:
+        deck_iterator = global_vars.myDB.find('Deck', {})
+        total_decks = global_vars.myDB.count_documents('Deck', {})
     global_vars.update_progress(identifier, 0, total_decks, 'Generating CardType Count Data...')
     
     all_decks_list = []
@@ -498,7 +517,9 @@ def generate_fusion_statistics_dataframe():
     def fetch_deck_titles(deck_names):
         deck_titles = {}
         for name in deck_names:
-            deck = deck_card_titles.get(name) or global_vars.myDB.find_one('Deck', {'name': name})
+            deck = None
+            if global_vars.myDB:
+                deck = deck_card_titles.get(name) or global_vars.myDB.find_one('Deck', {'name': name})
             if deck:
                 card_ids = deck.get('cardIds', [])
                 deck_titles[name] = get_card_titles(card_ids)
@@ -519,7 +540,9 @@ def generate_fusion_statistics_dataframe():
 
         return item_names
 
-    fusion_cursor = global_vars.myDB.find('Fusion', {})
+    fusion_cursor = []
+    if global_vars.myDB:
+        fusion_cursor = global_vars.myDB.find('Fusion', {})
     df_fusions = pd.DataFrame(list(fusion_cursor))
 
     global_vars.update_progress('Fusion Card Titles', 0, len(df_fusions), 'Fetching Card Titles')
@@ -597,7 +620,9 @@ def generate_deck_statistics_dataframe():
         return ', '.join(sorted(card_titles))
 
     # Get all Decks from the database once and reuse this list
-    decks = list(global_vars.myDB.find('Deck', {}))
+    decks = []
+    if global_vars.myDB:
+        decks = list(global_vars.myDB.find('Deck', {}))
     number_of_decks = len(decks)
 
     df_decks = pd.DataFrame(decks)
@@ -654,7 +679,7 @@ def coll_data_on_selection_changed(event, widget):
     global qm
     # Generate a DataFrame from the selected rows
     print(f'Selection changed: {event}')
-    deck_df = generate_deck_content_dataframe(event, widget)    
+    deck_df = generate_deck_content_dataframe(event)    
     qm.replace_grid('deck', deck_df)    
     qm.set_default_data('deck', deck_df)
         
@@ -719,8 +744,9 @@ def handle_debug_toggle(change):
 def handle_db_list_change(change):
     global username_widget, grid_manager
 
-    with global_vars.out_debug:
-        print(f'DB List Change: {change}')
+    if global_vars.out_debug:
+        with global_vars.out_debug:
+            print(f'DB List Change: {change}')
 
     if change['name'] == 'value' and change['old'] != change['new']:
         new_username = change['new'] #or ''  # Ensure new_username is a string
@@ -772,7 +798,9 @@ def reload_data_on_click(button, value):
 
     load_deck_data(args)    
     # Refresh db_list widget
-    db_names = global_vars.myDB.mdb.client.list_database_names()
+    db_names = []
+    if global_vars.myDB:
+        db_names = global_vars.myDB.mdb.client.list_database_names()
     valid_db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
 
     if valid_db_names:
@@ -804,7 +832,9 @@ def display_graph_on_click(button):
 
     if myDeckA and myDeckB:
         fusionName = f'{myDeckA.name}_{myDeckB.name}'
-        fusionCursor = global_vars.myDB.find('Fusion', {'name' : fusionName})
+        fusionCursor = None
+        if global_vars.myDB:
+            fusionCursor = global_vars.myDB.find('Fusion', {'name' : fusionName})
         if fusionCursor: 
             for fusion in fusionCursor:
                 myFusion = Fusion.from_data(fusion)
@@ -877,8 +907,10 @@ def display_graph_on_click(button):
     
 
 def refresh_faction_deck_options(faction_toggle, dropdown):    
-    #global_vars.myDB.set_database_name(global_vars.username)    
-    deckCursor = global_vars.myDB.find('Deck', { 'faction' : faction_toggle.value })
+    #global_vars.myDB.set_database_name(global_vars.username)   
+    deckCursor = []
+    if global_vars.myDB: 
+        deckCursor = global_vars.myDB.find('Deck', { 'faction' : faction_toggle.value })
     deckNames = []    
     deckNames = [deck['name'] for deck in deckCursor]
     dropdown.options = deckNames        
@@ -982,7 +1014,7 @@ def create_database_selection_widget():
     #global_vars.myDB.set_database_name(global_vars.username)
     # Also set the value of the username widget
     if username_widget:
-        username_widget.value = global_vars.username
+        username_widget.value = os.getenv('SFF_USERNAME', 'sff')
 
     def on_db_list_change(change):    
         if username_widget:
@@ -998,29 +1030,31 @@ def update_deck_and_fusion_counts():
     global count_display
     # Ensure we are querying the right database based on the selected username
     db_manager = global_vars.myDB
-    deck_count = db_manager.count_documents('Deck', {})
-    fusion_count = db_manager.count_documents('Fusion', {})
-    username = db_manager.get_current_db_name()
+    if db_manager:
+        deck_count = db_manager.count_documents('Deck', {})
+        fusion_count = db_manager.count_documents('Fusion', {})
+        username = db_manager.get_current_db_name()
 
-    # Query the GridFS for the 'central_df' file
-    file_record = db_manager.find_one('fs.files', {'filename': f"central_df_{username}"})
-    
-    if file_record and 'uploadDate' in file_record:
-    # Get the local timezone from your system
-        utc_upload_date = file_record['uploadDate']
-        local_timezone = get_localzone()
-        # Convert UTC to your local timezone
-        creation_date = utc_upload_date.replace(tzinfo=pytz.utc).astimezone(local_timezone)
-        creation_date_str = creation_date.strftime('%Y-%m-%d %H:%M:%S')
+        # Query the GridFS for the 'central_df' file
+        file_record = db_manager.find_one('fs.files', {'filename': f"central_df_{username}"})
+        
+        if file_record and 'uploadDate' in file_record:
+        # Get the local timezone from your system
+            utc_upload_date = file_record['uploadDate']
+            local_timezone = get_localzone()
+            # Convert UTC to your local timezone
+            creation_date = utc_upload_date.replace(tzinfo=pytz.utc).astimezone(local_timezone)
+            creation_date_str = creation_date.strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            creation_date_str = "No previous update found"
+        
+        # Update the display widget with the new counts and creation date
+        if count_display:
+            count_display.value = f"{creation_date_str} - Decks: {deck_count}, Fusions: {fusion_count}"
+        else:
+            print(f"{creation_date_str} - Decks: {deck_count}, Fusions: {fusion_count}")
     else:
-        creation_date_str = "No previous update found"
-    
-    # Update the display widget with the new counts and creation date
-    if count_display:
-        count_display.value = f"{creation_date_str} - Decks: {deck_count}, Fusions: {fusion_count}"
-    else:
-        print(f"{creation_date_str} - Decks: {deck_count}, Fusions: {fusion_count}")
-            
+        print('No database manager found.')
             
 ############################
 # Setup and Initialization #

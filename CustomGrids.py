@@ -401,15 +401,17 @@ class TemplateGrid:
             #print(f"DataFrame index: {qgrid_widget.df.index.tolist()}")
 
             if selected_indices is None or len(selected_indices) == 0:
-                with global_vars.out_debug:
-                    print("No row is selected.")
+                if global_vars.out_debug:
+                    with global_vars.out_debug:
+                        print("No row is selected.")
                 return
 
             selected_index = selected_indices[0] if isinstance(selected_indices, list) else selected_indices
 
             if not (0 <= selected_index < len(qgrid_widget.df)):
-                with global_vars.out_debug:
-                    print(f"Invalid index selected: {selected_index}. DataFrame length: {len(qgrid_widget.df)}")
+                if global_vars.out_debug:
+                    with global_vars.out_debug:
+                        print(f"Invalid index selected: {selected_index}. DataFrame length: {len(qgrid_widget.df)}")
                 return
 
             selected_row = qgrid_widget.df.iloc[selected_index]
@@ -434,6 +436,7 @@ class TemplateGrid:
         global_vars.data_selection_sets = {template_df.loc[template]['Template Name']: template_df.loc[template].index[template_df.loc[template] == True].tolist() for template in template_df.index}
         
         DataSelectionManager.update_data(event, widget)
-        with global_vars.out_debug:
-            print(f"Data selection sets updated: {global_vars.data_selection_sets}")
-        
+        if global_vars.out_debug:
+            with global_vars.out_debug:
+                print(f"Data selection sets updated: {global_vars.data_selection_sets}")
+            

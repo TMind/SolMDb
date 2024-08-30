@@ -1,6 +1,5 @@
-from email import message
-from itertools import accumulate
 from GlobalVariables import global_vars as gv
+import os
 from multiprocessing import Pool, cpu_count  
 from pymongo.operations import UpdateOne  
 from CardLibrary import Fusion, FusionData  
@@ -13,12 +12,10 @@ class MultiProcess:
         self.num_items = len(data)  
         self.num_processes = min(self.num_items, cpu_count())  
         self.data = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]  
-        self.username = username
-        gv.username = username
+        self.username = os.getenv('SFF_USERNAME', None)
   
     def init_worker(self):  
         global dbmgr  
-        gv.username = self.username
         dbmgr = DatabaseManager(self.username, force_new=True)          
         #print(f"Initialized worker with username: {self.username} , gv.username: {gv.username}")
   
@@ -61,12 +58,7 @@ def create_fusion(dataChunk):
              
             fusionObject = create_graph_for_object(fusionObject)
             fusionData = fusionObject.to_data()   
-            #fusionGraph = MyGraph()  
-            #fusionGraph.create_graph_children(fusionObject)  
-            #fusionGraphDict = nx.to_dict_of_dicts(fusionGraph.G) 
-            #fusionData['graph'] = fusionGraphDict  
-            #fusionData['node_data'] = fusionGraph.node_data  
-  
+        
             operations.append(UpdateOne({'_id': fusionId}, {'$set': fusionData}, upsert=True))  
   
     if operations:

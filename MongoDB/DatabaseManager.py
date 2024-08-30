@@ -205,7 +205,9 @@ class DatabaseObject:
         if data:    return cls.from_data(data)
         else:       
             dbname = db_manager.get_current_db_name()
-            print(f"{cls.__name__} with {type} = {name} not found in the database {dbname} .")
+            from GlobalVariables import global_vars
+            with global_vars.out_debug:
+                print(f"{cls.__name__} with {type} = {name} not found in the database {dbname} .")
             return None    
 
     @classmethod

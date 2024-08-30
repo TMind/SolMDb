@@ -253,6 +253,7 @@ class QGrid(BaseGrid):
             grid_options={'forceFitColumns': False, 'enableColumnReorder': True},
             show_toolbar=False
         )
+        apply_rotation_css_to_qgrid(self.main_widget, 12, header_height=150, custom_class='qgrid-rotated-header')
 
     def update_main_widget(self, new_df):
         self.main_widget.df = new_df
@@ -331,6 +332,8 @@ class FilterGrid:
             event (dict): The event data.
             widget (qgrid.QGridWidget): The filter grid widget.
         """
+        with gv.out_debug:
+            print(f"FilterClass::grid_filter_on_row_removed() - Removing row {event['index']} from filter grid")
         active_rows = []
         if 0 in event['indices']:
             df = pd.DataFrame({
@@ -360,7 +363,8 @@ class FilterGrid:
             event (dict): The event data.
             widget (qgrid.QGridWidget): The filter grid widget.
         """
-        
+        with gv.out_debug:
+            print(f"FilterClass::grid_filter_on_row_added() - Adding new row to filter grid")
         new_row_index = event['index']
         df = widget.get_changed_df()
 
@@ -391,9 +395,15 @@ class FilterGrid:
             event (dict): The event data.
             widget (qgrid.QGridWidget): The filter grid widget.
         """
+        with gv.out_debug:
+            print(f"FilterClass::grid_filter_on_cell_edit() - Editing cell in filter grid")
         row_index, column_index = event['index'], event['column']
         widget.df.loc[row_index, column_index] = event['new']
         
+        widget.df = widget.df
+        #Print the edited row from the widget
+        with gv.out_debug:
+            print(f"Edited row: {widget.df.loc[row_index]}")
         #if column_index == 'Active' or widget.df.loc[row_index, 'Active']:
         self.refresh_function({'new': row_index, 'old': None, 'owner': 'filter'})
 
@@ -817,7 +827,8 @@ class DynamicGridManager:
                 column_definitions=gv.all_column_definitions,
                 grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True}
             )
-            apply_rotation_css_to_qgrid(self.deck_content_grid, 7, header_height=150)
+            #apply_rotation_css_to_qgrid(self.deck_content_grid, 7, header_height=150)
+            apply_rotation_css_to_columns(self.deck_content_grid, gv.rotated_column_definitions.keys() ,header_height=150)
                             
             # Update the UI
             self.update_ui()
@@ -839,37 +850,6 @@ class DynamicGridManager:
 
 
 from IPython.display import display, HTML
-
-# def apply_rotation_css_to_qgrid(qgrid_widget, start_column, header_height=80, row_height=40):
-#     # Retrieve the unique element ID of the qgrid widget
-#     qgrid_id = qgrid_widget.grid_options.get('gridId')
-
-#     if not qgrid_id:
-#         raise AttributeError("Could not find gridId for the qgrid widget.")
-
-#     # Generate the CSSs
-#     css = f"""
-#     <style>
-#         #{qgrid_id} .slick-header-column {{
-#             height: {header_height}px !important; /* Set the header height */
-#             vertical-align: bottom; /* Align the text to the bottom */
-#         }}
-#         #{qgrid_id} .slick-header-column .slick-column-name {{
-#             transform: rotate(90deg);
-#             transform-origin: left bottom;
-#             white-space: nowrap;
-#             margin-left: 0px; /* Adjust spacing */
-#             margin-top: 0px; /* Fine-tune text placement */
-#         }}
-#         #{qgrid_id} .slick-cell {{
-#             height: {row_height}px; /* Adjust row height to match rotated header */
-#         }}
-#     </style>
-#     """
-
-#     # Apply the CSS
-#     display(HTML(css))
-    
     
 def apply_rotation_css_to_qgrid(qgrid_widget, start_column=2, header_height=80, custom_class='custom-qgrid'):
     """
@@ -902,6 +882,48 @@ def apply_rotation_css_to_qgrid(qgrid_widget, start_column=2, header_height=80, 
         }}
     </style>
     """
-
+    print(style)
     # Inject the CSS into the notebook
     display(HTML(style))
+
+def apply_rotation_css_to_columns(qgrid_widget, column_names, header_height=80, custom_class='custom-qgrid'):
+    """
+    Applies CSS to rotate the headers of specific columns in a qgrid widget, designed for JupyterLab.
+
+    Parameters:
+    - qgrid_widget: The qgrid widget to which the CSS will be applied.
+    - column_names: A list of column names whose headers should be rotated.
+    - header_height: The height of the header row (in pixels).
+    - custom_class: The custom CSS class to be applied to the qgrid widget.
+    """
+    # Add a custom class to the qgrid widget
+    qgrid_widget.add_class(custom_class)
+
+    # Generate the CSS string
+    style = f"""
+    <style>
+        /* Set the height for all headers */
+        .{custom_class} .slick-header-column {{
+            height: {header_height}px !important;
+        }}
+    """
+
+    for col_name in column_names:
+        style += f"""
+        .{custom_class} .slick-header-column[title*="{col_name}"] {{
+            vertical-align: bottom;
+            text-align: left;
+        }}
+        .{custom_class} .slick-header-column[title*="{col_name}"] .slick-column-name {{
+            transform: rotate(90deg);
+            transform-origin: left bottom;
+            white-space: nowrap;
+            margin-left: 0px;
+            margin-top: 0px;
+        }}
+        """
+    
+    style += "</style>"
+
+    # Inject the CSS into the document
+    display(HTML(f"<style>{style}</style>"))

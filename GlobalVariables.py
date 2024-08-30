@@ -12,7 +12,8 @@ class GlobalVariables:
         self.progress_containers = {}
         self.out_debug = widgets.Output()
         self.debug = False
-        self.all_column_definitions = all_column_definitions
+        self.rotated_column_definitions = rotated_column_definitions
+        self.all_column_definitions = { **non_rotated_column_definitions, **rotated_column_definitions }
         self.data_selection_sets = data_selection_sets
         #print("Global Variables Initialized")
         #print(f"Username: {self._username}")
@@ -79,33 +80,9 @@ class GlobalVariables:
 
 default_width = 150
 rotated_width = 10
-all_column_definitions = {
-    'index':            {'width': 50},
-    'Name':             {'width': 250},
-    'type':             {'width': 60},
-    'Deck A':           {'width': 250},
-    'Deck B':           {'width': 250},
-    'registeredDate':   {'width': 200},
-    'UpdatedAt':        {'width': 200},
-    'xp':               {'width': 50},
-    'elo':              {'width': 50},
-    'level':            {'width': 50},
-    'pExpiry':          {'width': 200},
-    'cardSetNo':        {'width': 50},
-    'faction':          {'width': 100},
-    'crossFaction':     {'width': 100},
-    'forgebornId':      {'width': 100},
-    'cardTitles':       {'width': 200},
-    'FB4':              {'width': default_width},
-    'FB2':              {'width': default_width},
-    'FB3':              {'width': default_width},
-    'A1':               {'width': 50},
-    'H1':               {'width': 50},
-    'A2':               {'width': 50},
-    'H2':               {'width': 50},
-    'A3':               {'width': 50},
-    'H3':               {'width': 50},
-    'Creatures':        {'width': rotated_width},
+
+rotated_column_definitions = {
+     'Creatures':        {'width': rotated_width},
     'Spells':           {'width': rotated_width},
     'Exalts':           {'width': rotated_width},   
     'Beast':            {'width': rotated_width},
@@ -214,6 +191,34 @@ all_column_definitions = {
     'Annoying':         {'width': rotated_width}
 }
 
+non_rotated_column_definitions = {
+    'index':            {'width': 50},
+    'Name':             {'width': 250},
+    'type':             {'width': 60},
+    'Deck A':           {'width': 250},
+    'Deck B':           {'width': 250},
+    'registeredDate':   {'width': 200},
+    'UpdatedAt':        {'width': 200},
+    'xp':               {'width': 50},
+    'elo':              {'width': 50},
+    'level':            {'width': 50},
+    'pExpiry':          {'width': 200},
+    'cardSetNo':        {'width': 50},
+    'faction':          {'width': 100},
+    'crossFaction':     {'width': 100},
+    'forgebornId':      {'width': 100},
+    'cardTitles':       {'width': 200},
+    'FB4':              {'width': default_width},
+    'FB2':              {'width': default_width},
+    'FB3':              {'width': default_width},
+    'A1':               {'width': 50},
+    'H1':               {'width': 50},
+    'A2':               {'width': 50},
+    'H2':               {'width': 50},
+    'A3':               {'width': 50},
+    'H3':               {'width': 50},
+}
+  
 data_selection_sets = {
   "Deck Stats": {
     "Name": True, "type": 'Deck',

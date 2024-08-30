@@ -522,7 +522,7 @@ def generate_fusion_statistics_dataframe():
     fusion_cursor = global_vars.myDB.find('Fusion', {})
     df_fusions = pd.DataFrame(list(fusion_cursor))
 
-    global_vars.update_progress('Fusion Card Titles', 0, 2*len(df_fusions), 'Fetching Card Titles')
+    global_vars.update_progress('Fusion Card Titles', 0, len(df_fusions), 'Fetching Card Titles')
     df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)
     df_fusions['forgebornId'] = df_fusions['currentForgebornId']
     df_fusions['type'] = 'Fusion'  

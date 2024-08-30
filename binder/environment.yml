@@ -1,4 +1,4 @@
-name: SolDB
+name: conda_env
 channels:  
   - conda-forge  
   - defaults  
@@ -9,6 +9,7 @@ dependencies:
   - jupyterlab=4.1.0  
   - pandas-datareader  
   - matplotlib  
+  - markdown
   - ipympl  
   - pymongo  
   - networkx  
@@ -16,10 +17,12 @@ dependencies:
   - pillow  
   - scipy  
   - tqdm  
+  - tzlocal
   - requests  
   - pip  
   - pip:  
     - pyvis # If pyvis is not available in conda channels  
     - jupyter-server-proxy # If jupyter-server-proxy is not available in conda channels  
-    - qgridnext==2.0.0rc0 # If qgridnext is not available in conda channels  
+    - qgridnext==2.0.1 # If qgridnext is not available in conda channels  
     - icecream # If icecream is not available in conda channels  
+    

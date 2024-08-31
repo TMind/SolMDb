@@ -2,7 +2,6 @@ import ipywidgets as widgets
 from IPython.display import display
 from gridfs import GridFS
 import os
-from MongoDB.DatabaseManager import BufferManager
 
 class GlobalVariables:
   
@@ -24,7 +23,8 @@ class GlobalVariables:
     self._username = os.getenv('SFF_USERNAME', 'sff')
     self._host = os.getenv('HOST', 'localhost')
     self._port = os.getenv('MONGODB_PORT', 27017)
-    self.uri = os.getenv('MONGODB_URI', "mongodb://tmind:c6tltLqSnbIyy4SAVsBwCiZWET9LA6USjk87IV3SO64jkKIuKXMBoe5Oeku4F2qHjXDldrgaNxypACDbE0WurA==@tmind.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@tmind@")
+    self.uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')
+    #self.uri = os.getenv('MONGODB_URI', "mongodb://tmind:c6tltLqSnbIyy4SAVsBwCiZWET9LA6USjk87IV3SO64jkKIuKXMBoe5Oeku4F2qHjXDldrgaNxypACDbE0WurA==@tmind.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@tmind@")
     self.debug = os.getenv('DEBUG_MODE', 'False').lower() in ('true', '1', 't')
     
     self.myDB = None
@@ -35,14 +35,12 @@ class GlobalVariables:
     self.rotated_column_definitions = rotated_column_definitions
     self.all_column_definitions = {**non_rotated_column_definitions, **rotated_column_definitions}
     self.data_selection_sets = data_selection_sets
-    self.buffer_manager = None
     
     self._set_environment_variables()
 
   def _initialize_objects(self):
     
     self.commonDB = self._initialize_commonDB()
-    self.buffer_manager = BufferManager(self.uri)
     self.out_debug = widgets.Output()
 
   def _set_environment_variables(self):

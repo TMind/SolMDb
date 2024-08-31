@@ -1,9 +1,9 @@
 import CardLibrary
 from Interface import Interface, InterfaceData
 from typing import Tuple, List, Dict
-import csv, json, re
+import csv, json, re, os
 
-from MongoDB.DatabaseManager import DatabaseManager
+from MongoDB.DatabaseManager import DatabaseManager, BufferManager
 
 class UniversalLibrary:
 
@@ -19,11 +19,14 @@ class UniversalLibrary:
         numEnt = self.database.count_documents('Entity')
 
         if numFB <= 1 or numEnt <= 0:
-            self.database.ensure_unique_index('Forgeborn', 'id')                    
-            self.database.ensure_unique_index('Entity', 'name')        
-            self.fb_map = self._read_forgeborns_from_csv(fb_path)
-            self._read_entities_from_csv(sff_path)           
-        
+            #self.database.ensure_unique_index('Forgeborn', 'id')                    
+            #self.database.ensure_unique_index('Entity', 'name') 
+            buffer_manager = BufferManager(os.getenv('MONGODB_URI', None))
+            with buffer_manager:       
+                print("Using the buffer manager") 
+                self.fb_map = self._read_forgeborns_from_csv(fb_path)
+                self._read_entities_from_csv(sff_path)           
+            
     def _read_entities_from_csv(self, csv_path):   
         with open(csv_path, 'r') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=';')

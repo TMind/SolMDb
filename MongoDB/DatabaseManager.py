@@ -4,6 +4,9 @@ import pymongo
 import pymongo.errors
 from dataclasses import dataclass, fields, asdict
 from typing import Any, Dict
+
+# Global variable to hold the active BufferManager instance
+_active_buffer_manager = None
 class DatabaseManager:
     _instances = {}
     _credentials = None
@@ -37,6 +40,15 @@ class DatabaseManager:
           
         return cls._instances[db_name]  
     
+    def add_to_buffer(self, collection_name, identifier, data_to_save):
+        global _active_buffer_manager
+        if _active_buffer_manager:
+            # Use the active buffer manager if it exists
+            _active_buffer_manager.add_to_buffer(self.mdb.get_db_name(), collection_name, identifier, data_to_save)
+        else:
+            # Directly write to the database if no buffer manager is active
+            self.bulk_write(collection_name, [pymongo.UpdateOne(identifier, {'$set': data_to_save}, upsert=True)])
+
     def set_database_name(self, db_name: str, host='localhost', port=27017, uri = None):        
         if not 'mdb' in self.__dict__: 
             if self._credentials is None:
@@ -60,29 +72,37 @@ class DatabaseManager:
         #print(f"Getting record by name: {name} from db - collection: {self.get_current_db_name()} - {collection_name}")
         return self.find_one(collection_name, {'name': name})
 
-class BufferManager:  
-        
-    def __init__(self, uri):  
+class BufferManager:
+    
+    def __init__(self, uri):
         self.uri = uri
-        self.buffers = {}  
-  
-    def add_to_buffer(self, database_name, collection_name, identifier, data_to_save):  
-        # Use a tuple of database and collection names as the key  
-        buffer_key = (database_name, collection_name)  
-          
-        if buffer_key not in self.buffers:  
-            self.buffers[buffer_key] = []  
-          
-        operation = pymongo.UpdateOne(identifier, {'$set': data_to_save}, upsert=True)  
-        self.buffers[buffer_key].append(operation)  
-  
-    def write_buffers(self):  
-        for (database_name, collection_name), operations in self.buffers.items():  
-            if operations:  
-                # Get the appropriate DatabaseManager
-                db = DatabaseManager(database_name, uri=self.uri)
-                db.bulk_write(collection_name, operations)                
-                self.buffers[(database_name, collection_name)] = []  # Clear the buffer after writing  
+        self.buffers = {}
+
+    def add_to_buffer(self, database_name, collection_name, identifier, data_to_save):
+        buffer_key = (database_name, collection_name)
+        if buffer_key not in self.buffers:
+            self.buffers[buffer_key] = []
+        operation = pymongo.UpdateOne(identifier, {'$set': data_to_save}, upsert=True)
+        self.buffers[buffer_key].append(operation)
+        print(f"Added to buffer: {operation}")
+
+    def write_buffers(self):
+        for (database_name, collection_name), operations in self.buffers.items():
+            if operations:
+                db = DatabaseManager(database_name)
+                db.bulk_write(collection_name, operations)
+                self.buffers[(database_name, collection_name)] = []  # Clear the buffer after writing
+                print(f"Buffer written for {database_name} - {collection_name}")
+
+    def __enter__(self):
+        global _active_buffer_manager
+        _active_buffer_manager = self  # Activate this buffer manager
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.write_buffers()  # Write all buffered data on exit
+        global _active_buffer_manager
+        _active_buffer_manager = None  # Deactivate the buffer manager
 
 class DatabaseObject:
     _db_manager = None
@@ -191,8 +211,7 @@ class DatabaseObject:
         if '_id' in data_to_save and (data_to_save['_id'] == '' or data_to_save['_id'] is None):
             del data_to_save['_id']
         identifier = {'_id': self._id} if hasattr(self, '_id') and self._id not in [None, ''] else {'name': self.name}
-        self.db_manager.upsert(collection_name, identifier, data_to_save)     
-
+        self.db_manager.add_to_buffer(collection_name, identifier, data_to_save)
 
     def to_data(self):        
         if isinstance(self.data, dict):            

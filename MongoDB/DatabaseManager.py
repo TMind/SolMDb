@@ -15,11 +15,11 @@ class DatabaseManager:
         if cls._credentials is None:  
             # Load from environment variables if not provided
             if host is None:
-                host = os.getenv('MONGO_HOST', 'localhost')
+                host = os.getenv('MONGODB_HOST', 'localhost')
             if port is None:
-                port = int(os.getenv('MONGO_PORT', 27017))
+                port = int(os.getenv('MONGODB_PORT', 27017))
             if uri is None:
-                uri = os.getenv('MONGO_URI')
+                uri = os.getenv('MONGODB_URI')
                 
             cls._credentials = {'host': host, 'port': port, 'uri': uri}  
   
@@ -73,26 +73,35 @@ class DatabaseManager:
         return self.find_one(collection_name, {'name': name})
 
 class BufferManager:
-    
-    def __init__(self, uri):
+    def __init__(self, uri, max_buffer_size=500):
         self.uri = uri
         self.buffers = {}
+        self.max_buffer_size = max_buffer_size  # Maximum number of operations before automatic flush
 
     def add_to_buffer(self, database_name, collection_name, identifier, data_to_save):
         buffer_key = (database_name, collection_name)
         if buffer_key not in self.buffers:
             self.buffers[buffer_key] = []
+
         operation = pymongo.UpdateOne(identifier, {'$set': data_to_save}, upsert=True)
         self.buffers[buffer_key].append(operation)
-        print(f"Added to buffer: {operation}")
+
+        # Automatically flush the buffer if it exceeds the max_buffer_size
+        if len(self.buffers[buffer_key]) >= self.max_buffer_size:
+            self.write_buffer(database_name, collection_name)
+
+    def write_buffer(self, database_name, collection_name):
+        """Writes the current buffer for the given database and collection."""
+        buffer_key = (database_name, collection_name)
+        if buffer_key in self.buffers and self.buffers[buffer_key]:
+            db = DatabaseManager(database_name)
+            db.bulk_write(collection_name, self.buffers[buffer_key])
+            self.buffers[buffer_key] = []  # Clear the buffer after writing
 
     def write_buffers(self):
-        for (database_name, collection_name), operations in self.buffers.items():
-            if operations:
-                db = DatabaseManager(database_name)
-                db.bulk_write(collection_name, operations)
-                self.buffers[(database_name, collection_name)] = []  # Clear the buffer after writing
-                print(f"Buffer written for {database_name} - {collection_name}")
+        """Writes all buffers across all database and collection combinations."""
+        for (database_name, collection_name) in list(self.buffers.keys()):
+            self.write_buffer(database_name, collection_name)
 
     def __enter__(self):
         global _active_buffer_manager

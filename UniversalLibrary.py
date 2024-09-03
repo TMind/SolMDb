@@ -25,6 +25,7 @@ class UniversalLibrary:
             with buffer_manager:       
                 print("Using the buffer manager") 
                 self.fb_map = self._read_forgeborns_from_csv(fb_path)
+                buffer_manager.write_buffers()
                 self._read_entities_from_csv(sff_path)           
             
     def _read_entities_from_csv(self, csv_path):   

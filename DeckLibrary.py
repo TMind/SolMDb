@@ -1,5 +1,6 @@
+import os
 from MyGraph import MyGraph
-from MongoDB.DatabaseManager import DatabaseManager
+from MongoDB.DatabaseManager import DatabaseManager, BufferManager
 from CardLibrary import  Fusion, Deck, Card
 from MultiProcess import MultiProcess
 from GlobalVariables import global_vars as gv
@@ -33,51 +34,53 @@ class DeckLibrary:
             deckDataList = []
             cardDataList = []
             deck_objects = []
+            
+            buffer_manager = BufferManager(os.getenv('MONGODB_URI', None))
+            with buffer_manager: 
+                for deckData in decks_data:
+                    deckName = deckData['name'] 
+                    # Save only new decks
+                    if deckName not in deckNamesDatabase:                         
+                        self.new_decks.append(deckData)    
+                        new_deck = Deck.from_data(deckData)
+                        
+                        if new_deck.children_data:
+                            new_deck.children_data.update({new_deck.forgebornId : 'CardLibrary.Forgeborn'})
+            
+                        # Store the deck object for later use
+                        deck_objects.append(new_deck)
+                        
+                        # Save all cards that are not already in the database
+                        for index, card in new_deck.cards.items():
+                            id = new_deck.cardIds[int(index)-1]                                                
+                            if id not in cardIdsDatabase:
+                                myCard = Card.from_data(card)                                                                                
+                                myCard.data._id = id                            
+                                cardDataList.append(myCard.to_data())
+                        
+                if cardDataList:                                                   
+                    # Remove duplicate entries but keep the first one in the list
+                    seen = set()
+                    cardDataList = [x for x in cardDataList if x['_id'] not in seen and not seen.add(x['_id'])]
+                    #cardDataList = [x for x in cardDataList if not (x['_id'] in seen or seen.add(x['_id']))]                                    
+                    self.dbmgr.insert_many('Card', cardDataList)
 
-            for deckData in decks_data:
-                deckName = deckData['name'] 
-                # Save only new decks
-                if deckName not in deckNamesDatabase:                         
-                    self.new_decks.append(deckData)    
-                    new_deck = Deck.from_data(deckData)
+                # Prepare all deck data for upsert in a single operation
+                for deckObject in deck_objects:
+                    # Now create the graph since the cards are in the database
+                    create_graph_for_object(deckObject)
                     
-                    if new_deck.children_data:
-                        new_deck.children_data.update({new_deck.forgebornId : 'CardLibrary.Forgeborn'})
-        
-                    # Store the deck object for later use
-                    deck_objects.append(new_deck)
-                    
-                    # Save all cards that are not already in the database
-                    for index, card in new_deck.cards.items():
-                        id = new_deck.cardIds[int(index)-1]                                                
-                        if id not in cardIdsDatabase:
-                            myCard = Card.from_data(card)                                                                                
-                            myCard.data._id = id                            
-                            cardDataList.append(myCard.to_data())
-                    
-            if cardDataList:                                                   
-                # Remove duplicate entries but keep the first one in the list
-                seen = set()
-                cardDataList = [x for x in cardDataList if x['_id'] not in seen and not seen.add(x['_id'])]
-                #cardDataList = [x for x in cardDataList if not (x['_id'] in seen or seen.add(x['_id']))]                                    
-                self.dbmgr.insert_many('Card', cardDataList)
+                    # Update the deck data with the graph and node data
+                    deck_data = deckObject.to_data()
+                    deck_data['graph'] = deckObject.data.graph
+                    deck_data['node_data'] = deckObject.data.node_data
 
-            # Prepare all deck data for upsert in a single operation
-            for deckObject in deck_objects:
-                # Now create the graph since the cards are in the database
-                create_graph_for_object(deckObject)
-                
-                # Update the deck data with the graph and node data
-                deck_data = deckObject.to_data()
-                deck_data['graph'] = deckObject.data.graph
-                deck_data['node_data'] = deckObject.data.node_data
+                    # Collect the deck data for upserting
+                    deckDataList.append(deck_data)
 
-                # Collect the deck data for upserting
-                deckDataList.append(deck_data)
-
-            if deckDataList:
-                #self.dbmgr.insert_many('Deck', deckDataList)
-                self.dbmgr.upsert_many('Deck', deckDataList)                
+                if deckDataList:
+                    #self.dbmgr.insert_many('Deck', deckDataList)
+                    self.dbmgr.upsert_many('Deck', deckDataList)                
 
         if fusions_data:
             

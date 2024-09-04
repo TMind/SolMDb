@@ -23,8 +23,8 @@ class GlobalVariables:
     self._username = os.getenv('SFF_USERNAME', 'sff')
     self._host = os.getenv('HOST', 'localhost')
     self._port = os.getenv('MONGODB_PORT', 27017)
-    #self.uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')
-    self.uri = os.getenv('MONGODB_URI', "mongodb://tmind:c6tltLqSnbIyy4SAVsBwCiZWET9LA6USjk87IV3SO64jkKIuKXMBoe5Oeku4F2qHjXDldrgaNxypACDbE0WurA==@tmind.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@tmind@")
+    self.uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')
+    #self.uri = os.getenv('MONGODB_URI', "mongodb://tmind:c6tltLqSnbIyy4SAVsBwCiZWET9LA6USjk87IV3SO64jkKIuKXMBoe5Oeku4F2qHjXDldrgaNxypACDbE0WurA==@tmind.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@tmind@")
     self.debug = os.getenv('DEBUG_MODE', 'False').lower() in ('true', '1', 't')
     
     self.myDB = None

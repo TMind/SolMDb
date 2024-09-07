@@ -37,6 +37,8 @@ class GlobalVariables:
     self.data_selection_sets = data_selection_sets
     
     self._set_environment_variables()
+    
+    apply_custom_css_for_specific_qgrid(self.rotated_column_definitions.keys(), header_height=150)
 
   def _initialize_objects(self):
     
@@ -111,12 +113,51 @@ class GlobalVariables:
           progress_bar.bar_style = 'success'
           progress_bar.style.bar_color = 'lightgreen'
           label.value = f"{message} -> Finished!"
+          
+          
+from IPython.display import display, HTML
+
+def apply_custom_css_for_specific_qgrid(column_names, column_width=10, header_height=80):
+    style = f"""
+    <style>
+        .slick-header-column {{
+            height: {header_height}px !important;
+            text-align: left !important;
+            vertical-align: bottom !important;
+        }}
+
+        .slick-header-column .slick-column-name {{
+            display: inline-block !important;
+            transform-origin: bottom left !important;
+            white-space: nowrap !important;
+            writing-mode: vertical-lr !important;
+            text-orientation: mixed !important;
+        }}
+    </style>
+
+    <script>
+        const columnNames = {column_names};
+
+        document.querySelectorAll('.slick-header-column').forEach(function(col) {{
+            const columnName = col.querySelector('.slick-column-name').innerText.trim();
+            if (columnNames.includes(columnName)) {{
+                col.style.width = '{column_width}px';
+                col.querySelector('.slick-column-name').style.transform = 'rotate(90deg)';
+            }} else {{
+                col.style.width = ''; // Reset the width for non-target columns
+                col.querySelector('.slick-column-name').style.transform = ''; // Reset the transform
+            }}
+        }});
+    </script>
+    """
+
+    display(HTML(style))
 
 default_width = 150
 rotated_width = 10
 
 rotated_column_definitions = {
-     'Creatures':        {'width': rotated_width},
+    'Creatures':        {'width': rotated_width},
     'Spells':           {'width': rotated_width},
     'Exalts':           {'width': rotated_width},   
     'Beast':            {'width': rotated_width},
@@ -236,6 +277,8 @@ non_rotated_column_definitions = {
     'xp':               {'width': 50},
     'elo':              {'width': 50},
     'level':            {'width': 50},
+    'deckScore':        {'width': 90},
+    'deckRank':         {'width': 90},
     'pExpiry':          {'width': 200},
     'cardSetNo':        {'width': 50},
     'faction':          {'width': 100},
@@ -257,7 +300,7 @@ data_selection_sets = {
   "Deck Stats": {
     "Name": True, "type": 'Deck',
     "registeredDate": True, "UpdatedAt": True, "pExpiry": True,
-    "level": True,  "xp": True, "elo": True,
+    "level": True,  "xp": True, "elo": True, "deckScore": True, "deckRank": True,
     "cardSetNo": True,  "faction": True,
     "forgebornId": True, "cardTitles": True,
     "Creatures": True,  "Spells": True,

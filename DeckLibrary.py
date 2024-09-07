@@ -25,11 +25,17 @@ class DeckLibrary:
         self.online_fusions = []
         
         if decks_data:            
-            deckCursor = self.dbmgr.find('Deck', {}, {'name': 1})                
-            deckNamesDatabase = [deck['name'] for deck in deckCursor]
+                        
+            #Default mode 'create'            
+            deckNamesDatabase = []
+            cardIdsDatabase = []
+                
+            if mode == 'update':
+                deckCursor = self.dbmgr.find('Deck', {}, {'name': 1})                
+                deckNamesDatabase = [deck['name'] for deck in deckCursor]
                                     
-            cardListDatabase = self.dbmgr.find('Card', {})        
-            cardIdsDatabase = [card['_id'] for card in cardListDatabase]
+                cardListDatabase = self.dbmgr.find('Card', {})        
+                cardIdsDatabase = [card['_id'] for card in cardListDatabase]
 
             deckDataList = []
             cardDataList = []
@@ -63,7 +69,7 @@ class DeckLibrary:
                     seen = set()
                     cardDataList = [x for x in cardDataList if x['_id'] not in seen and not seen.add(x['_id'])]
                     #cardDataList = [x for x in cardDataList if not (x['_id'] in seen or seen.add(x['_id']))]                                    
-                    self.dbmgr.insert_many('Card', cardDataList)
+                    self.dbmgr.upsert_many('Card', cardDataList)
 
                 # Prepare all deck data for upsert in a single operation
                 for deckObject in deck_objects:
@@ -78,8 +84,7 @@ class DeckLibrary:
                     # Collect the deck data for upserting
                     deckDataList.append(deck_data)
 
-                if deckDataList:
-                    #self.dbmgr.insert_many('Deck', deckDataList)
+                if deckDataList:                 
                     self.dbmgr.upsert_many('Deck', deckDataList)                
 
         if fusions_data:
@@ -116,9 +121,9 @@ class DeckLibrary:
                 self.online_fusions.append(fusion_data)                
                 gv.update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")
         
-        # Check if fusions exist already in the database and if not, create them
+        # In creation mode we create fusions for all decks
 
-        if mode =='create':
+        if mode =='fuse':
             #print('Creating fusions...')
             deckCursor = self.dbmgr.find('Deck', {}, {'name': 1})                
             self.new_decks = [deck for deck in deckCursor]             

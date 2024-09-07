@@ -63,7 +63,7 @@ class TemplateGrid:
             'Base Data': ['Name', 'type', 'faction', 'forgebornId', 'cardTitles', 'FB2', 'FB3', 'FB4', 'Creatures', 'Spells', 'Exalts'],
             'Deck Data': ['registeredDate', 'UpdatedAt', 'pExpiry', 'cardSetNo', 'tags' ],
             'Fusion Data': ['Deck A', 'Deck B', 'faction', 'crossFaction'],
-            'Deck Stats': ['elo', 'level', 'xp', 'deckRank' ],
+            'Deck Stats': ['elo', 'level', 'xp', 'deckRank', 'deckScore'],
             'Fusion Stats' : ['CreatedAt', 'id' ],
             'Statistical Data': ['A1', 'H1', 'A2', 'H2', 'A3', 'H3'],
             'Tags' : ['Beast', 'Dinosaur', 'Dragon', 'Elemental Type', 'Mage', 'Plant Type', 'Robot Type', 'Scientist', 'Spirit Type', 'Warrior', 'Zombie Type',

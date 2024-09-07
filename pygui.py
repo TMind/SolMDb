@@ -154,7 +154,7 @@ def print_dataframe(df, name):
     print(df.index)    
     display(qgrid.show_grid(df, grid_options={'forceFitColumns': False}, column_definitions=global_vars.all_column_definitions))    
 
-def clean_columns(df):
+def clean_columns(df, exclude_columns=None):
     """
     Cleans both numeric and non-numeric columns of a DataFrame by:
     1. Replacing NaN values with 0 in numeric columns and converting them to integers.
@@ -167,18 +167,15 @@ def clean_columns(df):
     Returns:
         pd.DataFrame: The cleaned DataFrame with both numeric and non-numeric columns processed.
     """
-    # Select only the numeric columns
-    numeric_df = df.select_dtypes(include='number')
+    if exclude_columns is None:
+        exclude_columns = []
+    
+    # Select numeric columns, excluding the ones you want to preserve
+    numeric_df = df.select_dtypes(include='number').drop(columns=exclude_columns, errors='ignore')
 
     # Replace NaN values with 0 and convert to integer for only numeric columns
-    #numeric_df = numeric_df.fillna(0).astype(int)
-    # Convert to integers and replace 0 with empty strings
     numeric_df = numeric_df.fillna(0).astype(int).replace(0, '').astype(str)
     
-    # Convert the numeric DataFrame to strings, replacing '0' with ''
-    #numeric_df = numeric_df.astype(str).replace('0', '')
-    #numeric_df = numeric_df.replace('0', '')
-
     # Select non-numeric columns
     non_numeric_df = df.select_dtypes(exclude='number')
 
@@ -204,12 +201,25 @@ def update_central_frame_tab(central_df):
     
     #print("Central DataFrame tab updated.")
 
+# def merge_and_concat(df1, df2):
+#     """
+#     Efficiently merges two DataFrames by handling overlapping columns and concatenating them row-wise if indices overlap.
+#     """
+#     # Handle overlapping columns: combine with non-NaN values taking precedence
+#     combined_df = pd.concat([df2, df1], axis=0, sort=False).groupby(level=0).first()
+#     return combined_df
+
 def merge_and_concat(df1, df2):
     """
-    Efficiently merges two DataFrames by handling overlapping columns and concatenating them row-wise if indices overlap.
+    Efficiently merges two DataFrames by handling overlapping columns and concatenating them row-wise,
+    ensuring all columns, including 'deckScore', are preserved.
     """
-    # Handle overlapping columns: combine with non-NaN values taking precedence
-    combined_df = pd.concat([df2, df1], axis=0, sort=False).groupby(level=0).first()
+    # Concatenate both DataFrames row-wise without dropping any columns
+    combined_df = pd.concat([df1, df2], axis=0, sort=False)
+    
+    # If needed, you can fill missing values with NaN (or other strategies)
+    #combined_df = combined_df.fillna(value=np.nan)
+    
     return combined_df
 
 
@@ -254,7 +264,7 @@ def generate_central_dataframe(force_new=False):
     central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
     fusion_stats_df = generate_fusion_statistics_dataframe()
     central_df = merge_and_concat(central_df, fusion_stats_df)
-    central_df = clean_columns(central_df)
+    central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo'])
     
     central_df = central_df.copy()
     #print("Resetting index of central dataframe...")
@@ -599,7 +609,7 @@ def generate_deck_statistics_dataframe():
 
     df_decks = pd.DataFrame(decks)
     df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
-    df_decks_filtered = df_decks[['name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph', 'node_data']].copy()
+    df_decks_filtered = df_decks[['name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph', 'node_data']].copy()
     df_decks_filtered['type'] = 'Deck'
     df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].astype(int).replace(99, 0)
     df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
@@ -753,14 +763,18 @@ def reload_data_on_click(button, value):
     #print(f'{value} for username: {username_value}')
     if value == 'Load Decks/Fusions':
         arguments = ['--username', username_value,
-                     '--mode', 'update',
+                     '--mode', 'create',
                      '--type', 'deck,fuseddeck']
         #print(f'Loading Decks/Fusions with arguments {arguments}')
-        args = parse_arguments(arguments)
-     
+        args = parse_arguments(arguments)    
+    elif value == 'Update Decks/Fusions':
+        arguments = ['--username', username_value,
+                     '--mode', 'update',
+                     '--type', 'deck,fuseddeck']        
+        args = parse_arguments(arguments)         
     elif value == 'Create all Fusions':
         arguments = ['--username', username_value,
-                     '--mode', 'create' ]
+                     '--mode', 'fuse' ]
         #print(f'Loading Fusions with arguments {arguments}')
         args = parse_arguments(arguments)    
     elif value == 'Generate Dataframe':
@@ -1046,11 +1060,11 @@ def setup_interface():
 
     # Toggle buttons to select load items
     loadToggle = widgets.ToggleButtons(
-        options=['Load Decks/Fusions', 'Create all Fusions', 'Generate Dataframe'],
+        options=['Load Decks/Fusions', 'Update Decks/Fusions', 'Create all Fusions', 'Generate Dataframe'],
         description='Action:',
         disabled=False,
         button_style='warning', # 'success', 'info', 'warning', 'danger' or ''
-        tooltips=['Load Decks and Fusions from the website', 'Create Fusions from loaded decks'])
+        tooltips=['Load Decks and Fusions from the website', 'Update Decks and Fusions in the database' 'Create Fusions from loaded decks'])
 
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description='Execute', button_style='info', tooltip='Execute the selected action')

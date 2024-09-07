@@ -207,6 +207,7 @@ class DeckData:
     digital: str = ''
     elo: int = 0
     deckRank: str = ''
+    deckScore: float = 0.0
     level: int = 0
     _id: str = ''
     children_data: dict = field(default_factory=dict)

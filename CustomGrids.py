@@ -50,6 +50,8 @@ class TemplateGrid:
         qgrid_filter = qgrid.show_grid(self.df, column_definitions=column_definitions,
                                        grid_options={'forceFitColumns': False, 'filterable': False, 'sortable': False, 'editable' : True, 'defaultColumnWidth': 75, 'enableColumnReorder': True}, show_toolbar=True)
         qgrid_filter.layout = widgets.Layout(height='auto')
+        qgrid_filter.add_class('qgrid-custom-css')
+        
         # Binding the grid events
         qgrid_filter.on('row_added', self.grid_filter_on_row_added)
         qgrid_filter.on('row_removed', self.grid_filter_on_row_removed)

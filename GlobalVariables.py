@@ -38,7 +38,9 @@ class GlobalVariables:
     
     self._set_environment_variables()
     
-    apply_custom_css_for_specific_qgrid(self.rotated_column_definitions.keys(), header_height=150)
+    #apply_custom_css_for_specific_qgrid(self.rotated_column_definitions.keys(), header_height=150)
+    #apply_custom_css_for_headerCss(header_height=150)
+    apply_CustomCss_to_ClassHeader('.qgrid-custom-css', rotate_suffix , header_height=150)    
 
   def _initialize_objects(self):
     
@@ -132,6 +134,7 @@ def apply_custom_css_for_specific_qgrid(column_names, column_width=10, header_he
             white-space: nowrap !important;
             writing-mode: vertical-lr !important;
             text-orientation: mixed !important;
+            margin-top: 20px !important;  /* Adding margin to the top */
         }}
     </style>
 
@@ -153,119 +156,166 @@ def apply_custom_css_for_specific_qgrid(column_names, column_width=10, header_he
 
     display(HTML(style))
 
+def apply_custom_css_for_headerCss(column_width=10, header_height=80):
+    style = f"""
+    <style>
+        .slick-header-column {{
+            height: {header_height}px !important;
+            text-align: left !important;
+            vertical-align: bottom !important;
+        }}
+
+        ._rotate_ .slick-column-name {{
+            display: inline-block !important;
+            transform-origin: bottom left !important;
+            white-space: nowrap !important;
+            transform: rotate(90deg) !important;
+            margin-top: 10px !important;  /* Adding margin to the top */
+        }}
+    </style>
+    """
+
+    display(HTML(style))
+
+def apply_CustomCss_to_ClassHeader(class_name='', keyword = '', header_height=80):
+    if keyword and not keyword.startswith('.'): keyword = f'.{keyword}'
+    style = f"""
+    <style>
+        {class_name} .slick-header-column {{
+            height: {header_height}px !important;
+            text-align: left !important;
+            vertical-align: bottom !important;
+        }}
+
+        {class_name} {keyword} .slick-column-name {{
+            display: inline-block !important;
+            transform-origin: bottom left !important;
+            white-space: nowrap !important;
+            transform: rotate(90deg) !important;
+            margin-top: 10px !important;
+        }}
+    </style>
+    """
+
+    display(HTML(style))
+
+
+
 default_width = 150
 rotated_width = 10
 
-rotated_column_definitions = {
-    'Creatures':        {'width': rotated_width},
-    'Spells':           {'width': rotated_width},
-    'Exalts':           {'width': rotated_width},   
-    'Beast':            {'width': rotated_width},
-    'Beast Synergy':    {'width': rotated_width},
-    'Beast Combo':      {'width': rotated_width},
-    'Dinosaur':         {'width': rotated_width},
-    'Dinosaur Synergy': {'width': rotated_width},
-    'Dinosaur Combo':   {'width': rotated_width},
-    'Mage':             {'width': rotated_width},
-    'Mage Synergy':     {'width': rotated_width},
-    'Mage Combo':       {'width': rotated_width},
-    'Robot':            {'width': rotated_width},
-    'Robot Synergy':    {'width': rotated_width},
-    'Robot Type':       {'width': rotated_width},
-    'Robot Combo':      {'width': rotated_width},
-    'Scientist':        {'width': rotated_width},
-    'Scientist Synergy': {'width': rotated_width},
-    'Scientist Combo':  {'width': rotated_width},
-    'Spirit':           {'width': rotated_width},
-    'Spirit Synergy':   {'width': rotated_width},
-    'Spirit Type' :     {'width': rotated_width},
-    'Spirit Combo':     {'width': rotated_width},
-    'Warrior':          {'width': rotated_width},
-    'Warrior Synergy':  {'width': rotated_width},
-    'Warrior Combo':    {'width': rotated_width},
-    'Zombie':           {'width': rotated_width},
-    'Zombie Synergy':   {'width': rotated_width},
-    'Zombie Type':      {'width': rotated_width},
-    'Zombie Combo':     {'width': rotated_width},
-    'Replace Setup':    {'width': rotated_width},
-    'Replace Profit':   {'width': rotated_width},
-    'Replace Combo':    {'width': rotated_width},
-    'Minion':           {'width': rotated_width},
-    'Minion Synergy':   {'width': rotated_width},
-    'Minion Combo':     {'width': rotated_width},
-    'Spell':            {'width': rotated_width},
-    'Spell Synergy':    {'width': rotated_width},
-    'Spell Combo':      {'width': rotated_width},
-    'Healing Source':   {'width': rotated_width},
-    'Healing Synergy':  {'width': rotated_width},
-    'Healing Combo':    {'width': rotated_width},
-    'Movement':         {'width': rotated_width},
-    'Disruption':       {'width': rotated_width},
-    'Movement Benefit': {'width': rotated_width},
-    'Movement Combo':   {'width': rotated_width},
-    'Armor':            {'width': rotated_width},
-    'Armor Giver':      {'width': rotated_width},
-    'Armor Synergy':    {'width': rotated_width},
-    'Armor Combo':      {'width': rotated_width},
-    'Activate':         {'width': rotated_width},
-    'Ready':            {'width': rotated_width},
-    'Activate Combo':   {'width': rotated_width},
-    'Free':             {'width': rotated_width},
-    'Free Upgrade':     {'width': rotated_width},
-    'Upgrade':          {'width': rotated_width},
-    'Upgrade Synergy':  {'width': rotated_width},
-    'Upgrade Combo':    {'width': rotated_width},
-    'Face Burn':        {'width': rotated_width},
-    'Removal':          {'width': rotated_width},
-    'Breakthrough':     {'width': rotated_width},
-    'Breakthrough Giver':{'width': rotated_width},
-    'Aggressive':       {'width': rotated_width},
-    'Aggressive Giver': {'width': rotated_width},
-    'Defender':         {'width': rotated_width},
-    'Defender Giver':   {'width': rotated_width},
-    'Stealth':          {'width': rotated_width},
-    'Stealth Giver':    {'width': rotated_width},
-    'Stat Buff':        {'width': rotated_width},
-    'Attack Buff':      {'width': rotated_width},
-    'Health Buff':      {'width': rotated_width},
-    'Stat Debuff':      {'width': rotated_width},
-    'Attack Debuff':    {'width': rotated_width},
-    'Health Debuff':    {'width': rotated_width},
-    'Destruction Synergy':{'width': rotated_width},
-    'Destruction Activator':{'width': rotated_width},
-    'Destruction Combo': {'width': rotated_width},
-    'Self Damage Payoff':{'width': rotated_width},
-    'Self Damage Activator':{'width': rotated_width},
-    'Self Damage Combo': {'width': rotated_width},
-    'Silence':          {'width': rotated_width},
-    'White Fang':       {'width': rotated_width},
-    'Dragon':           {'width': rotated_width},
-    'Dragon Synergy':   {'width': rotated_width},
-    'Dargon Combo':     {'width': rotated_width},
-    'Elemental':        {'width': rotated_width},
-    'Elemental Synergy':{'width': rotated_width},
-    'Elemental Type':   {'width': rotated_width},
-    'Elemental Combo':  {'width': rotated_width},
-    'Plant':            {'width': rotated_width},
-    'Plant Synergy':    {'width': rotated_width},
-    'Plant Combo':      {'width': rotated_width},
-    'Exalts':           {'width': rotated_width},
-    'Exalt Synergy':    {'width': rotated_width},
-    'Exalt Combo':      {'width': rotated_width},
-    'Slay':             {'width': rotated_width},
-    'Deploy':           {'width': rotated_width},
-    'Ready Combo' :     {'width': rotated_width},
-    'Deploy Combo' :    {'width': rotated_width},
-    'Reanimate' :       {'width': rotated_width},
-    'Reanimate Activator' : {'width': rotated_width},
-    'Reanimate Combo' : {'width': rotated_width},
-    'Last Winter':      {'width': rotated_width},
-    'Spicy':            {'width': rotated_width},
-    'Cool':             {'width': rotated_width},
-    'Fun':              {'width': rotated_width},
-    'Annoying':         {'width': rotated_width}
-}
+rotate_suffix = '_rotate_'
 
+rotated_column_definitions = {
+    'Creatures':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spells':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Exalts':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Beast':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Beast Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Beast Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dinosaur':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dinosaur Synergy': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dinosaur Combo':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Mage':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Mage Synergy':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Mage Combo':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Robot':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Robot Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Robot Type':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Robot Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Scientist':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Scientist Synergy':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Scientist Combo':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spirit':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spirit Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spirit Type' :     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spirit Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Warrior':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Warrior Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Warrior Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Zombie':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Zombie Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Zombie Type':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Zombie Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Replace Setup':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Replace Profit':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Replace Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Minion':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Minion Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Minion Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spell':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spell Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spell Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Healing Source':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Healing Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Healing Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Movement':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Disruption':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Movement Benefit': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Movement Combo':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Armor':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Armor Giver':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Armor Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Armor Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Activate':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Ready':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Activate Combo':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Free':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Free Upgrade':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Upgrade':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Upgrade Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Upgrade Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Face Burn':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Removal':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Breakthrough':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Breakthrough Giver':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Aggressive':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Aggressive Giver': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Defender':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Defender Giver':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Stealth':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Stealth Giver':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Stat Buff':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Attack Buff':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Health Buff':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Stat Debuff':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Attack Debuff':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Health Debuff':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Destruction Synergy':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Destruction Activator':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Destruction Combo': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Self Damage Payoff':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Self Damage Activator':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Self Damage Combo': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Silence':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'White Fang':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dragon':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dragon Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dragon Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Elemental':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Elemental Synergy':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Elemental Type':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Elemental Combo':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Plant':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Plant Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Plant Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Exalts':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Exalt Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Exalt Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Slay':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Deploy':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Ready Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Deploy Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Reanimate':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Reanimate Activator': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Reanimate Combo':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Last Winter':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spicy':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Cool':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Fun':              {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Annoying':         {'width': rotated_width, 'headerCssClass': rotate_suffix}
+}
+ 
 non_rotated_column_definitions = {
     'index':            {'width': 50},
     'Name':             {'width': 250},
@@ -302,7 +352,7 @@ data_selection_sets = {
     "registeredDate": True, "UpdatedAt": True, "pExpiry": True,
     "level": True,  "xp": True, "elo": True, "deckScore": True, "deckRank": True,
     "cardSetNo": True,  "faction": True,
-    "forgebornId": True, "cardTitles": True,
+    "forgebornId": True, "cardheaderCssClasss": True,
     "Creatures": True,  "Spells": True,
     "FB2": True,    "FB3": True,    "FB4": True,
     "A1": True,     "A2": True,     "A3": True,
@@ -312,7 +362,7 @@ data_selection_sets = {
     "Name": True, "type": 'Fusion',
     "CreationDate": True, "UpdatedAt": True, 
     "faction": True, "crossfaction": True,
-    "forgebornId": True, "cardTitles": True,
+    "forgebornId": True, "cardheaderCssClasss": True,
     "FB2": True,    "FB3": True,    "FB4": True,
     "Creatures": True,  "Spells": True, "Exalts": True,    
     #"A1": True,     "A2": True,     "A3": True,
@@ -476,7 +526,7 @@ data_selection_sets = {
     "FB2": True,
     "FB3": True,
     "FB4": True,
-    "cardTitles": True,
+    "cardheaderCssClasss": True,
     "Beast": True,
     "Beast Synergy": True,
     "Dinosaur": True,
@@ -561,7 +611,7 @@ data_selection_sets = {
     "FB2": True,
     "FB3": True,
     "FB4": True,
-    "cardTitles": True,  
+    "cardheaderCssClasss": True,  
     'Beast Combo':      True,
     'Dinosaur Combo':   True,
     'Mage Combo':       True,
@@ -590,7 +640,7 @@ data_selection_sets = {
   },
   'Deck Content': {
     'name': True,
-    'CardTitle': True,
+    'cardTitles': True,
     'faction': True,
     'cardType': True,
     'cardSubType': True,

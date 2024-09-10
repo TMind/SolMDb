@@ -4,6 +4,7 @@ import pandas as pd
 import qgrid
 import ipywidgets as widgets
 from GlobalVariables import global_vars as gv
+from CustomCss import CSSManager, rotate_suffix
 
 from DataSelectionManager import DataSelectionManager
 from MongoDB.DatabaseManager import DatabaseManager
@@ -19,8 +20,11 @@ class GridManager:
         self.qgrid_callbacks = {}
         self.relationships = {}
         self.debug_output = debug_output
+        self.css_manager = CSSManager()
+        self.custom_css_class = self.css_manager.create_and_inject_css('filter_grids', rotate_suffix)
 
     def add_grid(self, identifier, df, options=None, dependent_identifiers=None, grid_type='qgrid'):
+      
         """Add or update a grid to the GridManager."""
         if dependent_identifiers is None:
             dependent_identifiers = []
@@ -40,6 +44,15 @@ class GridManager:
             self._setup_grid_events(identifier, grid)
             with self.debug_output:
                 print(f"GridManager::add_grid() - Grid {identifier} added.")
+        
+        if self.css_manager.needs_custom_styles(grid.main_widget, rotate_suffix):
+            self.css_manager.apply_css_to_widget(grid.main_widget, self.custom_css_class)
+            with self.debug_output:
+                print(f"Apply Custom Css {self.custom_css_class} for {identifier} : {rotate_suffix} ")
+        else:
+            grid.main_widget.remove_class(self.custom_css_class)
+            print(f"Remove Custom Css {self.custom_css_class} for {identifier} : {rotate_suffix} ")
+                        
         
         return grid
         
@@ -245,16 +258,15 @@ class BaseGrid:
 
 class QGrid(BaseGrid):
     def create_main_widget(self, df):
-        print(f"QGrid::create_main_widget() - Creating QGrid -> column_definitions = {self.grid_options.get('column_definitions', {})}")
+        #print(f"QGrid::create_main_widget() - Creating QGrid -> column_definitions = {self.grid_options.get('column_definitions', {})}")
         self.main_widget = qgrid.show_grid(
             df,
             column_options=self.grid_options.get('column_options', {}),
             column_definitions=self.grid_options.get('column_definitions', {}),
-            grid_options={'forceFitColumns': False, 'enableColumnReorder': True},
+            grid_options={'forceFitColumns': False, 'enableColumnReorder': True, 'minVisibleRows' : 10},
             show_toolbar=False
         )
-        self.main_widget.add_class('qgrid-custom-css')
-        #apply_rotation_css_to_qgrid(self.main_widget, 12, header_height=150, custom_class='qgrid-rotated-header')
+        
 
     def update_main_widget(self, new_df):
         self.main_widget.df = new_df
@@ -321,7 +333,7 @@ class FilterGrid:
             'op2': [''],
             'Spell': [''],            
             'Forgeborn Ability': [''],
-            'Data Set': ['Deck Stats'],
+            'Data Set': ['Deck Tags'],
             'Active': [True],
         })
 
@@ -712,6 +724,8 @@ class DynamicGridManager:
         self.grid_layout = widgets.GridspecLayout(1, 1)        
         self.filterGridObject = FilterGrid(self.refresh_gridbox)
         self.deck_content_grid = qgrid.show_grid(pd.DataFrame(), show_toolbar=False, grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True})
+        self.css_manager = CSSManager()        
+        self.custom_css_class = self.css_manager.create_and_inject_css('deck_content', rotate_suffix)        
 
         # UI elements
         self.selectionGrid, self.filterGrid = self.filterGridObject.get_widgets()
@@ -776,7 +790,7 @@ class DynamicGridManager:
                 with self.out_debug:
                     print(f"Registering selection_changed callback for grid {grid_identifier}")
                 self.qm.on(grid_identifier, 'selection_changed', self.update_deck_content)
-                self.qm.display_registered_events()
+                #self.qm.display_registered_events()
 
                 filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
                 filter_row_widget.layout = widgets.Layout(height='70px') #, border='1px solid blue')
@@ -791,53 +805,57 @@ class DynamicGridManager:
         self.update_ui()
 
     def update_deck_content(self, event, widget):
-        """Update the deck content DataFrame based on the selected item in the grid."""
-        selected_indices = event['new']
-        grid_df = widget.get_changed_df()            
+        with gv.out_debug: 
+            """Update the deck content DataFrame based on the selected item in the grid."""
+            selected_indices = event['new']
+            grid_df = widget.get_changed_df()            
 
-        if grid_df is not None and selected_indices:
-            # Get the selected rows based on indices
-            selected_rows = grid_df.iloc[selected_indices]
+            if grid_df is not None and selected_indices:
+                # Get the selected rows based on indices
+                selected_rows = grid_df.iloc[selected_indices]
 
-            # Fetch the 'collection' DataFrame
-            collection_df = self.qm.get_default_data('collection')
+                # Fetch the 'collection' DataFrame
+                collection_df = self.qm.get_default_data('collection')
 
-            # Initialize a list to collect all selected deck names
-            selected_deck_names = []
+                # Initialize a list to collect all selected deck names
+                selected_deck_names = []
 
-            for _, row in selected_rows.iterrows():
-                # Find the corresponding row in the collection DataFrame
-                collection_row = collection_df.loc[collection_df['Name'] == row['Name']]
+                for _, row in selected_rows.iterrows():
+                    # Find the corresponding row in the collection DataFrame
+                    collection_row = collection_df.loc[collection_df['Name'] == row['Name']]
 
-                if not collection_row.empty:
-                    item_type = collection_row['type'].values[0]
+                    if not collection_row.empty:
+                        item_type = collection_row['type'].values[0]
 
-                    if item_type.lower() == 'fusion':
-                        # If it's a fusion, add both Deck A and Deck B names
-                        if 'Deck A' in collection_row and 'Deck B' in collection_row:
-                            selected_deck_names.extend([collection_row['Deck A'].values[0], collection_row['Deck B'].values[0]])
-                    elif item_type.lower() == 'deck':
-                        # If it's a deck, add the Name
-                        selected_deck_names.append(collection_row['Name'].values[0])
+                        if item_type.lower() == 'fusion':
+                            # If it's a fusion, add both Deck A and Deck B names
+                            if 'Deck A' in collection_row and 'Deck B' in collection_row:
+                                selected_deck_names.extend([collection_row['Deck A'].values[0], collection_row['Deck B'].values[0]])
+                        elif item_type.lower() == 'deck':
+                            # If it's a deck, add the Name
+                            selected_deck_names.append(collection_row['Name'].values[0])
 
-            # Remove any duplicates in the selected deck names
-            selected_deck_names = list(set(selected_deck_names))
-                            
-            # Generate the deck content DataFrame using the provided function
-            deck_content_df = self.data_generate_functions['deck_content'](selected_deck_names)
-
-            # Create a new grid for the deck content and update the UI
-            self.deck_content_grid = qgrid.show_grid(
-                deck_content_df,
-                show_toolbar=False,
-                column_definitions=gv.all_column_definitions,
-                grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True}
-            )
-            #apply_rotation_css_to_qgrid(self.deck_content_grid, 7, header_height=150)
-            #apply_rotation_css_to_columns(self.deck_content_grid, gv.rotated_column_definitions.keys() ,header_height=150)
-                            
-            # Update the UI
-            self.update_ui()
+                # Remove any duplicates in the selected deck names
+                selected_deck_names = list(set(selected_deck_names))
+                                
+                # Generate the deck content DataFrame using the provided function
+                deck_content_df = self.data_generate_functions['deck_content'](selected_deck_names)
+                #print(deck_content_df)
+                # Create a new grid for the deck content and update the UI
+                self.deck_content_grid = qgrid.show_grid(
+                    deck_content_df,
+                    show_toolbar=False,
+                    column_definitions=gv.all_column_definitions,
+                    grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True, 'minVisibleRows': 16 , 'maxVisibleRows': 30 }
+                )
+                
+                if self.css_manager.needs_custom_styles(self.deck_content_grid, rotate_suffix):     
+                    self.css_manager.apply_css_to_widget(self.deck_content_grid, self.custom_css_class)
+                else:
+                    self.deck_content_grid.remove_class(self.custom_css_class)
+                                                                                    
+                # Update the UI
+                self.update_ui()
 
     def update_ui(self):
         """Helper method to update the self.ui.children with the common layout."""

@@ -1,14 +1,13 @@
-from distutils import extension
-import select
+import copy
 import pandas as pd
-#import qgrid
 import qgridnext as qgrid 
 import ipywidgets as widgets
 from IPython.display import display, HTML
 from collections import OrderedDict
 
 from DataSelectionManager import DataSelectionManager
-from GlobalVariables import global_vars
+from GlobalVariables import global_vars as gv
+from CustomCss import CSSManager, rotate_suffix, rotated_column_definitions
 from MongoDB.DatabaseManager import DatabaseManager
 
 # Inject custom CSS
@@ -29,28 +28,30 @@ class TemplateGrid:
 
     def __init__(self):
         self.df = self.create_initial_dataframe()
+        self.css_manager = CSSManager()
         self.qgrid_filter = self.create_filter_qgrid()
-        self.setup_widgets()  # Initialize and setup widgets for dynamic column selection
+        self.setup_widgets()  # Initialize and setup widgets for dynamic column selection        
 
     def create_filter_qgrid(self):
         
-        columns = global_vars.all_column_definitions.keys()
-        column_definitions = {}
+        column_definitions = copy.deepcopy(gv.all_column_definitions)
         
         # Set column widths
-        for column in columns:
-            column_definitions[column] = { 'width': len(column) * 11 }
+        for column in column_definitions.keys():            
+            if column in rotated_column_definitions.keys() : continue
+            column_definitions[column]['width'] = len(column) * 11
 
         column_definitions['index'] = { 'width': 25 }
         column_definitions['Template Name'] = { 'width': 125 }
-        column_definitions['type'] = { 'width': 50 }
-        column_definitions['Name'] = { 'width': 50 } 
+        column_definitions['type']['width'] = 50
+        column_definitions['Name']['width'] = 200 
         
         # Create the qgrid widget
         qgrid_filter = qgrid.show_grid(self.df, column_definitions=column_definitions,
-                                       grid_options={'forceFitColumns': False, 'filterable': False, 'sortable': False, 'editable' : True, 'defaultColumnWidth': 75, 'enableColumnReorder': True}, show_toolbar=True)
-        qgrid_filter.layout = widgets.Layout(height='auto')
-        qgrid_filter.add_class('qgrid-custom-css')
+                                       grid_options={'forceFitColumns': False, 'filterable': False, 'sortable': False, 'editable' : True, 'defaultColumnWidth': 75, 'enableColumnReorder': True, 'minVisibleRows' : 15}, show_toolbar=True)
+        qgrid_filter.layout = widgets.Layout(height='auto') 
+        custom_css_class = self.css_manager.create_and_inject_css('Template', rotate_suffix)       
+        self.css_manager.apply_css_to_widget(qgrid_filter,custom_css_class)
         
         # Binding the grid events
         qgrid_filter.on('row_added', self.grid_filter_on_row_added)
@@ -64,7 +65,7 @@ class TemplateGrid:
         self.column_groups = {
             'Base Data': ['Name', 'type', 'faction', 'forgebornId', 'cardTitles', 'FB2', 'FB3', 'FB4', 'Creatures', 'Spells', 'Exalts'],
             'Deck Data': ['registeredDate', 'UpdatedAt', 'pExpiry', 'cardSetNo', 'tags' ],
-            'Fusion Data': ['Deck A', 'Deck B', 'faction', 'crossFaction'],
+            'Fusion Data': ['Deck A', 'Deck B', 'CreatedAt', 'faction', 'crossFaction'],
             'Deck Stats': ['elo', 'level', 'xp', 'deckRank', 'deckScore'],
             'Fusion Stats' : ['CreatedAt', 'id' ],
             'Statistical Data': ['A1', 'H1', 'A2', 'H2', 'A3', 'H3'],
@@ -156,7 +157,7 @@ class TemplateGrid:
         try:
             # Insert the new data
             #global_vars.myDB.upsert({'name': 'TemplateGrid', 'data': data})
-            myDB = global_vars.myDB or DatabaseManager(global_vars.username)
+            myDB = gv.myDB or DatabaseManager(gv.username)
             myDB.upsert(
                 collection_name='User Data',  # Assuming 'TemplateGrid' is the collection name
                 identifier={'name': 'TemplateGrid'},  # Identifier for the document
@@ -170,9 +171,9 @@ class TemplateGrid:
         """Restore the previously saved state of the template grid from MongoDB."""
         try:
             # Retrieve the data from MongoDB
-            data = global_vars.myDB.find_one('User Data', {'name': 'TemplateGrid'})
+            data = gv.myDB.find_one('User Data', {'name': 'TemplateGrid'})
             if not data:
-                with global_vars.out_debug:
+                with gv.out_debug:
                     print("No data found in MongoDB.")
                 return
             
@@ -199,7 +200,7 @@ class TemplateGrid:
                 self.qgrid_filter.change_selection(rows=[0])  # Re-select the first row
                 #print("Template grid restored from MongoDB.")
             else:
-                with global_vars.out_debug:
+                with gv.out_debug:
                     print("No data records found to restore.")  
         except Exception as e:
             print(f"An error occurred while restoring the template grid: {e}")
@@ -267,7 +268,7 @@ class TemplateGrid:
     def create_initial_dataframe(self):
         rows = []
 
-        for template_name, template_set in global_vars.data_selection_sets.items():
+        for template_name, template_set in gv.data_selection_sets.items():
             row = template_set.copy()
             row['Template Name'] = template_name
             rows.append(row)
@@ -304,27 +305,27 @@ class TemplateGrid:
 
             if selected_indices:
                 selected_index = selected_indices[0] if isinstance(selected_indices, list) else selected_indices
-                with global_vars.out_debug:
-                    if 0 <= selected_index < len(self.qgrid_filter.df):
-                        selected_row = self.qgrid_filter.df.iloc[selected_index]
+            
+                if 0 <= selected_index < len(self.qgrid_filter.df):
+                    selected_row = self.qgrid_filter.df.iloc[selected_index]
+                    
+                    additional_columns = []
+                    for extension in self.extension_selector.value:            
+                        additional_columns.append([f"{selected_column} {extension}" for selected_column in self.columns_display.value if f"{selected_column} {extension}" in self.qgrid_filter.df.columns])
                         
-                        additional_columns = []
-                        for extension in self.extension_selector.value:            
-                            additional_columns.append([f"{selected_column} {extension}" for selected_column in self.columns_display.value if f"{selected_column} {extension}" in self.qgrid_filter.df.columns])
-                            
-                        # Maintain the order of columns as they appear in the selected row
-                        ordered_columns = [col for col in selected_row.index if col in unique_columns]
-                        ordered_columns.extend(additional_columns)
-                        self.columns_display.options = ordered_columns
+                    # Maintain the order of columns as they appear in the selected row
+                    ordered_columns = [col for col in selected_row.index if col in unique_columns]
+                    ordered_columns.extend(additional_columns)
+                    self.columns_display.options = ordered_columns
 
-                        # Update the active columns based on the selected row
-                        valid_active_columns = [col for col in ordered_columns if selected_row[col] == True]
-                        self.columns_display.value = tuple(valid_active_columns)
-                        
-                        # Update the color of the selected options
-                        self.update_columns_option_colors(valid_active_columns)
-                    else:
-                        self.columns_display.value = ()
+                    # Update the active columns based on the selected row
+                    valid_active_columns = [col for col in ordered_columns if selected_row[col] == True]
+                    self.columns_display.value = tuple(valid_active_columns)
+                    
+                    # Update the color of the selected options
+                    self.update_columns_option_colors(valid_active_columns)
+                else:
+                    self.columns_display.value = ()
             else:
                 self.columns_display.value = ()
         else:
@@ -403,16 +404,16 @@ class TemplateGrid:
             #print(f"DataFrame index: {qgrid_widget.df.index.tolist()}")
 
             if selected_indices is None or len(selected_indices) == 0:
-                if global_vars.out_debug:
-                    with global_vars.out_debug:
+                if gv.out_debug:
+                    with gv.out_debug:
                         print("No row is selected.")
                 return
 
             selected_index = selected_indices[0] if isinstance(selected_indices, list) else selected_indices
 
             if not (0 <= selected_index < len(qgrid_widget.df)):
-                if global_vars.out_debug:
-                    with global_vars.out_debug:
+                if gv.out_debug:
+                    with gv.out_debug:
                         print(f"Invalid index selected: {selected_index}. DataFrame length: {len(qgrid_widget.df)}")
                 return
 
@@ -435,10 +436,10 @@ class TemplateGrid:
 
     def update_data_selection_sets(self, event, widget):
         template_df = self.qgrid_filter.get_changed_df()
-        global_vars.data_selection_sets = {template_df.loc[template]['Template Name']: template_df.loc[template].index[template_df.loc[template] == True].tolist() for template in template_df.index}
+        gv.data_selection_sets = {template_df.loc[template]['Template Name']: template_df.loc[template].index[template_df.loc[template] == True].tolist() for template in template_df.index}
         
         DataSelectionManager.update_data(event, widget)
-        if global_vars.out_debug:
-            with global_vars.out_debug:
-                print(f"Data selection sets updated: {global_vars.data_selection_sets}")
+        if gv.out_debug:
+            with gv.out_debug:
+                print(f"Data selection sets updated: {gv.data_selection_sets}")
             

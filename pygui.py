@@ -9,11 +9,11 @@ import pickle
 import pytz  
 from tzlocal import get_localzone  
 
-from GlobalVariables import global_vars
-global_vars._initialize_objects()
+from GlobalVariables import global_vars as gv
+gv._initialize_objects()
 
 # Ensure global_vars is initialized before using it
-if global_vars is None:
+if gv is None:
     raise RuntimeError("global_vars was not initialized properly.")
 
 from CardLibrary import Deck, FusionData, Fusion
@@ -74,10 +74,10 @@ central_frame_output = widgets.Output()
 
 # Manager Variables
 grid_manager = None 
-qm = GridManager(global_vars.out_debug)
+qm = GridManager(gv.out_debug)
 
 # Widget original options for qgrid
-qg_options ={ 'column_options' : {}, 'column_definitions' : global_vars.all_column_definitions }   
+qg_options ={ 'column_options' : {}, 'column_definitions' : gv.all_column_definitions }   
 
 ######################
 # Network Operations #
@@ -152,7 +152,7 @@ def print_dataframe(df, name):
     print(f'DataFrame: {name}')
     print(f'Shape: {df.shape}')
     print(df.index)    
-    display(qgrid.show_grid(df, grid_options={'forceFitColumns': False}, column_definitions=global_vars.all_column_definitions))    
+    display(qgrid.show_grid(df, grid_options={'forceFitColumns': False}, column_definitions=gv.all_column_definitions))    
 
 def clean_columns(df, exclude_columns=None):
     """
@@ -196,7 +196,7 @@ def update_central_frame_tab(central_df):
     # Update the content of the central_frame_tab
     central_frame_output.clear_output()  # Clear existing content
     with central_frame_output:
-        grid = qgrid.show_grid(central_df, grid_options={'forceFitColumns': False}, column_definitions=global_vars.all_column_definitions)  # Create a qgrid grid from the DataFrame
+        grid = qgrid.show_grid(central_df, grid_options={'forceFitColumns': False}, column_definitions=gv.all_column_definitions)  # Create a qgrid grid from the DataFrame
         display(grid)  # Display the qgrid grid
     
     #print("Central DataFrame tab updated.")
@@ -229,8 +229,8 @@ def generate_central_dataframe(force_new=False):
     username = os.getenv('SFF_USERNAME')
     identifier = f"Main DataFrame: {username}"
     file_record = None
-    if global_vars.myDB:
-        file_record = global_vars.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
+    if gv.myDB:
+        file_record = gv.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
     
     # Manage the cached DataFrame
     if not force_new and username in user_dataframes:
@@ -242,8 +242,8 @@ def generate_central_dataframe(force_new=False):
 
     # Load or regenerate the DataFrame
     if file_record and not force_new:
-        if global_vars.fs:
-            with global_vars.fs.get(file_record['_id']) as file:
+        if gv.fs:
+            with gv.fs.get(file_record['_id']) as file:
                 stored_df = pickle.load(file)
                 user_dataframes[username] = stored_df
                 update_deck_and_fusion_counts()
@@ -254,10 +254,10 @@ def generate_central_dataframe(force_new=False):
         if username in user_dataframes:
             del user_dataframes[username]
         if file_record:
-            if global_vars.fs:
-                global_vars.fs.delete(file_record['_id'])
+            if gv.fs:
+                gv.fs.delete(file_record['_id'])
 
-    global_vars.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
+    gv.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
     deck_stats_df = generate_deck_statistics_dataframe()
     card_type_counts_df = generate_cardType_count_dataframe()
 
@@ -275,11 +275,11 @@ def generate_central_dataframe(force_new=False):
     #print_dataframe(central_df, 'Central DataFrame')
     
     
-    global_vars.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
+    gv.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
     user_dataframes[username] = central_df
 
-    if global_vars.fs:
-        with global_vars.fs.new_file(filename=f'central_df_{username}') as file:
+    if gv.fs:
+        with gv.fs.new_file(filename=f'central_df_{username}') as file:
             pickle.dump(central_df, file)
         
     update_deck_and_fusion_counts()
@@ -349,7 +349,7 @@ def generate_deck_content_dataframe(deckNames):
     
         
     # Get the data set from the global variables
-    desired_fields = global_vars.data_selection_sets['Deck Content']
+    desired_fields = gv.data_selection_sets['Deck Content']
 
     card_dfs_list = []
 
@@ -357,8 +357,8 @@ def generate_deck_content_dataframe(deckNames):
         print(f'DeckName: {deckName}')
         #Get the Deck from the Database 
         deck = None 
-        if global_vars.myDB:
-            deck = global_vars.myDB.find_one('Deck', {'name': deckName})
+        if gv.myDB:
+            deck = gv.myDB.find_one('Deck', {'name': deckName})
         if deck:
             #print(f'Found deck: {deck}')
             #Get the cardIds from the Deck
@@ -366,8 +366,8 @@ def generate_deck_content_dataframe(deckNames):
             deck_df_list = pd.DataFrame([deck])  # Create a single row DataFrame from deck                    
             for cardId in cardIds:
                 card = None
-                if global_vars.myDB:
-                    card = global_vars.myDB.find_one('Card', {'_id': cardId})
+                if gv.myDB:
+                    card = gv.myDB.find_one('Card', {'_id': cardId})
                 if card:
                     fullCard = card 
 
@@ -421,7 +421,7 @@ def generate_deck_content_dataframe(deckNames):
         sorted_columns = sorted(final_df.columns)
         
         # Ensure 'DeckName' is first, followed by the specified order for other columns
-        fixed_order = ['DeckName', 'name', 'faction', 'cardType', 'cardSubType']
+        fixed_order = ['DeckName', 'faction', 'name', 'cardType', 'cardSubType']
         # Remove the fixed order columns from the sorted list
         sorted_columns = [col for col in sorted_columns if col not in fixed_order]
         # Concatenate the fixed order columns with the rest of the sorted columns
@@ -450,15 +450,15 @@ def generate_cardType_count_dataframe():
     identifier = 'CardType Count Data'
     deck_iterator = []
     total_decks = 0 
-    if global_vars.myDB:
-        deck_iterator = global_vars.myDB.find('Deck', {})
-        total_decks = global_vars.myDB.count_documents('Deck', {})
-    global_vars.update_progress(identifier, 0, total_decks, 'Generating CardType Count Data...')
+    if gv.myDB:
+        deck_iterator = gv.myDB.find('Deck', {})
+        total_decks = gv.myDB.count_documents('Deck', {})
+    gv.update_progress(identifier, 0, total_decks, 'Generating CardType Count Data...')
     
     all_decks_list = []
     
     for deck in deck_iterator:
-        global_vars.update_progress(identifier, message=f'Processing Deck: {deck["name"]}')
+        gv.update_progress(identifier, message=f'Processing Deck: {deck["name"]}')
         
         # Initialize the network graph
         myGraph = MyGraph()
@@ -500,8 +500,8 @@ def generate_fusion_statistics_dataframe():
         deck_titles = {}
         for name in deck_names:
             deck = None
-            if global_vars.myDB:
-                deck = deck_card_titles.get(name) or global_vars.myDB.find_one('Deck', {'name': name})
+            if gv.myDB:
+                deck = deck_card_titles.get(name) or gv.myDB.find_one('Deck', {'name': name})
             if deck:
                 card_ids = deck.get('cardIds', [])
                 deck_titles[name] = get_card_titles(card_ids)
@@ -510,7 +510,7 @@ def generate_fusion_statistics_dataframe():
     def get_card_titles_by_Ids(fusion_children_data):
         deck_names = [name for name, dtype in fusion_children_data.items() if dtype == 'CardLibrary.Deck']
         all_card_titles = {name: fetch_deck_titles([name]).get(name, []) for name in deck_names}
-        global_vars.update_progress('Fusion Card Titles', message='Fetching Card Titles')
+        gv.update_progress('Fusion Card Titles', message='Fetching Card Titles')
         return ', '.join(sorted(sum(all_card_titles.values(), [])))
     
     def get_items_from_child_data(children_data, item_type):
@@ -523,11 +523,11 @@ def generate_fusion_statistics_dataframe():
         return item_names
 
     fusion_cursor = []
-    if global_vars.myDB:
-        fusion_cursor = global_vars.myDB.find('Fusion', {})
+    if gv.myDB:
+        fusion_cursor = gv.myDB.find('Fusion', {})
     df_fusions = pd.DataFrame(list(fusion_cursor))
 
-    global_vars.update_progress('Fusion Card Titles', 0, len(df_fusions), 'Fetching Card Titles')
+    gv.update_progress('Fusion Card Titles', 0, len(df_fusions), 'Fetching Card Titles')
     df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)
     df_fusions['forgebornId'] = df_fusions['currentForgebornId']
     df_fusions['type'] = 'Fusion'  
@@ -544,13 +544,13 @@ def generate_fusion_statistics_dataframe():
     #     axis=1
     # )
     
-    global_vars.update_progress('Fusion Stats', 0, len(df_fusions), 'Generating Fusion Dataframe...')
+    gv.update_progress('Fusion Stats', 0, len(df_fusions), 'Generating Fusion Dataframe...')
     interface_ids_total_df = pd.DataFrame()
     all_interface_ids_df_list = []
 
     for fusion in df_fusions.itertuples():
         process_deck_forgeborn(fusion.name, fusion.forgebornId, getattr(fusion, 'ForgebornIds', []), df_fusions_filtered)
-        global_vars.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion.name}")
+        gv.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion.name}")
 
         decks = get_items_from_child_data(fusion.children_data, 'CardLibrary.Deck')              
         if len(decks) > 1:
@@ -603,8 +603,8 @@ def generate_deck_statistics_dataframe():
 
     # Get all Decks from the database once and reuse this list
     decks = []
-    if global_vars.myDB:
-        decks = list(global_vars.myDB.find('Deck', {}))
+    if gv.myDB:
+        decks = list(gv.myDB.find('Deck', {}))
     number_of_decks = len(decks)
 
     df_decks = pd.DataFrame(decks)
@@ -623,17 +623,17 @@ def generate_deck_statistics_dataframe():
 
     # Process each deck
     identifier = 'Forgeborn Data'
-    global_vars.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
+    gv.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
     for deck in decks:
-        global_vars.update_progress(identifier, message='Processing Deck Forgeborn: ' + deck['name'])
+        gv.update_progress(identifier, message='Processing Deck Forgeborn: ' + deck['name'])
         if 'forgebornId' in deck:
             process_deck_forgeborn(deck['name'], deck['forgebornId'], [deck['forgebornId']], df_decks_filtered)
 
     df_list = []
     identifier = 'Stats Data'
-    global_vars.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
+    gv.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
     for deck in decks:
-        global_vars.update_progress(identifier, message='Processing Deck Stats: ' + deck['name'])
+        gv.update_progress(identifier, message='Processing Deck Stats: ' + deck['name'])
         if 'stats' in deck:
             stats = deck.get('stats', {})
             card_type_count_dict = {'Creatures': stats['card_types']['Creature']['count'], 'Spells': stats['card_types']['Spell']['count']}
@@ -718,16 +718,16 @@ def check_column_values(column, changed_df):
 def handle_debug_toggle(change):
     if change.new:
         ic.enable()
-        global_vars.debug = True
+        gv.debug = True
     else:
         ic.disable()
-        global_vars.debug = False
+        gv.debug = False
 
 def handle_db_list_change(change):
     global username_widget, grid_manager
 
-    if global_vars.out_debug:
-        with global_vars.out_debug:
+    if gv.out_debug:
+        with gv.out_debug:
             print(f'DB List Change: {change}')
 
     if change['name'] == 'value' and change['old'] != change['new']:
@@ -737,7 +737,7 @@ def handle_db_list_change(change):
 
             change['type'] = 'username'
             # Update the Global Username Variable
-            global_vars.username = new_username
+            gv.username = new_username
 
             # Update Username Widget
             username_widget.value = new_username  # Reflect change in username widget
@@ -749,12 +749,12 @@ def handle_db_list_change(change):
 
 def reload_data_on_click(button, value):
     global db_list, username_widget
-    username_value = username_widget.value if username_widget else global_vars.username
+    username_value = username_widget.value if username_widget else gv.username
     if not username_value:
         print('Username cannot be empty.')
         return
 
-    global_vars.username = username_value
+    gv.username = username_value
 
     if not db_list:
         print('No database list found.')
@@ -785,8 +785,8 @@ def reload_data_on_click(button, value):
     load_deck_data(args)    
     # Refresh db_list widget
     db_names = []
-    if global_vars.myDB:
-        db_names = global_vars.myDB.mdb.client.list_database_names()
+    if gv.myDB:
+        db_names = gv.myDB.mdb.client.list_database_names()
     valid_db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
 
     if valid_db_names:
@@ -819,8 +819,8 @@ def display_graph_on_click(button):
     if myDeckA and myDeckB:
         fusionName = f'{myDeckA.name}_{myDeckB.name}'
         fusionCursor = None
-        if global_vars.myDB:
-            fusionCursor = global_vars.myDB.find('Fusion', {'name' : fusionName})
+        if gv.myDB:
+            fusionCursor = gv.myDB.find('Fusion', {'name' : fusionName})
         if fusionCursor: 
             for fusion in fusionCursor:
                 myFusion = Fusion.from_data(fusion)
@@ -895,8 +895,8 @@ def display_graph_on_click(button):
 def refresh_faction_deck_options(faction_toggle, dropdown):    
     #global_vars.myDB.set_database_name(global_vars.username)   
     deckCursor = []
-    if global_vars.myDB: 
-        deckCursor = global_vars.myDB.find('Deck', { 'faction' : faction_toggle.value })
+    if gv.myDB: 
+        deckCursor = gv.myDB.find('Deck', { 'faction' : faction_toggle.value })
     deckNames = []    
     deckNames = [deck['name'] for deck in deckCursor]
     dropdown.options = deckNames        
@@ -1015,7 +1015,7 @@ count_display = widgets.Label(value='Deck / Fusion counts will be displayed here
 def update_deck_and_fusion_counts():
     global count_display
     # Ensure we are querying the right database based on the selected username
-    db_manager = global_vars.myDB
+    db_manager = gv.myDB
     if db_manager:
         deck_count = db_manager.count_documents('Deck', {})
         fusion_count = db_manager.count_documents('Fusion', {})
@@ -1042,9 +1042,19 @@ def update_deck_and_fusion_counts():
     else:
         print('No database manager found.')
             
+# Function to create a styled HTML widget with a background color
+def create_styled_html(text, text_color, bg_color, border_color):
+    html = widgets.HTML(
+        value=f"<div style='padding:10px; color:{text_color}; background-color:{bg_color};"
+            f" border:solid 2px {border_color}; border-radius:5px;'>"
+            f"<strong>{text}</strong></div>"
+    )
+    return html            
+            
 ############################
 # Setup and Initialization #
 ############################
+import markdown as md
 from CustomGrids import TemplateGrid
 def setup_interface():
     global db_list, button_load, card_title_widget, grid_manager, central_frame_output
@@ -1084,23 +1094,12 @@ def setup_interface():
     data_generation_functions = {'central_dataframe' : generate_central_dataframe, 'deck_content' : generate_deck_content_dataframe}
     
     # Create an instance of the manager
-    grid_manager = DynamicGridManager(data_generation_functions, qg_options, global_vars.out_debug)
+    grid_manager = DynamicGridManager(data_generation_functions, qg_options, gv.out_debug)
 
     # Update the filter grid on db change
     db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')
 
     templateGrid = TemplateGrid()
-
-    import markdown as md
-    
-    # Function to create a styled HTML widget with a background color
-    def create_styled_html(text, text_color, bg_color, border_color):
-        html = widgets.HTML(
-            value=f"<div style='padding:10px; color:{text_color}; background-color:{bg_color};"
-                f" border:solid 2px {border_color}; border-radius:5px;'>"
-                f"<strong>{text}</strong></div>"
-        )
-        return html
 
     # Create styled HTML widgets with background colors
     db_helper = create_styled_html(
@@ -1236,13 +1235,18 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
         "Central Dataframe Tab: View and manage the central dataframe.",
         text_color='white', bg_color='teal', border_color='teal'
     )
+    
+    progressbar_header = create_styled_html(
+        "Progress Bars Section",
+        text_color='white', bg_color='#2E86AB', border_color='#205E86'  # Darker blue for contrast
+    )
 
     # Updated Tab content with styled text boxes
     db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
     deck_tab = widgets.VBox([deck_helper, deck_accordion, deck_filter_bar, grid_manager.get_ui()])
     template_tab = widgets.VBox([template_helper, templateGrid.get_ui()])
     fusions_tab = widgets.VBox([fusions_helper, *toggle_dropdown_pairs, button_graph])
-    debug_tab = widgets.VBox([debug_helper, debug_toggle, global_vars.out_debug])
+    debug_tab = widgets.VBox([debug_helper, debug_toggle, gv.out_debug])
     central_frame_tab = widgets.VBox([central_frame_helper, central_frame_output])
 
     # Create the Tab widget with children
@@ -1256,4 +1260,11 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
 
     # Set the default selected tab
     tab.selected_index = 0
-    display(tab)
+    
+    # Layout: Progress bars at the top, then the tab widget below
+    layout = widgets.VBox([progressbar_header,gv.progressbar_container, tab])
+    display(layout)
+
+    
+    
+    

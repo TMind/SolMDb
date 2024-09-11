@@ -17,3 +17,15 @@
 .q-grid ::-webkit-scrollbar-thumb:hover {
     background: rgba(90,90,90,0.8); /* Slightly darker gray on hover */
 }
+
+/* CSS for sorted columns */
+.sorted-column {
+    background-color: #dff0d8;  /* Light green */
+    font-weight: bold;
+}
+
+/* CSS for filtered columns */
+.filtered-column {
+    background-color: #fcf8e3;  /* Light yellow */
+    border: 2px solid #f0ad4e;  /* Orange border */
+}

@@ -1,10 +1,10 @@
 from datetime import datetime
-from email import header
 import pandas as pd
-import qgrid
+try:      import qgridnext as qgrid
+except ImportError:    import qgrid
 import ipywidgets as widgets
 from GlobalVariables import global_vars as gv
-from CustomCss import CSSManager, rotate_suffix
+from CustomCss import CSSManager, rotate_suffix, rotated_column_definitions
 
 from DataSelectionManager import DataSelectionManager
 from MongoDB.DatabaseManager import DatabaseManager
@@ -724,6 +724,7 @@ class DynamicGridManager:
         self.grid_layout = widgets.GridspecLayout(1, 1)        
         self.filterGridObject = FilterGrid(self.refresh_gridbox)
         self.deck_content_grid = qgrid.show_grid(pd.DataFrame(), show_toolbar=False, grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True})
+        self.sorting_info = {}
         self.css_manager = CSSManager()        
         self.custom_css_class = self.css_manager.create_and_inject_css('deck_content', rotate_suffix)        
 
@@ -805,7 +806,7 @@ class DynamicGridManager:
         self.update_ui()
 
     def update_deck_content(self, event, widget):
-        with gv.out_debug: 
+        with self.out_debug:
             """Update the deck content DataFrame based on the selected item in the grid."""
             selected_indices = event['new']
             grid_df = widget.get_changed_df()            
@@ -841,22 +842,16 @@ class DynamicGridManager:
                 # Generate the deck content DataFrame using the provided function
                 deck_content_df = self.data_generate_functions['deck_content'](selected_deck_names)
                 #print(deck_content_df)
-                # Create a new grid for the deck content and update the UI
-                self.deck_content_grid = qgrid.show_grid(
-                    deck_content_df,
-                    show_toolbar=False,
-                    column_definitions=gv.all_column_definitions,
-                    grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True, 'minVisibleRows': 16 , 'maxVisibleRows': 30 }
-                )
-                
-                if self.css_manager.needs_custom_styles(self.deck_content_grid, rotate_suffix):     
-                    self.css_manager.apply_css_to_widget(self.deck_content_grid, self.custom_css_class)
-                else:
-                    self.deck_content_grid.remove_class(self.custom_css_class)
-                                                                                    
+
+                # Copy original DataFrame to preserve column order
+                combined_df = deck_content_df.copy()
+
+                # Use the helper function to recreate the qgrid widget
+                self.deck_content_grid = self.initialize_grid_with_totals(combined_df)
+
                 # Update the UI
                 self.update_ui()
-
+            
     def update_ui(self):
         """Helper method to update the self.ui.children with the common layout."""
         self.ui.children = [
@@ -871,5 +866,188 @@ class DynamicGridManager:
 
     def get_ui(self):
         return self.ui
+    
+    def initialize_grid_with_totals(self, df):
+        """
+        Helper function to create and initialize the qgrid widget with the given DataFrame.
+        This function calculates the sum of numeric columns, inserts the totals row at the top,
+        applies multi-column sorting based on sorting_info, and returns the qgrid widget.
+        """
+        with self.out_debug:
+            # Remove any existing totals row from the DataFrame (if it's already present)
+            data_rows = df[df['DeckName'] != 'Totals'].reset_index(drop=True)  # Reset the index
+
+            # Calculate the totals row for numeric columns and handle non-numeric columns
+            totals_row = self.get_totals_row(data_rows)
+
+            # Concatenate the totals row at the top of the DataFrame
+            updated_df = pd.concat([totals_row, data_rows], ignore_index=True)
+
+            # Apply sorting to the DataFrame based on sorting_info
+            if self.sorting_info:
+                # Sort the columns by their sort_order and prepare them for sorting
+                columns_to_sort = [col for col in sorted(self.sorting_info, key=lambda x: self.sorting_info[x]['sort_order'])]
+                ascending_states = [self.sorting_info[col]['ascending'] for col in columns_to_sort]
+                updated_df = sort_dataframe(updated_df, columns_to_sort, ascending_states)
+
+            # Update the column definitions for sorted/filtered columns
+            new_column_definitions = gv.all_column_definitions.copy()
+            updated_column_definitions = self.get_column_definitions_with_sort_and_filter(new_column_definitions, self.sorting_info)
+
+            # Create the qgrid widget
+            widget = qgrid.show_grid(
+                updated_df,
+                show_toolbar=False,
+                column_definitions=updated_column_definitions,
+                grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True, 'minVisibleRows': 17, 'maxVisibleRows': 30}
+            )
+
+            # Apply CSS if needed
+            if self.css_manager.needs_custom_styles(widget, rotate_suffix):
+                self.css_manager.apply_css_to_widget(widget, self.custom_css_class)
+            else:
+                widget.remove_class(self.custom_css_class)
+
+            # Register event handlers for sorting and filtering
+            widget.on('sort_changed', self.handle_sort_changed)
+
+            return widget
+        
+    def handle_sort_changed(self, event, widget=None):
+        """
+        Handler to ensure that the totals row stays at the top after sorting.
+        This function checks if the sorted column is part of rotated_columns.
+        If it is, we handle the sorting manually. Otherwise, let qgrid handle it.
+        """
+        with self.out_debug:
+            # Capture the sorted column
+            sort_column = event['new']['column']
+
+            # Update the sorting info for the column
+            self.sorting_info = self.update_sorted_columns(sort_column)
+
+            # Check if the sorted column is part of rotated_columns
+            if sort_column in rotated_column_definitions:
+                # Prepare sorted columns and their ascending states
+                columns_to_sort = [col for col in sorted(self.sorting_info, key=lambda x: self.sorting_info[x]['sort_order'])]
+                ascending_states = [self.sorting_info[col]['ascending'] for col in columns_to_sort]
+
+                # Get the updated DataFrame from the qgrid widget
+                sorted_df = self.deck_content_grid.get_changed_df()
+
+                # Remove the totals row from the sorted DataFrame
+                data_rows = sorted_df[sorted_df['DeckName'] != 'Totals']
+
+                # Reinsert the totals row at the top
+                totals_row = self.get_totals_row(data_rows)
+
+                # Concatenate the totals row back at the top
+                updated_df = pd.concat([totals_row, data_rows], ignore_index=True)
+
+                # Sort the DataFrame manually based on sorted_columns and their ascending states
+                updated_df = sort_dataframe(updated_df, columns_to_sort, ascending_states)
+
+                # Recreate the grid with the updated DataFrame
+                self.deck_content_grid = self.initialize_grid_with_totals(updated_df)
+
+                # Update the UI to reflect the new grid
+                self.update_ui()
+
+            else:
+                # If the column is not in rotated_columns, let qgrid handle the sorting
+                print(f"Letting qgrid sort the column {sort_column} normally.")
+
+                # Reset column definitions to remove any custom sorting styles
+                new_column_definitions = gv.all_column_definitions.copy()
+                self.deck_content_grid.column_definitions = new_column_definitions
+
+                self.deck_content_grid.df = self.deck_content_grid.get_changed_df()
+                return
+
+            
+    def get_totals_row(self, df):
+        with self.out_debug:
+            """
+            Helper method to generate the totals row from the current DataFrame.
+            For numeric columns, sum values; for non-numeric columns, return an empty string or appropriate label.
+            """
+            # Create a copy of the DataFrame to work on the numeric conversion, keeping the original intact
+            numeric_df = df.copy()
+
+            # Convert the appropriate numeric columns (those in rotated_column_definitions) to numeric
+            numeric_cols = [col for col in df.columns if col in rotated_column_definitions]
+
+            # Convert only the relevant numeric columns to numeric for summation purposes
+            for col in numeric_cols:
+                numeric_df[col] = pd.to_numeric(numeric_df[col], errors='coerce')
+
+            # Sum numeric columns
+            totals = numeric_df[numeric_cols].sum(numeric_only=True)
+
+            # Create a DataFrame for the totals row
+            totals_row = pd.DataFrame(totals).T
+
+            # Label the totals row in the 'DeckName' column
+            totals_row['DeckName'] = 'Totals'
+
+            # Fill non-numeric columns with an empty string or placeholder
+            for col in df.columns:
+                if col not in totals_row.columns:
+                    totals_row[col] = ''  # Replace with empty string if you prefer
+
+            # Ensure totals row columns match the original DataFrame's column order
+            totals_row = totals_row[df.columns]
+
+            return totals_row
+        
+    def update_sorted_columns(self, new_sort_column):
+        """
+        Update the sorting information for the new sorted column.
+        Flip the ascending state if the column is already sorted.
+        """
+        # If the column is already in sorting_info, flip the ascending state
+        if new_sort_column in self.sorting_info:
+            self.sorting_info[new_sort_column]['ascending'] = not self.sorting_info[new_sort_column]['ascending']
+        else:
+            # Add the new column with ascending state and sort order
+            self.sorting_info[new_sort_column] = {
+                'ascending': True,  # Default to ascending for new column
+                'sort_order': len(self.sorting_info) + 1  # Track the order of sorting
+            }
+
+        return self.sorting_info
+
+    def get_column_definitions_with_sort_and_filter(self, column_definitions, sorting_info):
+        """
+        Update the column definitions with custom CSS for sorted and filtered columns.
+        sorting_info is a dictionary where the key is the column name and the value is a dictionary 
+        containing 'ascending' and 'sort_order' keys.
+        """
+        # Apply custom CSS class for sorted columns
+        for col_name, sort_info in sorting_info.items():
+            # Ensure the column is in the column definitions
+            if col_name in column_definitions:
+                column_definitions[col_name]['cssClass'] = 'sorted-column'
+
+        return column_definitions
 
 
+def sort_dataframe(df, columns_to_sort, ascending_states):
+    """
+    Sort the DataFrame based on the given columns and their respective ascending states.
+    If the columns are numeric but represented as strings, convert them to numbers for sorting.
+    """
+    # Identify numeric columns in rotated_columns
+    numeric_cols = [col for col in columns_to_sort if col in rotated_column_definitions]
+
+    # Convert numeric columns to numeric type, sort, and convert back
+    df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors='coerce')
+    
+    # Perform the sorting
+    sorted_df = df.sort_values(by=columns_to_sort, ascending=ascending_states)
+    
+    # Convert numeric columns back to strings, but replace NaN with ''
+    for col in numeric_cols:
+        sorted_df[col] = sorted_df[col].apply(lambda x: '' if pd.isna(x) else str(int(x) if x.is_integer() else x))
+    
+    return sorted_df

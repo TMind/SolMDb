@@ -13,8 +13,7 @@ class CSSManager:
     def __init__(self):
         self.css_classes = {}
 
-    # TODO: Header height seems to be a problem since it messes up qgrids internal calculations on how many rows are actually displayed 
-    def create_and_inject_css(self, class_name, column_selector='', header_height=120):
+    def create_and_inject_css(self, class_name, column_selector='', header_height=140):
         """
         Creates and injects CSS for a specific class.
 
@@ -32,14 +31,11 @@ class CSSManager:
         # Generate the CSS style as a string
         style = f"""
         <style>
-            /* Set the header height for all columns */
             .{class_name} .slick-header-column {{
                 height: {header_height}px !important;
                 text-align: left !important;
                 vertical-align: bottom !important;
             }}
-
-            /* Apply the rotation to the specified columns (if column selector is provided) */
             .{class_name} {column_selector} .slick-column-name {{
                 display: inline-block !important;
                 transform-origin: bottom left !important;
@@ -49,11 +45,7 @@ class CSSManager:
             }}
         </style>
         """
-
-        # Inject the custom CSS into the notebook
         display(HTML(style))
-        
-        # Store the CSS class name
         self.css_classes[class_name] = column_selector
         return class_name
 
@@ -70,17 +62,6 @@ class CSSManager:
         else:
             print(f"CSS class '{class_name}' does not exist.")
 
-    def remove_class_from_widget(self, widget_id, class_name):
-        js_code = f"""
-        (function() {{
-            var widget = document.getElementById('{widget_id}');
-            if (widget) {{
-                widget.classList.remove('{class_name}');
-            }}
-        }})();
-        """
-        display(Javascript(js_code))
-
     def needs_custom_styles(self, qgrid_widget, column_selector=''):
         """
         Checks if there are any columns in the qgrid widget that need a custom style.
@@ -90,20 +71,35 @@ class CSSManager:
         - column_selector: A CSS selector to target specific columns (e.g., by ID or class).
 
         Returns:
-        - True if any columns has the column_selector, False otherwise.
+        - True if any columns have the column_selector, False otherwise.
         """
         found_matching_columns = False
         df = qgrid_widget.get_changed_df()
         
         for column in df.columns:
             column_definition = qgrid_widget.column_definitions.get(column, {})
-            
             if 'headerCssClass' in column_definition and column_definition['headerCssClass'] == column_selector:
                 found_matching_columns = True
-                print(f"Found matching column selector {column_selector} for column {column}")
                 break
 
         return found_matching_columns
+
+    def apply_column_styles(self, qgrid_widget, sorted_columns=[], filtered_columns=[]):
+        """
+        Apply custom CSS styles to columns that are sorted or filtered.
+        """
+        column_definitions = qgrid_widget.column_definitions
+
+        # Apply CSS class for sorted columns
+        for sort_col in sorted_columns:
+            column_definitions[sort_col]['cssClass'] = 'sorted-column'
+
+        # Apply CSS class for filtered columns
+        for filter_col in filtered_columns:
+            column_definitions[filter_col]['cssClass'] = 'filtered-column'
+
+        return column_definitions
+    
     
 # Global variables 
 

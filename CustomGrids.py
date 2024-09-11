@@ -1,6 +1,9 @@
 import copy
 import pandas as pd
-import qgridnext as qgrid 
+try:
+    import qgridnext as qgrid
+except ImportError:
+    import qgrid 
 import ipywidgets as widgets
 from IPython.display import display, HTML
 from collections import OrderedDict

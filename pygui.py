@@ -1,4 +1,3 @@
-import glob
 import os, time, re, json
 import ipywidgets as widgets
 import numpy as np
@@ -188,9 +187,12 @@ def clean_columns(df, exclude_columns=None):
 
     return df
 
-
-# Function to update the central data frame tab
-import qgridnext as qgrid
+try:
+    import qgridnext as qgrid
+except ImportError:
+    import qgrid
+    
+# Function to update the central data frame tab    
 def update_central_frame_tab(central_df):
     global central_frame_output
     # Update the content of the central_frame_tab

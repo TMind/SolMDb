@@ -890,9 +890,11 @@ class DynamicGridManager:
                 ascending_states = [self.sorting_info[col]['ascending'] for col in columns_to_sort]
                 updated_df = sort_dataframe(updated_df, columns_to_sort, ascending_states)
 
+                print(f"Initializing grid with sorting. Columns to sort: {columns_to_sort}, Ascending states: {ascending_states}")
+
             # Update the column definitions for sorted/filtered columns
             new_column_definitions = gv.all_column_definitions.copy()
-            updated_column_definitions = self.get_column_definitions_with_sort_and_filter(new_column_definitions, self.sorting_info)
+            updated_column_definitions = self.get_column_definitions_with_gradient(new_column_definitions, self.sorting_info)
 
             # Create the qgrid widget
             widget = qgrid.show_grid(
@@ -917,20 +919,26 @@ class DynamicGridManager:
         """
         Handler to ensure that the totals row stays at the top after sorting.
         This function checks if the sorted column is part of rotated_columns.
-        If it is, we handle the sorting manually. Otherwise, let qgrid handle it.
+        If it is, we handle the sorting manually. Otherwise, reset sorting state for non-rotated columns.
         """
         with self.out_debug:
             # Capture the sorted column
             sort_column = event['new']['column']
-
-            # Update the sorting info for the column
-            self.sorting_info = self.update_sorted_columns(sort_column)
-
-            # Check if the sorted column is part of rotated_columns
+            print(f"Sort column triggered: {sort_column}")
+            
+            # Check if the column is part of rotated_columns
             if sort_column in rotated_column_definitions:
+                # Update sorting info for rotated columns
+                self.update_sorted_columns(sort_column)
+
+                print(f"Sorting Info for Rotated Columns: {self.sorting_info}")
+
                 # Prepare sorted columns and their ascending states
                 columns_to_sort = [col for col in sorted(self.sorting_info, key=lambda x: self.sorting_info[x]['sort_order'])]
                 ascending_states = [self.sorting_info[col]['ascending'] for col in columns_to_sort]
+
+                print(f"Columns to sort: {columns_to_sort}")
+                print(f"Ascending states: {ascending_states}")
 
                 # Get the updated DataFrame from the qgrid widget
                 sorted_df = self.deck_content_grid.get_changed_df()
@@ -954,15 +962,23 @@ class DynamicGridManager:
                 self.update_ui()
 
             else:
-                # If the column is not in rotated_columns, let qgrid handle the sorting
-                print(f"Letting qgrid sort the column {sort_column} normally.")
+                # If the column is not in rotated_columns, reset sorting and apply only to this column
+                print(f"Sorting only the column {sort_column} normally (non-rotated).")
 
-                # Reset column definitions to remove any custom sorting styles
-                new_column_definitions = gv.all_column_definitions.copy()
-                self.deck_content_grid.column_definitions = new_column_definitions
+                # Reset sorting_info to just the current column
+                self.sorting_info = {}
 
-                self.deck_content_grid.df = self.deck_content_grid.get_changed_df()
-                return
+                # Update the sorting info for the new column
+                self.update_sorted_columns(sort_column)
+
+                print(f"Sorting Info for Non-Rotated Columns: {self.sorting_info}")
+
+                # Trigger sorting manually
+                sorted_df = self.deck_content_grid.get_changed_df()
+
+                # Recreate the grid with updated sorting
+                self.deck_content_grid = self.initialize_grid_with_totals(sorted_df)
+                self.update_ui()
 
             
     def get_totals_row(self, df):
@@ -1008,46 +1024,105 @@ class DynamicGridManager:
         # If the column is already in sorting_info, flip the ascending state
         if new_sort_column in self.sorting_info:
             self.sorting_info[new_sort_column]['ascending'] = not self.sorting_info[new_sort_column]['ascending']
+            print(f"Flipping sort order for column {new_sort_column} to {'ascending' if self.sorting_info[new_sort_column]['ascending'] else 'descending'}")
         else:
             # Add the new column with ascending state and sort order
             self.sorting_info[new_sort_column] = {
                 'ascending': True,  # Default to ascending for new column
                 'sort_order': len(self.sorting_info) + 1  # Track the order of sorting
             }
+            print(f"Adding new sorted column {new_sort_column} with ascending order.")
 
         return self.sorting_info
 
-    def get_column_definitions_with_sort_and_filter(self, column_definitions, sorting_info):
+    def get_column_definitions_with_gradient(self, column_definitions, sorting_info):
         """
-        Update the column definitions with custom CSS for sorted and filtered columns.
-        sorting_info is a dictionary where the key is the column name and the value is a dictionary 
-        containing 'ascending' and 'sort_order' keys.
+        Update the column definitions with custom CSS for sorted columns.
+        Applies a vertical gradient to the header based on the sorting direction,
+        and applies a static background color to the column cells that matches the header's gradient.
         """
-        # Apply custom CSS class for sorted columns
+        def add_css_class(existing_class, new_class):
+            """Helper function to append a CSS class without duplication."""
+            classes = existing_class.split() if existing_class else []
+            if new_class not in classes:
+                classes.append(new_class)
+            return " ".join(classes)
+
+        def remove_css_class(existing_class, old_class):
+            """Helper function to remove a CSS class."""
+            classes = existing_class.split() if existing_class else []
+            if old_class in classes:
+                classes.remove(old_class)
+            return " ".join(classes)
+
+        # CSS classes for ascending and descending sorts
+        ascending_header_class = 'sorted-column-header-ascending'
+        descending_header_class = 'sorted-column-header-descending'
+        
+        # Static cell color classes for ascending and descending sorts
+        ascending_cell_class = 'sorted-column-cells-ascending'
+        descending_cell_class = 'sorted-column-cells-descending'
+
+        # Loop over each sorted column to apply or update the gradient in the header and static color in the cells
         for col_name, sort_info in sorting_info.items():
-            # Ensure the column is in the column definitions
             if col_name in column_definitions:
-                column_definitions[col_name]['cssClass'] = 'sorted-column'
+                # Determine the new CSS class based on the current ascending state
+                if sort_info['ascending']:
+                    new_header_class = ascending_header_class
+                    new_cell_class = ascending_cell_class
+                    old_header_class = descending_header_class
+                    old_cell_class = descending_cell_class
+                else:
+                    new_header_class = descending_header_class
+                    new_cell_class = descending_cell_class
+                    old_header_class = ascending_header_class
+                    old_cell_class = ascending_cell_class
+
+                # Get the current headerCssClass
+                existing_header_class = column_definitions[col_name].get('headerCssClass', '')
+
+                # Add the new header class for gradient and ensure no duplicates
+                updated_header_class = add_css_class(existing_header_class, new_header_class)
+
+                # Remove the old gradient class from the header
+                updated_header_class = remove_css_class(updated_header_class, old_header_class)
+
+                # Get the current cssClass (for cells)
+                existing_cell_class = column_definitions[col_name].get('cssClass', '')
+
+                # Apply static color to the cells in the sorted column
+                updated_cell_class = add_css_class(existing_cell_class, new_cell_class)
+
+                # Apply general sorted column style if needed (optional for borders)
+                updated_cell_class = add_css_class(updated_cell_class, 'sorted-column')
+
+                # Remove old cell color class to avoid duplication
+                updated_cell_class = remove_css_class(updated_cell_class, old_cell_class)
+
+                print(f"Updated CSS for column {col_name}: Header = {updated_header_class}, Cells = {updated_cell_class}")                
+                # Update the column definition with the new classes
+                column_definitions[col_name]['headerCssClass'] = updated_header_class
+                column_definitions[col_name]['cssClass'] = updated_cell_class
 
         return column_definitions
-
 
 def sort_dataframe(df, columns_to_sort, ascending_states):
     """
     Sort the DataFrame based on the given columns and their respective ascending states.
     If the columns are numeric but represented as strings, convert them to numbers for sorting.
+    Treat empty cells as 0 for sorting purposes.
     """
     # Identify numeric columns in rotated_columns
     numeric_cols = [col for col in columns_to_sort if col in rotated_column_definitions]
 
-    # Convert numeric columns to numeric type, sort, and convert back
-    df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors='coerce')
-    
+    # Convert numeric columns to numeric type, treating empty cells as 0
+    df[numeric_cols] = df[numeric_cols].apply(lambda col: pd.to_numeric(col, errors='coerce').fillna(0))
+
     # Perform the sorting
     sorted_df = df.sort_values(by=columns_to_sort, ascending=ascending_states)
-    
-    # Convert numeric columns back to strings, but replace NaN with ''
+
+    # Convert numeric columns back to strings, but replace 0 with '' where the original value was empty
     for col in numeric_cols:
-        sorted_df[col] = sorted_df[col].apply(lambda x: '' if pd.isna(x) else str(int(x) if x.is_integer() else x))
-    
+        sorted_df[col] = sorted_df[col].apply(lambda x: '' if x == 0 else str(int(x) if x.is_integer() else x))
+
     return sorted_df

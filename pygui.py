@@ -74,6 +74,7 @@ central_frame_output = widgets.Output()
 # Manager Variables
 grid_manager = None 
 qm = GridManager(gv.out_debug)
+tab = None 
 
 # Widget original options for qgrid
 qg_options ={ 'column_options' : {}, 'column_definitions' : gv.all_column_definitions }   
@@ -1059,7 +1060,7 @@ def create_styled_html(text, text_color, bg_color, border_color):
 import markdown as md
 from CustomGrids import TemplateGrid
 def setup_interface():
-    global db_list, button_load, card_title_widget, grid_manager, central_frame_output
+    global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab 
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()

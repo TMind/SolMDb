@@ -1028,7 +1028,7 @@ class DynamicGridManager:
         else:
             # Add the new column with ascending state and sort order
             self.sorting_info[new_sort_column] = {
-                'ascending': True,  # Default to ascending for new column
+                'ascending': False,  # Default to descending for new column
                 'sort_order': len(self.sorting_info) + 1  # Track the order of sorting
             }
             print(f"Adding new sorted column {new_sort_column} with ascending order.")
@@ -1069,14 +1069,14 @@ class DynamicGridManager:
                 # Determine the new CSS class based on the current ascending state
                 if sort_info['ascending']:
                     new_header_class = ascending_header_class
-                    new_cell_class = ascending_cell_class
+                    #new_cell_class = ascending_cell_class
                     old_header_class = descending_header_class
-                    old_cell_class = descending_cell_class
+                    #old_cell_class = descending_cell_class
                 else:
                     new_header_class = descending_header_class
-                    new_cell_class = descending_cell_class
+                    #new_cell_class = descending_cell_class
                     old_header_class = ascending_header_class
-                    old_cell_class = ascending_cell_class
+                    #old_cell_class = ascending_cell_class
 
                 # Get the current headerCssClass
                 existing_header_class = column_definitions[col_name].get('headerCssClass', '')
@@ -1091,18 +1091,18 @@ class DynamicGridManager:
                 existing_cell_class = column_definitions[col_name].get('cssClass', '')
 
                 # Apply static color to the cells in the sorted column
-                updated_cell_class = add_css_class(existing_cell_class, new_cell_class)
+               # updated_cell_class = add_css_class(existing_cell_class, new_cell_class)
 
                 # Apply general sorted column style if needed (optional for borders)
-                updated_cell_class = add_css_class(updated_cell_class, 'sorted-column')
+                #updated_cell_class = add_css_class(updated_cell_class, 'sorted-column')
 
                 # Remove old cell color class to avoid duplication
-                updated_cell_class = remove_css_class(updated_cell_class, old_cell_class)
+                #updated_cell_class = remove_css_class(updated_cell_class, old_cell_class)
 
-                print(f"Updated CSS for column {col_name}: Header = {updated_header_class}, Cells = {updated_cell_class}")                
+                print(f"Updated CSS for column {col_name}: Header = {updated_header_class}")                
                 # Update the column definition with the new classes
                 column_definitions[col_name]['headerCssClass'] = updated_header_class
-                column_definitions[col_name]['cssClass'] = updated_cell_class
+                #column_definitions[col_name]['cssClass'] = updated_cell_class
 
         return column_definitions
 

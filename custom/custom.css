@@ -18,37 +18,15 @@
     background: rgba(90,90,90,0.8); /* Slightly darker gray on hover */
 }
 
-/* .sorted-column {
-    background: linear-gradient(to right, #ffcccb, #ffe4b5);
-    font-weight: bold;
-}
-
-.sorted-column-header {
-    background: linear-gradient(to right, #add8e6, #87cefa); 
-    font-weight: bold;
-}  */
-
 /* Static color for sorted column headers */
 .sorted-column-header-ascending {
     background: linear-gradient(to bottom, #b3e5fc, #0288d1) !important;
     color: white;
 }
 
-/* Ascending sort: gradient for entire column (excluding header) */
-.sorted-column-cells-ascending {
-    background-color: #b3e5fc !important;
-    color: #0288d1 !important;
-}
-
-/* Static background color for ascending sorted column cells */
-.sorted-column-cells-ascending {
-    background-color: #b3e5fc !important;
-    color: white;
-}
-
-/* Static background color for descending sorted column cells */
-.sorted-column-cells-descending {
-    background-color: #0288d1 !important;
+/* Static color for sorted column headers */
+.sorted-column-header-descending {
+    background: linear-gradient(to top, #b3e5fc, #0288d1) !important;
     color: white;
 }
 

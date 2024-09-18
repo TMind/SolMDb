@@ -1,4 +1,5 @@
 from datetime import datetime
+from gc import enable
 import pandas as pd
 try:      import qgridnext as qgrid
 except ImportError:    import qgrid
@@ -8,6 +9,7 @@ from CustomCss import CSSManager, rotate_suffix, rotated_column_definitions
 
 from DataSelectionManager import DataSelectionManager
 from MongoDB.DatabaseManager import DatabaseManager
+from SortingManager import SortingManager
 
 # module global variables 
 
@@ -21,30 +23,38 @@ class GridManager:
         self.relationships = {}
         self.debug_output = debug_output
         self.css_manager = CSSManager()
+        self.sorting_manager = SortingManager(rotated_column_definitions)
         self.custom_css_class = self.css_manager.create_and_inject_css('filter_grids', rotate_suffix)
+        self.grid_initializer = GridInitializer(self.sorting_manager, self.css_manager, rotated_column_definitions, self.custom_css_class, debug_output)
 
-    def add_grid(self, identifier, df, options=None, dependent_identifiers=None, grid_type='qgrid'):
-      
+    def add_grid(self, identifier, df, options=None, dependent_identifiers=None, grid_type='qgrid', enable_sorting=False, include_totals=False):
         """Add or update a grid to the GridManager."""
         if dependent_identifiers is None:
             dependent_identifiers = []
 
         if identifier in self.grids:
-            # Grid exists, update DataFrame
             grid = self.grids[identifier]
             self.set_default_data(identifier, df)
-            self.update_dataframe(identifier, df)  # Ensure grid object has a method to update its DataFrame
+            self.update_dataframe(identifier, df)
             with self.debug_output:
                 print(f"GridManager::add_grid() - Grid {identifier} updated.")
         else:
-            # Create a new grid
-            grid = QGrid(identifier, df, options) if grid_type == 'qgrid' else print("Not QGrid Type!") #PandasGrid(identifier, df, options)
+            if include_totals:
+                grid = self.grid_initializer.initialize_grid_with_totals(df)
+            else:
+                grid = QGrid(identifier, df, options) if grid_type == 'qgrid' else print("Not QGrid Type!")
+            
             self.grids[identifier] = grid
             self.relationships[identifier] = dependent_identifiers
             self._setup_grid_events(identifier, grid)
             with self.debug_output:
                 print(f"GridManager::add_grid() - Grid {identifier} added.")
+            
+            # Optionally enable sorting for the grid
+            if enable_sorting:
+                self._setup_sorting_events(identifier, grid)
         
+        # Apply CSS if needed
         if self.css_manager.needs_custom_styles(grid.main_widget, rotate_suffix):
             self.css_manager.apply_css_to_widget(grid.main_widget, self.custom_css_class)
             with self.debug_output:
@@ -52,7 +62,6 @@ class GridManager:
         else:
             grid.main_widget.remove_class(self.custom_css_class)
             print(f"Remove Custom Css {self.custom_css_class} for {identifier} : {rotate_suffix} ")
-                        
         
         return grid
         
@@ -162,6 +171,27 @@ class GridManager:
 
         self.reapply_callbacks(identifier)
 
+    def _setup_sorting_events(self, identifier, grid):
+        """
+        Set up sorting events for the grid using the SortingManager.
+        """
+        def on_sort_change(event):
+            """
+            This function is triggered when a sort change event is detected. 
+            It will invoke the SortingManager to handle the sorting and update the grid accordingly.
+            """
+            sorted_df = self.sorting_manager.handle_sort_changed( event, grid.main_widget.df)
+
+            # Re-update the grid with the newly sorted DataFrame
+            self.update_dataframe(identifier, sorted_df)
+            self.trigger(self.EVENT_DF_STATUS_CHANGED, identifier, grid.df_status)
+
+        # Register the sorting event
+        grid.main_widget.on('sort_changed', on_sort_change)
+        with self.debug_output:
+            print(f"Sorting enabled for grid {identifier}.")
+
+
     def register_callback(self, event_name, callback, identifier=None):
         if identifier is None:
             for grid_id in self.grids:
@@ -267,7 +297,6 @@ class QGrid(BaseGrid):
             show_toolbar=False
         )
         
-
     def update_main_widget(self, new_df):
         self.main_widget.df = new_df
         self.set_dataframe_version('filtered', new_df)
@@ -280,6 +309,63 @@ class PandasGrid(BaseGrid):
         self.df_versions['default'] = new_df.copy()
         self.set_dataframe_version('filtered', new_df)
 
+
+import utils  
+class GridInitializer:
+    def __init__(self, sorting_manager, css_manager, rotated_column_definitions, custom_css_class, debug_output):
+        self.sorting_manager = sorting_manager
+        self.css_manager = css_manager
+        self.rotated_column_definitions = rotated_column_definitions
+        self.custom_css_class = custom_css_class
+        self.out_debug = debug_output
+
+    def initialize_grid_with_totals(self, df, grid_widget=None):
+        """
+        Helper function to create and initialize the qgrid widget with the given DataFrame.
+        This function calculates the sum of numeric columns, inserts the totals row at the top,
+        applies multi-column sorting based on sorting_info, and returns the qgrid widget.
+        """
+        with self.out_debug:
+            # Remove any existing totals row from the DataFrame (if it's already present)
+            data_rows = df[df['DeckName'] != 'Totals'].reset_index(drop=True)
+
+            # Use the utility function to calculate the totals row
+            totals_row = utils.get_totals_row(data_rows, self.rotated_column_definitions)
+
+            # Concatenate the totals row at the top of the DataFrame
+            updated_df = pd.concat([totals_row, data_rows], ignore_index=True)
+
+            # Apply sorting to the DataFrame based on sorting_info
+            if self.sorting_manager.sorting_info:
+                # Sort the columns by their sort_order and prepare them for sorting
+                columns_to_sort = [col for col in sorted(self.sorting_manager.sorting_info, key=lambda x: self.sorting_manager.sorting_info[x]['sort_order'])]
+                ascending_states = [self.sorting_manager.sorting_info[col]['ascending'] for col in columns_to_sort]
+                updated_df = self.sorting_manager.sort_dataframe(updated_df, columns_to_sort, ascending_states)
+
+                print(f"Initializing grid with sorting. Columns to sort: {columns_to_sort}, Ascending states: {ascending_states}")
+
+            # Update the column definitions for sorted/filtered columns
+            new_column_definitions = gv.all_column_definitions.copy()
+            updated_column_definitions = self.css_manager.get_column_definitions_with_gradient(new_column_definitions, self.sorting_manager.sorting_info)
+
+            # Create the qgrid widget
+            widget = qgrid.show_grid(
+                updated_df,
+                show_toolbar=False,
+                column_definitions=updated_column_definitions,
+                grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True, 'minVisibleRows': 17, 'maxVisibleRows': 30}
+            )
+
+            # Apply CSS if needed
+            if self.css_manager.needs_custom_styles(widget, rotate_suffix):
+                self.css_manager.apply_css_to_widget(widget, self.custom_css_class)
+            else:
+                widget.remove_class(self.custom_css_class)
+
+            # Register event handlers for sorting and filtering
+            widget.on('sort_changed', self.sorting_manager.handle_sort_changed)
+
+            return widget
 
 class FilterGrid:
     """
@@ -568,127 +654,126 @@ def get_forgeborn_abilities():
 
 
 import re
+
 def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=None):
+    with gv.out_debug:
+        def filter_by_substring(df, filter_row):    
+            def apply_filter(df, substrings, filter_fields=['cardTitles'], apply_operator='OR'):
+                if not substrings or not filter_fields:
+                    return df
 
-    def filter_by_substring(df, filter_row):    
-        def apply_filter(df, substrings, filter_fields=['cardTitles'], apply_operator='OR'):
-            if not substrings or not filter_fields:
-                return df
-
-            if apply_operator == 'AND':
-                # Create a boolean mask initialized to True for "AND" logic
-                mask = pd.Series([True] * len(df), index=df.index)
-                for substring in substrings:
-                    # Create a temporary mask for each substring
-                    temp_mask = pd.Series([False] * len(df), index=df.index)
+                if apply_operator == 'AND':
+                    # Create a boolean mask initialized to True for "AND" logic
+                    mask = pd.Series([True] * len(df), index=df.index)
+                    for substring in substrings:
+                        # Create a temporary mask for each substring
+                        temp_mask = pd.Series([False] * len(df), index=df.index)
+                        for field in filter_fields:
+                            if field in df.columns:
+                                # If the substring is found in any of the field‚s, update the temp_mask
+                                temp_mask |= df[field].apply(lambda title: substring.lower() in str(title).lower())
+                        # Update the main mask with the temp_mask using AND logic
+                        mask &= temp_mask
+                else:
+                    # Create a boolean mask initialized to False for "OR" logic
+                    mask = pd.Series([False] * len(df), index=df.index)
                     for field in filter_fields:
                         if field in df.columns:
-                            # If the substring is found in any of the field‚s, update the temp_mask
-                            temp_mask |= df[field].apply(lambda title: substring.lower() in str(title).lower())
-                    # Update the main mask with the temp_mask using AND logic
-                    mask &= temp_mask
-            else:
-                # Create a boolean mask initialized to False for "OR" logic
-                mask = pd.Series([False] * len(df), index=df.index)
-                for field in filter_fields:
-                    if field in df.columns:
-                        for substring in substrings:
-                            mask |= df[field].apply(lambda title: substring.lower() in str(title).lower())
+                            for substring in substrings:
+                                mask |= df[field].apply(lambda title: substring.lower() in str(title).lower())
 
-            # Filter the DataFrame using the boolean mask
-            current_filter_results = df[mask].copy()
+                # Filter the DataFrame using the boolean mask
+                current_filter_results = df[mask].copy()
 
-            return current_filter_results   
+                return current_filter_results   
 
-        def determine_operator_and_substrings(string): 
-            and_symbols = {
-                ':': r'\s*:\s*',
-                '&': r'\s*&\s*',
-                '+': r'\s*\+\s*'
-            }            
-            or_symbols = {
-                '|': r'\s*\|\s*',
-                '-': r'\s*-\s*'             
-            }
-            
-            for symbol, pattern in and_symbols.items():
-                if symbol in string:
-                    #print(f"Found AND symbol '{symbol}' in '{string}'")
-                    return 'AND', re.split(pattern, string)
-            
-            for symbol, pattern in or_symbols.items():
-                if symbol in string:
-                    #print(f"Found OR symbol '{symbol}' in '{string}'")
-                    return 'OR', re.split(pattern, string)
-            
-            #print(f"Falling back on standard '{string}'")
-            return 'OR', re.split(r'\s*;\s*', string)                                                   
+            def determine_operator_and_substrings(string): 
+                and_symbols = {
+                    ':': r'\s*:\s*',
+                    '&': r'\s*&\s*',
+                    '+': r'\s*\+\s*'
+                }            
+                or_symbols = {
+                    '|': r'\s*\|\s*',
+                    '-': r'\s*-\s*'             
+                }
+                
+                for symbol, pattern in and_symbols.items():
+                    if symbol in string:
+                        #print(f"Found AND symbol '{symbol}' in '{string}'")
+                        return 'AND', re.split(pattern, string)
+                
+                for symbol, pattern in or_symbols.items():
+                    if symbol in string:
+                        #print(f"Found OR symbol '{symbol}' in '{string}'")
+                        return 'OR', re.split(pattern, string)
+                
+                #print(f"Falling back on standard '{string}'")
+                return 'OR', re.split(r'\s*;\s*', string)                                                   
 
 
-        # Apply the first filter outside the loop
-        df_filtered = df_to_filter
-        #substrings = re.split(r'\s*;\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
-        apply_operator, substrings = determine_operator_and_substrings(filter_row['Modifier']) if filter_row['Modifier'] else ('OR', [])
-        if substrings:
-            df_filtered = apply_filter(df, substrings)
+            # Apply the first filter outside the loop
+            df_filtered = df_to_filter
+            #substrings = re.split(r'\s*;\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
+            apply_operator, substrings = determine_operator_and_substrings(filter_row['Modifier']) if filter_row['Modifier'] else ('OR', [])
+            if substrings:
+                df_filtered = apply_filter(df, substrings)
 
-        # Apply the remaining filters in the loop
-        for i, filter_type in enumerate(['Creature', 'Spell', 'Forgeborn Ability', 'Type'], start=1):
-            operator = ''
-            if f'op{i}' in filter_row:
-                operator = filter_row[f'op{i}']
-            
-            filter_fields = ['cardTitles'] 
-            if filter_type == 'Forgeborn Ability': 
-                filter_fields = ['FB2', 'FB3', 'FB4'] 
-                operator = 'AND'            
-
-            if filter_type == 'Type':
-                filter_fields = ['type']
-                operator = 'AND'
-
-            previous_substrings = substrings
-            # Determine if we should use AND or OR logic based on the operator            
-            apply_operator, substrings = determine_operator_and_substrings(filter_row[filter_type]) if filter_row[filter_type] else ("",[])
-            #substrings = re.split(r'\s*;\s*', filter_row[filter_type]) if filter_row[filter_type] else []
-            #print(f"Substrings = '{substrings}'")            
-            
-            if operator == '+':                
-                substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
-            
-            # If previous_substrings is empty treat the operator as ''
-            if not previous_substrings:
+            # Apply the remaining filters in the loop
+            for i, filter_type in enumerate(['Creature', 'Spell', 'Forgeborn Ability', 'Type'], start=1):
                 operator = ''
+                if f'op{i}' in filter_row:
+                    operator = filter_row[f'op{i}']
+                
+                filter_fields = ['cardTitles'] 
+                if filter_type == 'Forgeborn Ability': 
+                    filter_fields = ['FB2', 'FB3', 'FB4'] 
+                    operator = 'AND'            
 
-            # If substrings is empty, skip this iteration
-            if not substrings:
-                substrings = previous_substrings
-                continue
+                if filter_type == 'Type':
+                    filter_fields = ['type']
+                    operator = 'AND'
 
-            # Apply the filter to the DataFrame
-            current_filter_results = apply_filter(df, substrings, filter_fields, apply_operator=apply_operator)
+                previous_substrings = substrings
+                # Determine if we should use AND or OR logic based on the operator            
+                apply_operator, substrings = determine_operator_and_substrings(filter_row[filter_type]) if filter_row[filter_type] else ("",[])
+                #substrings = re.split(r'\s*;\s*', filter_row[filter_type]) if filter_row[filter_type] else []
+                #print(f"Substrings = '{substrings}'")            
+                
+                if operator == '+':                
+                    substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
+                
+                # If previous_substrings is empty treat the operator as ''
+                if not previous_substrings:
+                    operator = ''
 
-            # Handle the operator logic in the outer loop
-            if operator == 'AND':
-                df_filtered = df_filtered[df_filtered.index.isin(current_filter_results.index)]
-            elif operator == 'OR' :
-                df_filtered = pd.concat([df_filtered, current_filter_results]).drop_duplicates()
-            elif operator == '+' or operator == '':
-                df_filtered = current_filter_results
-            else:
-                print(f"Operator '{operator}' not recognized")
+                # If substrings is empty, skip this iteration
+                if not substrings:
+                    substrings = previous_substrings
+                    continue
+
+                # Apply the filter to the DataFrame
+                current_filter_results = apply_filter(df, substrings, filter_fields, apply_operator=apply_operator)
+
+                # Handle the operator logic in the outer loop
+                if operator == 'AND':
+                    df_filtered = df_filtered[df_filtered.index.isin(current_filter_results.index)]
+                elif operator == 'OR' :
+                    df_filtered = pd.concat([df_filtered, current_filter_results]).drop_duplicates()
+                elif operator == '+' or operator == '':
+                    df_filtered = current_filter_results
+                else:
+                    print(f"Operator '{operator}' not recognized")
+
+            return df_filtered
+
+        df_filtered = df_to_filter
+        active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
+
+        for _, filter_row in active_filters.iterrows():
+            df_filtered = filter_by_substring(df_filtered, filter_row)
 
         return df_filtered
-
-    df_filtered = df_to_filter
-    active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
-
-    for _, filter_row in active_filters.iterrows():
-        df_filtered = filter_by_substring(df_filtered, filter_row)
-
-    return df_filtered
-
-from MultiIndexDataFrame import MultiIndexDataFrame
 
 # Function to create a styled HTML widget with a background color
 def create_styled_html(text, text_color, bg_color, border_color):
@@ -736,7 +821,7 @@ class DynamicGridManager:
         self.update_grid_layout()
 
     def reset_grid_layout(self, new_size):
-        self.ui.children = [self.selectionGrid, self.filterGrid] 
+        #self.ui.children = [self.selectionGrid, self.filterGrid] 
         self.grid_layout = widgets.GridspecLayout(new_size, 1)
         #print(f"Resetting grid layout to size {new_size} : {self.grid_layout}")
         self.update_ui()
@@ -785,7 +870,7 @@ class DynamicGridManager:
                 grid_widget  = None 
 
                 grid_identifier = f"filtered_grid_{index}"
-                grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options)
+                grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options, enable_sorting=True)
                 
                 # Register selection event callback using GridManager's register_callback
                 with self.out_debug:
@@ -847,282 +932,24 @@ class DynamicGridManager:
                 combined_df = deck_content_df.copy()
 
                 # Use the helper function to recreate the qgrid widget
-                self.deck_content_grid = self.initialize_grid_with_totals(combined_df)
+                #self.deck_content_grid = self.initialize_grid_with_totals(combined_df)
 
                 # Update the UI
                 self.update_ui()
             
     def update_ui(self):
         """Helper method to update the self.ui.children with the common layout."""
-        self.ui.children = [
+        self.ui.children = [widget for widget in [
             self.selectionGrid, 
             filter_grid_bar, 
             self.filterGrid, 
             filter_results_bar, 
             self.grid_layout, 
-            deck_content_bar,
-            self.deck_content_grid
-        ]
+            #deck_content_bar,
+            #self.deck_content_grid
+        ] if widget is not None]
 
     def get_ui(self):
         return self.ui
     
-    def initialize_grid_with_totals(self, df):
-        """
-        Helper function to create and initialize the qgrid widget with the given DataFrame.
-        This function calculates the sum of numeric columns, inserts the totals row at the top,
-        applies multi-column sorting based on sorting_info, and returns the qgrid widget.
-        """
-        with self.out_debug:
-            # Remove any existing totals row from the DataFrame (if it's already present)
-            data_rows = df[df['DeckName'] != 'Totals'].reset_index(drop=True)  # Reset the index
-
-            # Calculate the totals row for numeric columns and handle non-numeric columns
-            totals_row = self.get_totals_row(data_rows)
-
-            # Concatenate the totals row at the top of the DataFrame
-            updated_df = pd.concat([totals_row, data_rows], ignore_index=True)
-
-            # Apply sorting to the DataFrame based on sorting_info
-            if self.sorting_info:
-                # Sort the columns by their sort_order and prepare them for sorting
-                columns_to_sort = [col for col in sorted(self.sorting_info, key=lambda x: self.sorting_info[x]['sort_order'])]
-                ascending_states = [self.sorting_info[col]['ascending'] for col in columns_to_sort]
-                updated_df = sort_dataframe(updated_df, columns_to_sort, ascending_states)
-
-                print(f"Initializing grid with sorting. Columns to sort: {columns_to_sort}, Ascending states: {ascending_states}")
-
-            # Update the column definitions for sorted/filtered columns
-            new_column_definitions = gv.all_column_definitions.copy()
-            updated_column_definitions = self.get_column_definitions_with_gradient(new_column_definitions, self.sorting_info)
-
-            # Create the qgrid widget
-            widget = qgrid.show_grid(
-                updated_df,
-                show_toolbar=False,
-                column_definitions=updated_column_definitions,
-                grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True, 'minVisibleRows': 17, 'maxVisibleRows': 30}
-            )
-
-            # Apply CSS if needed
-            if self.css_manager.needs_custom_styles(widget, rotate_suffix):
-                self.css_manager.apply_css_to_widget(widget, self.custom_css_class)
-            else:
-                widget.remove_class(self.custom_css_class)
-
-            # Register event handlers for sorting and filtering
-            widget.on('sort_changed', self.handle_sort_changed)
-
-            return widget
-        
-    def handle_sort_changed(self, event, widget=None):
-        """
-        Handler to ensure that the totals row stays at the top after sorting.
-        This function checks if the sorted column is part of rotated_columns.
-        If it is, we handle the sorting manually. Otherwise, reset sorting state for non-rotated columns.
-        """
-        with self.out_debug:
-            # Capture the sorted column
-            sort_column = event['new']['column']
-            print(f"Sort column triggered: {sort_column}")
-            
-            # Check if the column is part of rotated_columns
-            if sort_column in rotated_column_definitions:
-                # Update sorting info for rotated columns
-                self.update_sorted_columns(sort_column)
-
-                print(f"Sorting Info for Rotated Columns: {self.sorting_info}")
-
-                # Prepare sorted columns and their ascending states
-                columns_to_sort = [col for col in sorted(self.sorting_info, key=lambda x: self.sorting_info[x]['sort_order'])]
-                ascending_states = [self.sorting_info[col]['ascending'] for col in columns_to_sort]
-
-                print(f"Columns to sort: {columns_to_sort}")
-                print(f"Ascending states: {ascending_states}")
-
-                # Get the updated DataFrame from the qgrid widget
-                sorted_df = self.deck_content_grid.get_changed_df()
-
-                # Remove the totals row from the sorted DataFrame
-                data_rows = sorted_df[sorted_df['DeckName'] != 'Totals']
-
-                # Reinsert the totals row at the top
-                totals_row = self.get_totals_row(data_rows)
-
-                # Concatenate the totals row back at the top
-                updated_df = pd.concat([totals_row, data_rows], ignore_index=True)
-
-                # Sort the DataFrame manually based on sorted_columns and their ascending states
-                updated_df = sort_dataframe(updated_df, columns_to_sort, ascending_states)
-
-                # Recreate the grid with the updated DataFrame
-                self.deck_content_grid = self.initialize_grid_with_totals(updated_df)
-
-                # Update the UI to reflect the new grid
-                self.update_ui()
-
-            else:
-                # If the column is not in rotated_columns, reset sorting and apply only to this column
-                print(f"Sorting only the column {sort_column} normally (non-rotated).")
-
-                # Reset sorting_info to just the current column
-                self.sorting_info = {}
-
-                # Update the sorting info for the new column
-                self.update_sorted_columns(sort_column)
-
-                print(f"Sorting Info for Non-Rotated Columns: {self.sorting_info}")
-
-                # Trigger sorting manually
-                sorted_df = self.deck_content_grid.get_changed_df()
-
-                # Recreate the grid with updated sorting
-                self.deck_content_grid = self.initialize_grid_with_totals(sorted_df)
-                self.update_ui()
-
-            
-    def get_totals_row(self, df):
-        with self.out_debug:
-            """
-            Helper method to generate the totals row from the current DataFrame.
-            For numeric columns, sum values; for non-numeric columns, return an empty string or appropriate label.
-            """
-            # Create a copy of the DataFrame to work on the numeric conversion, keeping the original intact
-            numeric_df = df.copy()
-
-            # Convert the appropriate numeric columns (those in rotated_column_definitions) to numeric
-            numeric_cols = [col for col in df.columns if col in rotated_column_definitions]
-
-            # Convert only the relevant numeric columns to numeric for summation purposes
-            for col in numeric_cols:
-                numeric_df[col] = pd.to_numeric(numeric_df[col], errors='coerce')
-
-            # Sum numeric columns
-            totals = numeric_df[numeric_cols].sum(numeric_only=True)
-
-            # Create a DataFrame for the totals row
-            totals_row = pd.DataFrame(totals).T
-
-            # Label the totals row in the 'DeckName' column
-            totals_row['DeckName'] = 'Totals'
-
-            # Fill non-numeric columns with an empty string or placeholder
-            for col in df.columns:
-                if col not in totals_row.columns:
-                    totals_row[col] = ''  # Replace with empty string if you prefer
-
-            # Ensure totals row columns match the original DataFrame's column order
-            totals_row = totals_row[df.columns]
-
-            return totals_row
-        
-    def update_sorted_columns(self, new_sort_column):
-        """
-        Update the sorting information for the new sorted column.
-        Flip the ascending state if the column is already sorted.
-        """
-        # If the column is already in sorting_info, flip the ascending state
-        if new_sort_column in self.sorting_info:
-            self.sorting_info[new_sort_column]['ascending'] = not self.sorting_info[new_sort_column]['ascending']
-            print(f"Flipping sort order for column {new_sort_column} to {'ascending' if self.sorting_info[new_sort_column]['ascending'] else 'descending'}")
-        else:
-            # Add the new column with ascending state and sort order
-            self.sorting_info[new_sort_column] = {
-                'ascending': False,  # Default to descending for new column
-                'sort_order': len(self.sorting_info) + 1  # Track the order of sorting
-            }
-            print(f"Adding new sorted column {new_sort_column} with ascending order.")
-
-        return self.sorting_info
-
-    def get_column_definitions_with_gradient(self, column_definitions, sorting_info):
-        """
-        Update the column definitions with custom CSS for sorted columns.
-        Applies a vertical gradient to the header based on the sorting direction,
-        and applies a static background color to the column cells that matches the header's gradient.
-        """
-        def add_css_class(existing_class, new_class):
-            """Helper function to append a CSS class without duplication."""
-            classes = existing_class.split() if existing_class else []
-            if new_class not in classes:
-                classes.append(new_class)
-            return " ".join(classes)
-
-        def remove_css_class(existing_class, old_class):
-            """Helper function to remove a CSS class."""
-            classes = existing_class.split() if existing_class else []
-            if old_class in classes:
-                classes.remove(old_class)
-            return " ".join(classes)
-
-        # CSS classes for ascending and descending sorts
-        ascending_header_class = 'sorted-column-header-ascending'
-        descending_header_class = 'sorted-column-header-descending'
-        
-        # Static cell color classes for ascending and descending sorts
-        ascending_cell_class = 'sorted-column-cells-ascending'
-        descending_cell_class = 'sorted-column-cells-descending'
-
-        # Loop over each sorted column to apply or update the gradient in the header and static color in the cells
-        for col_name, sort_info in sorting_info.items():
-            if col_name in column_definitions:
-                # Determine the new CSS class based on the current ascending state
-                if sort_info['ascending']:
-                    new_header_class = ascending_header_class
-                    #new_cell_class = ascending_cell_class
-                    old_header_class = descending_header_class
-                    #old_cell_class = descending_cell_class
-                else:
-                    new_header_class = descending_header_class
-                    #new_cell_class = descending_cell_class
-                    old_header_class = ascending_header_class
-                    #old_cell_class = ascending_cell_class
-
-                # Get the current headerCssClass
-                existing_header_class = column_definitions[col_name].get('headerCssClass', '')
-
-                # Add the new header class for gradient and ensure no duplicates
-                updated_header_class = add_css_class(existing_header_class, new_header_class)
-
-                # Remove the old gradient class from the header
-                updated_header_class = remove_css_class(updated_header_class, old_header_class)
-
-                # Get the current cssClass (for cells)
-                existing_cell_class = column_definitions[col_name].get('cssClass', '')
-
-                # Apply static color to the cells in the sorted column
-               # updated_cell_class = add_css_class(existing_cell_class, new_cell_class)
-
-                # Apply general sorted column style if needed (optional for borders)
-                #updated_cell_class = add_css_class(updated_cell_class, 'sorted-column')
-
-                # Remove old cell color class to avoid duplication
-                #updated_cell_class = remove_css_class(updated_cell_class, old_cell_class)
-
-                print(f"Updated CSS for column {col_name}: Header = {updated_header_class}")                
-                # Update the column definition with the new classes
-                column_definitions[col_name]['headerCssClass'] = updated_header_class
-                #column_definitions[col_name]['cssClass'] = updated_cell_class
-
-        return column_definitions
-
-def sort_dataframe(df, columns_to_sort, ascending_states):
-    """
-    Sort the DataFrame based on the given columns and their respective ascending states.
-    If the columns are numeric but represented as strings, convert them to numbers for sorting.
-    Treat empty cells as 0 for sorting purposes.
-    """
-    # Identify numeric columns in rotated_columns
-    numeric_cols = [col for col in columns_to_sort if col in rotated_column_definitions]
-
-    # Convert numeric columns to numeric type, treating empty cells as 0
-    df[numeric_cols] = df[numeric_cols].apply(lambda col: pd.to_numeric(col, errors='coerce').fillna(0))
-
-    # Perform the sorting
-    sorted_df = df.sort_values(by=columns_to_sort, ascending=ascending_states)
-
-    # Convert numeric columns back to strings, but replace 0 with '' where the original value was empty
-    for col in numeric_cols:
-        sorted_df[col] = sorted_df[col].apply(lambda x: '' if x == 0 else str(int(x) if x.is_integer() else x))
-
-    return sorted_df
+    

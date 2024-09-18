@@ -77,7 +77,7 @@ qm = GridManager(gv.out_debug)
 tab = None 
 
 # Widget original options for qgrid
-qg_options ={ 'column_options' : {}, 'column_definitions' : gv.all_column_definitions }   
+qg_options ={ 'column_options' : {'defaultSortAsc': False}, 'column_definitions' : gv.all_column_definitions }   
 
 ######################
 # Network Operations #

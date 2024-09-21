@@ -32,6 +32,10 @@ class GridManager:
         if dependent_identifiers is None:
             dependent_identifiers = []
 
+        # Log the incoming options
+        with self.debug_output:
+            print(f"GridManager::add_grid() - Options passed for {identifier}: {options}")
+
         if identifier in self.grids:
             grid = self.grids[identifier]
             self.set_default_data(identifier, df)
@@ -39,16 +43,12 @@ class GridManager:
             with self.debug_output:
                 print(f"GridManager::add_grid() - Grid {identifier} updated.")
         else:
-            if include_totals:
-                grid = self.grid_initializer.initialize_grid_with_totals(df)
-            else:
-                grid = QGrid(identifier, df, options) if grid_type == 'qgrid' else print("Not QGrid Type!")
-            
+            grid = QGrid(identifier, df, options) if grid_type == 'qgrid' else print("Not QGrid Type!")
             self.grids[identifier] = grid
             self.relationships[identifier] = dependent_identifiers
             self._setup_grid_events(identifier, grid)
             with self.debug_output:
-                print(f"GridManager::add_grid() - Grid {identifier} added.")
+                print(f"GridManager::add_grid() - Grid {identifier} created with options {options}.")
             
             # Optionally enable sorting for the grid
             if enable_sorting:
@@ -58,11 +58,12 @@ class GridManager:
         if self.css_manager.needs_custom_styles(grid.main_widget, rotate_suffix):
             self.css_manager.apply_css_to_widget(grid.main_widget, self.custom_css_class)
             with self.debug_output:
-                print(f"Apply Custom Css {self.custom_css_class} for {identifier} : {rotate_suffix} ")
+                print(f"GridManager::add_grid() - Applying Custom CSS {self.custom_css_class} for {identifier} : {rotate_suffix}")
         else:
             grid.main_widget.remove_class(self.custom_css_class)
-            print(f"Remove Custom Css {self.custom_css_class} for {identifier} : {rotate_suffix} ")
-        
+            with self.debug_output:
+                print(f"GridManager::add_grid() - Removing Custom CSS {self.custom_css_class} for {identifier} : {rotate_suffix}")
+
         return grid
         
     def get_grid_df(self, identifier, version='default'):
@@ -257,7 +258,8 @@ class BaseGrid:
                 'changed': None
             }
         }
-        self.grid_options = options if options else {}
+        print(f"BaseGrid::__init__() - options = {options}")
+        self.qgrid_options = options if options else {}
         self.main_widget = None
         self.toggle_widget = self.create_toggle_widget(df)
         self.create_main_widget(df)
@@ -288,14 +290,37 @@ class BaseGrid:
 
 class QGrid(BaseGrid):
     def create_main_widget(self, df):
-        #print(f"QGrid::create_main_widget() - Creating QGrid -> column_definitions = {self.grid_options.get('column_definitions', {})}")
+        # Define default grid options
+        default_grid_options = {
+            'forceFitColumns': False,
+            'enableColumnReorder': True,
+            'minVisibleRows': 10,
+        }
+
+        # Get user-provided grid options from self.qgrid_options and update the defaults
+        user_grid_options = self.qgrid_options.get('grid_options', {})
+        
+        # Log the incoming options and the defaults
+        print(f"QGrid::create_main_widget() - Default grid options: {default_grid_options}")
+        print(f"QGrid::create_main_widget() - User-provided grid options: {user_grid_options}")
+        
+        # Update default options with user-provided options
+        default_grid_options.update(user_grid_options)
+        
+        # Debugging: Check merged options
+        print(f"QGrid::create_main_widget() - Merged grid options (default + user): {default_grid_options}")
+
+        # Create the QGrid widget with updated options
         self.main_widget = qgrid.show_grid(
             df,
-            column_options=self.grid_options.get('column_options', {}),
-            column_definitions=self.grid_options.get('column_definitions', {}),
-            grid_options={'forceFitColumns': False, 'enableColumnReorder': True, 'minVisibleRows' : 10},
+            column_options=self.qgrid_options.get('column_options', {}),
+            column_definitions=self.qgrid_options.get('column_definitions', {}),
+            grid_options=default_grid_options,  # Use the updated default options
             show_toolbar=False
         )
+        
+        # Confirm creation of the main widget and options passed
+        print(f"QGrid::create_main_widget() - Final grid options passed to qgrid: {default_grid_options}")
         
     def update_main_widget(self, new_df):
         self.main_widget.df = new_df
@@ -808,7 +833,7 @@ class DynamicGridManager:
         self.qm = GridManager(out_debug)
         self.grid_layout = widgets.GridspecLayout(1, 1)        
         self.filterGridObject = FilterGrid(self.refresh_gridbox)
-        self.deck_content_grid = qgrid.show_grid(pd.DataFrame(), show_toolbar=False, grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True})
+        self.deck_content_Grid = self.create_deck_content_Grid()#  qgrid.show_grid(pd.DataFrame(), show_toolbar=False, grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True})
         self.sorting_info = {}
         self.css_manager = CSSManager()        
         self.custom_css_class = self.css_manager.create_and_inject_css('deck_content', rotate_suffix)        
@@ -885,11 +910,42 @@ class DynamicGridManager:
                 grid_widget = grid.get_grid_box()
                 
                 self.grid_layout[index, 0] = widgets.VBox([filter_widget, grid_widget], layout=widgets.Layout(border='2px solid black'))
-        
+                        
         # After updating, reassign children to trigger update
         #print(f"Refresh Gridbox. Layout = {self.grid_layout}")
         self.update_ui()
 
+    def create_deck_content_Grid(self):
+        # Define the default grid options
+        default_options = {
+            'minVisibleRows': 10,
+            'maxVisibleRows': 20
+        }
+
+        # Ensure grid options exist in qg_options, or initialize them if not
+        qgrid_options = self.qg_options.copy()
+        qgrid_options['grid_options'] = qgrid_options.get('grid_options', {})
+        
+        # Merge the default options with user-provided options
+        qgrid_options['grid_options'].update(default_options)
+        
+        # Ensure column_options and column_definitions are safely updated
+        for name in ['column_options', 'column_definitions']:
+            if name in self.qg_options:
+                qgrid_options[name] = qgrid_options.get(name, {})
+                qgrid_options[name].update(self.qg_options.get(name, {}))
+
+        # Create the deck content qgrid with the merged options
+        deck_content_grid = self.qm.add_grid(
+            'deck_content',
+            pd.DataFrame(),  # Start with an empty DataFrame
+            options=qgrid_options
+        )
+
+        print(f"DynamicGridManager::create_deck_content_Grid() - Deck content grid created with options: {qgrid_options}")
+
+        return deck_content_grid
+    
     def update_deck_content(self, event, widget):
         with self.out_debug:
             """Update the deck content DataFrame based on the selected item in the grid."""
@@ -929,10 +985,14 @@ class DynamicGridManager:
                 #print(deck_content_df)
 
                 # Copy original DataFrame to preserve column order
-                combined_df = deck_content_df.copy()
-
-                # Use the helper function to recreate the qgrid widget
-                #self.deck_content_grid = self.initialize_grid_with_totals(combined_df)
+                combined_df = deck_content_df.copy()                
+                options = self.qg_options.copy()
+                additional_options = {
+                    'minVisibleRows': 10,
+                    'maxVisibleRows': 20
+                }
+                options.update(additional_options)       
+                self.qm.add_grid('deck_content', combined_df, options=options) 
 
                 # Update the UI
                 self.update_ui()
@@ -945,8 +1005,8 @@ class DynamicGridManager:
             self.filterGrid, 
             filter_results_bar, 
             self.grid_layout, 
-            #deck_content_bar,
-            #self.deck_content_grid
+            deck_content_bar,
+            self.deck_content_Grid.get_grid_box()
         ] if widget is not None]
 
     def get_ui(self):

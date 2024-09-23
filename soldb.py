@@ -26,7 +26,7 @@ def main(args):
     net_fusions = []
 
     if not args.offline:
-        myApi = NetApi(myUCL)
+        myApi = NetApi()
                 
         net_decks = get_net_decks(args, myApi)
         

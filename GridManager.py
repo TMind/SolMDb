@@ -258,7 +258,7 @@ class BaseGrid:
                 'changed': None
             }
         }
-        print(f"BaseGrid::__init__() - options = {options}")
+        #print(f"BaseGrid::__init__() - options = {options}")
         self.qgrid_options = options if options else {}
         self.main_widget = None
         self.toggle_widget = self.create_toggle_widget(df)
@@ -301,14 +301,14 @@ class QGrid(BaseGrid):
         user_grid_options = self.qgrid_options.get('grid_options', {})
         
         # Log the incoming options and the defaults
-        print(f"QGrid::create_main_widget() - Default grid options: {default_grid_options}")
-        print(f"QGrid::create_main_widget() - User-provided grid options: {user_grid_options}")
+        #print(f"QGrid::create_main_widget() - Default grid options: {default_grid_options}")
+        #print(f"QGrid::create_main_widget() - User-provided grid options: {user_grid_options}")
         
         # Update default options with user-provided options
         default_grid_options.update(user_grid_options)
         
         # Debugging: Check merged options
-        print(f"QGrid::create_main_widget() - Merged grid options (default + user): {default_grid_options}")
+        #print(f"QGrid::create_main_widget() - Merged grid options (default + user): {default_grid_options}")
 
         # Create the QGrid widget with updated options
         self.main_widget = qgrid.show_grid(
@@ -320,7 +320,7 @@ class QGrid(BaseGrid):
         )
         
         # Confirm creation of the main widget and options passed
-        print(f"QGrid::create_main_widget() - Final grid options passed to qgrid: {default_grid_options}")
+        #print(f"QGrid::create_main_widget() - Final grid options passed to qgrid: {default_grid_options}")
         
     def update_main_widget(self, new_df):
         self.main_widget.df = new_df
@@ -367,7 +367,7 @@ class GridInitializer:
                 ascending_states = [self.sorting_manager.sorting_info[col]['ascending'] for col in columns_to_sort]
                 updated_df = self.sorting_manager.sort_dataframe(updated_df, columns_to_sort, ascending_states)
 
-                print(f"Initializing grid with sorting. Columns to sort: {columns_to_sort}, Ascending states: {ascending_states}")
+                #print(f"Initializing grid with sorting. Columns to sort: {columns_to_sort}, Ascending states: {ascending_states}")
 
             # Update the column definitions for sorted/filtered columns
             new_column_definitions = gv.all_column_definitions.copy()
@@ -942,7 +942,7 @@ class DynamicGridManager:
             options=qgrid_options
         )
 
-        print(f"DynamicGridManager::create_deck_content_Grid() - Deck content grid created with options: {qgrid_options}")
+        #print(f"DynamicGridManager::create_deck_content_Grid() - Deck content grid created with options: {qgrid_options}")
 
         return deck_content_grid
     

@@ -7,13 +7,17 @@ dependencies:
   - ipywidgets=8.1.1  
   - pandas=2.2.0  
   - jupyterlab=4.1.0  
+  - jupyterhub
+  - configurable-http-proxy
   - pandas-datareader  
   - matplotlib  
   - markdown
   - ipympl  
   - pymongo  
   - networkx  
+  - nodejs
   - numpy  
+  - oauthenticator
   - pillow  
   - scipy  
   - tqdm  
@@ -25,7 +29,10 @@ dependencies:
   - pip:  
     - pyvis # If pyvis is not available in conda channels  
     - jupyter-server-proxy # If jupyter-server-proxy is not available in conda channels  
-    - qgridnext==2.0.1 # If qgridnext is not available in conda channels  
+    - google-auth
+    - google-auth-oauthlib
+    - google-auth-httplib2
+    #- qgridnext==2.0.1 # If qgridnext is not available in conda channels  . It needs to be installed locally now
     - icecream # If icecrls -eam is not available in conda channels  
     - tzlocal
 

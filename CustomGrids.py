@@ -12,6 +12,7 @@ from DataSelectionManager import DataSelectionManager
 from GlobalVariables import global_vars as gv
 from CustomCss import CSSManager, rotate_suffix, rotated_column_definitions
 from MongoDB.DatabaseManager import DatabaseManager
+from gsheets import GoogleSheetsClient
 
 # Inject custom CSS
 style = """
@@ -65,13 +66,18 @@ class TemplateGrid:
 
     def setup_widgets(self):
         # Define column groups for selection
+        
+        gsheets = GoogleSheetsClient()
+        tags = gsheets.get_column_names_from('Card Database', 'Beast')
+        
         self.column_groups = {
             'Base Data': ['Name', 'type', 'faction', 'forgebornId', 'cardTitles', 'FB2', 'FB3', 'FB4', 'Creatures', 'Spells', 'Exalts'],
-            'Deck Data': ['registeredDate', 'UpdatedAt', 'pExpiry', 'cardSetNo', 'tags' ],
+            'Deck Data': ['registeredDate', 'UpdatedAt', 'pExpiry', 'cardSetNo', 'tags', 'Betrayers', 'SolBinds'],
             'Fusion Data': ['Deck A', 'Deck B', 'CreatedAt', 'faction', 'crossFaction'],
             'Deck Stats': ['elo', 'level', 'xp', 'deckRank', 'deckScore'],
             'Fusion Stats' : ['CreatedAt', 'id' ],
             'Statistical Data': ['A1', 'H1', 'A2', 'H2', 'A3', 'H3'],
+            'CM Tags': tags,
             'Tags' : ['Beast', 'Dinosaur', 'Dragon', 'Elemental Type', 'Mage', 'Plant Type', 'Robot Type', 'Scientist', 'Spirit Type', 'Warrior', 'Zombie Type',
                       'Spell', 'Exalts', 'Activate', 'Ready', 'Upgrade', 'Slay', 'Deploy', 'Reanimate', 'Destruction', 'Self Damage', 'Armor'],
             'Creatures': ['Beast', 'Dinosaur', 'Dragon', 'Elemental Type', 'Mage', 'Plant Type', 'Robot Type', 'Scientist', 'Spirit Type', 'Warrior', 'Zombie Type'],

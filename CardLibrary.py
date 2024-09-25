@@ -110,6 +110,8 @@ class CardData():
     cardType: str   = ''
     cardSubType: str    =''    
     betrayer: bool = False
+    solbindId1: str = ''
+    solbindId2: str = ''
     sortValue: str = ''
     crossFaction: str = ''
     cardSetId: str = ''
@@ -207,7 +209,7 @@ class DeckData:
     digital: str = ''
     elo: int = 0
     deckRank: str = ''
-    deckScore: float = 0.0
+    deckScore: float = 0.0    
     level: int = 0
     _id: str = ''
     children_data: dict = field(default_factory=dict)

@@ -7,9 +7,12 @@ class NetApi:
 
     def __init__(self, csvfile=None):
         self.csvfile = csvfile or 'csv/sff.csv'
-        self.base_url = "https://ul51g2rg42.execute-api.us-east-1.amazonaws.com/main"  
+        self.base_url  = "https://ul51g2rg42.execute-api.us-east-1.amazonaws.com/main"  
 
     def make_request(self, id="", type="deck", username="TMind", params=None):
+        """
+        Makes a request to the specified API, handles pagination for batch API, and returns all deck data for a user.
+        """
         params = params or {}
         default_params = {
             "inclPvE": "true",
@@ -18,71 +21,40 @@ class NetApi:
         default_params.update(params)
         params = default_params
 
-        # Rest of the code...
-        #endpoint = f"{self.base_url}/{type}/app?{id}"
-        endpoint = f"{self.base_url}/{type}/{id}"
-                
-#        print(f"Requesting Data from Website: {','.join([username, type, id])}")
-#        print(f"Endpoint: {endpoint}")
-#        print(f"Params: {params}")
+        if id:  # Use the old protocol (single entry)
+            endpoint = f"{self.base_url}/{type}/{id}"  # URL for a single deck by ID
+        else:  # Use the new protocol (batch entry)
+            endpoint = f"{self.base_url}/{type}/app"
 
         try:
             response = requests.get(endpoint, params=params)
             response.raise_for_status()  # Raise an exception for HTTP errors
-            pageData = response.json()
-            #print(f"Initial response data: {pageData}")
+            page_data = response.json()
 
-            # If there's an error in the response, return an empty list
-            if 'error' in pageData:
-                print(f"Error in response: {pageData['error']}")
-                return []
+            # Old protocol: no pagination, return single result directly
+            if id:
+                return [page_data]
 
-                    # Check if this is a paginated result
-            if 'LastEvaluatedKey' in pageData:
-                # Multiple pages: fetch all items
-                all_decks = pageData['Items']
-                lastPK = pageData['LastEvaluatedKey']['PK']
-                lastSK = pageData['LastEvaluatedKey']['SK']
-                total = pageData['Count']
-                lastPK = ""
-                all_decks = pageData['Items']                        
-                total = pageData['Count']
+            # New protocol: handle pagination
+            all_decks = page_data.get('Items', [])
+            last_evaluated_key = page_data.get('LastEvaluatedKey', {})
 
-                gv.update_progress('Network API', 0, pageData['Count'], f"Fetching online records") 
- 
-                while 'LastEvaluatedKey' in pageData and lastPK != pageData['LastEvaluatedKey']['PK']:
-                    lastPK = pageData['LastEvaluatedKey']['PK']            
-                    lastSK = pageData['LastEvaluatedKey']['SK']            
-                    params.update({"exclusiveStartKeyPK": lastPK, 'exclusiveStartKeySK': lastSK})
-                    
-                    response = requests.get(endpoint, params=params)
-                    response.raise_for_status()
-                    pageData = response.json()
-                    #print(f"Page data: {pageData}")
-                    
-                    # Handle any errors
-                    if 'error' in pageData:
-                        print(f"Error in response: {pageData['error']}")
-                        return []
+            # Paginate if LastEvaluatedKey is present
+            while last_evaluated_key and last_evaluated_key.get('PK') and last_evaluated_key.get('SK'):
+                params.update({
+                    "exclusiveStartKeyPK": last_evaluated_key['PK'],
+                    "exclusiveStartKeySK": last_evaluated_key['SK']
+                })
+                response = requests.get(endpoint, params=params)
+                response.raise_for_status()
 
-                    all_decks.extend(pageData['Items'])
-                    records_fetched = pageData['Count']                
+                page_data = response.json()
+                all_decks.extend(page_data.get('Items', []))
 
-                    total += records_fetched
-                    gv.update_progress('Network API', total, total, message = f"{records_fetched} additional records from {total} fetched")
+                # Check if there is another page to fetch
+                last_evaluated_key = page_data.get('LastEvaluatedKey', {})
 
-                if 'error' in pageData:
-                    print(f"Error in response: {pageData['error']}")
-                    return []
-
-                if 'Items' in all_decks:     
-                    return all_decks['Items']
-                else:                   
-                    return all_decks
-
-            # No pagination: return the single result directly
-            else:
-                return pageData['Items'] if 'Items' in pageData else [pageData]
+            return all_decks
 
         except requests.exceptions.RequestException as e:
             print(f"Request failed: {e}")
@@ -90,6 +62,7 @@ class NetApi:
         except json.JSONDecodeError as e:
             print(f"Failed to decode JSON response: {e}")
             return []
+
 
     def request_decks(self, id="", type="deck", username="TMind", filename=None, params=None):
         if id.startswith('Fused'):  

@@ -49,7 +49,7 @@ except KeyError:
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
 synergy_template = SynergyTemplate()    
-ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
+ucl_paths = [ 'Card Database', os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')] #os.path.join('csv', 'sff.csv')
 
 #Read Entities and Forgeborns from Files into Database
 myUCL = UniversalLibrary(os.getenv('SFF_USERNAME'), *ucl_paths)
@@ -660,7 +660,17 @@ def generate_deck_statistics_dataframe():
     identifier = 'Stats Data'
     gv.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
     for deck in decks:
-        gv.update_progress(identifier, message='Processing Deck Stats: ' + deck['name'])
+        gv.update_progress(identifier, message='Processing Deck Stats: ' + deck['name'])        
+        # Fetch all cards in deck from the database
+        cards = []
+        if gv.myDB:
+            cards = gv.myDB.find('Card', {'_id': {'$in': deck['cardIds']}}) 
+            # Collect all cards where the betrayer attribute is True
+            betrayers = [card['name'] for card in cards if card.get('betrayer', False)]
+            solbinds = [card['name'] for card in cards if card.get('solbind', False)]
+            df_decks_filtered.loc[deck['name'], 'Betrayers'] = ', '.join(betrayers)
+            df_decks_filtered.loc[deck['name'], 'SolBind'] = ', '.join(solbinds)
+        
         if 'stats' in deck:
             stats = deck.get('stats', {})
             card_type_count_dict = {'Creatures': stats['card_types']['Creature']['count'], 'Spells': stats['card_types']['Spell']['count']}

@@ -3,6 +3,7 @@ from gridfs import GridFS
 import os
 
 from CustomCss import rotated_column_definitions, non_rotated_column_definitions
+from gsheets import GoogleSheetsClient
 
 class GlobalVariables:
   
@@ -49,7 +50,7 @@ class GlobalVariables:
         self.progressbar_container = widgets.VBox([])  # Initially empty
         # If there are already progress containers, add them to the progressbar_container
         for identifier, container_dict in self.progress_containers.items():
-            self.progressbar_container.children += (container_dict['container'],)  # Add to VBox
+            self.progressbar_container.children += (container_dict['container'],)  # Add to VBox        
        
     def _set_environment_variables(self):
         """Set environment variables based on the current values."""
@@ -122,13 +123,15 @@ class GlobalVariables:
             progress_bar.style.bar_color = 'lightgreen'
             label.value = f"{message} -> Finished!"
 
+cm_tags = GoogleSheetsClient().get_column_names_from('Card Database', 'Beast')
+
 data_selection_sets = {
   "Deck Stats": {
     "Name": True, "type": 'Deck',
     "registeredDate": True, "UpdatedAt": True, "pExpiry": True,
     "level": True,  "xp": True, "elo": True, "deckScore": True, "deckRank": True,
     "cardSetNo": True,  "faction": True,
-    "forgebornId": True, "cardTitles": True,
+    "forgebornId": True, "cardTitles": True, "Betrayers": True, "SolBinds": True,
     "Creatures": True,  "Spells": True,
     "FB2": True,    "FB3": True,    "FB4": True,
     "A1": True,     "A2": True,     "A3": True,
@@ -421,6 +424,16 @@ data_selection_sets = {
     'cardSubType': True,
   }
 }
+
+data_selection_sets['CM Tags'] = {
+      "Name": True,
+      "faction": True,
+      "FB2": True,
+      "FB3": True,
+      "FB4": True,
+  }
+cmtags = { tag : True for tag in cm_tags }
+data_selection_sets['CM Tags'].update(cmtags)
 
 # Initialize global_vars
 global_vars = GlobalVariables.get_instance()

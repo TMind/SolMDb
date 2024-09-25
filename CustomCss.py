@@ -1,5 +1,7 @@
 from IPython.display import display, HTML, Javascript
 
+from gsheets import GoogleSheetsClient
+
 # Function to inject CSS from a file
 def inject_css(css_file_path):
     with open(css_file_path, 'r') as f:
@@ -198,6 +200,11 @@ rotated_width = 20
 
 rotate_suffix = '_rotate_'
 
+from gsheets import GoogleSheetsClient
+cm_tags = GoogleSheetsClient().get_column_names_from('Card Database', 'Beast')
+
+cm_tags_definitions = {tag: {'width': default_width} for tag in cm_tags}
+
 rotated_column_definitions = {
     # Creatures 
     'Creature':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -346,6 +353,8 @@ rotated_column_definitions = {
     'Fun':              {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Annoying':         {'width': rotated_width, 'headerCssClass': rotate_suffix}
 }
+
+rotated_column_definitions = {**cm_tags_definitions, **rotated_column_definitions}
  
 non_rotated_column_definitions = {
     'index':            {'width': 50},

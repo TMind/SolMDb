@@ -77,14 +77,27 @@ qm = GridManager(gv.out_debug)
 tab = None 
 
 # Widget original options for qgrid
-qg_options ={ 'column_options' : {}, 'column_definitions' : gv.all_column_definitions }   
+qg_options ={ 'column_options' : {'defaultSortAsc': False}, 'column_definitions' : gv.all_column_definitions }   
 
 ######################
 # Network Operations #
 ######################
 
+from MagicEden import get_collection_listings, fetch_all_magiceden_listings
+
 def fetch_network_decks(args, myApi):
     #print(f'Fetching Network Decks with args: {args}')
+    
+    if args.username == 'magiceden': 
+        print(f'Fetching decks from Magic Eden') 
+        args.type = 'deck'       
+        # Fetch the listings from Magic Eden
+        collection_symbol = 'sfgc'  # This could be dynamic based on args
+        
+        deck_data = fetch_all_magiceden_listings(collection_symbol, myApi, args)
+        print(f"Total Magic Eden decks processed: {len(deck_data)}")            
+        return deck_data        
+    
     if args.id:
         urls = args.id.split('\n')
         pattern = r'\/([^\/]+)$'        
@@ -115,9 +128,12 @@ def load_deck_data(args):
     net_decks = []
     net_fusions = []
 
-    myApi = NetApi(myUCL)                   
+    myApi = NetApi()                   
     types = args.type.split(',')
     for type in types:
+        if args.username == 'magiceden' and type == 'fuseddeck':
+            print(f"Skipping 'fuseddeck' for Magic Eden.")
+            continue
         args.type = type
         net_results = fetch_network_decks(args, myApi)            
         
@@ -530,51 +546,57 @@ def generate_fusion_statistics_dataframe():
         fusion_cursor = gv.myDB.find('Fusion', {})
     df_fusions = pd.DataFrame(list(fusion_cursor))
 
-    gv.update_progress('Fusion Card Titles', 0, len(df_fusions), 'Fetching Card Titles')
-    df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)
-    df_fusions['forgebornId'] = df_fusions['currentForgebornId']
-    df_fusions['type'] = 'Fusion'  
+    # If fusions are found, process them
+    if not df_fusions.empty:
 
-    additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'node_data', 'tags']
-    df_fusions_filtered = df_fusions[additional_fields].copy()
-    
-    df_fusions_filtered.set_index('name', inplace=True)
-    
-    #df_fusions_filtered[['Deck A', 'Deck B']] = df_fusions.apply(lambda x: pd.Series(get_items_from_child_data(x.children_data, 'CardLibrary.Deck')[:2]), axis=1)
-    # Assign values to 'Deck A' and 'Deck B' using .loc
-    # df_fusions_filtered.loc[:, ['Deck A', 'Deck B']] = df_fusions.apply(
-    #     lambda x: pd.Series(get_items_from_child_data(x.children_data, 'CardLibrary.Deck')[:2]),
-    #     axis=1
-    # )
-    
-    gv.update_progress('Fusion Stats', 0, len(df_fusions), 'Generating Fusion Dataframe...')
-    interface_ids_total_df = pd.DataFrame()
-    all_interface_ids_df_list = []
+        gv.update_progress('Fusion Card Titles', 0, len(df_fusions), 'Fetching Card Titles')
+        df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)
+        df_fusions['forgebornId'] = df_fusions['currentForgebornId']
+        df_fusions['type'] = 'Fusion'  
 
-    for fusion in df_fusions.itertuples():
-        process_deck_forgeborn(fusion.name, fusion.forgebornId, getattr(fusion, 'ForgebornIds', []), df_fusions_filtered)
-        gv.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion.name}")
+        additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'node_data', 'tags']
+        df_fusions_filtered = df_fusions[additional_fields].copy()
+        
+        df_fusions_filtered.set_index('name', inplace=True)
+        
+        #df_fusions_filtered[['Deck A', 'Deck B']] = df_fusions.apply(lambda x: pd.Series(get_items_from_child_data(x.children_data, 'CardLibrary.Deck')[:2]), axis=1)
+        # Assign values to 'Deck A' and 'Deck B' using .loc
+        # df_fusions_filtered.loc[:, ['Deck A', 'Deck B']] = df_fusions.apply(
+        #     lambda x: pd.Series(get_items_from_child_data(x.children_data, 'CardLibrary.Deck')[:2]),
+        #     axis=1
+        # )
+        
+        gv.update_progress('Fusion Stats', 0, len(df_fusions), 'Generating Fusion Dataframe...')
+        interface_ids_total_df = pd.DataFrame()
+        all_interface_ids_df_list = []
 
-        decks = get_items_from_child_data(fusion.children_data, 'CardLibrary.Deck')              
-        if len(decks) > 1:
-            df_fusions_filtered.loc[fusion.name, 'Deck A'] = decks[0]
-            df_fusions_filtered.loc[fusion.name, 'Deck B'] = decks[1]        
+        for fusion in df_fusions.itertuples():
+            process_deck_forgeborn(fusion.name, fusion.forgebornId, getattr(fusion, 'ForgebornIds', []), df_fusions_filtered)
+            gv.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion.name}")
 
-        myGraph = MyGraph()
-        myGraph.G = nx.from_dict_of_dicts(fusion.graph)
-        myGraph.node_data = fusion.node_data
-        interface_ids = myGraph.get_length_interface_ids()
-        interface_ids_df = pd.DataFrame(interface_ids, index=[fusion.name])
-        all_interface_ids_df_list.append(interface_ids_df)
+            decks = get_items_from_child_data(fusion.children_data, 'CardLibrary.Deck')              
+            if len(decks) > 1:
+                df_fusions_filtered.loc[fusion.name, 'Deck A'] = decks[0]
+                df_fusions_filtered.loc[fusion.name, 'Deck B'] = decks[1]        
 
-    interface_ids_total_df = pd.concat(all_interface_ids_df_list)
-    interface_ids_total_df = clean_columns(interface_ids_total_df)
+            myGraph = MyGraph()
+            myGraph.G = nx.from_dict_of_dicts(fusion.graph)
+            myGraph.node_data = fusion.node_data
+            interface_ids = myGraph.get_length_interface_ids()
+            interface_ids_df = pd.DataFrame(interface_ids, index=[fusion.name])
+            all_interface_ids_df_list.append(interface_ids_df)
 
-    #print_dataframe(interface_ids_total_df, 'Interface IDs Total DF')
-    df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)
-    #print_dataframe(df_fusions_filtered, 'Fusion Stats DF')
+        interface_ids_total_df = pd.concat(all_interface_ids_df_list)
+        interface_ids_total_df = clean_columns(interface_ids_total_df)
 
-    return df_fusions_filtered
+        #print_dataframe(interface_ids_total_df, 'Interface IDs Total DF')
+        df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)
+        #print_dataframe(df_fusions_filtered, 'Fusion Stats DF')
+
+        return df_fusions_filtered
+    else:
+        print('No fusions found in the database')
+        return pd.DataFrame()
 
 def extract_forgeborn_ids_and_factions(my_decks, fusion_data):
     forgeborn_ids = []
@@ -614,7 +636,9 @@ def generate_deck_statistics_dataframe():
     df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
     df_decks_filtered = df_decks[['name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph', 'node_data']].copy()
     df_decks_filtered['type'] = 'Deck'
-    df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].astype(int).replace(99, 0)
+    # Replace non-numeric values with NaN, then convert to int
+    df_decks_filtered['cardSetNo'] = pd.to_numeric(df_decks_filtered['cardSetNo'], errors='coerce').fillna(0).astype(int)
+    df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].replace(99, 0)
     df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
     df_decks_filtered['elo'] = pd.to_numeric(df_decks_filtered['elo'], errors='coerce').fillna(-1).round(2)
 
@@ -667,22 +691,6 @@ def coll_data_on_selection_changed(event, widget):
     deck_df = generate_deck_content_dataframe(event)    
     qm.replace_grid('deck', deck_df)    
     qm.set_default_data('deck', deck_df)
-        
-# def get_dataframe_apply_index_filter(source, target):
-#     # Initialize a list to store the filtered rows
-#     filtered_rows = []
-
-#     # Iterate over the indices of the source DataFrame
-#     for idx in source.index:
-#         # Check if the index exists in the target DataFrame
-#         if idx in target.index:
-#             # Filter the target DataFrame for each index and add the result to the list
-#             filtered_rows.append(target.loc[[idx]])
-
-#     # Concatenate all the filtered rows into a DataFrame
-#     filtered_df = pd.concat(filtered_rows) if filtered_rows else pd.DataFrame()
-
-#     return filtered_df
 
 # Function to check if any value in the column is not an empty string with regards to the changed_df of the qgrid widget
 def check_column_values(column, changed_df):
@@ -694,28 +702,6 @@ def check_column_values(column, changed_df):
     else:
         print(f"Column '{column}' does not exist in the DataFrame.")
         return False
-
-# Goal of this function :
-# 1. Update the column definitions of the qgrid widget to set the width of each column to 0 if all values in the column are empty strings
-#    Where to get the original column definitions from? global_df[id(qgrid_widget)]
-#    Where to get the current column definitions from? qgrid_widget.column_definitions
-
-# def update_visible_columns_on_count():
-#     global qm 
-
-#     zero_width_columns = []   
-#     # Analyze changed DataFrame for updates
-#     qgrid_widget = qm.grids['count']['main_widget']
-#     changed_df = qgrid_widget.get_changed_df()
-#     #print(f'Columns : {changed_df.columns}')
-#     for column in changed_df.columns:  
-#         # Check if column values are not just empty strings
-#         if not check_column_values(column, changed_df):
-#             zero_width_columns.append(column)
-#             changed_df.drop(column, axis=1, inplace=True)
-        
-#     qgrid_widget.column_definitions['index'] = {'width' : 250 }
-#     qgrid_widget.df = changed_df    
 
 # Function to handle changes to the checkbox
 def handle_debug_toggle(change):

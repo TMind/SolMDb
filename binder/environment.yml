@@ -19,6 +19,8 @@ dependencies:
   - tqdm  
   - tzlocal
   - requests  
+  - gspread 
+  - google-auth
   - pip  
   - pip:  
     - pyvis # If pyvis is not available in conda channels  

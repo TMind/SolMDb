@@ -36,6 +36,20 @@ class CSSManager:
                 text-align: left !important;
                 vertical-align: bottom !important;
             }}
+            
+            /* Position the sort indicator at the bottom of the rotated column */
+            .{class_name} .slick-header-column .slick-sort-indicator {{
+                position: absolute !important;
+                bottom: 10px !important; /* Position at the bottom */
+                left: 50% !important; /* Center horizontally */
+                transform: translateX(-100%) !important; /* Proper centering */
+                display: inline-block !important;
+                visibility: visible !important;
+                font-size: 20px !important; /* Adjust size as needed */
+                z-index: 2; /* Ensure it's above other elements */
+                color: blue !important; /* Adjust color */
+            }}
+            
             .{class_name} {column_selector} .slick-column-name {{
                 display: inline-block !important;
                 transform-origin: bottom left !important;
@@ -48,6 +62,8 @@ class CSSManager:
         display(HTML(style))
         self.css_classes[class_name] = column_selector
         return class_name
+
+
 
     def apply_css_to_widget(self, widget, class_name):
         """
@@ -100,7 +116,81 @@ class CSSManager:
 
         return column_definitions
     
-    
+    def get_column_definitions_with_gradient(self, column_definitions, sorting_info):
+        """
+        Update the column definitions with custom CSS for sorted columns.
+        Applies a vertical gradient to the header based on the sorting direction,
+        and applies a static background color to the column cells that matches the header's gradient.
+        """
+        
+        # CSS classes for ascending and descending sorts
+        ascending_header_class = 'sorted-column-header-ascending'
+        descending_header_class = 'sorted-column-header-descending'
+        
+        # Static cell color classes for ascending and descending sorts
+        ascending_cell_class = 'sorted-column-cells-ascending'
+        descending_cell_class = 'sorted-column-cells-descending'
+
+        # Loop over each sorted column to apply or update the gradient in the header and static color in the cells
+        for col_name, sort_info in sorting_info.items():
+            if col_name in column_definitions:
+                # Determine the new CSS class based on the current ascending state
+                if sort_info['ascending']:
+                    new_header_class = ascending_header_class
+                    #new_cell_class = ascending_cell_class
+                    old_header_class = descending_header_class
+                    #old_cell_class = descending_cell_class
+                else:
+                    new_header_class = descending_header_class
+                    #new_cell_class = descending_cell_class
+                    old_header_class = ascending_header_class
+                    #old_cell_class = ascending_cell_class
+
+                # Get the current headerCssClass
+                existing_header_class = column_definitions[col_name].get('headerCssClass', '')
+
+                # Add the new header class for gradient and ensure no duplicates
+                updated_header_class = add_css_class(existing_header_class, new_header_class)
+
+                # Remove the old gradient class from the header
+                updated_header_class = remove_css_class(updated_header_class, old_header_class)
+
+                # Get the current cssClass (for cells)
+                existing_cell_class = column_definitions[col_name].get('cssClass', '')
+
+                # Apply static color to the cells in the sorted column
+               # updated_cell_class = add_css_class(existing_cell_class, new_cell_class)
+
+                # Apply general sorted column style if needed (optional for borders)
+                #updated_cell_class = add_css_class(updated_cell_class, 'sorted-column')
+
+                # Remove old cell color class to avoid duplication
+                #updated_cell_class = remove_css_class(updated_cell_class, old_cell_class)
+
+                print(f"Updated CSS for column {col_name}: Header = {updated_header_class}")                
+                # Update the column definition with the new classes
+                column_definitions[col_name]['headerCssClass'] = updated_header_class
+                #column_definitions[col_name]['cssClass'] = updated_cell_class
+
+        return column_definitions
+
+# Global functions
+
+def add_css_class(existing_class, new_class):
+    """Helper function to append a CSS class without duplication."""
+    classes = existing_class.split() if existing_class else []
+    if new_class not in classes:
+        classes.append(new_class)
+    return " ".join(classes)
+
+def remove_css_class(existing_class, old_class):
+    """Helper function to remove a CSS class."""
+    classes = existing_class.split() if existing_class else []
+    if old_class in classes:
+        classes.remove(old_class)
+    return " ".join(classes)
+
+
 # Global variables 
 
 default_width = 150

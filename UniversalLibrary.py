@@ -4,6 +4,7 @@ from typing import Tuple, List, Dict
 import csv, json, re, os
 
 from MongoDB.DatabaseManager import DatabaseManager, BufferManager
+from gsheets import GoogleSheetsClient
 
 class UniversalLibrary:
 
@@ -11,6 +12,7 @@ class UniversalLibrary:
 
     def __init__(self, username, sff_path, fb_path, syn_path):        
         self.database = DatabaseManager('common')
+        self.google_sheets_client = GoogleSheetsClient()
         self.forgeborns = {}
         self.fb_map = {} 
 
@@ -26,13 +28,21 @@ class UniversalLibrary:
                 print("Using the buffer manager") 
                 self.fb_map = self._read_forgeborns_from_csv(fb_path)
                 buffer_manager.write_buffers()
-                self._read_entities_from_csv(sff_path)           
+                self._read_entities_from_gsheets(sff_path)           
             
-    def _read_entities_from_csv(self, csv_path):   
-        with open(csv_path, 'r') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=';')
-            for row in reader:    
-                self._process_row(row)
+    def _read_entities_from_gsheets(self, worksheet_name):   
+        """
+        Fetches and processes entities from a Google Sheet using the GoogleSheetsClient.
+        """
+        # Get the rows from Google Sheets via the external module
+        rows = self.google_sheets_client.read_data_from_google_sheet(worksheet_name)
+        
+        # Convert rows to dict (similar to csv.DictReader)
+        headers = rows[0]  # Assuming first row is headers
+        for row in rows[1:]:
+            row_dict = dict(zip(headers, row))  # Create a dictionary for each row
+            self._process_row(row_dict)
+    
 
     def _read_forgeborns_from_csv(self, fb_path):
         fb_map = {}

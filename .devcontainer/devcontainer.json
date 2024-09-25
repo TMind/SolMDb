@@ -1,6 +1,6 @@
 {  
     "name": "MongoDB Environment",  
-    "dockerComposeFile": "../docker/docker-compose.yml",
+    "dockerFile": "Dockerfile",
     "service": "jupyter",
     "settings": {  
         "terminal.integrated.shell.linux": "/bin/bash"  
@@ -11,5 +11,8 @@
         "ms-toolsai.jupyter",  
         "ms-python.python"  
     ],  
-    "runArgs": ["--init"]
+    "runArgs": ["--init"],
+
+    "postCreateCommand": "./post-create.sh"  
+
 }  

@@ -49,7 +49,7 @@ except KeyError:
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
 synergy_template = SynergyTemplate()    
-ucl_paths = [os.path.join('csv', 'sff.csv'), os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
+ucl_paths = ["Card Database", os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
 
 #Read Entities and Forgeborns from Files into Database
 myUCL = UniversalLibrary(os.getenv('SFF_USERNAME'), *ucl_paths)

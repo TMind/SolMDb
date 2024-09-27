@@ -1,4 +1,5 @@
 import os, time, re, json
+from turtle import update
 import ipywidgets as widgets
 import numpy as np
 from pyvis.network import Network
@@ -9,7 +10,7 @@ import pytz
 from tzlocal import get_localzone  
 
 from GlobalVariables import global_vars as gv
-gv._initialize_objects()
+from GlobalVariables import GLOBAL_COLUMN_ORDER
 
 # Ensure global_vars is initialized before using it
 if gv is None:
@@ -241,6 +242,20 @@ def merge_and_concat(df1, df2):
     
     return combined_df
 
+def enforce_column_order(df, column_order):
+    """
+    Ensure the DataFrame has the columns in the specified order, 
+    but only includes columns that are present in the DataFrame.
+    """
+    # Ensure the order of columns matches column_order, including only those present in df.columns
+    existing_columns = [col for col in column_order if col in df.columns]
+    
+    # Reindex the DataFrame with the valid columns in the specified order
+    df_reindexed = df.reindex(columns=existing_columns)
+    
+    print_dataframe(df_reindexed, 'Reindexed DataFrame')
+    return df_reindexed
+
 
 user_dataframes = {}
 ### Dataframe Generation Functions ###
@@ -289,6 +304,10 @@ def generate_central_dataframe(force_new=False):
     #print("Resetting index of central dataframe...")
     central_df.reset_index(inplace=True, drop=False)
     central_df.rename(columns={'index': 'Name'}, inplace=True)
+    
+    # After all DataFrame processing is done, enforce the global column order
+    central_df = enforce_column_order(central_df, GLOBAL_COLUMN_ORDER)
+    
     #Print the index of the central dataframe
     #print(central_df.index)
     #print_dataframe(central_df, 'Central DataFrame')
@@ -459,6 +478,8 @@ def generate_deck_content_dataframe(deckNames):
         # Ensure the columns in final_df are of type object to handle the update properly
         final_df[df_numeric.columns] = final_df[df_numeric.columns].astype(object)
         final_df.update(df_numeric)
+        # Ensure the DataFrame has the columns in the same order
+        final_df = enforce_column_order(final_df, GLOBAL_COLUMN_ORDER)
         return clean_columns(final_df)
     else:
         print(f'No cards found in the database for {deckNames}')
@@ -504,6 +525,9 @@ def generate_cardType_count_dataframe():
         numeric_df = all_decks_df.select_dtypes(include='number')
         numeric_df = numeric_df.fillna(0).astype(int)
         #numeric_df = numeric_df.astype(str).replace('0', '')
+        # Ensure the column order
+        numeric_df = enforce_column_order(numeric_df, GLOBAL_COLUMN_ORDER)
+
         return numeric_df
     else:
         print('No decks found in the database')
@@ -592,6 +616,10 @@ def generate_fusion_statistics_dataframe():
         #print_dataframe(interface_ids_total_df, 'Interface IDs Total DF')
         df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)
         #print_dataframe(df_fusions_filtered, 'Fusion Stats DF')
+        
+        # Ensure the column order
+        df_fusions_filtered = enforce_column_order(df_fusions_filtered, GLOBAL_COLUMN_ORDER)
+
 
         return df_fusions_filtered
     else:
@@ -779,6 +807,13 @@ def reload_data_on_click(button, value):
     elif value == 'Generate Dataframe':
         generate_central_dataframe(force_new=True)
         grid_manager.refresh_gridbox({'type': 'generation', 'new': 'central_dataframe'})
+        return
+    elif value == 'Update CM Sheet':
+        # Update the local CSV using CMManager
+        gv.cm_manager.update_local_csv('Card Database')
+        
+        # Update and display sheet statistics
+        update_sheet_stats()
         return
 
     load_deck_data(args)    
@@ -1009,10 +1044,50 @@ def create_database_selection_widget():
 
     return db_list
 
-count_display = widgets.Label(value='Deck / Fusion counts will be displayed here.')
+# Initialize a global dictionary to store the different stats to be displayed
+display_data = {
+    'Collection': '',
+    'CM Sheet': ''
+}
+count_display = widgets.Output()
+def update_count_display():
+    """
+    Updates the count_display widget with the combined information stored in the display_data dictionary.
+    Displays each Info Type with its corresponding key-value pairs in a structured format.
+    """
+    global count_display
+    global display_data
+
+    # Clear the output widget
+    count_display.clear_output()
+
+    # Initialize a list to hold rows for the DataFrame
+    rows = []
+
+    for key, value in display_data.items():
+        if value:  # Only proceed if the value is not empty
+            if isinstance(value, dict):
+                # Add each key-value pair in the dictionary as new rows with Info Type
+                for sub_key, sub_value in value.items():
+                    rows.append((key, sub_key, sub_value))
+
+    # Create a DataFrame from the rows
+    if rows:
+        df_display = pd.DataFrame(rows, columns=['Info Type', 'Key', 'Value'])
+
+        # Set a MultiIndex using Info Type and Sub Key
+        df_display.set_index(['Info Type', 'Key'], inplace=True)
+
+        # Display the DataFrame in the output widget
+        with count_display:
+            display(df_display)  # Use the display function to show the DataFrame
+    else:
+        with count_display:
+            print("No data to display.")
 
 def update_deck_and_fusion_counts():
-    global count_display
+    global display_data
+    
     # Ensure we are querying the right database based on the selected username
     db_manager = gv.myDB
     if db_manager:
@@ -1024,7 +1099,7 @@ def update_deck_and_fusion_counts():
         file_record = db_manager.find_one('fs.files', {'filename': f"central_df_{username}"})
         
         if file_record and 'uploadDate' in file_record:
-        # Get the local timezone from your system
+            # Get the local timezone from your system
             utc_upload_date = file_record['uploadDate']
             local_timezone = get_localzone()
             # Convert UTC to your local timezone
@@ -1033,13 +1108,42 @@ def update_deck_and_fusion_counts():
         else:
             creation_date_str = "No previous update found"
         
-        # Update the display widget with the new counts and creation date
-        if count_display:
-            count_display.value = f"{creation_date_str} - Decks: {deck_count}, Fusions: {fusion_count}"
-        else:
-            print(f"{creation_date_str} - Decks: {deck_count}, Fusions: {fusion_count}")
+        # Store the deck and fusion count information in the dictionary
+        display_data['Collection'] = {
+            'Timestamp': creation_date_str,
+            'Decks': deck_count,
+            'Fusions': fusion_count
+        }
+        # Call the helper function to update the display
+        update_count_display()
     else:
         print('No database manager found.')
+
+
+def update_sheet_stats():
+    """
+    Updates the timestamp, title, and tags of the Google Sheet only when this function is called.
+    This avoids frequent and unnecessary connections to Google Sheets.
+    """
+    global display_data
+
+    # Ensure the CMManager is already initialized in GlobalVariables
+    if gv.cm_manager:
+        # Get the current timestamp and title from the CMManager
+        current_timestamp = gv.cm_manager.timestamp  # Direct access
+        current_title = gv.cm_manager.title  # Direct access
+
+        # Store the latest sheet information in display_data
+        display_data['CM Sheet'] = {
+            'Title': current_title,
+            'Timestamp': current_timestamp
+        }
+
+        # Call helper function to update the display
+        update_count_display()
+
+    else:
+        print("CMManager not initialized.")
             
 # Function to create a styled HTML widget with a background color
 def create_styled_html(text, text_color, bg_color, border_color):
@@ -1069,11 +1173,11 @@ def setup_interface():
 
     # Toggle buttons to select load items
     loadToggle = widgets.ToggleButtons(
-        options=['Load Decks/Fusions', 'Update Decks/Fusions', 'Create all Fusions', 'Generate Dataframe'],
+        options=['Load Decks/Fusions', 'Update Decks/Fusions', 'Create all Fusions', 'Generate Dataframe', 'Update CM Sheet'],
         description='Action:',
         disabled=False,
         button_style='warning', # 'success', 'info', 'warning', 'danger' or ''
-        tooltips=['Load Decks and Fusions from the website', 'Update Decks and Fusions in the database' 'Create Fusions from loaded decks'])
+        tooltips=['Load Decks and Fusions from the website', 'Update Decks and Fusions in the database' 'Create Fusions from loaded decks', 'Get the latest version from Collection Manager'])
 
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description='Execute', button_style='info', tooltip='Execute the selected action')
@@ -1264,6 +1368,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     layout = widgets.VBox([progressbar_header,gv.progressbar_container, tab])
     display(layout)
 
+    update_sheet_stats()
     
     
     

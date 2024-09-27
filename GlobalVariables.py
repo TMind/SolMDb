@@ -1,13 +1,24 @@
 import ipywidgets as widgets
 from gridfs import GridFS
 import os
+import logging
+import pandas as pd
 
-from CustomCss import rotated_column_definitions, non_rotated_column_definitions
-from gsheets import GoogleSheetsClient
+from CMManager import CMManager
+from GSheetsClient import GoogleSheetsClient
+
+# Configure logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    handlers=[
+                        logging.FileHandler("app.log"),
+                        logging.StreamHandler()
+                    ])
 
 class GlobalVariables:
   
     _instance = None
+    _initialized = False  # Flag to track initialization
 
     @classmethod  
     def get_instance(cls):  
@@ -18,40 +29,76 @@ class GlobalVariables:
     def __new__(cls,):
         if cls._instance is None:
             cls._instance = super(GlobalVariables, cls).__new__(cls)
+            logging.info("Initializing GlobalVariables instance.")
             cls._instance._initialize_env()
+            cls._instance._initialize_objects()
+        else:
+            logging.info("GlobalVariables instance already initialized.")
         return cls._instance
 
     def _initialize_env(self):
+        logging.info("Initializing Environment.")
         self._username = os.getenv('SFF_USERNAME', 'sff')
         self._host = os.getenv('HOST', 'localhost')
         self._port = os.getenv('MONGODB_PORT', 27017)
-        self.uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')
-        #self.uri = os.getenv('MONGODB_URI', "mongodb://tmind:c6tltLqSnbIyy4SAVsBwCiZWET9LA6USjk87IV3SO64jkKIuKXMBoe5Oeku4F2qHjXDldrgaNxypACDbE0WurA==@tmind.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@tmind@")
+        self.uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')        
         self.debug = os.getenv('DEBUG_MODE', 'False').lower() in ('true', '1', 't')
+        self.sheet_url = os.getenv('SHEET_URL', 'https://docs.google.com/spreadsheets/d/1HFDXfrO4uE70-HyNAxdHuCVlt_ALjBK9f6tpveRudZY/edit')
         
         self.myDB = None
         self.fs = None 
         self.commonDB = None
         self.progress_containers = {}
-        self.out_debug = None
-        self.rotated_column_definitions = rotated_column_definitions
-        self.all_column_definitions = {**non_rotated_column_definitions, **rotated_column_definitions}
-        self.data_selection_sets = data_selection_sets
-        
+        self.out_debug = None        
+        self.data_selection_sets = data_selection_sets               
         self._set_environment_variables()
-        
-        #apply_CustomCss_to_ClassHeader('.qgrid-custom-css', rotate_suffix , header_height=150)    
-        #apply_CustomCss_to_ColumnHeader('.qgrid-custom-css', rotate_suffix , header_height=150)
+        self.GoogleSheetsClient = None
+        self.cm_manager = None
+        self.all_column_definitions = {**rotated_column_definitions, **non_rotated_column_definitions}
 
     def _initialize_objects(self):
+        if not self._initialized:
+            logging.info("Initializing objects.")
+            
+            self.commonDB = self._initialize_commonDB()
+            self.out_debug = widgets.Output()
+            self.progressbar_container = widgets.VBox([])  # Initially empty
+            # If there are already progress containers, add them to the progressbar_container
+            for identifier, container_dict in self.progress_containers.items():
+                self.progressbar_container.children += (container_dict['container'],)  # Add to VBox        
+            
+            # Initialize CMManager for handling the CM sheet
+            self.GoogleSheetsClient = GoogleSheetsClient()
+            self.cm_manager = CMManager(self.commonDB, self.sheet_url, local_copy_path='local_collection_manager.csv', sheets_client=self.GoogleSheetsClient)
+            self.update_all_column_definitions()
+            self._initialized = True
+        else:
+            logging.info("Objects already initialized.")
         
-        self.commonDB = self._initialize_commonDB()
-        self.out_debug = widgets.Output()
-        self.progressbar_container = widgets.VBox([])  # Initially empty
-        # If there are already progress containers, add them to the progressbar_container
-        for identifier, container_dict in self.progress_containers.items():
-            self.progressbar_container.children += (container_dict['container'],)  # Add to VBox        
-       
+    def update_all_column_definitions(self):
+        """
+        Update all_column_definitions by combining existing columns and new columns from the CM sheet.
+        """
+        try:
+                    
+            # Read the local CSV file to get the columns
+            df = pd.read_csv('local_collection_manager.csv')            
+            cm_columns = df.columns.tolist()
+            
+            # Add the CM sheet columns to the rotated/non-rotated definitions
+            cm_column_definitions = {col: {'width': rotated_width , 'headerCssClass' : rotate_suffix } for col in cm_columns}  # Adjust width as necessary
+            
+            # Combine with existing column definitions
+            self.all_column_definitions = {
+                **rotated_column_definitions,
+                **non_rotated_column_definitions,
+                **cm_column_definitions  # Add the CM-specific columns
+            }
+            
+            print(f"Updated all_column_definitions: {self.all_column_definitions}")
+        except Exception as e:
+            print(f"Error updating column definitions: {e}")    
+                   
     def _set_environment_variables(self):
         """Set environment variables based on the current values."""
         os.environ['SFF_USERNAME'] = self._username
@@ -123,7 +170,201 @@ class GlobalVariables:
             progress_bar.style.bar_color = 'lightgreen'
             label.value = f"{message} -> Finished!"
 
-cm_tags = GoogleSheetsClient().get_column_names_from('Card Database', 'Beast')
+# Global variables 
+
+default_width = 150
+rotated_width = 20
+
+rotate_suffix = '_rotate_'
+
+rotated_column_definitions = {
+    # Creatures 
+    'Creature':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Abomination':      {'width': rotated_width, 'headerCssClass': rotate_suffix},    
+    'Beast':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Beast Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Beast Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dinosaur':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dinosaur Synergy': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dinosaur Combo':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dragon':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dragon Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Dragon Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Elemental':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Elemental Synergy':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Elemental Type':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Elemental Combo':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Mage':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Mage Synergy':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Mage Combo':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Plant':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Plant Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Plant Type':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Plant Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},    
+    'Robot':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Robot Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Robot Type':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Robot Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Scientist':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Scientist Synergy':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Scientist Combo':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spirit':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spirit Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spirit Type' :     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spirit Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Warrior':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Warrior Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Warrior Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Zombie':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Zombie Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Zombie Type':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Zombie Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    # Minion 
+    'Minion':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Minion Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Minion Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Activate / Ready / Deploy 
+    'Activate':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Activate Combo':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Ready':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Ready Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Deploy':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Deploy Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Damage 
+    
+    'Destruction Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Destruction Activator':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'SelfDestruction Activator':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Destruction Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Face Damage':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Face Damage Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Self Damage Payoff':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Self Damage Activator':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Self Damage Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Spell / Exalts
+    'Exalts':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Exalt Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Exalt Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spell':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spell Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Spell Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Utility
+    'Armor':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Armor Giver':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Armor Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Armor Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    'Disruption':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Healing Source':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Healing Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Healing Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Movement':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Movement Benefit': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Movement Combo':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Reanimate':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Reanimate Activator': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Reanimate Combo':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Replace Setup':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Replace Profit':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Replace Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+   
+    'Upgrade':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Upgrade Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Upgrade Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Free 
+    'Free':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Free Attack Buff': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Free Healing Source':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Free Mage':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Free Spell':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Free Replace':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Free Self Damage': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Free SelfDestruction': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Free Upgrade':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Removal 
+    'Face Burn':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Removal':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Silence':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Keywords 
+    'Aggressive':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Aggressive Giver': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Breakthrough':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Breakthrough Giver':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Defender':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Defender Giver':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Stealth':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Stealth Giver':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Stats
+    'Stat Buff':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Attack Buff':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Health Buff':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Stat Debuff':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Attack Debuff':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Health Debuff':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Attack 
+    'Battle':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Battle Synergy' :  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Slay':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Sets
+    'Last Winter':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'White Fang':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    
+    # Other 
+    'Spicy':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Cool':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Fun':              {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Annoying':         {'width': rotated_width, 'headerCssClass': rotate_suffix}
+}
+ 
+non_rotated_column_definitions = {
+    'index':            {'width': 50},
+    'Name':             {'width': 250},
+    'DeckName':         {'width': 250},
+    'type':             {'width': 60},
+    'Deck A':           {'width': 250},
+    'Deck B':           {'width': 250},
+    'registeredDate':   {'width': 200},
+    'CreatedAt' :    {'width': 200},
+    'UpdatedAt':        {'width': 200},
+    'xp':               {'width': 50},
+    'elo':              {'width': 50},
+    'level':            {'width': 50},
+    'deckScore':        {'width': 90},
+    'deckRank':         {'width': 90},
+    'pExpiry':          {'width': 200},
+    'cardSetNo':        {'width': 50},
+    'faction':          {'width': 80},
+    'crossFaction':     {'width': 100},
+    'forgebornId':      {'width': 100},
+    'cardTitles':       {'width': 200},
+    'name':             {'width': 200}, 
+    'cardType' :        {'width': 75},
+    'cardSubType' :     {'width': 75},
+    'FB4':              {'width': default_width},
+    'FB2':              {'width': default_width},
+    'FB3':              {'width': default_width},
+    'Creatures':        {'width': default_width},
+    'Spells':           {'width': default_width},
+    'Exalt':            {'width': default_width},
+    'A1':               {'width': 50},
+    'H1':               {'width': 50},
+    'A2':               {'width': 50},
+    'H2':               {'width': 50},
+    'A3':               {'width': 50},
+    'H3':               {'width': 50},
+    'graph':            {'width': 50},
+    'node_data':        {'width': 50},
+}
 
 data_selection_sets = {
   "Deck Stats": {
@@ -422,19 +663,94 @@ data_selection_sets = {
     'faction': True,
     'cardType': True,
     'cardSubType': True,
+  },
+  'CM Tags': {
+    'Name': True,
+    'faction': True,
+    'FB2': True,
+    'FB3': True,
+    'FB4': True,
   }
 }
 
-data_selection_sets['CM Tags'] = {
-      "Name": True,
-      "faction": True,
-      "FB2": True,
-      "FB3": True,
-      "FB4": True,
-  }
-cmtags = { tag : True for tag in cm_tags }
-data_selection_sets['CM Tags'].update(cmtags)
+
+GLOBAL_COLUMN_ORDER = [
+    'index', 'Name', 'DeckName', 'type', 'Deck A', 'Deck B',
+    'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 
+    'xp', 'elo', 'level', 'deckScore', 'deckRank',
+    'cardSetNo', 'faction', 'crossFaction', 'forgebornId', 'cardTitles', 
+    'name', 'cardType', 'cardSubType', 'FB4', 'FB2', 'FB3',
+    'Creatures', 'Spells', 'Exalt', 
+    'A1', 'H1', 'A2', 'H2', 'A3', 'H3',    
+    
+    # Creatures
+    'Abomination', 
+    'Beast', 'Beast Synergy', 'Beast Combo', 
+    'Dinosaur', 'Dinosaur Synergy', 'Dinosaur Combo', 
+    'Dragon', 'Dragon Synergy', 'Dragon Combo', 
+    'Elemental', 'Elemental Type', 'Elemental Synergy', 'Elemental Combo', 
+    'Mage', 'Mage Synergy', 'Mage Combo',
+    'Plant', 'Plant Synergy', 'Plant Type', 'Plant Combo',
+    'Robot', 'BanishRobot Synergy', 'BanishRobot', 'Robot Combo',
+    'Scientist', 'Scientist Synergy', 'Scientist Combo',
+    'Spirit', 'BanishSpirit Synergy', 'BanishSpirit', 'Spirit Combo',
+    'Warrior', 'Warrior Synergy', 'Warrior Combo',
+    'Zombie', 'Zombie Synergy', 'Zombie Type', 'Zombie Combo',
+    
+    # Minion
+    'Minion', 'Minion Synergy', 'Minion Combo',
+    
+    # Activate / Ready / Deploy 
+    'Activate', 'Activate Combo', 
+    'Ready', 'Ready Combo',
+    'Deploy', 'Deploy Combo',
+    
+    # Damage 
+    'Destruction Others', 'Destruction Self','Good Destroyed', 'Destruction Synergy', 'Destruction Combo',
+    'Face Damage', 'Face Damage Synergy', 
+    'Self Damage Activator', 'Self Damage Payoff', 'Self Damage Combo',
+    
+    # Exalts / Spells
+    'Exalts', 'Exalt Synergy', 'Exalt Combo', 'Exalt Counter',
+    'Spell', 'Spell Synergy', 'Spell Combo', 
+    
+    # Utility
+    'Armor', 'Armor Giver', 'Armor Synergy', 'Armor Combo',     
+    'Healing Source', 'Healing Synergy', 'Healing Combo', 
+    'Movement', 'Movement Benefit', 'Movement Combo', 
+    'Reanimate', 'Reanimate Activator', 'Reanimate Combo',
+    'Replace Setup', 'Replace Profit', 'Replace Combo', 
+    'Upgrade', 'Upgrade Synergy', 'Upgrade Combo', 
+    
+    # Free
+    'Free', 'Free Attack Buff', 'Free Healing Source', 'Free Mage', 'Free Spell', 'Free Replace', 'Free Self Damage', 'Free SelfDestruction', 'Free Upgrade',
+    
+    # Removal
+    'Face Burn', 'FB Creature', 'FB Creature Synergy', 'Disruption', 'Removal', 'Silence', 
+    
+    # Keywords
+    'Aggressive', 'Aggressive Giver',
+    'Breakthrough', 'Breakthrough Giver', 
+    'Defender', 'Defender Giver',
+    'Stealth', 'Stealth Giver',
+    
+    # Stats
+    'Increased A', 'Increased A Synergy',
+    
+    
+    'Stat Buff', 'Attack Buff', 'Health Buff',
+    'Stat Debuff', 'Attack Debuff', 'Health Debuff',
+    
+    # Battle
+    'Battle', 'Battle Synergy', 
+    'Slay', 
+    
+    # Miscellaneous    
+    'Last Winter', 'White Fang',
+    'Spicy', 'Cool', 'Fun', 'Annoying'
+]
+
+
 
 # Initialize global_vars
 global_vars = GlobalVariables.get_instance()
-global_vars._initialize_objects() 

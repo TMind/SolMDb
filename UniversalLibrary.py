@@ -4,15 +4,14 @@ from typing import Tuple, List, Dict
 import csv, json, re, os
 
 from MongoDB.DatabaseManager import DatabaseManager, BufferManager
-from gsheets import GoogleSheetsClient
+from GlobalVariables import global_vars as gv 
 
 class UniversalLibrary:
 
     entities = []
 
-    def __init__(self, username, sff_path, fb_path, syn_path):        
+    def __init__(self, username, worksheet, fb_path, syn_path):        
         self.database = DatabaseManager('common')
-        self.google_sheets_client = GoogleSheetsClient()
         self.forgeborns = {}
         self.fb_map = {} 
 
@@ -28,14 +27,14 @@ class UniversalLibrary:
                 print("Using the buffer manager") 
                 self.fb_map = self._read_forgeborns_from_csv(fb_path)
                 buffer_manager.write_buffers()
-                self._read_entities_from_gsheets(sff_path)           
+                self._read_entities_from_gsheets()           
             
-    def _read_entities_from_gsheets(self, worksheet_name):   
+    def _read_entities_from_gsheets(self):   
         """
         Fetches and processes entities from a Google Sheet using the GoogleSheetsClient.
         """
-        # Get the rows from Google Sheets via the external module
-        rows = self.google_sheets_client.read_data_from_google_sheet(worksheet_name)
+        # Get the rows from the CMManager
+        rows = gv.cm_manager.read_data_from_local_csv()
         
         # Convert rows to dict (similar to csv.DictReader)
         headers = rows[0]  # Assuming first row is headers

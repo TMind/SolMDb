@@ -5,7 +5,8 @@ try:      import qgridnext as qgrid
 except ImportError:    import qgrid
 import ipywidgets as widgets
 from GlobalVariables import global_vars as gv
-from CustomCss import CSSManager, rotate_suffix, rotated_column_definitions
+from GlobalVariables import rotate_suffix, rotated_column_definitions
+from CustomCss import CSSManager
 
 from DataSelectionManager import DataSelectionManager
 from MongoDB.DatabaseManager import DatabaseManager
@@ -833,14 +834,13 @@ class DynamicGridManager:
         self.qm = GridManager(out_debug)
         self.grid_layout = widgets.GridspecLayout(1, 1)        
         self.filterGridObject = FilterGrid(self.refresh_gridbox)
-        self.deck_content_Grid = self.create_deck_content_Grid()#  qgrid.show_grid(pd.DataFrame(), show_toolbar=False, grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True})
+        self.deck_content_Grid = self.create_deck_content_Grid()
         self.sorting_info = {}
         self.css_manager = CSSManager()        
         self.custom_css_class = self.css_manager.create_and_inject_css('deck_content', rotate_suffix)        
 
         # UI elements
         self.selectionGrid, self.filterGrid = self.filterGridObject.get_widgets()
-        #self.ui = widgets.VBox([self.selectionGrid, filter_grid_bar, self.filterGrid, filter_results_bar, self.grid_layout, deck_content_bar])
         self.ui = widgets.VBox([])
         self.update_ui()
         self.update_grid_layout()
@@ -982,7 +982,7 @@ class DynamicGridManager:
                                 
                 # Generate the deck content DataFrame using the provided function
                 deck_content_df = self.data_generate_functions['deck_content'](selected_deck_names)
-                #print(deck_content_df)
+                print(deck_content_df)
 
                 # Copy original DataFrame to preserve column order
                 combined_df = deck_content_df.copy()                

@@ -27,21 +27,21 @@ class UniversalLibrary:
                 print("Using the buffer manager") 
                 self.fb_map = self._read_forgeborns_from_csv(fb_path)
                 buffer_manager.write_buffers()
-                self._read_entities_from_gsheets()           
+                self._read_entities_from_csv()           
             
-    def _read_entities_from_gsheets(self):   
+    def _read_entities_from_csv(self):   
         """
         Fetches and processes entities from a Google Sheet using the GoogleSheetsClient.
         """
         # Get the rows from the CMManager
-        rows = gv.cm_manager.read_data_from_local_csv()
+        if not os.path.exists('csv/sff.csv'):
+            gv.cm_manager.update_local_csv('Card Database')
+            
+        with open('csv/sff.csv', 'r') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=';')
+            for row in reader:
+                self._process_row(row)
         
-        # Convert rows to dict (similar to csv.DictReader)
-        headers = rows[0]  # Assuming first row is headers
-        for row in rows[1:]:
-            row_dict = dict(zip(headers, row))  # Create a dictionary for each row
-            self._process_row(row_dict)
-    
 
     def _read_forgeborns_from_csv(self, fb_path):
         fb_map = {}
@@ -169,90 +169,6 @@ class UniversalLibrary:
         else:
             print(f"Forgeborn {id} could not be found")
         return None
-
-    def load_decks_from_file(self, filepath):
-        with open(filepath, 'r') as f:
-            data = json.load(f)            
-        return self.load_decks_from_data(data)
-
-    def load_decks_from_data(self, decks_data: List[Dict]) -> Tuple[List[CardLibrary.Deck], List[Dict]]:
-
-        decks = []
-        incomplete_data = []
-        
-        for deck_data in decks_data:            
-            try:
-                print(f"Original forgebornId from deck_data: {deck_data['forgebornId']}")
-                forgebornId = deck_data['forgebornId']
-                forgebornId = forgebornId.replace('0','2')
-                print(f"forgebornId after replacement: {forgebornId}")
-                forgeborn_unique_id = forgebornId[:-3]
-                print(f"forgeborn_unique_id extracted: {forgeborn_unique_id}")
-                forgeborn_unique = self.database.find_one('Forgeborns', {'id': forgeborn_unique_id})
-                print(f"Document found for forgeborn_unique_id: {forgeborn_unique}")
-                unique_forgeborn = CardLibrary.Forgeborn.from_data(forgeborn_unique)
-                print(f"unique_forgeborn object created: {unique_forgeborn}")
-                forgeborn = unique_forgeborn.get_permutation(forgebornId)
-                print(f"Final forgeborn object after permutation: {forgeborn}")
-
-            except Exception as e:
-                print(f"Exception: {e}")
-                print(f"Could not load Forgeborn data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
-                
-                incomplete_data.append(deck_data)
-                continue
-
-            try: 
-                cards_data = deck_data['cards']
-
-                cards_title = []
-                cards_additional_data = {}
-
-                # Handle the case when cards_data is a dictionary
-                if isinstance(cards_data, dict):
-                    for card in cards_data.values():
-
-                        card_title = str(card.get('title')) if 'title' in card else str(card.get('name'))
-                        cards_title.append(card_title)
-
-                else:
-                    cards_title = cards_data
-
-                # Create the cards dictionary with additional data
-                cards = {card_title: self.create_card_from_title(card_title, cards_additional_data.get(card_title, {})) for card_title in cards_title}
-
-                
-            except Exception as e:
-                print(f"Could not load Cards data: {deck_data['name'] if 'name' in deck_data else 'unknown'}")
-                print(f"Exception: {e}")
-                incomplete_data.append(deck_data)
-                continue
-            deckData = CardLibrary.DeckData(name=deck_data['name'], forgebornId=forgebornId, faction=deck_data['faction'], cards=cards)
-            deck = CardLibrary.Deck(deckData)
-            decks.append(deck)
-            
-        return decks, incomplete_data
-
-        
-    def load_fusions(self, fusions_data: List[Dict]) -> Tuple[List[CardLibrary.Fusion], List[Dict]]:
-        fusions = []
-        incomplete_fusionsdata = []
-
-        for fusion_data in fusions_data:            
-                decks, incomplete_decksdata = self.load_decks_from_data(fusion_data['myDecks'])
-                name = fusion_data['name'] if 'name' in fusion_data else ""
-                if decks:
-                    fusion = CardLibrary.Fusion(decks, name)
-                    fusions.append(fusion)
-                if incomplete_decksdata:
-                   incomplete_fusionsdata.append(
-                        {
-                            'name': name, 
-                            'myDecks': incomplete_decksdata
-                        }
-                    )
-                
-        return fusions, incomplete_fusionsdata
 
     def create_card_from_title(self, card_title, card_data_additional):
         # First try with full title

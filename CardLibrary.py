@@ -16,7 +16,10 @@ class EntityData:
 class Entity(DatabaseObject):
     def __init__(self, data: EntityData):        
         super().__init__(data)
-        self._id = self.name
+        id = None
+        if self.attributes:
+            id = self.attributes.get('id', None)
+        self._id = id or self.name
         if self.interfaceNames:
             self.data.children_data = {interfaceName: 'Interface.Interface' for interfaceName in self.interfaceNames}
     
@@ -209,7 +212,8 @@ class DeckData:
     digital: str = ''
     elo: int = 0
     deckRank: str = ''
-    deckScore: float = 0.0    
+    deckScore: float = 0.0
+    rares: int = 0
     level: int = 0
     _id: str = ''
     children_data: dict = field(default_factory=dict)
@@ -226,6 +230,19 @@ class Deck(DatabaseObject):
         self._id = self.name  
         if self.data and self.cardIds: 
             self.data._id = self.name
+            for card  in self.data.cards.values():
+                #print(f"Card: {card}")
+                card_rarity = card.get('rarity', None)
+                # Collect all the card rarity types
+                if card_rarity:
+                    if 'Solbind' == card_rarity:
+                        solbindId1 = card.get('solbindId1', None)[5:]
+                        solbindId2 = card.get('solbindId2', None)[5:]                                            
+                        self.cardIds.extend([solbindId1, solbindId2])
+                    else: 
+                        for rarity in card_rarity.split(' '):
+                            if rarity == 'Rare': 
+                                self.data.rares += 1                
             self.data.children_data = {cardId: 'CardLibrary.Card' for cardId in self.cardIds}
             self.calculate_stats()
             self.calculate_averages()

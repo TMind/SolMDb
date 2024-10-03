@@ -98,6 +98,13 @@ class MongoDB:
     def delete_many(self, collection_name: str, query: dict):
         collection = self.get_collection(collection_name)
         return collection.delete_many(query)
+    
+    def drop_collection(self, collection_name: str):
+        collection = self.get_collection(collection_name)
+        return collection.drop
+    
+    def drop_database(self):
+        return self.client.drop_database(self.db.name)
 
     def count_documents(self, collection_name: str, query: dict = {}):
         collection = self.get_collection(collection_name)        

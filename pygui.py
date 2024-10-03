@@ -1,4 +1,5 @@
 import os, time, re, json
+from tkinter import Label
 from turtle import update
 import ipywidgets as widgets
 import numpy as np
@@ -21,7 +22,7 @@ from UniversalLibrary import UniversalLibrary
 from DeckLibrary import DeckLibrary
 from MongoDB.DatabaseManager import DatabaseManager
 from MyGraph import MyGraph
-from NetApi import NetApi
+from NetApi import NetApi, CognitoAuth
 
 from soldb import parse_arguments
 from IPython.display import display, HTML
@@ -29,7 +30,7 @@ from IPython.display import display, HTML
 from Synergy import SynergyTemplate
 import pandas as pd
 from GridManager import GridManager, DynamicGridManager
-from CustomGrids import TemplateGrid
+from CustomGrids import TemplateGrid, ActionToolbar
 
 from icecream import ic
 ic.disable()
@@ -50,10 +51,8 @@ except KeyError:
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
 synergy_template = SynergyTemplate()    
-ucl_paths = [ 'Card Database', os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')] #os.path.join('csv', 'sff.csv')
 
 #Read Entities and Forgeborns from Files into Database
-myUCL = UniversalLibrary(os.getenv('SFF_USERNAME'), *ucl_paths)
 deckCollection = None
 
 # Widget Variables
@@ -221,13 +220,6 @@ def update_central_frame_tab(central_df):
     
     #print("Central DataFrame tab updated.")
 
-# def merge_and_concat(df1, df2):
-#     """
-#     Efficiently merges two DataFrames by handling overlapping columns and concatenating them row-wise if indices overlap.
-#     """
-#     # Handle overlapping columns: combine with non-NaN values taking precedence
-#     combined_df = pd.concat([df2, df1], axis=0, sort=False).groupby(level=0).first()
-#     return combined_df
 
 def merge_and_concat(df1, df2):
     """
@@ -253,7 +245,7 @@ def enforce_column_order(df, column_order):
     # Reindex the DataFrame with the valid columns in the specified order
     df_reindexed = df.reindex(columns=existing_columns)
     
-    print_dataframe(df_reindexed, 'Reindexed DataFrame')
+    #print_dataframe(df_reindexed, 'Reindexed DataFrame')
     return df_reindexed
 
 
@@ -691,13 +683,33 @@ def generate_deck_statistics_dataframe():
         gv.update_progress(identifier, message='Processing Deck Stats: ' + deck['name'])        
         # Fetch all cards in deck from the database
         cards = []
+        faction = deck.get('faction')
         if gv.myDB:
             cards = gv.myDB.find('Card', {'_id': {'$in': deck['cardIds']}}) 
             # Collect all cards where the betrayer attribute is True
-            betrayers = [card['name'] for card in cards if card.get('betrayer', False)]
-            solbinds = [card['name'] for card in cards if card.get('solbind', False)]
+            betrayers = []
+            solbinds = []
+            for card in cards:
+                if not card: continue
+                crossfaction = card.get('crossfaction') or card.get('crossFaction')
+                betrayer = card.get('betrayer')
+                rarity = card.get('rarity')
+                if rarity == 'Solbind':
+                    solbinds.append(card['name'])
+                    for type in ['solbindId1', 'solbindId2']:
+                        if card[type]:
+                            solbind_card = gv.myDB.find_one('Card', {'_id': card[type]})
+                            if solbind_card:
+                                solbinds.append(solbind_card['name'])
+                            
+                # Check if betrayer is explicitly 'True' as a string
+                if crossfaction and crossfaction != faction:
+                    betrayers.append(card['name'])                    
+                elif betrayer and betrayer == 'True' or betrayer == True:
+                    betrayers.append(card['name'])
+                
             df_decks_filtered.loc[deck['name'], 'Betrayers'] = ', '.join(betrayers)
-            df_decks_filtered.loc[deck['name'], 'SolBind'] = ', '.join(solbinds)
+            df_decks_filtered.loc[deck['name'], 'SolBinds'] = ', '.join(solbinds)
         
         if 'stats' in deck:
             stats = deck.get('stats', {})
@@ -722,24 +734,24 @@ def generate_deck_statistics_dataframe():
 # Event Handling #
 ##################
 
-def coll_data_on_selection_changed(event, widget):
-    global qm
-    # Generate a DataFrame from the selected rows
-    print(f'Selection changed: {event}')
-    deck_df = generate_deck_content_dataframe(event)    
-    qm.replace_grid('deck', deck_df)    
-    qm.set_default_data('deck', deck_df)
+# def coll_data_on_selection_changed(event, widget):
+#     global qm
+#     # Generate a DataFrame from the selected rows
+#     print(f'Selection changed: {event}')
+#     deck_df = generate_deck_content_dataframe(event)    
+#     qm.replace_grid('deck', deck_df)    
+#     qm.set_default_data('deck', deck_df)
 
 # Function to check if any value in the column is not an empty string with regards to the changed_df of the qgrid widget
-def check_column_values(column, changed_df):
-    # Check if the column exists in the DataFrame
-    if column in changed_df.columns:
-        # Check if any value in the column is not an empty string
-        result = changed_df[column].ne('').any()   
-        return result
-    else:
-        print(f"Column '{column}' does not exist in the DataFrame.")
-        return False
+# def check_column_values(column, changed_df):
+#     # Check if the column exists in the DataFrame
+#     if column in changed_df.columns:
+#         # Check if any value in the column is not an empty string
+#         result = changed_df[column].ne('').any()   
+#         return result
+#     else:
+#         print(f"Column '{column}' does not exist in the DataFrame.")
+#         return False
 
 # Function to handle changes to the checkbox
 def handle_debug_toggle(change):
@@ -811,6 +823,7 @@ def reload_data_on_click(button, value):
     elif value == 'Update CM Sheet':
         # Update the local CSV using CMManager
         gv.cm_manager.update_local_csv('Card Database')
+        gv.reset_universal_library()
         
         # Update and display sheet statistics
         update_sheet_stats()
@@ -1159,8 +1172,13 @@ def create_styled_html(text, text_color, bg_color, border_color):
 ############################
 import markdown as md
 from CustomGrids import TemplateGrid
+action_toolbar = None
+selected_db_label = widgets.Label(value='Selected Database: None')
+selected_items_label = widgets.Label(value='Selected Items: None')
+
 def setup_interface():
-    global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab 
+    global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab
+    global action_toolbar, selected_db_label, selected_items_label
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
@@ -1343,7 +1361,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
         "Progress Bars Section",
         text_color='white', bg_color='#2E86AB', border_color='#205E86'  # Darker blue for contrast
     )
-
+              
     # Updated Tab content with styled text boxes
     db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
     deck_tab = widgets.VBox([deck_helper, deck_accordion, deck_filter_bar, grid_manager.get_ui()])
@@ -1364,11 +1382,111 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     # Set the default selected tab
     tab.selected_index = 0
     
+    # Create the labels that will be updated
+    selected_db_label = widgets.Label(value="Selected Database: None")
+    selected_items_label = widgets.Label(value="Selected Items: None")
+
+
+    def save_grid_dataframe(change):
+        """
+        Function to save the DataFrame from the grid to a CSV file.
+        This function is triggered when the 'Save' button is clicked.
+        """
+        # Get the DataFrame from the grid manager
+        if grid_manager:
+            grid_manager.save_dataframes_to_csv()
+        else:
+            print("No GridManager available")
+
+    # Assuming gv.myDB and grid_manager are initialized and available
+    # Function to update the action area with selected info
+    def update_action_area(change=None):
+        # Get selected DB info and selected items from the grid manager
+        if gv.myDB:
+            selected_db_info = gv.myDB.get_current_db_name()  # Assuming gv.myDB manages the current database
+        else:
+            selected_db_info = "None"
+        selected_items_info = grid_manager.get_selected_grid_items()  # This now returns a dictionary with lists of names
+
+        # Update the labels with new info
+        selected_db_label.value = f"Selected Database: {selected_db_info}"
+
+        if selected_items_info:
+            # Since selected_items_info is a dictionary of lists, we can flatten the lists and join the names
+            selected_names = [name for names_list in selected_items_info.values() for name in names_list]
+
+            # Update the label with the selected names
+            selected_items_label.value = f"Selected Items: {', '.join(selected_names) if selected_names else 'None'}"
+        else:
+            selected_items_label.value = "Selected Items: None"
+    
+    # Function for making a solbind request
+    def solbind_request(button):
+        username = selected_db_label.value.split(': ')[1]  # Extract the username from the label
+        selected_items_info = selected_items_label.value.split(': ')[1]  # Extract selected items from the label
+        
+        # Here, handle multiple selected items if needed
+        if ',' in selected_items_info:
+            print("Multiple items selected, please select only one deck.")
+            return
+        deck_name = selected_items_info  # Assuming single selection
+        deck_id = gv.myDB.find_one('Deck', {'name': deck_name})['id']
+        
+        # Proceed with the solbind request using NetApi
+        net_api = NetApi()
+        net_api.post_solbind_request(username, deck_id)
+
+    # Function for renaming a fusion
+    def rename_fusion(button):
+        username = gv.myDB.get_current_db_name()  
+        selected_items_info = selected_items_label.value.split(': ')[1]  # Extract selected items from the label
+        
+        # Here, handle multiple selected items if needed
+        if ',' in selected_items_info:
+            print("Multiple items selected, please select only one fusion.")
+            return
+        fusion_name = selected_items_info.strip(" ")  # Assuming single selection
+        fusion = gv.myDB.find_one('Fusion', {'name': fusion_name})
+                
+        # Prompt for new name
+        new_name = input("Enter new fusion name: ")  # Simple input method; you could use a dialog or widget
+        
+        # Proceed with the rename request using NetApi
+        net_api = NetApi()
+        
+        # Provide your credentials and Cognito client information
+        # client_id = "75mcr7j8relead00pia1dbse9c"
+        # username = "stefan2581@gmail.com"
+        # password = "your_password"
+
+        # # Create an instance of CognitoAuth
+        # authenticator = CognitoAuth(client_id, username, password)
+
+        # # Get the access token
+        # access_token = authenticator.get_access_token()
+
+        # # If successful, print the access token
+        # if access_token:
+        #     print(f"Access Token: {access_token}")
+                        
+        net_api.update_fused_deck(username, fusion, new_name)
+    
+    # Initialize the ActionToolbar and pass the update function
+    action_toolbar = ActionToolbar()
+    action_toolbar.assign_callback('Refresh', update_action_area)
+    action_toolbar.assign_callback('Solbind', solbind_request)
+    action_toolbar.assign_callback('Rename', rename_fusion)
+    action_toolbar.assign_callback('Export', save_grid_dataframe)
+
+    # Action area where the toolbar and the labels are displayed
+    action_area = widgets.VBox([selected_db_label, selected_items_label, action_toolbar.get_ui()])
+    
     # Layout: Progress bars at the top, then the tab widget below
-    layout = widgets.VBox([progressbar_header,gv.progressbar_container, tab])
+    layout = widgets.VBox([progressbar_header,gv.progressbar_container,action_area, tab])
     display(layout)
 
     update_sheet_stats()
     
-    
-    
+
+
+        

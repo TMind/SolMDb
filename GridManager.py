@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from gc import enable
 import pandas as pd
@@ -5,7 +6,7 @@ try:      import qgridnext as qgrid
 except ImportError:    import qgrid
 import ipywidgets as widgets
 from GlobalVariables import global_vars as gv
-from GlobalVariables import rotate_suffix, rotated_column_definitions
+from GlobalVariables import rotate_suffix
 from CustomCss import CSSManager
 
 from DataSelectionManager import DataSelectionManager
@@ -24,9 +25,9 @@ class GridManager:
         self.relationships = {}
         self.debug_output = debug_output
         self.css_manager = CSSManager()
-        self.sorting_manager = SortingManager(rotated_column_definitions)
+        self.sorting_manager = SortingManager(gv.rotated_column_definitions)
         self.custom_css_class = self.css_manager.create_and_inject_css('filter_grids', rotate_suffix)
-        self.grid_initializer = GridInitializer(self.sorting_manager, self.css_manager, rotated_column_definitions, self.custom_css_class, debug_output)
+        self.grid_initializer = GridInitializer(self.sorting_manager, self.css_manager, gv.rotated_column_definitions, self.custom_css_class, debug_output)
 
     def add_grid(self, identifier, df, options=None, dependent_identifiers=None, grid_type='qgrid', enable_sorting=False, include_totals=False):
         """Add or update a grid to the GridManager."""
@@ -475,7 +476,9 @@ class FilterGrid:
             })
             widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
             event['indices'].remove(0)
-        
+        else:
+            widget.df = widget.get_changed_df()
+
         active_rows = widget.df[widget.df['Active'] == True]
         
         self.refresh_function({'new': active_rows, 'old': None, 'owner': 'filter'})
@@ -522,17 +525,17 @@ class FilterGrid:
             event (dict): The event data.
             widget (qgrid.QGridWidget): The filter grid widget.
         """
-        if gv.out_debug:
-            with gv.out_debug:
-                print(f"FilterClass::grid_filter_on_cell_edit() - Editing cell in filter grid")
+        #if gv.out_debug:
+            #with gv.out_debug:
+                #print(f"FilterClass::grid_filter_on_cell_edit() - Editing cell in filter grid")
         row_index, column_index = event['index'], event['column']
         widget.df.loc[row_index, column_index] = event['new']
         
         widget.df = widget.df
         #Print the edited row from the widget
-        if gv.out_debug:
-            with gv.out_debug:
-                print(f"Edited row: {widget.df.loc[row_index]}")
+        #if gv.out_debug:
+            #with gv.out_debug:
+                #print(f"Edited row: {widget.df.loc[row_index]}")
         #if column_index == 'Active' or widget.df.loc[row_index, 'Active']:
         self.refresh_function({'new': row_index, 'old': None, 'owner': 'filter'})
 
@@ -1013,3 +1016,70 @@ class DynamicGridManager:
         return self.ui
     
     
+    def get_selected_grid_items(self):
+        """
+        Retrieves the currently selected items from the grids currently displayed in the grid layout.
+        
+        Returns:
+            dict: A dictionary where the keys are grid identifiers and the values are lists of selected items.
+        """
+        selected_items = {}
+
+        # Iterate through the grid layout's children
+        for index, widget_box in enumerate(self.grid_layout.children):
+            # Access the VBox that contains the filter and grid widgets
+            if isinstance(widget_box, widgets.VBox) and len(widget_box.children) > 1:
+                # Get the grid widget (the second child of the VBox)
+                grid_widget_box = widget_box.children[1]  
+                grid_widget = grid_widget_box.children[1]  # This is the actual grid widget we need
+
+                # Check if this grid_widget_box matches any registered grids in the GridManager
+                for grid_id, grid in self.qm.grids.items():
+                    if grid.main_widget == grid_widget:
+                    # Use get_selected_df() to directly get the DataFrame of selected rows
+                        selected_df = grid.main_widget.get_selected_df()
+
+                        # Only include the grid if there are selected items and the 'Name' column exists
+                        if not selected_df.empty and 'Name' in selected_df.columns:
+                            selected_names = selected_df['Name'].tolist()  # Get the 'Name' column values for selected rows
+                            selected_items[grid_id] = selected_names  # Store selected 'Name' values as a list
+
+        return selected_items
+        
+       
+    def save_dataframes_to_csv(self, directory='dataframes'):
+        """
+        Saves the DataFrames of grids that are currently children of the GridSpecLayout as CSV files.
+
+        Args:
+            directory (str): The directory where CSV files will be saved. Defaults to 'dataframes'.
+        """
+        # Create the directory if it doesn't exist
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        # Iterate through the current children in GridSpecLayout
+        for index, widget_box in enumerate(self.grid_layout.children):
+            # Check if the widget is a VBox containing the grid
+            if isinstance(widget_box, widgets.VBox) and len(widget_box.children) > 1:
+                grid_widget_box = widget_box.children[1]  # The grid widget is typically the second child in the VBox
+                grid_widget = grid_widget_box.children[1]  # Access the actual grid widget
+
+                # Find the corresponding grid in the GridManager
+                for grid_id, grid in self.qm.grids.items():
+                    if grid.main_widget == grid_widget:
+                        # Get the DataFrame of the current grid
+                        df = grid.main_widget.get_changed_df()
+
+                        # If the DataFrame is not empty, save it as CSV
+                        if df is not None and not df.empty:
+                            csv_filename = os.path.join(directory, f"{grid_id}.csv")
+                            df.to_csv(csv_filename, index=False)
+                            with self.out_debug:
+                                print(f"Saved DataFrame '{grid_id}' to {csv_filename}")
+                        else:
+                            with self.out_debug:
+                                print(f"No data available for grid '{grid_id}', skipping...")
+
+        with self.out_debug:
+            print(f"All applicable DataFrames saved to {directory}:")

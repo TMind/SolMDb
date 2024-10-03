@@ -20,6 +20,33 @@ def create_graph_for_object(object):
 
 class DeckLibrary:
     def __init__(self, decks_data, fusions_data, mode):                
+        
+        def extract_card_data_from_entity(entity):
+            # Assuming the entity has fields that correspond to those in CardData
+            card_data = {
+                'name': entity.data.get('name', ''),
+                'title': entity.data.get('title', ''),
+                'faction': entity.data.get('faction', ''),
+                'cardType': entity.data.get('attributes', {}).get('cardType', ''),
+                'cardSubType': entity.data.get('attributes', {}).get('cardSubType', ''),
+                'betrayer': entity.data.get('attributes', {}).get('betrayer', False),
+                'solbindId1': entity.data.get('solbindId1', ''),
+                'solbindId2': entity.data.get('solbindId2', ''),
+                'sortValue': entity.data.get('sortValue', ''),
+                'crossFaction': entity.data.get('attributes', {}).get('crossFaction', ''),
+                'cardSetId': entity.data.get('cardSetId', ''),
+                '_id': entity.data.get('_id', ''),
+                'rarity': entity.data.get('attributes', {}).get('rarity', ''),
+                'provides': entity.data.get('provides', ''),
+                'seeks': entity.data.get('seeks', ''),
+                'levels': entity.data.get('levels', {}),
+                'attack': entity.data.get('attack', {}),
+                'health': entity.data.get('health', {}),
+                'children_data': entity.data.get('children_data', {}),
+            }
+            
+            return card_data
+        
         self.dbmgr = DatabaseManager(gv.username)
         self.new_decks = []
         self.online_fusions = []
@@ -58,7 +85,17 @@ class DeckLibrary:
                         
                         # Save all cards that are not already in the database
                         for index, card in new_deck.cards.items():
-                            id = new_deck.cardIds[int(index)-1]                                                
+                            id = new_deck.cardIds[int(index)-1]    
+                            if card['rarity'] == 'Solbind':
+                                # Add Solbind Cards to the database as well
+                                for solbindCard in ['solbindId1', 'solbindId2']:
+                                    solbindId = card[solbindCard]
+                                    if solbindId and solbindId not in cardIdsDatabase:
+                                        myUCL = gv.get_universal_library()
+                                        solbind_entity = myUCL.create_card_from_title(solbindId[5:], None)
+                                        solbind_data = extract_card_data_from_entity(solbind_entity)
+                                        cardDataList.append(solbind_data)
+                                        # ???? create_card_from_entity does not create a card,  but return two entities     
                             if id not in cardIdsDatabase:
                                 myCard = Card.from_data(card)                                                                                
                                 myCard.data._id = id                            

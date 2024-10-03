@@ -20,6 +20,8 @@ class GlobalVariables:
     _instance = None
     _initialized = False  # Flag to track initialization
 
+    _universal_library_instance = None
+
     @classmethod  
     def get_instance(cls):  
         if cls._instance is None:  
@@ -36,6 +38,20 @@ class GlobalVariables:
             logging.info("GlobalVariables instance already initialized.")
         return cls._instance
 
+    def get_universal_library(self):
+        if self._universal_library_instance is None:
+            logging.info("Initializing UniversalLibrary.")
+            from UniversalLibrary import UniversalLibrary  # Import here to avoid partial import
+            self._universal_library_instance = UniversalLibrary(self._username, *self.ucl_paths)
+        return self._universal_library_instance
+
+    def reset_universal_library(self):
+        from UniversalLibrary import UniversalLibrary  # Import here to avoid partial import
+        if self.commonDB:
+            self.commonDB.drop_database()  
+        self._universal_library_instance = UniversalLibrary(self._username, *self.ucl_paths)
+        
+
     def _initialize_env(self):
         logging.info("Initializing Environment.")
         self._username = os.getenv('SFF_USERNAME', 'sff')
@@ -47,6 +63,7 @@ class GlobalVariables:
         
         self.myDB = None
         self.fs = None 
+        self.ucl_paths = [ 'Card Database', os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
         self.commonDB = None
         self.progress_containers = {}
         self.out_debug = None        
@@ -54,7 +71,9 @@ class GlobalVariables:
         self._set_environment_variables()
         self.GoogleSheetsClient = None
         self.cm_manager = None
-        self.all_column_definitions = {**rotated_column_definitions, **non_rotated_column_definitions}
+        self.rotated_column_definitions = rotated_column_defs
+        self.non_rotated_column_definitions = non_rotated_column_defs
+        self.all_column_definitions = {**self.rotated_column_definitions, **self.non_rotated_column_definitions}
 
     def _initialize_objects(self):
         if not self._initialized:
@@ -69,8 +88,10 @@ class GlobalVariables:
             
             # Initialize CMManager for handling the CM sheet
             self.GoogleSheetsClient = GoogleSheetsClient()
-            self.cm_manager = CMManager(self.commonDB, self.sheet_url, local_copy_path='local_collection_manager.csv', sheets_client=self.GoogleSheetsClient)
+            self.cm_manager = CMManager(self.commonDB, self.sheet_url, local_copy_path='csv/sff.csv', sheets_client=self.GoogleSheetsClient)
             self.update_all_column_definitions()
+            if self.cm_manager.cm_tags :
+                self.data_selection_sets['CM Tags'].update( {tag : True for tag in self.cm_manager.cm_tags} )
             self._initialized = True
         else:
             logging.info("Objects already initialized.")
@@ -81,21 +102,20 @@ class GlobalVariables:
         """
         try:
                     
-            # Read the local CSV file to get the columns
-            df = pd.read_csv('local_collection_manager.csv')            
-            cm_columns = df.columns.tolist()
+            # Read the local CSV file to get the columns            
+            cm_columns = self.cm_manager.cm_tags or [] # Get the CM sheet columns
             
             # Add the CM sheet columns to the rotated/non-rotated definitions
             cm_column_definitions = {col: {'width': rotated_width , 'headerCssClass' : rotate_suffix } for col in cm_columns}  # Adjust width as necessary
             
             # Combine with existing column definitions
+            self.rotated_column_definitions = { **self.rotated_column_definitions, **cm_column_definitions } 
             self.all_column_definitions = {
-                **rotated_column_definitions,
-                **non_rotated_column_definitions,
-                **cm_column_definitions  # Add the CM-specific columns
+                **self.rotated_column_definitions,
+                **self.non_rotated_column_definitions,            
             }
             
-            print(f"Updated all_column_definitions: {self.all_column_definitions}")
+            #print(f"Updated all_column_definitions: {self.all_column_definitions}")
         except Exception as e:
             print(f"Error updating column definitions: {e}")    
                    
@@ -177,7 +197,7 @@ rotated_width = 20
 
 rotate_suffix = '_rotate_'
 
-rotated_column_definitions = {
+rotated_column_defs = {
     # Creatures 
     'Creature':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Abomination':      {'width': rotated_width, 'headerCssClass': rotate_suffix},    
@@ -326,7 +346,7 @@ rotated_column_definitions = {
     'Annoying':         {'width': rotated_width, 'headerCssClass': rotate_suffix}
 }
  
-non_rotated_column_definitions = {
+non_rotated_column_defs = {
     'index':            {'width': 50},
     'Name':             {'width': 250},
     'DeckName':         {'width': 250},
@@ -347,6 +367,8 @@ non_rotated_column_definitions = {
     'crossFaction':     {'width': 100},
     'forgebornId':      {'width': 100},
     'cardTitles':       {'width': 200},
+    'Betrayers':        {'width': 200},
+    'SolBinds':         {'width': 200},
     'name':             {'width': 200}, 
     'cardType' :        {'width': 75},
     'cardSubType' :     {'width': 75},
@@ -384,7 +406,7 @@ data_selection_sets = {
     "faction": True, "crossFaction": True,
     "forgebornId": True, "cardTitles": True,
     "FB2": True,    "FB3": True,    "FB4": True,
-    "Creatures": True,  "Spells": True, "Exalts": True,    
+    "Creatures": True,  "Spells": True, "Exalt": True,    
     #"A1": True,     "A2": True,     "A3": True,
     #"H1": True,     "H2": True,     "H3": True
   },
@@ -661,6 +683,7 @@ data_selection_sets = {
   'Deck Content': {
     'name': True,
     'faction': True,
+    'rarity': True,
     'cardType': True,
     'cardSubType': True,
   },
@@ -675,11 +698,11 @@ data_selection_sets = {
 
 
 GLOBAL_COLUMN_ORDER = [
-    'index', 'Name', 'DeckName', 'type', 'Deck A', 'Deck B',
+    'index', 'Name', 'name', 'DeckName', 'type', 'Deck A', 'Deck B',
     'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 
     'xp', 'elo', 'level', 'deckScore', 'deckRank',
-    'cardSetNo', 'faction', 'crossFaction', 'forgebornId', 'cardTitles', 
-    'name', 'cardType', 'cardSubType', 'FB4', 'FB2', 'FB3',
+    'cardSetNo', 'faction', 'crossFaction', 'forgebornId', 'cardTitles', 'Betrayers', 'SolBinds',
+    'cardType', 'cardSubType', 'FB4', 'FB2', 'FB3',
     'Creatures', 'Spells', 'Exalt', 
     'A1', 'H1', 'A2', 'H2', 'A3', 'H3',    
     

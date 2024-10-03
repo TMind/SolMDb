@@ -32,7 +32,7 @@ class GoogleSheetsClient:
             self.authenticate_google_sheets()
 
         spreadsheet_id = self.sheet_url.split('/d/')[1].split('/')[0]
-        range_name = f"{worksheet_name}!A:Z"  # Adjust the range as necessary
+        range_name = f"{worksheet_name}"  # Adjust the range as necessary
 
         try:
             result = self.gc.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
@@ -63,18 +63,3 @@ class GoogleSheetsClient:
         except Exception as e:
             print(f"An error occurred while fetching the title: {e}")
             return None
-
-    def get_column_names_from(self, worksheet_name, start_column_name):
-        if not self.gc:
-            self.authenticate_google_sheets()
-        sh = self.gc.open_by_url(self.sheet_url)
-        worksheet = sh.worksheet(worksheet_name)
-        header_row = worksheet.row_values(1)
-
-        try:
-            start_column_index = header_row.index(start_column_name)
-        except ValueError:
-            raise ValueError(f"Column '{start_column_name}' not found in the sheet.")
-
-        column_names = header_row[start_column_index:]
-        return column_names

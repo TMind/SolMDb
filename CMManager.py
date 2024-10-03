@@ -1,16 +1,18 @@
 import os
 import datetime
+from tkinter.ttk import Separator
 import pandas as pd
 from datetime import datetime
 
 class CMManager:
-    def __init__(self, db_manager, sheet_url, local_copy_path='sff.csv', sheets_client=None):
+    def __init__(self, db_manager, sheet_url, local_copy_path='csv/sff.csv', sheets_client=None):
         self.db_manager = db_manager
         self.sheet_url = sheet_url
         self.local_copy_path = local_copy_path
-        self.sheets_client = sheets_client  # Pass GoogleSheetsClient for online interaction
+        self.sheets_client = sheets_client  # Pass GoogleSheetsClient for online‚ interaction
         self.title = None
         self.timestamp = None
+        self.cm_tags = None
 
         if not sheets_client:
             raise ValueError("CMManager requires an instance of GoogleSheetsClient for online interaction.")
@@ -32,7 +34,7 @@ class CMManager:
             df = pd.DataFrame(rows[1:], columns=rows[0])  # Assuming the first row is headers
 
             # Save DataFrame to CSV
-            df.to_csv(self.local_copy_path, index=False)
+            df.to_csv(self.local_copy_path, index=False, sep=';')
             print(f"Local CSV updated at {self.local_copy_path}")
 
             # After updating the local CSV, fetch the new metadata
@@ -40,8 +42,13 @@ class CMManager:
             self.timestamp = self.format_timestamp(raw_timestamp)  # Format the timestamp            
             self.title = self.sheets_client.get_sheet_title()  # Get updated title
             
+            # Get the index of the starting column
+            start_column_index = df.columns.get_loc('Beast')        
+            # Retrieve column names starting from the specified column
+            self.cm_tags = df.columns[start_column_index:].tolist()
+            
             # Store the updated metadata in the database
-            self.store_sheet_metadata(self.timestamp, self.title, None)  # Pass tags if needed
+            self.store_sheet_metadata(self.timestamp, self.title, self.cm_tags)  # Pass tags if needed
 
         except Exception as e:
             print(f"An error occurred while updating the local CSV: {e}")
@@ -63,6 +70,7 @@ class CMManager:
         if stored_data:
             self.title = stored_data.get('title')
             self.timestamp = stored_data.get('timestamp')
+            self.cm_tags = stored_data.get('cm_tags')
             print(f"Loaded metadata: title='{self.title}', timestamp='{self.timestamp}'")
         else:
             print("No metadata found in the database.")
@@ -70,11 +78,12 @@ class CMManager:
     def store_sheet_metadata(self, timestamp, title, tags):
         self.timestamp = timestamp
         self.title = title
+        self.cm_tags = tags
         metadata = {
             'sheet_name': 'Card Database',
             'timestamp': timestamp,
             'title': title,
-            'tags': tags
+            'cm_tags': tags
         }
         try:
             if self.db_manager:
@@ -84,11 +93,12 @@ class CMManager:
                 print("commonDB is not initialized.")
         except Exception as e:
             print(f"Failed to store sheet metadata: {e}")
+            
     def get_column_names_from(self, worksheet_name, start_column_name):
         """
         Retrieves column names from the local CSV file starting from a specific column.
         """
-        df = pd.read_csv(self.local_copy_path)
+        df = pd.read_csv(self.local_copy_path, sep=';')
         
         # Ensure the DataFrame contains the desired start_column_name
         if start_column_name not in df.columns:

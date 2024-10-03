@@ -10,8 +10,8 @@ from collections import OrderedDict
 
 from DataSelectionManager import DataSelectionManager
 from GlobalVariables import global_vars as gv
+from GlobalVariables import rotate_suffix
 from CustomCss import CSSManager
-from GlobalVariables import rotate_suffix, rotated_column_definitions
 from MongoDB.DatabaseManager import DatabaseManager
 
 # Inject custom CSS
@@ -31,10 +31,11 @@ display(HTML(style))
 class TemplateGrid:
 
     def __init__(self):
-        self.df = self.create_initial_dataframe()
-        self.css_manager = CSSManager()
-        self.qgrid_filter = self.create_filter_qgrid()
         self.setup_widgets()  # Initialize and setup widgets for dynamic column selection        
+        self.df = self.create_initial_dataframe()
+        self.css_manager = CSSManager()        
+        self.qgrid_filter = self.create_filter_qgrid()
+        
 
     def create_filter_qgrid(self):
         
@@ -42,7 +43,7 @@ class TemplateGrid:
         
         # Set column widths
         for column in column_definitions.keys():            
-            if column in rotated_column_definitions.keys() : continue
+            if column in gv.rotated_column_definitions.keys() : continue
             column_definitions[column]['width'] = len(column) * 11
 
         column_definitions['index'] = { 'width': 25 }
@@ -67,7 +68,7 @@ class TemplateGrid:
     def setup_widgets(self):
         # Define column groups for selection
                 
-        cm_tags = gv.cm_manager.get_column_names_from('Card Database', 'Beast')
+        cm_tags = gv.cm_manager.cm_tags or []
         
         self.column_groups = {
             'Base Data': ['Name', 'type', 'faction', 'forgebornId', 'cardTitles', 'FB2', 'FB3', 'FB4', 'Creatures', 'Spells', 'Exalts'],
@@ -451,3 +452,70 @@ class TemplateGrid:
             with gv.out_debug:
                 print(f"Data selection sets updated: {gv.data_selection_sets}")
             
+            
+class ActionToolbar:
+    def __init__(self, button_configs=None):
+        """
+        Initialize the floating toolbar with a list of buttons.
+        
+        :param buttons: List of ipywidgets buttons to include in the toolbar.
+        """
+        if button_configs is None:
+            # Default buttons if none are provided
+            button_configs = {
+                "Refresh": {"description": "Refresh Selection", "button_style": 'info'},
+                "Solbind": {"description": "Solbind", "button_style": 'danger'},
+                "Rename": {"description": "Rename", "button_style": 'warning'},
+                "Export": {"description": "Export", "button_style": 'info'}
+            }
+        
+        self.buttons = {}
+        
+        # Initialize buttons based on provided or default configurations
+        for name, config in button_configs.items():
+            self.buttons[name] = widgets.Button(description=config.get("description", name), button_style=config.get("button_style", ''))
+
+        # Create a horizontal box (HBox) to hold the buttons
+        self.toolbar = widgets.HBox(list(self.buttons.values()))
+        
+        # Create a custom widget container with floating style
+        self.action_toolbar = widgets.Box([self.toolbar], layout=widgets.Layout(width='auto'))
+        
+    def add_button(self, button_name, description, button_style='', callback_function=None):
+        """
+        Adds a button to the toolbar.
+        
+        :param button_name: The name of the button (used as the key in the dictionary).
+        :param description: The text displayed on the button.
+        :param button_style: Optional style for the button (e.g., 'info', 'danger', etc.).
+        :param callback_function: Optional callback function to attach to the button.
+        """
+        if button_name not in self.buttons:
+            # Create the new button
+            new_button = widgets.Button(description=description, button_style=button_style)
+            self.buttons[button_name] = new_button
+            
+            # Assign the callback function if provided
+            if callback_function:
+                new_button.on_click(callback_function)
+            
+            # Update the toolbar layout
+            self.toolbar.children = list(self.buttons.values())
+        else:
+            raise ValueError(f"Button '{button_name}' already exists in the toolbar.")
+
+    def assign_callback(self, button_name, callback_function):
+        """
+        Assigns a callback function to a button in the toolbar.
+        
+        :param button_name: The name of the button (string) to assign the callback to.
+        :param callback_function: The function to call when the button is clicked.
+        """
+        if button_name in self.buttons:
+            self.buttons[button_name].on_click(callback_function)
+        else:
+            raise ValueError(f"Button {button_name} not found in the toolbar.")
+        
+    def get_ui(self):
+        """Return the action toolbar UI."""
+        return self.action_toolbar

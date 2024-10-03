@@ -3,8 +3,6 @@ class DataSelectionManager:
 
     @staticmethod
     def update_data(event, widget):
-        #global data_selection_sets
-        #data_selection_sets = new_data
         DataSelectionManager.notify_observers(event, widget)
 
     @staticmethod

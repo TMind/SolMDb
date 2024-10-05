@@ -88,7 +88,7 @@ class CMManager:
         try:
             if self.db_manager:
                 self.db_manager.upsert('sheet_metadata', {'sheet_name': 'Card Database'}, metadata)
-                print(f"Sheet metadata updated: {metadata}")
+                print(f"Sheet metadata updated in database {self.db_manager.get_current_db_name()}: {metadata}")
             else:
                 print("commonDB is not initialized.")
         except Exception as e:

@@ -86,7 +86,8 @@ class MyGraph:
         elif child_type == 'Forgeborn':
             self._process_forgeborn_child(root, db_object, parent_object, child_name, full_class_path)                     
         else:
-            child_object = cls.lookup(child_name)
+            ftype = 'name'  if child_type == 'Entity' else '_id'
+            child_object = cls.lookup(child_name, type=ftype)
             #print(f"Child Object = {child_object}")
             if child_object:
                 color = self._get_color_based_on_child_type(child_type, child_object)

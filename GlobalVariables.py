@@ -47,8 +47,8 @@ class GlobalVariables:
 
     def reset_universal_library(self):
         from UniversalLibrary import UniversalLibrary  # Import here to avoid partial import
-        if self.commonDB:
-            self.commonDB.drop_database()  
+        self.commonDB.drop_collection('Entities')
+        self.commonDB.drop_collection('Forgeborns')
         self._universal_library_instance = UniversalLibrary(self._username, *self.ucl_paths)
         
 

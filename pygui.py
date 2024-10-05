@@ -83,7 +83,7 @@ qg_options ={ 'column_options' : {'defaultSortAsc': False}, 'column_definitions'
 # Network Operations #
 ######################
 
-from MagicEden import get_collection_listings, fetch_all_magiceden_listings
+from MagicEden import fetch_all_magiceden_listings
 
 def fetch_network_decks(args, myApi):
     #print(f'Fetching Network Decks with args: {args}')
@@ -95,7 +95,9 @@ def fetch_network_decks(args, myApi):
         collection_symbol = 'sfgc'  # This could be dynamic based on args
         
         deck_data = fetch_all_magiceden_listings(collection_symbol, myApi, args)
-        print(f"Total Magic Eden decks processed: {len(deck_data)}")            
+        print(f"Total Magic Eden decks processed: {len(deck_data)}")
+        gv.myDB.set_database_name('magiceden')
+        gv.myDB.drop_database()
         return deck_data        
     
     if args.id:
@@ -688,28 +690,36 @@ def generate_deck_statistics_dataframe():
             cards = gv.myDB.find('Card', {'_id': {'$in': deck['cardIds']}}) 
             # Collect all cards where the betrayer attribute is True
             betrayers = []
-            solbinds = []
+            solbinds = {}
             for card in cards:
                 if not card: continue
                 crossfaction = card.get('crossfaction') or card.get('crossFaction')
                 betrayer = card.get('betrayer')
                 rarity = card.get('rarity')
                 if rarity == 'Solbind':
-                    solbinds.append(card['name'])
-                    for type in ['solbindId1', 'solbindId2']:
-                        if card[type]:
-                            solbind_card = gv.myDB.find_one('Card', {'_id': card[type]})
+                    solbinds['Solbind'] = card['name']
+                    for solbind_field in ['solbindId1', 'solbindId2']:
+                        if card.get(solbind_field, None):
+                            solbind_cardId = card.get(solbind_field, None)[5:]
+                            solbind_card = gv.myDB.find_one('Card', {'_id': solbind_cardId})
                             if solbind_card:
-                                solbinds.append(solbind_card['name'])
+                                solbinds[solbind_field] = solbind_card['name']
+                            else:
+                                solbinds[solbind_field] = card[solbind_field]
                             
                 # Check if betrayer is explicitly 'True' as a string
                 if crossfaction and crossfaction != faction:
                     betrayers.append(card['name'])                    
                 elif betrayer and betrayer == 'True' or betrayer == True:
                     betrayers.append(card['name'])
-                
+            
+            # Define the order of keys
+            solbind_order = ['Solbind', 'solbindId1', 'solbindId2']
+            
             df_decks_filtered.loc[deck['name'], 'Betrayers'] = ', '.join(betrayers)
-            df_decks_filtered.loc[deck['name'], 'SolBinds'] = ', '.join(solbinds)
+            df_decks_filtered.loc[deck['name'], 'SolBinds'] = ''
+            if 'Solbind' in solbinds and solbinds['Solbind']:
+                df_decks_filtered.loc[deck['name'], 'SolBinds'] = ', '.join([solbinds[key] for key in solbind_order])
         
         if 'stats' in deck:
             stats = deck.get('stats', {})
@@ -822,9 +832,11 @@ def reload_data_on_click(button, value):
         return
     elif value == 'Update CM Sheet':
         # Update the local CSV using CMManager
-        gv.cm_manager.update_local_csv('Card Database')
+        if gv.commonDB:
+            gv.commonDB.drop_database()
+        if gv.cm_manager:
+            gv.cm_manager.update_local_csv('Card Database')
         gv.reset_universal_library()
-        
         # Update and display sheet statistics
         update_sheet_stats()
         return
@@ -1059,8 +1071,8 @@ def create_database_selection_widget():
 
 # Initialize a global dictionary to store the different stats to be displayed
 display_data = {
-    'Collection': '',
-    'CM Sheet': ''
+    'Collection': {},
+    'CM Sheet': {}  # Allowing for complex structures
 }
 count_display = widgets.Output()
 def update_count_display():

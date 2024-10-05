@@ -39,21 +39,22 @@ class UniversalLibrary:
             
         with open('csv/sff.csv', 'r') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=';')
-            for row in reader:
+            rows_list = list(reader)  # Store all rows in a list
+            for row in rows_list:
+                gv.update_progress('Process Entity Row', total=len(rows_list), message='Processing CM entity: ' + row['Name'])
                 self._process_row(row)
         
-
     def _read_forgeborns_from_csv(self, fb_path):
         fb_map = {}
         with open(fb_path, 'r') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=',')
-            for row in reader:
+            rows_list = list(reader)  # Store all rows in a list
+            
+            # Iterate over the rows
+            for row in rows_list:
+                gv.update_progress('Process FB Row', total=len(rows_list), message='Processing CM ForgebornID: ' + row['forgebornID'])
                 forgeborn_ability_id = row['forgebornID']
                 card_id = row['cardId']
-                #forgeborn_id = forgeborn_ability_id[:-5]
-                #if forgeborn_id not in self.forgeborns:
-                #    forgeborn_name = forgeborn_id[5:].capitalize()
-                #    self.forgeborns[forgeborn_id] = Forgeborn(forgeborn_id, forgeborn_name)
                 if card_id not in fb_map:
                     fb_map[card_id] = []
                 fb_map[card_id].append(forgeborn_ability_id)

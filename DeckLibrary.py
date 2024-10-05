@@ -1,4 +1,5 @@
 import os
+import CardLibrary
 from MyGraph import MyGraph
 from MongoDB.DatabaseManager import DatabaseManager, BufferManager
 from CardLibrary import  Fusion, Deck, Card
@@ -21,31 +22,53 @@ def create_graph_for_object(object):
 class DeckLibrary:
     def __init__(self, decks_data, fusions_data, mode):                
         
-        def extract_card_data_from_entity(entity):
-            # Assuming the entity has fields that correspond to those in CardData
-            card_data = {
-                'name': entity.data.get('name', ''),
-                'title': entity.data.get('title', ''),
-                'faction': entity.data.get('faction', ''),
-                'cardType': entity.data.get('attributes', {}).get('cardType', ''),
-                'cardSubType': entity.data.get('attributes', {}).get('cardSubType', ''),
-                'betrayer': entity.data.get('attributes', {}).get('betrayer', False),
-                'solbindId1': entity.data.get('solbindId1', ''),
-                'solbindId2': entity.data.get('solbindId2', ''),
-                'sortValue': entity.data.get('sortValue', ''),
-                'crossFaction': entity.data.get('attributes', {}).get('crossFaction', ''),
-                'cardSetId': entity.data.get('cardSetId', ''),
-                '_id': entity.data.get('_id', ''),
-                'rarity': entity.data.get('attributes', {}).get('rarity', ''),
-                'provides': entity.data.get('provides', ''),
-                'seeks': entity.data.get('seeks', ''),
-                'levels': entity.data.get('levels', {}),
-                'attack': entity.data.get('attack', {}),
-                'health': entity.data.get('health', {}),
-                'children_data': entity.data.get('children_data', {}),
-            }
+        def extract_card_data_from_entity(entity, id):
+            card_data = {'_id': id}
+
+            if entity.data:
+                if entity.data.name:
+                    card_data['name'] = entity.data.name
+                    card_data['title'] = entity.data.name
+                if entity.data.faction:
+                    card_data['faction'] = entity.data.faction
+                if 'cardType' in entity.data.attributes:
+                    card_data['cardType'] = entity.data.attributes.get('cardType', '')
+                if 'cardSubType' in entity.data.attributes:
+                    card_data['cardSubType'] = entity.data.attributes.get('cardSubType', '')
+                if 'betrayer' in entity.data.attributes:
+                    card_data['betrayer'] = entity.data.attributes.get('betrayer', False)
+                if hasattr(entity.data, 'solbindId1') and entity.data.solbindId1:
+                    card_data['solbindId1'] = entity.data.solbindId1
+                if hasattr(entity.data, 'solbindId2') and entity.data.solbindId2:
+                    card_data['solbindId2'] = entity.data.solbindId2
+                if hasattr(entity.data, 'sortValue') and entity.data.sortValue:
+                    card_data['sortValue'] = entity.data.sortValue
+                if 'crossFaction' in entity.data.attributes:
+                    card_data['crossFaction'] = entity.data.attributes.get('crossFaction', '')
+                if hasattr(entity.data, 'cardSetId') and entity.data.cardSetId:
+                    card_data['cardSetId'] = entity.data.cardSetId
+                if hasattr(entity.data, '_id') and entity.data._id:
+                    card_data['_id'] = entity.data._id
+                if 'rarity' in entity.data.attributes:
+                    card_data['rarity'] = entity.data.attributes.get('rarity', '')
+                if hasattr(entity.data, 'provides') and entity.data.provides:
+                    card_data['provides'] = entity.data.provides
+                if hasattr(entity.data, 'seeks') and entity.data.seeks:
+                    card_data['seeks'] = entity.data.seeks
+                if hasattr(entity.data, 'levels') and entity.data.levels:
+                    card_data['levels'] = entity.data.levels
+                if hasattr(entity.data, 'attack') and entity.data.attack:
+                    card_data['attack'] = entity.data.attack
+                if hasattr(entity.data, 'health') and entity.data.health:
+                    card_data['health'] = entity.data.health
+                if hasattr(entity.data, 'children_data') and entity.data.children_data:
+                    card_data['children_data'] = entity.data.children_data
+
+            else:
+                print(f"Entity {entity} has no data.")
             
             return card_data
+
         
         self.dbmgr = DatabaseManager(gv.username)
         self.new_decks = []
@@ -89,13 +112,15 @@ class DeckLibrary:
                             if card['rarity'] == 'Solbind':
                                 # Add Solbind Cards to the database as well
                                 for solbindCard in ['solbindId1', 'solbindId2']:
-                                    solbindId = card[solbindCard]
-                                    if solbindId and solbindId not in cardIdsDatabase:
-                                        myUCL = gv.get_universal_library()
-                                        solbind_entity = myUCL.create_card_from_title(solbindId[5:], None)
-                                        solbind_data = extract_card_data_from_entity(solbind_entity)
-                                        cardDataList.append(solbind_data)
-                                        # ???? create_card_from_entity does not create a card,  but return two entities     
+                                    solbindId = card[solbindCard][5:]
+                                    if solbindId and solbindId not in cardIdsDatabase:                                        
+                                        solbind_entity = CardLibrary.Entity.lookup(solbindId)
+                                        if solbind_entity:  
+                                            solbind_data = extract_card_data_from_entity(solbind_entity, solbindId)
+                                            solbind_data['cardType'] = 'Solbind'
+                                            cardDataList.append(solbind_data)
+                                        else:
+                                            print(f"Solbind card {solbindId} not found.")
                             if id not in cardIdsDatabase:
                                 myCard = Card.from_data(card)                                                                                
                                 myCard.data._id = id                            

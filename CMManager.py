@@ -71,7 +71,7 @@ class CMManager:
             self.title = stored_data.get('title')
             self.timestamp = stored_data.get('timestamp')
             self.cm_tags = stored_data.get('cm_tags')
-            print(f"Loaded metadata: title='{self.title}', timestamp='{self.timestamp}'")
+            #print(f"Loaded metadata: title='{self.title}', timestamp='{self.timestamp}'")
         else:
             print("No metadata found in the database.")
 

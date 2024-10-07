@@ -34,7 +34,7 @@ def create_graph_for_object(object):
     object.data.node_data = objectGraph.node_data
     
     # Convert the graph to a dictionary
-    objectGraphDict = nx.to_dict_of_dicts(objectGraph.G)
+    objectGraphDict = objectGraph.to_dict()
     object.data.graph = objectGraphDict
     #print(f"object.data.graph: {object.data.graph}")
     #print(f"object.data.node_data: {object.data.node_data}")

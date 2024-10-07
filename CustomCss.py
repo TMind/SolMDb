@@ -1,6 +1,4 @@
-from IPython.display import display, HTML, Javascript
-
-from GlobalVariables import global_vars as gv
+from IPython.display import display, HTML
 
 # Function to inject CSS from a file
 def inject_css(css_file_path):

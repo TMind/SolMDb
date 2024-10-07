@@ -14,7 +14,7 @@ def create_graph_for_object(object):
     object.data.node_data = objectGraph.node_data
     
     # Convert the graph to a dictionary
-    objectGraphDict = nx.to_dict_of_dicts(objectGraph.G)
+    objectGraphDict = objectGraph.to_dict()
     object.data.graph = objectGraphDict
     
     return object
@@ -140,8 +140,8 @@ class DeckLibrary:
                     
                     # Update the deck data with the graph and node data
                     deck_data = deckObject.to_data()
-                    deck_data['graph'] = deckObject.data.graph
-                    deck_data['node_data'] = deckObject.data.node_data
+                    #deck_data['graph'] = deckObject.data.graph
+                    #deck_data['node_data'] = deckObject.data.node_data
 
                     # Collect the deck data for upserting
                     deckDataList.append(deck_data)

@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     handlers=[
                         logging.FileHandler("app.log"),
-                        logging.StreamHandler()
+                        #logging.StreamHandler()
                     ])
 
 class GlobalVariables:
@@ -60,6 +60,7 @@ class GlobalVariables:
         self.uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')        
         self.debug = os.getenv('DEBUG_MODE', 'False').lower() in ('true', '1', 't')
         self.sheet_url = os.getenv('SHEET_URL', 'https://docs.google.com/spreadsheets/d/1HFDXfrO4uE70-HyNAxdHuCVlt_ALjBK9f6tpveRudZY/edit')
+        self.rotate_suffix = rotate_suffix
         
         self.myDB = None
         self.fs = None 
@@ -730,7 +731,7 @@ GLOBAL_COLUMN_ORDER = [
     
     # Damage 
     'Destruction Others', 'Destruction Self','Good Destroyed', 'Destruction Synergy', 'Destruction Combo',
-    'Face Damage', 'Face Damage Synergy', 
+    'Face Damage', 'Face Damage Synergy', 'Face Damage Combo',
     'Self Damage Activator', 'Self Damage Payoff', 'Self Damage Combo',
     
     # Exalts / Spells
@@ -749,7 +750,8 @@ GLOBAL_COLUMN_ORDER = [
     'Free', 'Free Attack Buff', 'Free Healing Source', 'Free Mage', 'Free Spell', 'Free Replace', 'Free Self Damage', 'Free SelfDestruction', 'Free Upgrade',
     
     # Removal
-    'Face Burn', 'FB Creature', 'FB Creature Synergy', 'Disruption', 'Removal', 'Silence', 
+    'Face Burn', 'FB Creature', 'FB Creature Synergy', 'FB Creature Combo',
+    'Disruption', 'Removal', 'Silence', 
     
     # Keywords
     'Aggressive', 'Aggressive Giver',
@@ -758,7 +760,7 @@ GLOBAL_COLUMN_ORDER = [
     'Stealth', 'Stealth Giver',
     
     # Stats
-    'Increased A', 'Increased A Synergy',
+    'Increased A', 'Increased A Synergy', 'Increased A Combo',
     
     
     'Stat Buff', 'Attack Buff', 'Health Buff',

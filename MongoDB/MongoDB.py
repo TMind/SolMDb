@@ -66,9 +66,28 @@ class MongoDB:
         return collection.update_one(query, {'$set': update_data})
 
     def upsert_many(self, collection_name: str, data: list):
+        def check_keys(doc, path="root"):
+            if isinstance(doc, dict):
+                for key, value in doc.items():
+                    if not isinstance(key, str):
+                        print(f"Invalid key '{key}' found in path '{path}' in document with '_id': {doc.get('_id')}")
+                        return False
+                    if not check_keys(value, path + f".{key}"):
+                        return False
+            elif isinstance(doc, list):
+                for index, item in enumerate(doc):
+                    if not check_keys(item, path + f"[{index}]"):
+                        return False
+            return True
+        
         # Prepare bulk operations for upsert
         operations = []
         for doc in data:
+            # Validate document keys
+            if not check_keys(doc):
+                print("Skipping document due to invalid keys:", doc)
+                continue  # Skip invalid documents
+
             if '_id' in doc:
                 filter_query = {'_id': doc['_id']}
             else:

@@ -1,3 +1,4 @@
+import sys
 import os, time, re, json
 from tkinter import Label
 from turtle import update
@@ -50,7 +51,7 @@ except KeyError:
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
-synergy_template = SynergyTemplate()    
+#synergy_template = SynergyTemplate()    
 
 #Read Entities and Forgeborns from Files into Database
 deckCollection = None
@@ -70,6 +71,7 @@ qgrid_widget_options = {}
 data_generation_functions = {}
 
 central_frame_output = widgets.Output()
+graph_output = widgets.Output()
 
 # Manager Variables
 grid_manager = None 
@@ -218,6 +220,7 @@ def update_central_frame_tab(central_df):
     central_frame_output.clear_output()  # Clear existing content
     with central_frame_output:
         grid = qgrid.show_grid(central_df, grid_options={'forceFitColumns': False}, column_definitions=gv.all_column_definitions)  # Create a qgrid grid from the DataFrame
+        grid.add_class(gv.rotate_suffix)
         display(grid)  # Display the qgrid grid
     
     #print("Central DataFrame tab updated.")
@@ -292,9 +295,15 @@ def generate_central_dataframe(force_new=False):
     central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
     fusion_stats_df = generate_fusion_statistics_dataframe()
     central_df = merge_and_concat(central_df, fusion_stats_df)
-    central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo'])
     
+    # Generate the combo DataFrame and merge it with the central DataFrame
+    combo_df = generate_combo_dataframe()
+    central_df = merge_and_concat(central_df, combo_df)
+    
+    # Clean the columns of the central DataFrame
+    central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo'])
     central_df = central_df.copy()
+    
     #print("Resetting index of central dataframe...")
     central_df.reset_index(inplace=True, drop=False)
     central_df.rename(columns={'index': 'Name'}, inplace=True)
@@ -386,7 +395,7 @@ def generate_deck_content_dataframe(deckNames):
     card_dfs_list = []
 
     for deckName in deckNames:
-        print(f'DeckName: {deckName}')
+        #print(f'DeckName: {deckName}')
         #Get the Deck from the Database 
         deck = None 
         if gv.myDB:
@@ -496,8 +505,9 @@ def generate_cardType_count_dataframe():
         
         # Initialize the network graph
         myGraph = MyGraph()
-        myGraph.G = nx.from_dict_of_dicts(deck.get('graph', {}))
-        myGraph.node_data = deck.get('node_data', {})
+        myGraph.from_dict(deck.get('graph', {}))
+        #myGraph.G = nx.from_dict_of_dicts(deck.get('graph', {}))
+        #myGraph.node_data = deck.get('node_data', {})
         interface_ids = myGraph.get_length_interface_ids()
         
         # Prepare DataFrame for interface IDs
@@ -598,8 +608,9 @@ def generate_fusion_statistics_dataframe():
                 df_fusions_filtered.loc[fusion.name, 'Deck B'] = decks[1]        
 
             myGraph = MyGraph()
-            myGraph.G = nx.from_dict_of_dicts(fusion.graph)
-            myGraph.node_data = fusion.node_data
+            myGraph.from_dict(fusion.graph)
+            #myGraph.G = nx.from_dict_of_dicts(fusion.graph)
+            #myGraph.node_data = fusion.node_data
             interface_ids = myGraph.get_length_interface_ids()
             interface_ids_df = pd.DataFrame(interface_ids, index=[fusion.name])
             all_interface_ids_df_list.append(interface_ids_df)
@@ -641,6 +652,48 @@ def extract_forgeborn_ids_and_factions(my_decks, fusion_data):
             break  # Exit loop since we handled this case
 
     return forgeborn_ids, factions
+
+def generate_combo_dataframe(df = None):
+    # Get all decks and fusions from the database or from a given dataframe (optionally)
+    items = {'Deck': [], 'Fusion': []}
+    
+    if df is None:
+        if gv.myDB:
+            for item_type in items.keys():
+                items[item_type] = list(gv.myDB.find(item_type, {}))
+        else:
+            items = {'Deck': [], 'Fusion': []}
+        
+        df = pd.DataFrame(items['Deck'] + items['Fusion'])
+    
+    # For each deck, get the graph and node data
+    gv.update_progress(f'Combo Data ', 0, len(df), 'Generating Combo Data...')
+    for item_type in ['Deck', 'Fusion']:
+        get_combos(df, items[item_type]) 
+            
+    return df
+
+def get_combos(df, item_list):
+    for item in item_list:
+        gv.update_progress('Combo Data', message=f'Processing Item: {item["name"]}')
+        graph = item.get('graph', {})
+        myGraph = MyGraph()
+        myGraph.from_dict(graph)
+        # Get the combos from the synergy template
+        combos = myGraph.get_combos()
+        # Add the combos to the deck data
+        item['combos'] = combos    
+        
+        # Save the deck['combos'] to the database 
+        if gv.myDB:
+            gv.myDB.update_one('Deck', {'_id': item['_id']}, {'combos': combos})
+        
+        # Update the DataFrame with each combo of the combo list 
+        for combo in combos:
+            input_count, output_count = item['combos'][combo]
+            df.loc[item['name'], combo] = f'{input_count} <- {output_count}'
+        
+        
 
 
 def generate_deck_statistics_dataframe():
@@ -840,6 +893,9 @@ def reload_data_on_click(button, value):
         # Update and display sheet statistics
         update_sheet_stats()
         return
+    elif value == 'Find Combos':
+        combo_df = generate_combo_dataframe()
+        return combo_df
 
     load_deck_data(args)    
     # Refresh db_list widget
@@ -898,7 +954,48 @@ def display_graph_on_click(button):
                 myGraph.create_graph_children(deck)
                 net = visualize_network_graph(myGraph.G)
                 display(net.show(f'{deck.name}.html'))
-        
+
+import webbrowser
+def display_graph():
+    global selected_items_label
+    
+    selected_items_string = selected_items_label.value.split(':')
+    selected_items = selected_items_string[1].split(',')
+    
+     # Clear previous graph output
+    graph_output.clear_output()
+
+    # Ensure the 'html' subfolder exists
+    os.makedirs('html', exist_ok=True)
+    
+    with graph_output:
+        for item in selected_items:
+            deck = gv.myDB.find_one('Deck', {'name': item.strip()})
+            print(f"Finding Deck with name: {item.strip()}")
+            
+            if deck:
+                myGraph = MyGraph()
+                myGraph.from_dict(deck.get('graph', {}))
+                
+                # Create a NetworkX graph from the dictionary                
+                graph = myGraph.G
+                net = Network(notebook=True, directed=True, height='1500px', width='2000px', cdn_resources='in_line')    
+                net.from_nx(graph)
+                net.force_atlas_2based()
+                net.show_buttons(True)
+                                        
+                filename = f'html/{deck["name"]}.html'
+                net.show(filename)
+                
+                # Read HTML file content and display using IPython HTML
+                filepath = os.path.join(os.getcwd(), filename)
+                if os.path.exists(filepath):
+                    webbrowser.open(f'file://{filepath}')
+                    display(HTML(filename))
+                else:
+                    print(f"File {filename} not found.")
+            else:
+                print(f"No graph found for item: {item}")
 
 # def update_filter_widget(change=None):
 #     global cardTypes_names_widget
@@ -982,7 +1079,7 @@ def visualize_network_graph(graph, size=10):
     net.from_nx(graph)
     net.force_atlas_2based()
     net.show_buttons()
-    print('Displaying Graph!')
+    #print('Displaying Graph!')
     #display(net.show('graph.html'))
     return net
 
@@ -1190,7 +1287,29 @@ selected_items_label = widgets.Label(value='Selected Items: None')
 
 def setup_interface():
     global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab
-    global action_toolbar, selected_db_label, selected_items_label
+    global action_toolbar, selected_db_label, selected_items_label, graph_output
+    
+    # Function to update the action area with selected info
+    def update_action_area():
+        # Get selected DB info and selected items from the grid manager
+        if gv.myDB:
+            selected_db_info = gv.myDB.get_current_db_name()  # Assuming gv.myDB manages the current database
+        else:
+            selected_db_info = "None"
+        selected_items_info = grid_manager.get_selected_grid_items()  # This now returns a dictionary with lists of names
+
+        # Update the labels with new info
+        selected_db_label.value = f"Selected Database: {selected_db_info}"
+
+        if selected_items_info:
+            # Since selected_items_info is a dictionary of lists, we can flatten the lists and join the names
+            selected_names = [name for names_list in selected_items_info.values() for name in names_list]
+
+            # Update the label with the selected names
+            selected_items_label.value = f"Selected Items: {', '.join(selected_names) if selected_names else 'None'}"
+        else:
+            selected_items_label.value = "Selected Items: None"
+    
     
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
@@ -1199,11 +1318,11 @@ def setup_interface():
 
     # Button to create network graph
     button_graph = widgets.Button(description='Show Graph')
-    button_graph.on_click(lambda button: display_graph_on_click(button))
+    button_graph.on_click(lambda button: display_graph()) #display_graph_on_click(button))
 
     # Toggle buttons to select load items
     loadToggle = widgets.ToggleButtons(
-        options=['Load Decks/Fusions', 'Update Decks/Fusions', 'Create all Fusions', 'Generate Dataframe', 'Update CM Sheet'],
+        options=['Load Decks/Fusions', 'Update Decks/Fusions', 'Create all Fusions', 'Generate Dataframe', 'Find Combos', 'Update CM Sheet'],
         description='Action:',
         disabled=False,
         button_style='warning', # 'success', 'info', 'warning', 'danger' or ''
@@ -1224,7 +1343,10 @@ def setup_interface():
     debug_toggle = widgets.Checkbox(value=False, description='Debugging', disabled=False)    
     debug_toggle.observe(handle_debug_toggle, 'value')
     
-    data_generation_functions = {'central_dataframe' : generate_central_dataframe, 'deck_content' : generate_deck_content_dataframe}
+    data_generation_functions = {
+        'central_dataframe' : generate_central_dataframe, 
+        'deck_content' : generate_deck_content_dataframe,
+        'update_selection_area' : update_action_area,}
     
     # Create an instance of the manager
     grid_manager = DynamicGridManager(data_generation_functions, qg_options, gv.out_debug)
@@ -1378,12 +1500,12 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
     deck_tab = widgets.VBox([deck_helper, deck_accordion, deck_filter_bar, grid_manager.get_ui()])
     template_tab = widgets.VBox([template_helper, templateGrid.get_ui()])
-    fusions_tab = widgets.VBox([fusions_helper, *toggle_dropdown_pairs, button_graph])
+    graph_tab = widgets.VBox([fusions_helper, *toggle_dropdown_pairs, button_graph, graph_output])
     debug_tab = widgets.VBox([debug_helper, debug_toggle, gv.out_debug])
     central_frame_tab = widgets.VBox([central_frame_helper, central_frame_output])
 
     # Create the Tab widget with children
-    tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, fusions_tab, debug_tab, central_frame_tab])
+    tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, graph_tab, debug_tab, central_frame_tab])
     tab.set_title(0, 'Database')
     tab.set_title(1, 'Decks')
     tab.set_title(2, 'Templates')
@@ -1410,28 +1532,6 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
         else:
             print("No GridManager available")
 
-    # Assuming gv.myDB and grid_manager are initialized and available
-    # Function to update the action area with selected info
-    def update_action_area(change=None):
-        # Get selected DB info and selected items from the grid manager
-        if gv.myDB:
-            selected_db_info = gv.myDB.get_current_db_name()  # Assuming gv.myDB manages the current database
-        else:
-            selected_db_info = "None"
-        selected_items_info = grid_manager.get_selected_grid_items()  # This now returns a dictionary with lists of names
-
-        # Update the labels with new info
-        selected_db_label.value = f"Selected Database: {selected_db_info}"
-
-        if selected_items_info:
-            # Since selected_items_info is a dictionary of lists, we can flatten the lists and join the names
-            selected_names = [name for names_list in selected_items_info.values() for name in names_list]
-
-            # Update the label with the selected names
-            selected_items_label.value = f"Selected Items: {', '.join(selected_names) if selected_names else 'None'}"
-        else:
-            selected_items_label.value = "Selected Items: None"
-    
     # Function for making a solbind request
     def solbind_request(button):
         username = selected_db_label.value.split(': ')[1]  # Extract the username from the label

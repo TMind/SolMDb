@@ -952,6 +952,7 @@ class DynamicGridManager:
     def update_deck_content(self, event, widget):
         with self.out_debug:
             """Update the deck content DataFrame based on the selected item in the grid."""
+            print(f"DynamicGridManager::update_deck_content() - Updating deck content with event: {event}")
             selected_indices = event['new']
             grid_df = widget.get_changed_df()            
 
@@ -985,7 +986,7 @@ class DynamicGridManager:
                                 
                 # Generate the deck content DataFrame using the provided function
                 deck_content_df = self.data_generate_functions['deck_content'](selected_deck_names)
-                print(deck_content_df)
+                #print(deck_content_df)
 
                 # Copy original DataFrame to preserve column order
                 combined_df = deck_content_df.copy()                
@@ -999,6 +1000,7 @@ class DynamicGridManager:
 
                 # Update the UI
                 self.update_ui()
+                self.data_generate_functions['update_selection_area']()
             
     def update_ui(self):
         """Helper method to update the self.ui.children with the common layout."""

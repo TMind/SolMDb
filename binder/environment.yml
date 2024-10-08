@@ -34,6 +34,7 @@ dependencies:
   - requests  
   - gspread 
   - google-auth
+  - boto3
   - pip  
   - pip:  
     - pyvis # If pyvis is not available in conda channels  

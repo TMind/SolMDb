@@ -4,9 +4,18 @@ channels:
   - defaults  
 dependencies:  
   - python=3.11  
-  - ipywidgets=8.1.1  
+  - ipython=8.27.0
+  - ipykernel=6.29.5
+  - ipywidgets=8.1.2  
   - pandas=2.2.0  
-  - jupyterlab=4.1.0  
+  - jupyter_client=7.4.9
+  - jupyter_core=5.7.2
+  - jupyter_server=2.14.2
+  - jupyterlab=4.1.0    
+  - nbclient=0.10.0
+  - nbconvert=7.16.4
+  - nbformat=5.10.4
+  - notebook=6.5.7
   - jupyterhub
   - configurable-http-proxy
   - pandas-datareader  
@@ -31,8 +40,7 @@ dependencies:
     - jupyter-server-proxy # If jupyter-server-proxy is not available in conda channels  
     - google-auth
     - google-auth-oauthlib
-    - google-auth-httplib2
-    #- qgridnext==2.0.1 # If qgridnext is not available in conda channels  . It needs to be installed locally now
+    - google-auth-httplib2    
     - icecream # If icecrls -eam is not available in conda channels  
     - tzlocal
 

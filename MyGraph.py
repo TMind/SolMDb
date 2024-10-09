@@ -342,7 +342,7 @@ class MyGraph:
         :param graph_dict: A dictionary containing the data to restore the graph.
         """
         # Restore the edges with nx.from_dict_of_dicts
-        self.G = nx.from_dict_of_dicts(graph_dict['edges'], create_using=nx.DiGraph)
+        self.G = nx.from_dict_of_dicts(graph_dict['edges'], create_using=nx.MultiDiGraph)
         
         # Restore node attributes
         for node, attributes in graph_dict['nodes'].items():

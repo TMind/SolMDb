@@ -1342,7 +1342,7 @@ def setup_interface():
         description='Action:',
         disabled=False,
         button_style='warning', # 'success', 'info', 'warning', 'danger' or ''
-        tooltips=['Load Decks and Fusions from the website', 'Update Decks and Fusions in the database' 'Create Fusions from loaded decks', 'Get the latest version from Collection Manager'])
+        tooltips=['Load Decks and Fusions from the website', 'Update Decks and Fusions in the database', 'Create Fusions from loaded decks', 'Get the latest version from Collection Manager'])
 
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description='Execute', button_style='info', tooltip='Execute the selected action')

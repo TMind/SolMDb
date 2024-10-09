@@ -4,8 +4,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 class GoogleSheetsClient:
-    def __init__(self, service_account_file_path='~/soldb-gc-key.json'):
-        self.sheet_url = 'https://docs.google.com/spreadsheets/d/1HFDXfrO4uE70-HyNAxdHuCVlt_ALjBK9f6tpveRudZY/edit'
+    def __init__(self, service_account_file_path='~/soldb-gc-key.json'):        
+        self.sheet_url = 'https://docs.google.com/spreadsheets/d/17aYAWS5R1hg-8mxFEjQEcNlMZ9kocJhnDTjLU9anzw8/edit?usp=sharing'
         self.service_account_file_path = os.path.expanduser(service_account_file_path)
         self.drive_service = None
         self.credentials = None

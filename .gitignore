@@ -18,5 +18,5 @@ myenv/*
 source/*
 .eggs/*
 .idea/
-.ipynb_checkpoints/*
+binder/soldb-gc-key.json
 

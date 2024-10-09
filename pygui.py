@@ -293,15 +293,15 @@ def generate_central_dataframe(force_new=False):
     deck_stats_df = generate_deck_statistics_dataframe()
     card_type_counts_df = generate_cardType_count_dataframe()
 
+    # # Generate the combo DataFrame and merge it with the central DataFrame
+    # combo_df = generate_combo_dataframe(df=central_df)
+    # print_dataframe(combo_df, 'Combo DataFrame')
+    # central_df = merge_and_concat(central_df, combo_df)
+    # print_dataframe(central_df, 'Central DataFrame')
+
     central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
     fusion_stats_df = generate_fusion_statistics_dataframe()
     central_df = merge_and_concat(central_df, fusion_stats_df)
-    
-    # Generate the combo DataFrame and merge it with the central DataFrame
-    combo_df = generate_combo_dataframe()
-    print_dataframe(combo_df, 'Combo DataFrame')
-    central_df = merge_and_concat(central_df, combo_df)
-    print_dataframe(central_df, 'Central DataFrame')
     
     # Clean the columns of the central DataFrame
     central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo'])
@@ -508,9 +508,7 @@ def generate_cardType_count_dataframe():
         
         # Initialize the network graph
         myGraph = MyGraph()
-        myGraph.from_dict(deck.get('graph', {}))
-        #myGraph.G = nx.from_dict_of_dicts(deck.get('graph', {}))
-        #myGraph.node_data = deck.get('node_data', {})
+        myGraph.from_dict(deck.get('graph', {}))        
         interface_ids = myGraph.get_length_interface_ids()
         
         # Prepare DataFrame for interface IDs
@@ -523,6 +521,10 @@ def generate_cardType_count_dataframe():
             all_decks_list.append(combined_df)
         else:
             all_decks_list.append(interface_ids_df)
+        
+        # Generate combo data for the current deck  
+        combo_data = get_combos_for_graph(myGraph, deck['name'])  
+        combos_list.append(combo_data)  
 
     if all_decks_list:
         all_decks_df = pd.concat(all_decks_list)
@@ -531,7 +533,7 @@ def generate_cardType_count_dataframe():
         all_decks_df.sort_index(axis=1, inplace=True)
         numeric_df = all_decks_df.select_dtypes(include='number')
         numeric_df = numeric_df.fillna(0).astype(int)
-        #numeric_df = numeric_df.astype(str).replace('0', '')
+        
         # Ensure the column order
         numeric_df = enforce_column_order(numeric_df, GLOBAL_COLUMN_ORDER)
 
@@ -611,9 +613,7 @@ def generate_fusion_statistics_dataframe():
                 df_fusions_filtered.loc[fusion.name, 'Deck B'] = decks[1]        
 
             myGraph = MyGraph()
-            myGraph.from_dict(fusion.graph)
-            #myGraph.G = nx.from_dict_of_dicts(fusion.graph)
-            #myGraph.node_data = fusion.node_data
+            myGraph.from_dict(fusion.graph)            
             interface_ids = myGraph.get_length_interface_ids()
             interface_ids_df = pd.DataFrame(interface_ids, index=[fusion.name])
             all_interface_ids_df_list.append(interface_ids_df)
@@ -655,62 +655,70 @@ def extract_forgeborn_ids_and_factions(my_decks, fusion_data):
             break  # Exit loop since we handled this case
 
     return forgeborn_ids, factions
+def generate_combo_dataframe(df: pd.DataFrame=None) -> pd.DataFrame:
+    # If no DataFrame is provided, fetch Deck and Fusion names and graphs from the database  
+    if df is None:  
+        items = {'Deck': [], 'Fusion': []}  # Initialize dictionary to avoid KeyError  
+        if gv.myDB:  
+            for item_type in items.keys():  
+                # Fetch only the names and graph fields from the database  
+                items[item_type] = [  
+                    {'name': item['name'], 'graph': item.get('graph', {})}  
+                    for item in gv.myDB.find(item_type, {}, {'name': 1, 'graph': 1})  
+                ]              
 
-def generate_combo_dataframe(df=None):
-    # Initialize dictionary for storing items' names and graphs only
-    items = {'Deck': [], 'Fusion': []}
-
-    # If no DataFrame is provided, fetch Deck and Fusion names and graphs from the database
-    if df is None:
-        if gv.myDB:
-            for item_type in items.keys():
-                # Fetch only the names and graph fields from the database
-                items[item_type] = [
-                    {'name': item['name'], 'graph': item.get('graph', {})} 
-                    for item in gv.myDB.find(item_type, {}, {'name': 1, 'graph': 1})
-                ]
-        else:
-            items = {'Deck': [], 'Fusion': []}
-        
-        # Combine the Deck and Fusion lists, add a 'type' field for differentiation, and create DataFrame
-        data = [{'name': item['name'], 'graph': item['graph'], 'type': item_type}
-                for item_type, item_list in items.items() for item in item_list]
-        df = pd.DataFrame(data)
-
-    # For each deck and fusion, process the graph data to generate combos
-    gv.update_progress(f'Combo Data', 0, len(df), 'Generating Combo Data...')
-    for item_type in ['Deck', 'Fusion']:
-        item_names = df[df['type'] == item_type].to_dict(orient='records')
-        df = get_combos(df, item_names)
-
-    print_dataframe(df, 'Combo DataFrame')
-    return df
-
-def get_combos(df, item_list):
-    for item in item_list:
-        gv.update_progress('Combo Data', message=f'Processing Item: {item["name"]}')
-        graph = item.get('graph', {})
-        
-        # Initialize MyGraph with the graph data
+        # Combine the Deck and Fusion lists, add a 'type' field for differentiation, and create DataFrame  
+        data = [{'name': item['name'], 'graph': item['graph'], 'type': item_type}  
+                for item_type, item_list in items.items() for item in item_list]  
+        df = pd.DataFrame(data)  
+  
+    # Initialize an empty DataFrame for combos  
+    combos_list = []
+  
+    # For each deck and fusion, process the graph data to generate combos  
+    gv.update_progress(f'Combo Data', 0, len(df), 'Generating Combo Data...')  
+    print_dataframe(df, 'Input DataFrame')
+    for _, item in df.iterrows():  
+        # Process the current item and graph and get its combo data as a dictionary 
         myGraph = MyGraph()
-        myGraph.from_dict(graph)
+        myGraph.from_dict(item['graph'])
 
-        # Retrieve and process combos from the graph
-        combos = myGraph.get_combos()
-        
-        # Save combos in the database (example using 'Deck', adjust as needed)
-        if gv.myDB:
-            gv.myDB.update_one('Deck', {'name': item['name']}, {'combos': combos})
-        
-        # Update the DataFrame with the combos data
-        for combo, (input_count, output_count) in combos.items():
-            product = input_count * output_count
-            text = f'{product:>2} = {input_count:>2} * {output_count:>2}'
-            if output_count <= 0 : text = ''
-            if input_count <= 0 : text = f'{-input_count:>2}'
-            
-            df.loc[df['name'] == item['name'], combo] = text        
-    return clean_columns(df)        
+        combo_data = get_combos_for_graph(myGraph, item['name'])  
+        # Append the combo data to the combos_df DataFrame  
+        combos_list.append(combo_data)  
+  
+    combos_df = pd.DataFrame(combos_list)
+
+    # Merge the original df with the combos_df  
+    result_df = pd.merge(df, combos_df, on='name', how='left')  
+    result_df = clean_columns(result_df)
+
+    print_dataframe(result_df, 'Combo DataFrame')  
+    return result_df  
+
+def get_combos_for_graph(myGraph: MyGraph, name: str) -> dict:  
+    gv.update_progress('Combo Data', message=f'Processing Item: {name}')    
+      
+    # Retrieve and process combos from the graph  
+    combos = myGraph.get_combos()  
+    
+    # Save combos in the database (example using 'Deck', adjust as needed)  
+    #if gv.myDB:  
+    #    gv.myDB.update_one('Deck', {'name': name}, {'combos': combos})  
+    
+    # Prepare the combo data as a dictionary with the item's name  
+    combo_data = {'name': name}  
+    for combo_name, (input_count, output_count) in combos.items():  
+        product = input_count * output_count  
+        text = f'{product:>2} = {input_count:>2} * {output_count:>2}'  
+        if output_count <= 0:  
+            text = ''  
+        if input_count < 0:  
+            text = f'{-input_count:>2}'  
+        combo_data[combo_name] = text  
+    
+    return combo_data
+   
 
 def generate_deck_statistics_dataframe():
     def get_card_titles(card_ids):

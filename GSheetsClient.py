@@ -21,7 +21,7 @@ class GoogleSheetsClient:
             self.gc = build('sheets', 'v4', credentials=self.credentials)
             self.drive_service = build('drive', 'v3', credentials=self.credentials)
         else:
-            print(f"Service Account File does not exist!")
+            print(f"Service Account File '{self.service_account_file_path}' does not exist!")
             return
 
     def read_data_from_google_sheet(self, worksheet_name):

@@ -299,7 +299,9 @@ def generate_central_dataframe(force_new=False):
     
     # Generate the combo DataFrame and merge it with the central DataFrame
     combo_df = generate_combo_dataframe()
+    print_dataframe(combo_df, 'Combo DataFrame')
     central_df = merge_and_concat(central_df, combo_df)
+    print_dataframe(central_df, 'Central DataFrame')
     
     # Clean the columns of the central DataFrame
     central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo'])

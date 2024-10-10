@@ -446,7 +446,7 @@ class FilterGrid:
             'op2': [''],
             'Spell': [''],            
             'Forgeborn Ability': [''],
-            'Data Set': ['Deck Tags'],
+            'Data Set': ['Deck Combos'],
             'Active': [True],
         })
 

@@ -293,12 +293,6 @@ def generate_central_dataframe(force_new=False):
     deck_stats_df = generate_deck_statistics_dataframe()
     card_type_counts_df = generate_cardType_count_dataframe()
 
-    # # Generate the combo DataFrame and merge it with the central DataFrame
-    # combo_df = generate_combo_dataframe(df=central_df)
-    # print_dataframe(combo_df, 'Combo DataFrame')
-    # central_df = merge_and_concat(central_df, combo_df)
-    # print_dataframe(central_df, 'Central DataFrame')
-
     central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
     fusion_stats_df = generate_fusion_statistics_dataframe()
     central_df = merge_and_concat(central_df, fusion_stats_df)
@@ -313,11 +307,6 @@ def generate_central_dataframe(force_new=False):
     
     # After all DataFrame processing is done, enforce the global column order
     central_df = enforce_column_order(central_df, GLOBAL_COLUMN_ORDER)
-    
-    #Print the index of the central dataframe
-    #print(central_df.index)
-    #print_dataframe(central_df, 'Central DataFrame')
-    
     
     gv.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
     user_dataframes[username] = central_df
@@ -498,12 +487,12 @@ def generate_cardType_count_dataframe():
     total_decks = 0 
     if gv.myDB:
         deck_iterator = gv.myDB.find('Deck', {})
-        total_decks = gv.myDB.count_documents('Deck', {})
-    gv.update_progress(identifier, 0, total_decks, 'Generating CardType Count Data...')
+        deck_list = list(deck_iterator)
+    gv.update_progress(identifier, 0, len(deck_list), 'Generating CardType Count Data...')
     
     all_decks_list = []
     
-    for deck in deck_iterator:
+    for deck in deck_list:
         gv.update_progress(identifier, message=f'Processing Deck: {deck["name"]}')
         
         # Initialize the network graph
@@ -511,33 +500,50 @@ def generate_cardType_count_dataframe():
         myGraph.from_dict(deck.get('graph', {}))        
         interface_ids = myGraph.get_length_interface_ids()
         
-        # Prepare DataFrame for interface IDs
-        interface_ids_df = pd.DataFrame(interface_ids, index=[deck['name']])
-        
+        # Generate combo data for the current deck  
+        combo_data = get_combos_for_graph(myGraph, deck['name'])  
+
+        # Concatenate the interface IDs with the combo data
+        interface_ids = {**interface_ids, **combo_data}
+
+        # Prepare DataFrame for interface IDs (including combo data)
+        interface_ids_df = pd.DataFrame([interface_ids], index=[deck['name']])
+
         # Check if the deck has statistics; if not, append only interface_ids_df
         if 'stats' in deck and 'card_types' in deck['stats']:
             cardType_df = pd.DataFrame(deck['stats']['card_types'].get('Creature', {}), index=[deck['name']])
             combined_df = cardType_df.combine_first(interface_ids_df)
+
+            # Append the combined DataFrame
             all_decks_list.append(combined_df)
         else:
-            all_decks_list.append(interface_ids_df)
-        
-        # Generate combo data for the current deck  
-        combo_data = get_combos_for_graph(myGraph, deck['name'])  
-        combos_list.append(combo_data)  
+            # Append interface_ids_df directly if no card stats
+            all_decks_list.append(interface_ids_df)            
 
     if all_decks_list:
+        
+        # Step 1: Gather all possible columns from the single-row DataFrames
+        all_columns = set()
+        for df in all_decks_list:
+            all_columns.update(df.columns)
+            
+        # Step 2: Reindex each single-row DataFrame to have all columns
+        all_decks_list = [df.reindex(columns=all_columns, fill_value='') for df in all_decks_list]
+
+        # Step 3: Concatenate all DataFrames into a single DataFrame
+        all_decks_df = pd.concat(all_decks_list, axis=0, sort=False)
         all_decks_df = pd.concat(all_decks_list)
         if 'name' in all_decks_df.columns:
             all_decks_df.set_index('name', inplace=True)
         all_decks_df.sort_index(axis=1, inplace=True)
-        numeric_df = all_decks_df.select_dtypes(include='number')
-        numeric_df = numeric_df.fillna(0).astype(int)
+        #numeric_df = all_decks_df.select_dtypes(include='number')
+        #numeric_df = numeric_df.fillna(0).astype(int)
         
         # Ensure the column order
-        numeric_df = enforce_column_order(numeric_df, GLOBAL_COLUMN_ORDER)
+        all_decks_df = clean_columns(all_decks_df)
+        result_df = enforce_column_order(all_decks_df, GLOBAL_COLUMN_ORDER)
 
-        return numeric_df
+        return result_df
     else:
         print('No decks found in the database')
         return pd.DataFrame()
@@ -677,9 +683,10 @@ def generate_combo_dataframe(df: pd.DataFrame=None) -> pd.DataFrame:
   
     # For each deck and fusion, process the graph data to generate combos  
     gv.update_progress(f'Combo Data', 0, len(df), 'Generating Combo Data...')  
-    print_dataframe(df, 'Input DataFrame')
+    #print_dataframe(df, 'Input DataFrame')
     for _, item in df.iterrows():  
         # Process the current item and graph and get its combo data as a dictionary 
+        gv.update_progress('Combo Data', message=f'Generating Combo Data for {item["name"]}')  
         myGraph = MyGraph()
         myGraph.from_dict(item['graph'])
 
@@ -693,12 +700,10 @@ def generate_combo_dataframe(df: pd.DataFrame=None) -> pd.DataFrame:
     result_df = pd.merge(df, combos_df, on='name', how='left')  
     result_df = clean_columns(result_df)
 
-    print_dataframe(result_df, 'Combo DataFrame')  
+    #print_dataframe(result_df, 'Combo DataFrame')  
     return result_df  
 
 def get_combos_for_graph(myGraph: MyGraph, name: str) -> dict:  
-    gv.update_progress('Combo Data', message=f'Processing Item: {name}')    
-      
     # Retrieve and process combos from the graph  
     combos = myGraph.get_combos()  
     

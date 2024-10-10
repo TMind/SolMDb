@@ -77,17 +77,21 @@ class TemplateGrid:
             'Deck Stats': ['elo', 'level', 'xp', 'deckRank', 'deckScore'],
             'Fusion Stats' : ['CreatedAt', 'id' ],
             'Statistical Data': ['A1', 'H1', 'A2', 'H2', 'A3', 'H3'],
-            'CM Tags': cm_tags,
-            'Tags' : ['Beast', 'Dinosaur', 'Dragon', 'Elemental Type', 'Mage', 'Plant Type', 'Robot Type', 'Scientist', 'Spirit Type', 'Warrior', 'Zombie Type',
-                      'Spell', 'Exalts', 'Activate', 'Ready', 'Upgrade', 'Slay', 'Deploy', 'Reanimate', 'Destruction', 'Self Damage', 'Armor'],
-            'Creatures': ['Beast', 'Dinosaur', 'Dragon', 'Elemental Type', 'Mage', 'Plant Type', 'Robot Type', 'Scientist', 'Spirit Type', 'Warrior', 'Zombie Type'],
+            'CM Tags': cm_tags,            
+            'Creatures': ['Beast', 'Dinosaur', 'Dragon', 'Elemental', 'Mage', 'Plant', 'BanishRobot', 'Scientist', 'BanishSpirit', 'Warrior', 'Zombie'],
             'Spells': ['Spell', 'Exalts'], 
             'Free' : [ 'Free' ],    
             'De/Buffs' : ['Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Attack Debuff', 'Health Buff'],
             'Utility' : ['Activate', 'Ready', 'Upgrade', 'Slay', 'Deploy', 'Reanimate'],
             'Effects' : ['Removal', 'Silence', 'Face Burn' ],
-            'Damage' : ['Destruction', 'Self Damage' ],
+            'Damage' : ['Destruction Others', 'Destruction Self', 'Self Damage' ],            
             'Keywords' : ['Breakthrough', 'Breakthrough Giver', 'Aggressive', 'Aggressive Giver', 'Defender', 'Defender Giver', 'Stealth', 'Stealth Giver', 'Armor', 'Armor Giver'],
+            'Combos' : [
+                'BEAST Combo', 'DINOSAUR Combo', 'DRAGON Combo', 'ELEMENTAL Combo', 'MAGE Combo', 'PLANT Combo',
+                'ROBOT Combo', 'SCIENTIST Combo', 'SPIRIT Combo', 'BANISH SPIRIT', 'WARRIOR Combo', 'ZOMBIE Combo',
+                'MINION Combo', 'EXALT Combo', 'SPELL Combo', 'DEPLOY Combo', 'ARMOR Combo', 'ACTIVATE Combo',
+                'DESTRUCTION Combo', 'DESTROY Combo', 'HEALING Combo', 'MOVEMENT Combo','REPLACE Combo',
+                'READY Combo', 'REANIMATE Combo', 'SELFDAMAGE Combo','UPGRADE Combo' ],
             'Custom': ['White Fang', 'Last Winter', 'Spicy', 'Cool', 'Fun', 'Annoying']
         }
 

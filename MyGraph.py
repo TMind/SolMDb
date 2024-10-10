@@ -1,3 +1,6 @@
+from hmac import new
+import re
+import attr
 import networkx as nx
 import importlib
 
@@ -23,7 +26,7 @@ class MyGraph:
     graph_cache = {}  # Class-level cache to store graphs
     
     def __init__(self):
-        self.G = nx.MultiDiGraph()
+        self.G = nx.DiGraph()
         self.node_data =  { 'tags': {}}
 
     def add_node(self, child_object, **attributes):
@@ -36,26 +39,69 @@ class MyGraph:
     def add_edge(self, parent, child_object, **attributes):
         parent_id = self.get_node_id(parent)
         child_id = self.get_node_id(child_object)
-        
-        # Add the edge between parent and child
-        self.G.add_edge(parent_id, child_id, **attributes)
 
-        # Update incoming edge information for the child node
-        # If storing the number of incoming edges:
-        if 'parents' not in self.G.nodes[child_id]:
-            self.G.nodes[child_id]['parents'] = []
+        # Extract edge weights and types
+        weight_to_add = attributes.get('weight', 1)
+        edge_types = attributes.get('types', ['undirected'])
         
-        self.G.nodes[child_id]['parents'].append(parent_id)
+        # Check if the edge already exists
+        if self.G.has_edge(parent_id, child_id):
+            # Get current edge weights
+            input_weight = self.G[parent_id][child_id].get('input_weight', 0)
+            output_weight = self.G[parent_id][child_id].get('output_weight', 0)
+            current_weight = self.G[parent_id][child_id].get('weight', 1)
 
-        # Optionally, if storing the sum of weights from all incoming edges:
-        # current_weight = self.G.nodes[child_id].get('weight', 0)
-        # edge_weight = attributes.get('weight', 1)  # Assuming a default weight of 1 if not provided
-        # self.G.nodes[child_id]['weight'] = current_weight + edge_weight
+            # Update edge weights based on types
+            if 'I' in edge_types:
+                input_weight += weight_to_add
+            if 'O' in edge_types:
+                output_weight += weight_to_add
+            new_edge_weight = current_weight + weight_to_add
+
+            # Update the edge attributes
+            self.G[parent_id][child_id].update({
+                'input_weight': input_weight,
+                'output_weight': output_weight,
+                'weight': new_edge_weight
+            })
+
+            # Update child node weights
+            child_input_weight = self.G.nodes[child_id].get('input_weight', 0) + (weight_to_add if 'I' in edge_types else 0)
+            child_output_weight = self.G.nodes[child_id].get('output_weight', 0) + (weight_to_add if 'O' in edge_types else 0)
+            new_child_weight = self.G.nodes[child_id].get('weight', 1) + weight_to_add
+            total_weight = child_input_weight + child_output_weight
+            if total_weight != new_child_weight:
+                print(f"Total weight mismatch: {child_id} [{total_weight} != {new_child_weight}]")
+            self.set_weight(child_id, new_child_weight, child_input_weight, child_output_weight)
+
+        else:
+            # Add a new edge with weights
+            self.G.add_edge(parent_id, child_id, **attributes)
+
+            # Initialize or update child node weights
+            new_weight = self.G.nodes[child_id].get('weight', 0) + weight_to_add
+            input_weight = weight_to_add if 'I' in edge_types else 0
+            output_weight = weight_to_add if 'O' in edge_types else 0
+            self.set_weight(child_id, new_weight, input_weight, output_weight)
+
+        print(f"{parent_id} -{weight_to_add}-> {child_id} [{self.G.nodes[child_id]['weight']}]")
+            
+    def set_weight(self, node_id, weight, input_weight=0, output_weight=0):
+        self.G.nodes[node_id]['weight'] = weight
+        if input_weight is not None:
+            self.G.nodes[node_id]['input_weight'] = input_weight
+        if output_weight is not None:
+            self.G.nodes[node_id]['output_weight'] = output_weight
+        self.update_label(node_id)
+
+    def update_label(self, node_id):
+        weight_self = self.G.nodes[node_id].get('weight', 1)
+        input_weight = self.G.nodes[node_id].get('input_weight', 0)
+        output_weight = self.G.nodes[node_id].get('output_weight', 0)
+        self.G.nodes[node_id]['label'] = f"{node_id}[{weight_self}]"
+        if input_weight or output_weight:
+            self.G.nodes[node_id]['label'] += f"[{input_weight}:{output_weight}]"
         
-        # Store or update label directly with the number of parents or total weight
-        num_parents = len(self.G.nodes[child_id]['parents'])
-        self.G.nodes[child_id]['label'] = f"{child_id}[{num_parents}]"
-
     def get_node_id(self, node):
         for attr in ['name', 'tag', 'title']:
             node_id = getattr(node, attr, None)
@@ -66,22 +112,20 @@ class MyGraph:
     def set_node_attributes(self, node, **attributes):
         node_id = self.get_node_id(node)
         self.G.nodes[node_id].update(attributes)
-
-    def create_graph_children(self, db_object, parent_object=None, root=None):
-        # # Use a unique identifier for caching, for example, the name or ID
-        # object_id = self.get_node_id(db_object)
-        # if object_id in MyGraph.graph_cache:
-        #     # Load the graph from cache
-        #     self.G, self.node_data = MyGraph.graph_cache[object_id]
-        #     return
+    
+    def set_edge_attributes(self, source, target, **attributes):
+        if self.G.has_edge(source, target):
+            self.G[source][target].update(attributes)
+            
+    def get_node_attributes(self, node, attribute):
+        node_id = self.get_node_id(node)
+        return self.G.nodes[node_id].get(attribute, None)
         
+    def create_graph_children(self, db_object, parent_object=None, root=None):      
         root, parent_object = self._initialize_root_and_parent(db_object, parent_object, root)
         if db_object.children_data:
             for child_name, full_class_path in db_object.children_data.items():
-                self._process_child(root, db_object, parent_object, child_name, full_class_path)
-
-        # After graph is constructed, cache it
-        # MyGraph.graph_cache[object_id] = (self.G.copy(), dict(self.node_data))
+                self._process_child(root, db_object, parent_object, child_name, full_class_path)        
 
     def _initialize_root_and_parent(self, db_object, parent_object, root):
         if not root or not parent_object:
@@ -161,52 +205,16 @@ class MyGraph:
         # Load the Synergy child object
         child_object = cls.load(child_name)
 
-        # Count incoming edges for the synergy child node
-        child_id = self.get_node_id(child_object)
-        input_count, output_count = self.count_incoming_edge_types(child_id)
-
         # Define Synergy-specific attributes
         node_attributes = {
             'shape': 'diamond',
             'color': 'greenyellow',
             'label': self.get_node_id(child_object),
-            'node_type': 'Synergy',
-            'input_count': input_count,
-            'output_count': output_count
+            'node_type': 'Synergy'
         }
 
         # Use the centralized method to add the child node and its edge
         self._add_child_to_graph(root, db_object, parent_object=db_object, child_object=child_object, node_attributes=node_attributes)
-        
-        # Update the label with the input and output counts
-        self.G.nodes[child_id]['label'] += f"[{input_count}<-{output_count}]"
-
-
-    def count_incoming_edge_types(self, node_id):
-        """
-        Counts the number of incoming edges for a node, categorized by type 'I' (Input) and 'O' (Output).
-
-        Parameters:
-        - node_id (str): The ID of the node for which to count incoming edge types.
-
-        Returns:
-        - tuple: A tuple (input_count, output_count) representing the count of input and output edges.
-        """
-        input_count = 0
-        output_count = 0
-
-        # Iterate over all incoming edges to the node
-        for _, _, edge_data in self.G.in_edges(node_id, data=True):
-            # Check if the edge type includes 'I' for Input and 'O' for Output
-            edge_types = edge_data.get('types', [])
-            
-            # Count based on 'I' and 'O' type
-            if 'I' in edge_types:
-                input_count += 1
-            if 'O' in edge_types:
-                output_count += 1
-
-        return input_count, output_count
             
     def _get_color_based_on_child_type(self, child_type, child_object):
         """
@@ -257,19 +265,16 @@ class MyGraph:
         # Check for 'Interface' to 'Synergy' relationship and fetch the type from the Interface object
         if source_type == 'Interface' and target_type == 'Synergy':
             edge_types = source_object.types
-            #self._fetch_edge_type_from_interface(source_object)
-
 
         # Prepare edge attributes with determined edge type
         edge_arguments = {
+            'weight': 1,
             'types': edge_types,
             'smooth': {'type': 'diagonalCross'} if source_type in ['Fusion', 'Deck', 'Forgeborn'] else {'smooth': False}
         }
 
-        if source_type not in ['Deck', 'Forgeborn']:
+        if source_type not in ['Deck', 'Forgeborn']:            
             root.add_edge(source_object, target_object, **edge_arguments)
-
-#        self._add_parent_to_child(root, source_object, target_object)
 
     def _get_source_and_target_objects(self, db_object, parent_object, child_object):
         source_object = db_object
@@ -288,32 +293,6 @@ class MyGraph:
     def get_length_interface_ids(self):
         return {interface_id: self.node_data['tags'][interface_id]
                 for interface_id in self.node_data['tags']}
-
-    def get_combos(self):
-        """
-        Collects the number of input and output synergies for every synergy node in the graph,
-        distinguishing them by the edge types 'I' for input and 'O' for output.
-        
-        :return: A dictionary with nodes as keys and a tuple (input_synergies, output_synergies) as values.
-        """
-        synergy_counts = {}
-
-        # Iterate through each node in the graph
-        for node in self.G.nodes:
-            node_data = self.G.nodes[node]
-
-            # Check if the node is a synergy node by its `node_type`
-            if node_data.get('node_type') == 'Synergy':
-                input_synergies = node_data.get('input_count', 0)
-                output_synergies = node_data.get('output_count', 0)
-
-                # Store the counts in the dictionary
-                if input_synergies == 0 or output_synergies == 0:
-                    input_synergies = -input_synergies
-                    output_synergies = -output_synergies
-                synergy_counts[node] = (input_synergies, output_synergies)
-
-        return synergy_counts
 
     def to_dict(self):
         """
@@ -342,7 +321,7 @@ class MyGraph:
         :param graph_dict: A dictionary containing the data to restore the graph.
         """
         # Restore the edges with nx.from_dict_of_dicts
-        self.G = nx.from_dict_of_dicts(graph_dict['edges'], create_using=nx.MultiDiGraph)
+        self.G = nx.from_dict_of_dicts(graph_dict['edges'], create_using=nx.DiGraph)
         
         # Restore node attributes
         for node, attributes in graph_dict['nodes'].items():

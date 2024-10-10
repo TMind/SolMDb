@@ -188,9 +188,9 @@ class Card(DatabaseObject):
                 entities_data.append(modifier_entity_data['name'])
             if card_entity_data:
                 #print(f"Card Entity Data found : {card_entity_data['name']}")
-                entities_data.append(card_entity_data['name'])
-                
-            return entities_data
+                entities_data.append(card_entity_data['name'])                
+                return entities_data
+            
         # If no entities found, return card_title
         return [card_name]
 

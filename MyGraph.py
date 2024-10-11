@@ -28,6 +28,7 @@ class MyGraph:
     def __init__(self):
         self.G = nx.DiGraph()
         self.node_data =  { 'tags': {}}
+        self.combo_data = {}
 
     def add_node(self, child_object, **attributes):
         node_id = self.get_node_id(child_object)
@@ -101,6 +102,7 @@ class MyGraph:
         self.G.nodes[node_id]['label'] = f"{node_id}[{weight_self}]"
         if input_weight or output_weight:
             self.G.nodes[node_id]['label'] += f"[{input_weight}:{output_weight}]"
+            self.combo_data[node_id] = (input_weight , output_weight)
         
     def get_node_id(self, node):
         for attr in ['name', 'tag', 'title']:
@@ -294,6 +296,32 @@ class MyGraph:
         return {interface_id: self.node_data['tags'][interface_id]
                 for interface_id in self.node_data['tags']}
 
+    def get_combos(self):
+        """
+        Collects the number of input and output synergies for every synergy node in the graph,
+        distinguishing them by the edge types 'I' for input and 'O' for output.
+        
+        :return: A dictionary with nodes as keys and a tuple (input_synergies, output_synergies) as values.
+        """
+        if not self.combo_data: 
+                
+            # Iterate through each node in the graph
+            for node in self.G.nodes:
+                node_data = self.G.nodes[node]
+        
+                # Check if the node is a synergy node by its `node_type`
+                if node_data.get('node_type') == 'Synergy':
+                    input_synergies = node_data.get('input_weight', 0)
+                    output_synergies = node_data.get('output_weight', 0)
+        
+                    # Store the counts in the dictionary
+                    if input_synergies == 0 or output_synergies == 0:
+                        input_synergies = -input_synergies
+                        output_synergies = -output_synergies
+                    self.combo_data[node] = (input_synergies, output_synergies)
+        
+        return self.combo_data
+        
     def to_dict(self):
         """
         Converts the entire graph, including node and edge attributes, into a dictionary.
@@ -303,7 +331,8 @@ class MyGraph:
         graph_dict = {
             'nodes': {node: self.G.nodes[node] for node in self.G.nodes},
             'edges': nx.to_dict_of_dicts(self.G),
-            'node_data': self.node_data  # Include additional node data, if needed
+            'node_data': self.node_data,  
+            'combo_data' : self.combo_data
         }
         
         # Convert edges, changing integer keys to strings
@@ -332,4 +361,5 @@ class MyGraph:
 
         # Restore additional node data
         self.node_data = graph_dict.get('node_data', {'tags': {}})
+        self.combo_data = graph_dict.get('combo_data', {})
     

@@ -593,7 +593,7 @@ def generate_fusion_statistics_dataframe():
         df_fusions['forgebornId'] = df_fusions['currentForgebornId']
         df_fusions['type'] = 'Fusion'  
 
-        additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'node_data', 'tags']
+        additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'tags']
         df_fusions_filtered = df_fusions[additional_fields].copy()
         
         df_fusions_filtered.set_index('name', inplace=True)
@@ -704,16 +704,9 @@ def generate_combo_dataframe(df: pd.DataFrame=None) -> pd.DataFrame:
     return result_df  
 
 def get_combos_for_graph(myGraph: MyGraph, name: str) -> dict:  
-    # Retrieve and process combos from the graph  
-    combos = myGraph.get_combos()  
-    
-    # Save combos in the database (example using 'Deck', adjust as needed)  
-    #if gv.myDB:  
-    #    gv.myDB.update_one('Deck', {'name': name}, {'combos': combos})  
-    
     # Prepare the combo data as a dictionary with the item's name  
     combo_data = {'name': name}  
-    for combo_name, (input_count, output_count) in combos.items():  
+    for combo_name, (input_count, output_count) in myGraph.combo_data.items():  
         product = input_count * output_count  
         text = f'{product:>2} = {input_count:>2} * {output_count:>2}'  
         if output_count <= 0:  
@@ -738,7 +731,7 @@ def generate_deck_statistics_dataframe():
 
     df_decks = pd.DataFrame(decks)
     df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
-    df_decks_filtered = df_decks[['name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph', 'node_data']].copy()
+    df_decks_filtered = df_decks[['name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph']].copy()
     df_decks_filtered['type'] = 'Deck'
     # Replace non-numeric values with NaN, then convert to int
     df_decks_filtered['cardSetNo'] = pd.to_numeric(df_decks_filtered['cardSetNo'], errors='coerce').fillna(0).astype(int)

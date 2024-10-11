@@ -1,5 +1,6 @@
 import requests
 import json
+from GlobalVariables import global_vars as gv
 
 AUTHENTICATION_TOKEN = 'eyJraWQiOiJtRW5iWXZvODY1dXNYOE15XC9GYXF5cWNkN1R1SjVxVlllZGJrUktaTVMyaz0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI3NzQ4ODhkMC01NDllLTRhNWQtOWE0NC05MmJmZjdmMjgxZWEiLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV9qVkpKWmxSS3YiLCJjdXN0b206aXNKdWRnZSI6ImZhbHNlIiwiY3VzdG9tOmFjY291bnRUYWdzIjoiW10iLCJhdmF0YXJJZCI6IkF2YXRhcl8zaWUxeWhpOWw0ZDlpZnYwIiwiY3VzdG9tOnN0b3JlVXNlciI6ImZhbHNlIiwiY3VzdG9tOmlzT3JnYW5pemVyIjoidHJ1ZSIsImF1dGhfdGltZSI6MTcyNTU2MzQ4NSwiZXhwIjoxNzI3NTIwNjUyLCJpYXQiOjE3Mjc1MTcwNTMsImp0aSI6ImVlMzk4NGZlLTE4M2ItNGM0Yi04M2QyLTYzMTE4Y2JkMWIxYiIsImVtYWlsIjoic3RlZmFuMjU4MUBnbWFpbC5jb20iLCJjdXN0b206YW1iYXNzYWRvclBvaW50cyI6IjAiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXZhdGFyVXJsIjoiaHR0cHM6XC9cL3Nmd21lZGlhMTE0NTMtbWFpbi5zMy51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvcHVibGljXC9zdGVlbC1yb3NldHRhLWNyb3BwZWQucG5nIiwiY29nbml0bzp1c2VybmFtZSI6InRtaW5kIiwiY3VzdG9tOnN1YnNjcmliZXIiOiJmYWxzZSIsImdpdmVuX25hbWUiOiJTdGVmYW4iLCJjdXN0b206dXNlcklkIjoiMlVESFZUV0w2VyIsIm9yaWdpbl9qdGkiOiI5MjIzZmVmMC03MGRjLTQyMDktODYxNC01OWI3OGM5ZDk4YjMiLCJhdmF0YXJOYW1lIjoiU3RlZWwgUm9zZXR0YSIsImF1ZCI6Ijc1bWNyN2o4cmVsZWFkMDBwaWExZGJzZTljIiwiZXZlbnRfaWQiOiIxM2M5OWVlNS01Y2E3LTRiZmMtOGNlNi1mMDI5MGRlYzExNDQiLCJ0b2tlbl91c2UiOiJpZCIsImN1c3RvbTphbGxvd19tYXJrZXRpbmciOiJ0cnVlIiwiZmFtaWx5X25hbWUiOiJSIn0.nPZG1Z6ASLz2jlmpo573U2GiIvbKQg3MoIdLm3f1XjVykR0_VTsd6sJPz8KifV5aiDQQtOQueg_ZyJ8HfDQc4UUEX938ERa8Y5Hf8A_AzOryBas2kqFG0rp-CxG7XGz17GTDXMAYH0d3QZjNaYB0S8T0pCH_Yl-71QPri3uTS8RztuXOHAw_Kr0og2i8hNjujooNENgUyvnqOEeTwJT8S86O9QiRd4wBygF3SaVJS5_qMzQpkL48t85QvaavjC5r52da_SNPag0fMwn-Iw_EC6TSndGijF5XlqeIG0ywtt6fegalAB_xxY8bwDPipztXBy19Rdrn35CFNKQCb6vT5w'
 
@@ -40,6 +41,7 @@ class NetApi:
             last_evaluated_key = page_data.get('LastEvaluatedKey', {})
 
             # Paginate if LastEvaluatedKey is present
+            gv.update_progress('Fetching decks')
             while last_evaluated_key and last_evaluated_key.get('PK') and last_evaluated_key.get('SK'):
                 params.update({
                     "exclusiveStartKeyPK": last_evaluated_key['PK'],
@@ -53,7 +55,7 @@ class NetApi:
 
                 # Check if there is another page to fetch
                 last_evaluated_key = page_data.get('LastEvaluatedKey', {})
-
+                gv.update_progress('Fetching decks', len(page_data.get('Items', [])), len(all_decks), "Paginate")
             return all_decks
 
         except requests.exceptions.RequestException as e:

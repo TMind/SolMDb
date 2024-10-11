@@ -23,7 +23,7 @@ def get_class_from_path(full_class_path):
 
 class MyGraph:
     
-    graph_cache = {}  # Class-level cache to store graphs
+    object_cache = {} # Cache for objects to avoid loading them multiple times    
     
     def __init__(self):
         self.G = nx.DiGraph()
@@ -146,7 +146,7 @@ class MyGraph:
         if not cls or not child_type:
             return
 
-        #print(f"Child Name = {child_name}[{child_type}]")
+        #print(f"Child Name = {child_name}[{child_type}]")        
 
         if child_type == 'Interface':
             self._process_interface_child(root, db_object, parent_object, child_name, full_class_path)
@@ -155,8 +155,9 @@ class MyGraph:
         elif child_type == 'Forgeborn':
             self._process_forgeborn_child(root, db_object, parent_object, child_name, full_class_path)                     
         else:
-            ftype = 'name'  if child_type == 'Entity' else '_id'
-            child_object = cls.lookup(child_name, type=ftype)
+            ftype = 'name'  if child_type == 'Entity' else '_id'            
+            child_object = self.get_cached_child_object(full_class_path, child_name)                
+            
             #print(f"Child Object = {child_object}")
             if child_object:
                 node_attributes = {
@@ -172,7 +173,7 @@ class MyGraph:
         if not cls or not child_type:
             return
 
-        forgeborn_object = cls.load(forgebornId)
+        forgeborn_object = self.get_cached_child_object(full_class_path, forgebornId)
         forgeborn_object.get_permutation(forgebornId)
         node_attributes = {
                 'color': self._get_color_based_on_child_type(child_type, forgeborn_object),
@@ -192,8 +193,7 @@ class MyGraph:
         self.node_data['tags'].setdefault(child_name, 0)
         self.node_data['tags'][child_name] += 1
         
-        #child_object = cls.load(child_name)
-        child_object = cls.lookup(child_name)
+        child_object = self.get_cached_child_object(full_class_path, child_name)        
         if child_object:
             #print(f"Interface Child Object = {child_object}")
             node_attributes = {
@@ -205,7 +205,7 @@ class MyGraph:
         
     def _process_synergy_child(self, root, db_object, cls, child_name):
         # Load the Synergy child object
-        child_object = cls.load(child_name)
+        child_object = self.get_cached_child_object(cls, child_name, method='lookup')
 
         # Define Synergy-specific attributes
         node_attributes = {
@@ -217,7 +217,26 @@ class MyGraph:
 
         # Use the centralized method to add the child node and its edge
         self._add_child_to_graph(root, db_object, parent_object=db_object, child_object=child_object, node_attributes=node_attributes)
-            
+
+    def get_cached_child_object(self, class_path, child_name, method='load'):                  
+        cls, child_type = get_class_from_path(class_path)
+        cache_key = (class_path, child_name)  
+        
+        if cache_key in self.object_cache:  
+            return self.object_cache[cache_key]  
+        
+        if method == 'lookup':  
+            child_object = cls.lookup(child_name)  
+        elif method == 'load':  
+            child_object = cls.load(child_name)  
+        else:  
+            raise ValueError(f"Unsupported method: {method}")  
+        
+        self.object_cache[cache_key] = child_object  
+        return child_object  
+
+    
+
     def _get_color_based_on_child_type(self, child_type, child_object):
         """
         Returns the color based on the child type.
@@ -304,7 +323,8 @@ class MyGraph:
         :return: A dictionary with nodes as keys and a tuple (input_synergies, output_synergies) as values.
         """
         if not self.combo_data: 
-                
+            
+            print("No combo_data found. Calculating...")
             # Iterate through each node in the graph
             for node in self.G.nodes:
                 node_data = self.G.nodes[node]

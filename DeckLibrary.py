@@ -12,6 +12,7 @@ def create_graph_for_object(object):
     objectGraph = MyGraph()
     objectGraph.create_graph_children(object)
     object.data.node_data = objectGraph.node_data
+    object.data.combo_data = objectGraph.combo_data
     
     # Convert the graph to a dictionary
     objectGraphDict = objectGraph.to_dict()
@@ -93,7 +94,9 @@ class DeckLibrary:
             
             buffer_manager = BufferManager(os.getenv('MONGODB_URI', None))
             with buffer_manager: 
+                gv.update_progress('DeckLibrary Decks', 0, len(decks_data), 'Saving Online Decks')
                 for deckData in decks_data:
+                    gv.update_progress('DeckLibrary Decks', message=f"Saving Deck {deckData['name']}")
                     deckName = deckData['name'] 
                     # Save only new decks
                     if deckName not in deckNamesDatabase:                         
@@ -107,7 +110,10 @@ class DeckLibrary:
                         deck_objects.append(new_deck)
                         
                         # Save all cards that are not already in the database
-                        for index, card in new_deck.cards.items():
+                        gv.update_progress('DeckLibrary Cards', total= len(new_deck.cards.items()), message=f"Saving Cards for Deck {deckData['name']}")
+                        for index, card in new_deck.cards.items():                            
+                            card_name = card['name'] if 'name' in card else card['title']                            
+                            gv.update_progress('DeckLibrary Cards', message=f"Saving Card {card_name}")
                             id = new_deck.cardIds[int(index)-1]    
                             if card['rarity'] == 'Solbind':
                                 # Add Solbind Cards to the database as well
@@ -134,7 +140,9 @@ class DeckLibrary:
                     self.dbmgr.upsert_many('Card', cardDataList)
 
                 # Prepare all deck data for upsert in a single operation
+                gv.update_progress('DeckLibrary Graphs', 0, len(deck_objects), 'Creating Graphs for Decks')
                 for deckObject in deck_objects:
+                    gv.update_progress('DeckLibrary Graphs', message=f"Creating Graph for Deck {deckObject.name}")
                     # Now create the graph since the cards are in the database
                     create_graph_for_object(deckObject)
                     
@@ -166,7 +174,7 @@ class DeckLibrary:
 
                 return forgeborn_ids, factions
 
-            gv.update_progress('DeckLibrary', 0, len(fusions_data), 'Saving Online Fusions')            
+            gv.update_progress('DeckLibrary Fusions', 0, len(fusions_data), 'Saving Online Fusions')            
             for fusion_data in fusions_data:
                 decks = fusion_data['myDecks']                      
                 forgebornIds, factions = extract_fb_ids_and_factions(decks, fusion_data)
@@ -181,7 +189,7 @@ class DeckLibrary:
                 # Save the fusion to the database
                 fusionObject.save()           
                 self.online_fusions.append(fusion_data)                
-                gv.update_progress('DeckLibrary', message=f"Saved Fusion {fusionObject.name}")
+                gv.update_progress('DeckLibrary Fusions', message=f"Saved Fusion {fusionObject.name}")
         
         # In creation mode we create fusions for all decks
 

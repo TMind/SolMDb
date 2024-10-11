@@ -32,6 +32,7 @@ def create_graph_for_object(object):
     objectGraph = MyGraph()
     objectGraph.create_graph_children(object)
     object.data.node_data = objectGraph.node_data
+    object.data.combo_data = objectGraph.combo_data
     
     # Convert the graph to a dictionary
     objectGraphDict = objectGraph.to_dict()

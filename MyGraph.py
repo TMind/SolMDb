@@ -294,6 +294,32 @@ class MyGraph:
         return {interface_id: self.node_data['tags'][interface_id]
                 for interface_id in self.node_data['tags']}
 
+    def get_combos(self):
+        """
+        Collects the number of input and output synergies for every synergy node in the graph,
+        distinguishing them by the edge types 'I' for input and 'O' for output.
+        
+        :return: A dictionary with nodes as keys and a tuple (input_synergies, output_synergies) as values.
+        """
+        synergy_counts = {}
+
+        # Iterate through each node in the graph
+        for node in self.G.nodes:
+            node_data = self.G.nodes[node]
+
+            # Check if the node is a synergy node by its `node_type`
+            if node_data.get('node_type') == 'Synergy':
+                input_synergies = node_data.get('input_count', 0)
+                output_synergies = node_data.get('output_count', 0)
+
+                # Store the counts in the dictionary
+                if input_synergies == 0 or output_synergies == 0:
+                    input_synergies = -input_synergies
+                    output_synergies = -output_synergies
+                synergy_counts[node] = (input_synergies, output_synergies)
+
+        return synergy_counts
+    
     def to_dict(self):
         """
         Converts the entire graph, including node and edge attributes, into a dictionary.

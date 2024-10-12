@@ -229,10 +229,35 @@ class DatabaseObject:
             return asdict(self.data)        
         
     @classmethod
+    def get_instance(cls, name, field='_id', collection_name=None):
+        """
+        Retrieves an instance from the database based on the identifier type.
+        
+        Args:
+            name (str): The identifier for the object to be retrieved.
+            type (str): The type of identifier ('_id' for ID-based lookup or 'name' for name-based lookup). 
+                        Default is '_id'.
+            collection_name (str, optional): The name of the collection. Default is the class name.
+        
+        Returns:
+            instance or None: The retrieved instance, or None if not found.
+        """
+        db_manager = cls._get_class_db_manager()
+        collection_name = collection_name or cls.__name__
+        data = db_manager.find_one(collection_name, {field : name})
+
+        if data:
+            return cls.from_data(data)
+        else:
+            dbname = db_manager.get_current_db_name()
+            print(f"{cls.__name__} with {field} = {name} not found in the database {dbname}.")
+            return None
+        
+    @classmethod
     def lookup(cls, name, type='_id', collection_name=None):
         db_manager = cls._get_class_db_manager()
         collection_name = collection_name or cls.__name__
-        data = db_manager.find_one(collection_name, {type: name})
+        data = db_manager.find_one(collection_name, {type : name})
         
         if data:    return cls.from_data(data)
         else:       

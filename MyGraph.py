@@ -45,46 +45,45 @@ class MyGraph:
         weight_to_add = attributes.get('weight', 1)
         edge_types = attributes.get('types', ['undirected'])
         
+        # Check if the child node exists
+        edge_exists = self.G.has_edge(parent_id, child_id)
+                
         # Check if the edge already exists
-        if self.G.has_edge(parent_id, child_id):
+        if edge_exists:
             # Get current edge weights
             input_weight = self.G[parent_id][child_id].get('input_weight', 0)
             output_weight = self.G[parent_id][child_id].get('output_weight', 0)
-            current_weight = self.G[parent_id][child_id].get('weight', 1)
+            weight = self.G[parent_id][child_id].get('weight', 1)
 
             # Update edge weights based on types
             if 'I' in edge_types:
                 input_weight += weight_to_add
+                weight       += weight_to_add
             if 'O' in edge_types:
                 output_weight += weight_to_add
-            new_edge_weight = current_weight + weight_to_add
-
+                weight        += weight_to_add
+            
             # Update the edge attributes
-            self.G[parent_id][child_id].update({
-                'input_weight': input_weight,
-                'output_weight': output_weight,
-                'weight': new_edge_weight
-            })
-
-            # Update child node weights
-            child_input_weight = self.G.nodes[child_id].get('input_weight', 0) + (weight_to_add if 'I' in edge_types else 0)
-            child_output_weight = self.G.nodes[child_id].get('output_weight', 0) + (weight_to_add if 'O' in edge_types else 0)
-            new_child_weight = self.G.nodes[child_id].get('weight', 1) + weight_to_add
-            total_weight = child_input_weight + child_output_weight
-            if total_weight != new_child_weight:
-                print(f"Total weight mismatch: {child_id} [{total_weight} != {new_child_weight}]")
-            self.set_weight(child_id, new_child_weight, child_input_weight, child_output_weight)
-
+            attributes['weight'] = weight
+            attributes['input_weight'] = input_weight
+            attributes['output_weight'] = output_weight            
+            self.G[parent_id][child_id].update(attributes)
+                                
         else:
             # Add a new edge with weights
             self.G.add_edge(parent_id, child_id, **attributes)
 
-            # Initialize or update child node weights
-            new_weight = self.G.nodes[child_id].get('weight', 0) + weight_to_add
-            input_weight = weight_to_add if 'I' in edge_types else 0
-            output_weight = weight_to_add if 'O' in edge_types else 0
-            self.set_weight(child_id, new_weight, input_weight, output_weight)
+        # Get current child node weights
+        weight = self.G.nodes[child_id].get('weight', 0)
+        input_weight = self.G.nodes[child_id].get('input_weight', 0)
+        output_weight = self.G.nodes[child_id].get('output_weight', 0)
 
+        # Initialize or update child node weights
+        weight += weight_to_add
+        input_weight  += weight_to_add if 'I' in edge_types else 0
+        output_weight += weight_to_add if 'O' in edge_types else 0
+        
+        self.set_weight(child_id, weight, input_weight, output_weight)
         print(f"{parent_id} -{weight_to_add}-> {child_id} [{self.G.nodes[child_id]['weight']}]")
             
     def set_weight(self, node_id, weight, input_weight=0, output_weight=0):
@@ -151,12 +150,12 @@ class MyGraph:
         if child_type == 'Interface':
             self._process_interface_child(root, db_object, parent_object, child_name, full_class_path)
         elif child_type == 'Synergy':
-            self._process_synergy_child(root, db_object, cls, child_name)
+            self._process_synergy_child(root, db_object, full_class_path, child_name)
         elif child_type == 'Forgeborn':
             self._process_forgeborn_child(root, db_object, parent_object, child_name, full_class_path)                     
         else:
             ftype = 'name'  if child_type == 'Entity' else '_id'            
-            child_object = self.get_cached_child_object(full_class_path, child_name)                
+            child_object = self.get_cached_child_object(full_class_path, child_name, field=ftype)                
             
             #print(f"Child Object = {child_object}")
             if child_object:
@@ -166,6 +165,8 @@ class MyGraph:
                 }
                 self._add_child_to_graph(root, db_object, parent_object, child_object, node_attributes)
                 self.create_graph_children(child_object, parent_object=db_object, root=root)
+            else:
+                print(f"process_child: Child Object not found: {child_name}")
 
     def _process_forgeborn_child(self, root, db_object, parent_object, child_name, full_class_path):
         forgebornId = child_name[5:-3]
@@ -173,7 +174,10 @@ class MyGraph:
         if not cls or not child_type:
             return
 
-        forgeborn_object = self.get_cached_child_object(full_class_path, forgebornId)
+        forgeborn_object = self.get_cached_child_object(full_class_path, forgebornId, field='name')
+        if not forgeborn_object:
+            print(f"process_forgeborn: Child Object not found: {child_name}")
+            return
         forgeborn_object.get_permutation(forgebornId)
         node_attributes = {
                 'color': self._get_color_based_on_child_type(child_type, forgeborn_object),
@@ -202,10 +206,16 @@ class MyGraph:
             }
             self._add_child_to_graph(root, db_object, parent_object, child_object, node_attributes)
             self.create_graph_children(child_object, parent_object=db_object, root=root)
+        else:
+            print(f"Child Object not found: {child_name}")
         
-    def _process_synergy_child(self, root, db_object, cls, child_name):
+    def _process_synergy_child(self, root, db_object, class_path, child_name):
         # Load the Synergy child object
-        child_object = self.get_cached_child_object(cls, child_name, method='lookup')
+        child_object = self.get_cached_child_object(class_path, child_name, field='name')
+
+        if child_object is None:
+            print(f"process_synergy: Child Object not found: {child_name}")
+            return
 
         # Define Synergy-specific attributes
         node_attributes = {
@@ -217,23 +227,19 @@ class MyGraph:
 
         # Use the centralized method to add the child node and its edge
         self._add_child_to_graph(root, db_object, parent_object=db_object, child_object=child_object, node_attributes=node_attributes)
-
-    def get_cached_child_object(self, class_path, child_name, method='load'):                  
-        cls, child_type = get_class_from_path(class_path)
-        cache_key = (class_path, child_name)  
         
-        if cache_key in self.object_cache:  
-            return self.object_cache[cache_key]  
+    def get_cached_child_object(self, class_path_or_cls, child_name, field='_id'):
+        cls, _ = get_class_from_path(class_path_or_cls)
+        cache_key = (class_path_or_cls, child_name)  
+            
+        # Check cache for existing object
+        if cache_key in self.object_cache:
+            return self.object_cache[cache_key]
         
-        if method == 'lookup':  
-            child_object = cls.lookup(child_name)  
-        elif method == 'load':  
-            child_object = cls.load(child_name)  
-        else:  
-            raise ValueError(f"Unsupported method: {method}")  
-        
-        self.object_cache[cache_key] = child_object  
-        return child_object  
+        # Fetch and cache the child object using the determined class
+        child_object = cls.get_instance(child_name, field=field)
+        self.object_cache[cache_key] = child_object
+        return child_object
 
     
 
@@ -294,7 +300,7 @@ class MyGraph:
             'smooth': {'type': 'diagonalCross'} if source_type in ['Fusion', 'Deck', 'Forgeborn'] else {'smooth': False}
         }
 
-        if source_type not in ['Deck', 'Forgeborn']:            
+        if source_type not in ['Deck']:            
             root.add_edge(source_object, target_object, **edge_arguments)
 
     def _get_source_and_target_objects(self, db_object, parent_object, child_object):

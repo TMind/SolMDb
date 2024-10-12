@@ -598,13 +598,6 @@ def generate_fusion_statistics_dataframe():
         
         df_fusions_filtered.set_index('name', inplace=True)
         
-        #df_fusions_filtered[['Deck A', 'Deck B']] = df_fusions.apply(lambda x: pd.Series(get_items_from_child_data(x.children_data, 'CardLibrary.Deck')[:2]), axis=1)
-        # Assign values to 'Deck A' and 'Deck B' using .loc
-        # df_fusions_filtered.loc[:, ['Deck A', 'Deck B']] = df_fusions.apply(
-        #     lambda x: pd.Series(get_items_from_child_data(x.children_data, 'CardLibrary.Deck')[:2]),
-        #     axis=1
-        # )
-        
         gv.update_progress('Fusion Stats', 0, len(df_fusions), 'Generating Fusion Dataframe...')
         interface_ids_total_df = pd.DataFrame()
         all_interface_ids_df_list = []
@@ -621,6 +614,11 @@ def generate_fusion_statistics_dataframe():
             myGraph = MyGraph()
             myGraph.from_dict(fusion.graph)            
             interface_ids = myGraph.get_length_interface_ids()
+            
+            # Generate combos directly for this fusion
+            combo_data = get_combos_for_graph(myGraph, fusion.name)
+            interface_ids = {**interface_ids, **combo_data}         
+            
             interface_ids_df = pd.DataFrame(interface_ids, index=[fusion.name])
             all_interface_ids_df_list.append(interface_ids_df)
 
@@ -633,7 +631,6 @@ def generate_fusion_statistics_dataframe():
         
         # Ensure the column order
         df_fusions_filtered = enforce_column_order(df_fusions_filtered, GLOBAL_COLUMN_ORDER)
-
 
         return df_fusions_filtered
     else:
@@ -991,14 +988,23 @@ def display_graph():
     os.makedirs('html', exist_ok=True)
     
     with graph_output:
-        for item in selected_items:
-            deck = gv.myDB.find_one('Deck', {'name': item.strip()})
-            print(f"Finding Deck with name: {item.strip()}")
-            
-            if deck:
+        name = ''
+        graph = {}
+        for item in selected_items:            
+            for item_type in ['Deck', 'Fusion']:
+                print(f"Searching {item_type} with name: {item.strip()}")
+                item_cursor = gv.myDB.find_one(item_type, {'name': item.strip()})
+                if item_cursor:                    
+                    name = item_cursor.get('name', '')
+                    graph = item_cursor.get('graph', {})                    
+                    break
+                else:
+                    print(f"No {item_type} found with name: {item.strip()}")
+                                                
+            if graph:
                 myGraph = MyGraph()
-                myGraph.from_dict(deck.get('graph', {}))
-                
+                myGraph.from_dict(graph)
+                            
                 # Create a NetworkX graph from the dictionary                
                 graph = myGraph.G
                 net = Network(notebook=True, directed=True, height='1500px', width='2000px', cdn_resources='in_line')    
@@ -1006,7 +1012,7 @@ def display_graph():
                 net.force_atlas_2based()
                 net.show_buttons(True)
                                         
-                filename = f'html/{deck["name"]}.html'
+                filename = f'html/{name}.html'
                 net.show(filename)
                 
                 # Read HTML file content and display using IPython HTML

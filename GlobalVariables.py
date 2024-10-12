@@ -679,20 +679,20 @@ GLOBAL_COLUMN_ORDER = [
     
     # Creatures
     'Abomination', 
-    'Beast', 'Beast Synergy', 'BEAST Combo', 
-    'Dinosaur', 'Dinosaur Synergy', 'DINOSAUR Combo', 
-    'Dragon', 'Dragon Synergy', 'DRAGON Combo', 
-    'Elemental', 'Elemental Type', 'ELEMENTAL Synergy', 'Elemental Combo', 
-    'Mage', 'Mage Synergy', 'MAGE Combo',
-    'Ooze',
-    'Plant', 'Plant Synergy', 'BanishPlant', 'PLANT Combo',
-    'Robot', 'BanishRobot', 'BanishRobot Synergy', 'Robot Synergy' 'ROBOT Combo',
-    'Scientist', 'Scientist Synergy', 'SCIENTIST Combo',
-    'Spirit', 'Spirit Synergy', 'SPIRIT Combo',
-    'BanishSpirit', 'BanishSpirit Synergy', 'BANISH SPIRIT Combo',
-    'Vampire',
-    'Warrior', 'Warrior Synergy', 'WARRIOR Combo',
-    'Zombie', 'Zombie Synergy', 'Zombie Type', 'ZOMBIE Combo',
+    'Beast'         ,'Beast Synergy'        ,'BEAST Combo'                                                                  , 
+    'Dinosaur'      ,'Dinosaur Synergy'     ,'DINOSAUR Combo'                                                               ,             
+    'Dragon'        ,'Dragon Synergy'       ,'DRAGON Combo'                                                                 ,             
+    'Elemental'     ,'Elemental Type'       ,'ELEMENTAL Synergy', 'Elemental Combo'                                         , 
+    'Mage'          ,'Mage Synergy'         ,'MAGE Combo'                                                                   ,          
+    'Ooze'                                                                                                                  ,     
+    'Plant'         ,'Plant Synergy'        ,'BanishPlant'      ,'PLANT Combo'                                              ,     
+    'Robot'         ,'BanishRobot'          ,'BanishRobot Synergy'                  ,'Robot Synergy'    ,'ROBOT Combo'      ,
+    'Scientist'     ,'Scientist Synergy'    ,'SCIENTIST Combo'                                                              ,     
+    'Spirit'        ,'Spirit Synergy'       ,'SPIRIT Combo'                                                                 ,       
+    'BanishSpirit'  ,'BanishSpirit Synergy' ,'BANISH SPIRIT Combo'                                                          ,     
+    'Vampire'                                                                                                               ,                                                                    
+    'Warrior'       ,'Warrior Synergy'      ,'WARRIOR Combo'                                                                ,      
+    'Zombie'        ,'Zombie Synergy'       ,'Zombie Type'      ,'ZOMBIE Combo'                                             ,                
     
     # Minion
     'Minion', 'Minion Synergy', 'MINION Combo',
@@ -703,13 +703,13 @@ GLOBAL_COLUMN_ORDER = [
     'Deploy', 'DEPLOY Combo',
     
     # Damage 
-    'Destruction Self', 'Destruction Synergy', 'DESTRUCTION Combo',
-    'Destruction Others', 'Good Destroyed', 'DESTROY Combo',
-    'Self Damage Activator', 'Self Damage Payoff', 'SELFDAMAGE Combo',
+    'Destruction Self'      ,'Destruction Synergy'      ,'DESTRUCTION Combo'        ,
+    'Destruction Others'    ,'Good Destroyed'           ,'DESTROY Combo'            ,
+    'Self Damage Activator' ,'Self Damage Payoff'       ,'SELFDAMAGE Combo'         ,
     
     # Exalts / Spells
-    'Exalts', 'Exalt Synergy', 'EXALT Combo', 'Exalt Counter',
-    'Spell', 'Spell Synergy', 'SPELL Combo', 
+    'Exalts'                ,'Exalt Synergy'            ,'EXALT Combo'              , 'Exalt Counter',
+    'Spell'                 ,'Spell Synergy'            ,'SPELL Combo'              , 
     
     # Utility
     'Armor', 'Armor Giver', 'Armor Synergy', 'ARMOR Combo',     

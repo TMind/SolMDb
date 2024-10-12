@@ -301,12 +301,26 @@ def generate_central_dataframe(force_new=False):
     central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo'])
     central_df = central_df.copy()
     
-    #print("Resetting index of central dataframe...")
+    # Reset the index and add the index as a column named 'Name'
     central_df.reset_index(inplace=True, drop=False)
-    central_df.rename(columns={'index': 'Name'}, inplace=True)
-    
-    # After all DataFrame processing is done, enforce the global column order
+
+    # Check if renaming to 'Name' is needed
+    if 'index' in central_df.columns:
+        central_df.rename(columns={'index': 'Name'}, inplace=True)
+
+    # If the actual names are in the column 'name', replace 'Name' with those values
+    if 'name' in central_df.columns:
+        central_df['Name'] = central_df['name']
+
+    # Drop the original 'name' column if not needed
+    central_df.drop(columns=['name'], inplace=True)
+
+    # Ensure the final DataFrame is correctly ordered
     central_df = enforce_column_order(central_df, GLOBAL_COLUMN_ORDER)
+
+    # Check if renaming was successful
+    if 'Name' not in central_df.columns:
+        raise RuntimeError("The renaming of the index column to 'Name' failed.")
     
     gv.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
     user_dataframes[username] = central_df

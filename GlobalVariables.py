@@ -190,6 +190,15 @@ class GlobalVariables:
             progress_bar.bar_style = 'success'
             progress_bar.style.bar_color = 'lightgreen'
             label.value = f"{message} -> Finished!"
+            
+    def reset_progress(self, identifier):
+        container = self.get_or_create_progress_container(identifier)
+        progress_bar = container['progress_bar']
+        label = container['label']
+        progress_bar.value = 0
+        progress_bar.bar_style = 'info'
+        progress_bar.style.bar_color = 'lightblue'
+        label.value = ''
 
 # Global variables 
 
@@ -397,7 +406,7 @@ non_rotated_column_defs = {
 
 data_selection_sets = {
   "Deck Stats": {
-    "Name": True, "type": 'Deck',
+    "Name": True, "name": True, "type": 'Deck',
     "registeredDate": True, "UpdatedAt": True, "pExpiry": True,
     "level": True,  "xp": True, "elo": True, "deckScore": True, "deckRank": True,
     "cardSetNo": True,  "faction": True,
@@ -580,7 +589,7 @@ data_selection_sets = {
     "Annoying": True
   },
   "Deck Combos": {
-    "Name": True, "type": 'Deck',
+    "Name": True, "name": True, "type": 'Deck',
     "cardSetNo": True,  "faction": True,
     "forgebornId": True, "Betrayers": True, "SolBinds": True,
     'BEAST Combo':      True,

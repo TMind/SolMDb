@@ -84,7 +84,7 @@ class MyGraph:
         output_weight += weight_to_add if 'O' in edge_types else 0
         
         self.set_weight(child_id, weight, input_weight, output_weight)
-        print(f"{parent_id} -{weight_to_add}-> {child_id} [{self.G.nodes[child_id]['weight']}]")
+        #print(f"{parent_id} -{weight_to_add}-> {child_id} [{self.G.nodes[child_id]['weight']}]")
             
     def set_weight(self, node_id, weight, input_weight=0, output_weight=0):
         self.G.nodes[node_id]['weight'] = weight

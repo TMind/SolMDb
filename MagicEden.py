@@ -1,6 +1,7 @@
 import requests, re, json
 from NetApi import NetApi  
 from soldb import parse_arguments
+from GlobalVariables import global_vars as gv
 
 def get_collection_listings(collection_symbol):
     """
@@ -87,7 +88,10 @@ def process_magiceden_listings(listings, myApi, args):
     net_data = []
 
     if listings:
-        for idx, listing in enumerate(listings, start=1):
+        identifier = "Processing listing"
+        gv.reset_progress(identifier)
+        gv.update_progress(identifier, 0, len(listings))
+        for idx, listing in enumerate(listings, start=1):            
             token = listing.get('token', {})
             attributes = token.get('attributes', [])
             deck_link = None
@@ -103,7 +107,8 @@ def process_magiceden_listings(listings, myApi, args):
                 match = re.search(r'\/([^\/]+)$', deck_link)
                 if match:
                     deck_id = match.group(1)
-                    print(f"Fetching deck data for ID: {deck_id}")
+                    gv.update_progress("Processing listing", message=f"Fetching deck data for ID: {deck_id}")
+                    #print(f"Fetching deck data for ID: {deck_id}")
                     
                     # Fetch the deck data using myApi.request_decks
                     deck_data = myApi.request_decks(

@@ -248,6 +248,11 @@ def enforce_column_order(df, column_order):
     # Ensure the order of columns matches column_order, including only those present in df.columns
     existing_columns = [col for col in column_order if col in df.columns]
     
+    # Find columns in df that are not in column_order
+    extra_columns = [col for col in df.columns if col not in column_order]
+    if extra_columns:
+        print(f"Columns in DataFrame that are not in column_order: {extra_columns}")
+    
     # Reindex the DataFrame with the valid columns in the specified order
     df_reindexed = df.reindex(columns=existing_columns)
     
@@ -291,36 +296,39 @@ def generate_central_dataframe(force_new=False):
 
     gv.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
     deck_stats_df = generate_deck_statistics_dataframe()
+    validate_dataframe_attributes(deck_stats_df, 'Deck Stats', expected_index_name=None, disallow_columns=['name'])
+
     card_type_counts_df = generate_cardType_count_dataframe()
+    validate_dataframe_attributes(card_type_counts_df, 'Card Type Counts', expected_index_name=None, disallow_columns=['name'])
 
     central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
+    validate_dataframe_attributes(central_df, 'Central DF after merging Card Type Counts', expected_index_name=None, disallow_columns=['name'])
+
     fusion_stats_df = generate_fusion_statistics_dataframe()
+    validate_dataframe_attributes(fusion_stats_df, 'Fusion Stats', expected_index_name=None, disallow_columns=['name'])
+
     central_df = merge_and_concat(central_df, fusion_stats_df)
-    
+    validate_dataframe_attributes(central_df, 'Central DF after merging Fusion Stats', expected_index_name=None, disallow_columns=['name'])
+
     # Clean the columns of the central DataFrame
     central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo'])
     central_df = central_df.copy()
-    
-    # Reset the index and add the index as a column named 'Name'
-    central_df.reset_index(inplace=True, drop=False)
+    validate_dataframe_attributes(central_df, 'Central DF after cleaning', expected_index_name=None, disallow_columns=['name'])
 
-    # Check if renaming to 'Name' is needed
-    if 'index' in central_df.columns:
-        central_df.rename(columns={'index': 'Name'}, inplace=True)
-
-    # If the actual names are in the column 'name', replace 'Name' with those values
-    if 'name' in central_df.columns:
-        central_df['Name'] = central_df['name']
-
-    # Drop the original 'name' column if not needed
-    central_df.drop(columns=['name'], inplace=True)
-
-    # Ensure the final DataFrame is correctly ordered
-    central_df = enforce_column_order(central_df, GLOBAL_COLUMN_ORDER)
+    # Reset the index and create a new column named 'name' from the original index
+    central_df.reset_index(inplace=True)
+    central_df.rename(columns={'name': 'Name'}, inplace=True)
+    validate_dataframe_attributes(central_df, 'Central DF after resetting index' ,expected_index_name=None, disallow_columns=[])
 
     # Check if renaming was successful
     if 'Name' not in central_df.columns:
         raise RuntimeError("The renaming of the index column to 'Name' failed.")
+
+    print("Central DataFrame After Resetting Index and Renaming:")
+    print("Columns:", central_df.columns)
+    
+    # After all DataFrame processing is done, enforce the global column order
+    central_df = enforce_column_order(central_df, GLOBAL_COLUMN_ORDER)
     
     gv.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
     user_dataframes[username] = central_df
@@ -526,6 +534,12 @@ def generate_cardType_count_dataframe():
         # Check if the deck has statistics; if not, append only interface_ids_df
         if 'stats' in deck and 'card_types' in deck['stats']:
             cardType_df = pd.DataFrame(deck['stats']['card_types'].get('Creature', {}), index=[deck['name']])
+            
+            # Ensure indices are consistent before merging
+            if not cardType_df.index.equals(interface_ids_df.index):
+                cardType_df = cardType_df.reindex(interface_ids_df.index)
+            
+            # Combine both DataFrames, prioritizing cardType_df values where present
             combined_df = cardType_df.combine_first(interface_ids_df)
 
             # Append the combined DataFrame
@@ -535,7 +549,6 @@ def generate_cardType_count_dataframe():
             all_decks_list.append(interface_ids_df)            
 
     if all_decks_list:
-        
         # Step 1: Gather all possible columns from the single-row DataFrames
         all_columns = set()
         for df in all_decks_list:
@@ -546,15 +559,18 @@ def generate_cardType_count_dataframe():
 
         # Step 3: Concatenate all DataFrames into a single DataFrame
         all_decks_df = pd.concat(all_decks_list, axis=0, sort=False)
-        all_decks_df = pd.concat(all_decks_list)
+
+        # If the 'name' column is present in columns, set it as index
         if 'name' in all_decks_df.columns:
             all_decks_df.set_index('name', inplace=True)
-        all_decks_df.sort_index(axis=1, inplace=True)
-        #numeric_df = all_decks_df.select_dtypes(include='number')
-        #numeric_df = numeric_df.fillna(0).astype(int)
         
-        # Ensure the column order
+        # Sort columns for consistency
+        all_decks_df.sort_index(axis=1, inplace=True)
+
+        # Clean numeric columns (convert NaNs to empty strings, etc.)
         all_decks_df = clean_columns(all_decks_df)
+
+        # Enforce global column order
         result_df = enforce_column_order(all_decks_df, GLOBAL_COLUMN_ORDER)
 
         return result_df
@@ -584,16 +600,13 @@ def generate_fusion_statistics_dataframe():
         all_card_titles = {name: fetch_deck_titles([name]).get(name, []) for name in deck_names}
         gv.update_progress('Fusion Card Titles', message='Fetching Card Titles')
         return ', '.join(sorted(sum(all_card_titles.values(), [])))
-    
-    def get_items_from_child_data(children_data, item_type):
-        # Children data is a dictionary that contains the deck names as keys, where the value is the object type CardLibrary.Deck 
-        item_names = []
-        for name, data_type in children_data.items():
-            if data_type == item_type:
-                item_names.append(name)
 
+    def get_items_from_child_data(children_data, item_type):
+        # Children data is a dictionary that contains the deck names as keys, where the value is the object type CardLibrary.Deck
+        item_names = [name for name, data_type in children_data.items() if data_type == item_type]
         return item_names
 
+    # Fetch fusions from the database
     fusion_cursor = []
     if gv.myDB:
         fusion_cursor = gv.myDB.find('Fusion', {})
@@ -601,56 +614,84 @@ def generate_fusion_statistics_dataframe():
 
     # If fusions are found, process them
     if not df_fusions.empty:
-
         gv.update_progress('Fusion Card Titles', 0, len(df_fusions), 'Fetching Card Titles')
+
+        # Extract necessary columns and add additional calculated columns
         df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)
         df_fusions['forgebornId'] = df_fusions['currentForgebornId']
-        df_fusions['type'] = 'Fusion'  
+        df_fusions['type'] = 'Fusion'
 
-        additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'tags']
+        # Select only relevant fields for analysis
+        additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'children_data', 'tags']
         df_fusions_filtered = df_fusions[additional_fields].copy()
-        
-        df_fusions_filtered.set_index('name', inplace=True)
-        
+
+        # Set 'name' as the index and drop the original 'name' column
+        if 'name' in df_fusions_filtered.columns:
+            df_fusions_filtered.set_index('name', drop=True, inplace=True)
+            # Check if the 'name' column is still in the  dataframe
+            if 'name' in df_fusions_filtered.columns:
+                print("Column name still present in the DataFrame.")
+                df_fusions_filtered.drop('name', axis=1, inplace=True)                
+            else:
+                print("OK: 'name' column not found in the dataframe.")                 
+            
+        # Track the current state of the index
+        #print("Fusion DataFrame Index before processing:")
+        #print(df_fusions_filtered.index)
+
         gv.update_progress('Fusion Stats', 0, len(df_fusions), 'Generating Fusion Dataframe...')
-        interface_ids_total_df = pd.DataFrame()
         all_interface_ids_df_list = []
 
-        for fusion in df_fusions.itertuples():
-            process_deck_forgeborn(fusion.name, fusion.forgebornId, getattr(fusion, 'ForgebornIds', []), df_fusions_filtered)
-            gv.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion.name}")
+        for fusion_name, fusion_row in df_fusions_filtered.iterrows():
+                    
+            #print(f"Fusion Index = {fusion_name}")
+            
+            # Process the forgeborn data for each fusion
+            process_deck_forgeborn(fusion_name, fusion_row['forgebornId'], getattr(fusion_row, 'ForgebornIds', []), df_fusions_filtered)
+            gv.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion_name}")
 
-            decks = get_items_from_child_data(fusion.children_data, 'CardLibrary.Deck')              
+            # Extract decks from children data
+            decks = get_items_from_child_data(fusion_row['children_data'], 'CardLibrary.Deck')
             if len(decks) > 1:
-                df_fusions_filtered.loc[fusion.name, 'Deck A'] = decks[0]
-                df_fusions_filtered.loc[fusion.name, 'Deck B'] = decks[1]        
+                df_fusions_filtered.loc[fusion_name, 'Deck A'] = decks[0]
+                df_fusions_filtered.loc[fusion_name, 'Deck B'] = decks[1]
 
+            # Generate graph data for the current fusion
             myGraph = MyGraph()
-            myGraph.from_dict(fusion.graph)            
+            myGraph.from_dict(fusion_row['graph'])
             interface_ids = myGraph.get_length_interface_ids()
-            
-            # Generate combos directly for this fusion
-            combo_data = get_combos_for_graph(myGraph, fusion.name)
-            interface_ids = {**interface_ids, **combo_data}         
-            
-            interface_ids_df = pd.DataFrame(interface_ids, index=[fusion.name])
+
+            # Generate combo data directly for this fusion
+            combo_data = get_combos_for_graph(myGraph, fusion_name)
+            interface_ids = {**interface_ids, **combo_data}
+
+            # Prepare DataFrame for interface IDs
+            interface_ids_df = pd.DataFrame([interface_ids])
+            #interface_ids_df.set_index('name', inplace=True)            
+                
             all_interface_ids_df_list.append(interface_ids_df)
 
-        interface_ids_total_df = pd.concat(all_interface_ids_df_list)
-        interface_ids_total_df = clean_columns(interface_ids_total_df)
+        # Concatenate all the interface ID DataFrames
+        if all_interface_ids_df_list:            
+            interface_ids_total_df = pd.concat(all_interface_ids_df_list)
+            interface_ids_total_df.set_index('name', inplace=True, drop=True)
+            interface_ids_total_df = clean_columns(interface_ids_total_df)
 
-        #print_dataframe(interface_ids_total_df, 'Interface IDs Total DF')
-        df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)
-        #print_dataframe(df_fusions_filtered, 'Fusion Stats DF')
-        
-        # Ensure the column order
+            # Track the current state of the index for debugging
+            #print("Interface IDs Total DataFrame Index:")
+            #print(interface_ids_total_df.index)
+
+            # Concatenate the fusion DataFrame with the interface IDs DataFrame
+            df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)
+
+        # Ensure the column order is correct
         df_fusions_filtered = enforce_column_order(df_fusions_filtered, GLOBAL_COLUMN_ORDER)
 
         return df_fusions_filtered
     else:
         print('No fusions found in the database')
         return pd.DataFrame()
-
+    
 def extract_forgeborn_ids_and_factions(my_decks, fusion_data):
     forgeborn_ids = []
     factions = []
@@ -825,6 +866,48 @@ def generate_deck_statistics_dataframe():
 
     return df_decks_filtered
 
+def validate_dataframe_attributes(df, identifier=None, expected_index_name=None, disallow_columns=None):
+    """
+    Validate the attributes of a DataFrame.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame to validate.
+    - identifier (str, optional): An identifier for the DataFrame being checked.
+    - expected_index_name (str, optional): The expected name of the index.
+    - disallow_columns (list, optional): A list of column names that should not be present in the DataFrame.
+
+    Returns:
+    - dict: A dictionary containing validation results.
+    """
+    validation_results = {
+        'index_name_correct': True,
+        'unwanted_columns_present': False,
+        'unwanted_columns': [],
+        'messages': []
+    }
+    
+    # Check if the index name matches the expected index name
+    if expected_index_name is not None:
+        if df.index.name != expected_index_name:
+            validation_results['index_name_correct'] = False
+            validation_results['messages'].append(f"[{identifier}] Index name '{df.index.name}' does not match the expected name '{expected_index_name}'.")
+
+    # Check for unwanted columns
+    if disallow_columns is not None:
+        for col in disallow_columns:
+            if col in df.columns:
+                validation_results['unwanted_columns_present'] = True
+                validation_results['unwanted_columns'].append(col)
+                validation_results['messages'].append(f"[{identifier}] Column '{col}' should not be present in the DataFrame.")
+
+    # Print summary of validation results
+    if validation_results['messages']:
+        for message in validation_results['messages']:
+            print(message)
+    else:
+        print(f"[{identifier}] DataFrame validation passed.")
+
+    return validation_results
 
 ##################
 # Event Handling #

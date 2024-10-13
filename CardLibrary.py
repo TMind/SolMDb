@@ -63,7 +63,7 @@ class Forgeborn(DatabaseObject):
         new_forgeborn.data.id = forgeborn_id
         new_forgeborn.abilities = {aid: self.abilities[aid] for aid in ability_ids if aid in self.abilities}
         
-        new_forgeborn.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in new_forgeborn.abilities}
+        new_forgeborn.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in new_forgeborn.abilities.values()}
         
         return new_forgeborn
 

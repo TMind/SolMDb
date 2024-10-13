@@ -169,22 +169,23 @@ class MyGraph:
                 print(f"process_child: Child Object not found: {child_name}")
 
     def _process_forgeborn_child(self, root, db_object, parent_object, child_name, full_class_path):
-        forgebornId = child_name[5:-3]
+        forgebornId = child_name
+        forgebornName = child_name[5:-3]
         cls, child_type = get_class_from_path(full_class_path)
         if not cls or not child_type:
             return
 
-        forgeborn_object = self.get_cached_child_object(full_class_path, forgebornId, field='name')
+        forgeborn_object = self.get_cached_child_object(full_class_path, forgebornName, field='name')
         if not forgeborn_object:
             print(f"process_forgeborn: Child Object not found: {child_name}")
             return
-        forgeborn_object.get_permutation(forgebornId)
+        forgeborn_with_abilities_object = forgeborn_object.get_permutation(forgebornId)
         node_attributes = {
-                'color': self._get_color_based_on_child_type(child_type, forgeborn_object),
+                'color': self._get_color_based_on_child_type(child_type, forgeborn_with_abilities_object),
                 'node_type': child_type,
             }
-        self._add_child_to_graph(root, db_object, parent_object, forgeborn_object, node_attributes)
-        self.create_graph_children(forgeborn_object, db_object, root)
+        self._add_child_to_graph(root, db_object, parent_object, forgeborn_with_abilities_object, node_attributes)
+        self.create_graph_children(forgeborn_with_abilities_object, db_object, root)
 
     def _process_interface_child(self, root, db_object, parent_object, child_name, full_class_path):
         cls, child_type = get_class_from_path(full_class_path)
@@ -254,15 +255,16 @@ class MyGraph:
         Returns:
         - color: The color based on the child type.
         """
-        if child_type == 'Interface':
-            if child_object.types and 'O' in child_object.types:
-                return "gainsboro"
+        if child_type == 'Interface':            
             if child_object.types and 'I' in child_object.types:
                 return "gold"
+            if child_object.types and 'O' in child_object.types:
+                return "gainsboro"
         color_mapping = {
             'Card': 'skyblue',
             'Fusion': 'purple',
-            'Deck': 'violet'
+            'Deck': 'violet',
+            'Forgeborn': 'darkorange',
         }
         return color_mapping.get(child_type, '#97c2fc')
 

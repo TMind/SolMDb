@@ -166,7 +166,8 @@ class MyGraph:
                 self._add_child_to_graph(root, db_object, parent_object, child_object, node_attributes)
                 self.create_graph_children(child_object, parent_object=db_object, root=root)
             else:
-                print(f"process_child: Child Object not found: {child_name}")
+                #print(f"process_child: Child Object not found: {child_name}")
+                pass
 
     def _process_forgeborn_child(self, root, db_object, parent_object, child_name, full_class_path):
         forgebornId = child_name
@@ -177,7 +178,7 @@ class MyGraph:
 
         forgeborn_object = self.get_cached_child_object(full_class_path, forgebornName, field='name')
         if not forgeborn_object:
-            print(f"process_forgeborn: Child Object not found: {child_name}")
+            #print(f"process_forgeborn: Child Object not found: {child_name}")
             return
         forgeborn_with_abilities_object = forgeborn_object.get_permutation(forgebornId)
         node_attributes = {
@@ -208,14 +209,15 @@ class MyGraph:
             self._add_child_to_graph(root, db_object, parent_object, child_object, node_attributes)
             self.create_graph_children(child_object, parent_object=db_object, root=root)
         else:
-            print(f"Child Object not found: {child_name}")
+            #print(f"Child Object not found: {child_name}")
+            pass
         
     def _process_synergy_child(self, root, db_object, class_path, child_name):
         # Load the Synergy child object
         child_object = self.get_cached_child_object(class_path, child_name, field='name')
 
         if child_object is None:
-            print(f"process_synergy: Child Object not found: {child_name}")
+            #print(f"process_synergy: Child Object not found: {child_name}")
             return
 
         # Define Synergy-specific attributes

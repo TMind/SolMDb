@@ -302,16 +302,15 @@ class FusionData:
     myDecks: list = field(default_factory=list)    
     faction: str = ''
     crossFaction: str = ''
-    currentForgebornId: str = ''
-    ForgebornIds: list = field(default_factory=list)
+    currentForgebornId: str = ''    
+    ForgebornIds: list = field(default_factory=list)  
     id: str = ''
     deckRank: str = ''
     CreatedAt: str = ''   
-    UpdatedAt: str = ''     
+    UpdatedAt: str = ''       
     tags: list = field(default_factory=list)
     children_data: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)
-    #node_data: dict = field(default_factory=dict)
 
 class Fusion(DatabaseObject):
     def __init__(self, data=None):

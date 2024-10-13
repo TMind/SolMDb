@@ -460,7 +460,7 @@ class FilterGrid:
         """
         if gv.out_debug:
             with gv.out_debug:
-                print(f"FilterClass::grid_filter_on_row_removed() - Removing row {event['index']} from filter grid")
+                print(f"FilterClass::grid_filter_on_row_removed() - Removing row {event['indices']} from filter grid")
         active_rows = []
         if 0 in event['indices']:
             df = pd.DataFrame({
@@ -875,8 +875,7 @@ class DynamicGridManager:
         
 
     def refresh_gridbox(self, change=None):
-        #print(f"DynamicGridManager::refresh_gridbox() - Refreshing grid box with change: {change}")
-        gv.update_progress('Gridbox', 0, message="Refreshing Gridbox")
+        #print(f"DynamicGridManager::refresh_gridbox() - Refreshing grid box with change: {change}")        
         collection_df = self.qm.get_default_data('collection')
         if collection_df.empty or (change and 'type' in change and (change['type'] == 'username' or change['type'] == 'generation')):            
             collection_df = self.data_generate_functions['central_dataframe']()

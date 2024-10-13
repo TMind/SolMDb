@@ -610,7 +610,9 @@ def generate_fusion_statistics_dataframe():
     fusion_cursor = []
     if gv.myDB:
         fusion_cursor = gv.myDB.find('Fusion', {})
-    df_fusions = pd.DataFrame(list(fusion_cursor))
+        fusion_list = list(fusion_cursor)
+    print(f"Generating Basic Dataframe from  {len(fusion_list)} fusions")
+    df_fusions = pd.DataFrame(fusion_list)
 
     # If fusions are found, process them
     if not df_fusions.empty:
@@ -622,7 +624,7 @@ def generate_fusion_statistics_dataframe():
         df_fusions['type'] = 'Fusion'
 
         # Select only relevant fields for analysis
-        additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'children_data', 'tags']
+        additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'ForgebornIds', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'children_data', 'tags']
         df_fusions_filtered = df_fusions[additional_fields].copy()
 
         # Set 'name' as the index and drop the original 'name' column

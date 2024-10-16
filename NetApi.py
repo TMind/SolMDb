@@ -72,10 +72,14 @@ class NetApi:
         """
         url = f"{self.base_url}/user/solbind/{deck_id}"
 
+        if not (username and deck_id):
+            print("Username and deck are required.")
+            return None
+
         payload = {"username": username}
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.auth_token}"
+            "Authorization": self.auth_token
         }
 
         try:

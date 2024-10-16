@@ -1,6 +1,4 @@
-from numpy import cross
 from MongoDB.DatabaseManager import DatabaseManager, DatabaseObject
-from copy import copy
 from dataclasses import dataclass, field
 
 @dataclass
@@ -166,8 +164,22 @@ class Card(DatabaseObject):
     def get_entity_names_from_title(self, card_name):        
         if not card_name or card_name == '': return None
 
-        # First try with full title   
         commonDB = DatabaseManager('common')     
+        if "Fraud's Experiment" in card_name: 
+            # Construct the entity names for Fraud's Experiment
+            fmid =  card_name.split(' ')[-1]
+            card_entity_data = commonDB.get_record_by_name('Forgeborn', "Fraud's Experiment")
+            if card_entity_data:
+                Fraud = Forgeborn.from_data(card_entity_data)
+                base_ability, modifier_abilities = Fraud.get_fraud_monster(fmid)                    
+                entities_data = [base_ability] + list(modifier_abilities)
+                entity_names = [ card_entity_data['abilities'][entity_id] for entity_id in entities_data ]
+                return entity_names
+            else:
+                print(f"Fraud not found in common database: {card_name}")
+                return None
+
+        # First try with full title           
         card_entity_data =  commonDB.get_record_by_name('Entity', card_name)        
         if card_entity_data:          
             #print(f"Card Entity Data found : {card_entity_data['name']}")

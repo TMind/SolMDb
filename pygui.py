@@ -606,12 +606,31 @@ def generate_fusion_statistics_dataframe():
         item_names = [name for name, data_type in children_data.items() if data_type == item_type]
         return item_names
 
-    # Fetch fusions from the database
-    fusion_cursor = []
+    # Fetch fusions from the database using a batch approach
+    count = 0
+    batch_size = 1000  # Set your desired batch size here
+    fusion_list = []
+
     if gv.myDB:
-        fusion_cursor = gv.myDB.find('Fusion', {})
-        fusion_list = list(fusion_cursor)
-    print(f"Generating Basic Dataframe from  {len(fusion_list)} fusions")
+        fusion_cursor = gv.myDB.find('Fusion', {}).batch_size(batch_size)
+        gv.update_progress('Fetching Fusions', message='Generating Basic Dataframe from fusions')
+        
+        batch = []
+        for fusion in fusion_cursor:            
+            batch.append(fusion)
+            count += 1
+
+            # If batch is full, process it
+            if len(batch) >= batch_size:
+                fusion_list.extend(batch)
+                gv.update_progress('Fetching Fusions', message=f'Processed {count} fusions so far... size : {len(fusion_list) * len(fusion)}')
+                batch = []
+
+        # Process any remaining documents in the batch
+        if batch:
+            fusion_list.extend(batch)
+        
+    print(f"{count} fusions fetched from the database.")
     df_fusions = pd.DataFrame(fusion_list)
 
     # If fusions are found, process them
@@ -781,6 +800,7 @@ def generate_deck_statistics_dataframe():
     decks = []
     if gv.myDB:
         decks = list(gv.myDB.find('Deck', {}))
+    
     number_of_decks = len(decks)
 
     df_decks = pd.DataFrame(decks)

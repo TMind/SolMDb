@@ -88,19 +88,14 @@ class UniversalLibrary:
             elif read_synergies:
                 vrange   = ""
                 if value is not None:                             
-                    if not value.isnumeric():
-                        if tag == "Free":                                    
-                            tag = f"Free {value}"            
-                            value = 1
-                            
-                        else: 
-                            vrange = value
-                            if   value == '*':  value = 1                                        
-                            elif value == '+':  value = 1
-                            elif value == '.':  value = 0
-                            else:
-                                vrange = ''
-                                value = 0
+                    if not value.isnumeric():                        
+                        vrange = value
+                        if   value == '*':  value = 1                                        
+                        elif value == '+':  value = 1
+                        elif value == '.':  value = 0
+                        else:
+                            vrange = ''
+                            value = 0
                             
                     if int(value) > 0:                                                                
                             interface_data = InterfaceData(tag, value, vrange)

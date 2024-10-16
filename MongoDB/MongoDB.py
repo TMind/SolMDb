@@ -52,9 +52,9 @@ class MongoDB:
         collection = self.get_collection(collection_name)
         return collection.find_one(query)
 
-    def find(self, collection_name: str, query: dict = {}, projection: dict = None):
+    def find(self, collection_name: str, query: dict = {}, projection: dict = None, batch_size : int = 1000):
         collection = self.get_collection(collection_name)        
-        return collection.find(query, projection)
+        return collection.find(query, projection, batch_size=batch_size)
 
 
     def bulk_write(self, collection_name: str, operations: list):

@@ -10,7 +10,7 @@ from collections import OrderedDict
 
 from DataSelectionManager import DataSelectionManager
 from GlobalVariables import global_vars as gv
-from GlobalVariables import rotate_suffix
+from GlobalVariables import rotate_suffix, GLOBAL_COLUMN_ORDER
 from CustomCss import CSSManager
 from MongoDB.DatabaseManager import DatabaseManager
 
@@ -244,6 +244,9 @@ class TemplateGrid:
             
             # Re-select the edited row in the template grid
             self.qgrid_filter.change_selection(rows=[selected_index])
+            
+            self.update_data_selection_sets(event_like, self.qgrid_filter)
+            
 
     def update_select_all_button(self, change):
         """Update the text of the select all button based on the selection."""
@@ -310,8 +313,8 @@ class TemplateGrid:
                 else:
                     print(f"Warning: Group '{group}' not found in column groups.")
             
-            # Remove duplicates while preserving the order using OrderedDict
-            unique_columns = list(OrderedDict.fromkeys(all_columns))
+            # Remove duplicates while preserving the order using OrderedDict            
+            unique_columns = [col for col in GLOBAL_COLUMN_ORDER if col in list(OrderedDict.fromkeys(all_columns))]
             
             # Get the order of columns as they appear in the selected row
             selected_indices = self.qgrid_filter.get_selected_rows()
@@ -448,6 +451,7 @@ class TemplateGrid:
             print(f"An unexpected error occurred: {e}")
 
     def update_data_selection_sets(self, event, widget):
+        print(f"UpdateDatatSelectionSets called with {event}")
         template_df = self.qgrid_filter.get_changed_df()
         gv.data_selection_sets = {template_df.loc[template]['Template Name']: template_df.loc[template].index[template_df.loc[template] == True].tolist() for template in template_df.index}
         

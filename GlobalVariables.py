@@ -691,7 +691,7 @@ GLOBAL_COLUMN_ORDER = [
     'Beast'         ,'Beast Synergy'        ,'BEAST Combo'                                                                  , 
     'Dinosaur'      ,'Dinosaur Synergy'     ,'DINOSAUR Combo'                                                               ,             
     'Dragon'        ,'Dragon Synergy'       ,'DRAGON Combo'                                                                 ,             
-    'Elemental'     ,'Elemental Type'       ,'ELEMENTAL Synergy', 'Elemental Combo'                                         , 
+    'Elemental'     ,'Elemental Type'       ,'Elemental Synergy', 'ELEMENTAL Combo'                                         , 
     'Mage'          ,'Mage Synergy'         ,'MAGE Combo'                                                                   ,          
     'Ooze'                                                                                                                  ,     
     'Plant'         ,'Plant Synergy'        ,'BanishPlant'      ,'PLANT Combo'                                              ,     
@@ -707,9 +707,9 @@ GLOBAL_COLUMN_ORDER = [
     'Minion', 'Minion Synergy', 'MINION Combo',
     
     # Activate / Ready / Deploy 
-    'Activate', 'ACTIVATE Combo', 
+    'Activate', 'ACTIVATION Combo', 
     'Ready', 'READY Combo',
-    'Deploy', 'DEPLOY Combo',
+    'Deploy', 'Deploy Synergy', 'DEPLOY Combo',
     
     # Damage 
     'Destruction Self'      ,'Destruction Synergy'      ,'DESTRUCTION Combo'        ,

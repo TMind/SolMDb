@@ -1411,10 +1411,16 @@ from CustomGrids import TemplateGrid
 action_toolbar = None
 selected_db_label = widgets.Label(value='Selected Database: None')
 selected_items_label = widgets.Label(value='Selected Items: None')
+text_box = widgets.Text(  
+    value='',  
+    placeholder='Enter information here',  
+    description='Bearer Token:',  
+    disabled=False  
+)  
 
 def setup_interface():
     global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab
-    global action_toolbar, selected_db_label, selected_items_label, graph_output
+    global action_toolbar, selected_db_label, selected_items_label, text_box, graph_output
     
     # Function to update the action area with selected info
     def update_action_area():
@@ -1663,16 +1669,19 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     def solbind_request(button):
         username = selected_db_label.value.split(': ')[1]  # Extract the username from the label
         selected_items_info = selected_items_label.value.split(': ')[1]  # Extract selected items from the label
+        bearer_token = text_box.value  # Get the bearer token from the text box
         
         # Here, handle multiple selected items if needed
         if ',' in selected_items_info:
             print("Multiple items selected, please select only one deck.")
             return
         deck_name = selected_items_info  # Assuming single selection
-        deck_id = gv.myDB.find_one('Deck', {'name': deck_name})['id']
+        deck_data = gv.myDB.find_one('Deck', {'name': deck_name})
+        if deck_data:
+            deck_id = deck_data.get('id')
         
         # Proceed with the solbind request using NetApi
-        net_api = NetApi()
+        net_api = NetApi(auth_token=bearer_token)
         net_api.post_solbind_request(username, deck_id)
 
     # Function for renaming a fusion
@@ -1718,7 +1727,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     action_toolbar.assign_callback('Export', save_grid_dataframe)
 
     # Action area where the toolbar and the labels are displayed
-    action_area = widgets.VBox([selected_db_label, selected_items_label, action_toolbar.get_ui()])
+    action_area = widgets.VBox([selected_db_label, selected_items_label, text_box, action_toolbar.get_ui()])
     
     # Layout: Progress bars at the top, then the tab widget below
     layout = widgets.VBox([progressbar_header,gv.progressbar_container,action_area, tab])

@@ -201,6 +201,7 @@ class DeckData:
     faction     : str    
     cardIds     : list  # Card ids from Net API
     cards       : dict           
+    forgeborn   : dict = field(default_factory=dict)
     cardSetName: str   = ''
     cardSetId: str   = ''
     cardSetNo: str   = ''
@@ -216,7 +217,9 @@ class DeckData:
     rares: int = 0
     level: int = 0
     _id: str = ''
+    id: str = ''    
     children_data: dict = field(default_factory=dict)
+    myCategories: dict = field(default_factory=dict)
     deckStats: dict = field(default_factory=dict)
     tags: dict = field(default_factory=dict)
     stats: dict = field(default_factory=dict)
@@ -227,7 +230,7 @@ class Deck(DatabaseObject):
     
     def __init__(self, data: DeckData):        
         super().__init__(data)         
-        self._id = self.name  
+        self._id = self.id
         if self.data and self.cardIds: 
             self.data._id = self.name
             for card  in self.data.cards.values():

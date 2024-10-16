@@ -349,6 +349,7 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
         
         forgebornCounter = 0
         inspired_ability_cycle = 0
+        forgeborn_ability_texts = {}
 
         for forgeborn_id in forgebornIds:
             forgebornCounter += 1
@@ -383,9 +384,8 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
                     
                     # Update the DataFrame with the ability name
                     if forgebornCounter == 1 or cycle == inspired_ability_cycle:
+                        forgeborn_ability_texts[cycle] =  aName
                         #df.loc[item_name, f'FB{cycle}'] = aName
-                        cycle_to_replace = cycle
-                        replace_with_ability = aName
 
             #df.loc[item_name, 'forgebornId'] = currentForgebornId[5:-3].title()
             
@@ -402,7 +402,7 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
         print(f"Index: {item_name}, ForgebornId key: {forgebornIds}")
     
     
-    return replace_forgebornId, cycle_to_replace, replace_with_ability    
+    return replace_forgebornId, forgeborn_ability_texts
     
 
 def generate_deck_content_dataframe(deckNames):
@@ -584,21 +584,25 @@ def generate_cardType_count_dataframe():
         print('No decks found in the database')
         return pd.DataFrame()
 
-deck_card_titles = {}
+deck_card_titles = {}    
 def generate_fusion_statistics_dataframe():
+    deck_card_ids_dict = {}
+    if gv.myDB:
+       # Get all deck documents from the database
+        deck_data_cursor = gv.myDB.find('Deck', {}, {'name': 1, 'cardIds': 1})
+
+        # Create a dictionary to store cardIds by deck name
+        deck_card_ids_dict = {deck['name']: deck['cardIds'] for deck in deck_data_cursor if 'name' in deck and 'cardIds' in deck}
+
     def get_card_titles(card_ids):
         titles = [cid[5:].replace('-', ' ').title() for cid in card_ids if cid[5:].replace('-', ' ').title()]
         return sorted(titles)
-
+    
     def fetch_deck_titles(deck_names):
-        deck_titles = {}
-        for name in deck_names:
-            deck = None
-            if gv.myDB:
-                deck = deck_card_titles.get(name) or gv.myDB.find_one('Deck', {'name': name})
-            if deck:
-                card_ids = deck.get('cardIds', [])
-                deck_titles[name] = get_card_titles(card_ids)
+        deck_titles = {
+            name: get_card_titles(deck_card_ids_dict[name])
+            for name in deck_names if name in deck_card_ids_dict
+        }
         return deck_titles
 
     def get_card_titles_by_Ids(fusion_children_data):
@@ -611,6 +615,41 @@ def generate_fusion_statistics_dataframe():
         # Children data is a dictionary that contains the deck names as keys, where the value is the object type CardLibrary.Deck
         item_names = [name for name, data_type in children_data.items() if data_type == item_type]
         return item_names
+    
+    def process_row(fusion_row):
+        fusion_name = fusion_row.name
+        
+        # Process the forgeborn data for each fusion
+        replace_forgebornId, forgeborn_ability_texts = process_deck_forgeborn(
+            fusion_name, fusion_row['forgebornId'], getattr(fusion_row, 'ForgebornIds', [])
+        )
+        fusion_row['forgebornId'] = replace_forgebornId
+        for cycle , ability in forgeborn_ability_texts.items():
+            fusion_row[f'FB{cycle}'] = ability
+
+        # Extract decks from children data
+        decks = get_items_from_child_data(fusion_row['children_data'], 'CardLibrary.Deck')
+        if len(decks) > 1:
+            fusion_row['Deck A'] = decks[0]
+            fusion_row['Deck B'] = decks[1]
+
+        # Generate graph data for the current fusion
+        myGraph = MyGraph()
+        myGraph.from_dict(fusion_row['graph'])
+        interface_ids = myGraph.get_length_interface_ids()
+
+        # Generate combo data directly for this fusion
+        combo_data = get_combos_for_graph(myGraph, fusion_name)
+        interface_ids = {**interface_ids, **combo_data}
+
+        # Convert interface IDs dictionary to DataFrame row and concatenate
+        interface_ids_df = pd.DataFrame([interface_ids], index=[fusion_name])
+        all_interface_ids_df_list.append(interface_ids_df)
+
+        # Update progress
+        gv.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion_name}")
+        
+        return fusion_row
 
     # Fetch fusions from the database using a batch approach
     count = 0
@@ -618,8 +657,9 @@ def generate_fusion_statistics_dataframe():
     fusion_list = []
 
     if gv.myDB:
+        fusion_count = gv.myDB.count_documents('Fusion', {})
         fusion_cursor = gv.myDB.find('Fusion', {}).batch_size(batch_size)
-        gv.update_progress('Fetching Fusions', message='Generating Basic Dataframe from fusions')
+        gv.update_progress('Fetching Fusions', total= fusion_count, message='Generating Basic Dataframe from fusions')
         
         batch = []
         for fusion in fusion_cursor:            
@@ -629,7 +669,7 @@ def generate_fusion_statistics_dataframe():
             # If batch is full, process it
             if len(batch) >= batch_size:
                 fusion_list.extend(batch)
-                gv.update_progress('Fetching Fusions', message=f'Processed {count} fusions so far... size : {len(fusion_list) * len(fusion)}')
+                gv.update_progress('Fetching Fusions', value=1000,  message=f'Processed {count} fusions so far... size : {len(fusion_list) * len(fusion)/1000}KB')
                 batch = []
 
         # Process any remaining documents in the batch
@@ -662,56 +702,19 @@ def generate_fusion_statistics_dataframe():
             else:
                 print("OK: 'name' column not found in the dataframe.")                 
             
-        # Track the current state of the index
-        #print("Fusion DataFrame Index before processing:")
-        #print(df_fusions_filtered.index)
-
+        # Initialize a list to store all interface ID DataFrames
         gv.update_progress('Fusion Stats', 0, len(df_fusions), 'Generating Fusion Dataframe...')
         all_interface_ids_df_list = []
-
-        for fusion_name, fusion_row in df_fusions_filtered.iterrows():
-                    
-            #print(f"Fusion Index = {fusion_name}")
-            
-            # Process the forgeborn data for each fusion
-            #process_deck_forgeborn(fusion_name, fusion_row['forgebornId'], getattr(fusion_row, 'ForgebornIds', []))
-            
-            replace_forgebornId , cycle_replace, ability_replace =  process_deck_forgeborn(fusion_name, fusion_row['forgebornId'], getattr(fusion_row, 'ForgebornIds', []))
-            df_fusions_filtered.loc[fusion_name, 'forgebornId'] = replace_forgebornId
-            df_fusions_filtered.loc[fusion_name, f'FB{cycle_replace}'] = ability_replace
-            
-            gv.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion_name}")
-
-            # Extract decks from children data
-            decks = get_items_from_child_data(fusion_row['children_data'], 'CardLibrary.Deck')
-            if len(decks) > 1:
-                df_fusions_filtered.loc[fusion_name, 'Deck A'] = decks[0]
-                df_fusions_filtered.loc[fusion_name, 'Deck B'] = decks[1]
-
-            # Generate graph data for the current fusion
-            myGraph = MyGraph()
-            myGraph.from_dict(fusion_row['graph'])
-            interface_ids = myGraph.get_length_interface_ids()
-
-            # Generate combo data directly for this fusion
-            combo_data = get_combos_for_graph(myGraph, fusion_name)
-            interface_ids = {**interface_ids, **combo_data}
-
-            # Prepare DataFrame for interface IDs
-            interface_ids_df = pd.DataFrame([interface_ids])
-            #interface_ids_df.set_index('name', inplace=True)            
-                
-            all_interface_ids_df_list.append(interface_ids_df)
+        
+        # Apply the function across all rows in a more efficient way
+        all_interface_ids_df_list = []
+        df_fusions_filtered = df_fusions_filtered.apply(process_row, axis=1)
 
         # Concatenate all the interface ID DataFrames
         if all_interface_ids_df_list:            
             interface_ids_total_df = pd.concat(all_interface_ids_df_list)
             interface_ids_total_df.set_index('name', inplace=True, drop=True)
             interface_ids_total_df = clean_columns(interface_ids_total_df)
-
-            # Track the current state of the index for debugging
-            #print("Interface IDs Total DataFrame Index:")
-            #print(interface_ids_total_df.index)
 
             # Concatenate the fusion DataFrame with the interface IDs DataFrame
             df_fusions_filtered = pd.concat([df_fusions_filtered, interface_ids_total_df], axis=1)
@@ -840,9 +843,10 @@ def generate_deck_statistics_dataframe():
         # Process the forgeborn data for this deck
         deck_name = deck['name']
         forgebornId = deck['forgebornId']
-        replace_forgebornId , cycle_replace, ability_replace =  process_deck_forgeborn(deck_name, forgebornId, [forgebornId])
+        replace_forgebornId , forgeborn_ability_texts =  process_deck_forgeborn(deck_name, forgebornId, [forgebornId])
         df_decks_filtered.loc[deck_name, 'forgebornId'] = replace_forgebornId
-        df_decks_filtered.loc[deck_name, f'FB{cycle_replace}'] = ability_replace
+        for cycle, ability in forgeborn_ability_texts.items():
+            df_decks_filtered.loc[deck_name, f'FB{cycle}'] = ability
         
         # Fetch all cards in deck from the database
         cards = []

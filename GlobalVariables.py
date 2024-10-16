@@ -185,6 +185,12 @@ class GlobalVariables:
                 progress_bar.style.bar_color = 'lightblue'
         else:
             progress_bar.value += 1  # Auto-increment if no value provided
+            
+        if progress_bar.max and message:
+            count = progress_bar.value
+            total = progress_bar.max
+            percentage_message = f"[{count: >5}/{total:<5}] "
+            label.value = f"{percentage_message}{message}"
 
         if progress_bar.value >= progress_bar.max:
             progress_bar.bar_style = 'success'

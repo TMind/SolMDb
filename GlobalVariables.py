@@ -369,6 +369,7 @@ non_rotated_column_defs = {
     'type':             {'width': 60},
     'Deck A':           {'width': 250},
     'Deck B':           {'width': 250},
+    'id':               {'width': 200},
     'registeredDate':   {'width': 200},
     'CreatedAt' :    {'width': 200},
     'UpdatedAt':        {'width': 200},
@@ -406,7 +407,7 @@ non_rotated_column_defs = {
 
 data_selection_sets = {
   "Deck Stats": {
-    "Name": True, "name": True, "type": 'Deck',
+    "Name": True, "name": True, "type": 'Deck', "id" : True,
     "registeredDate": True, "UpdatedAt": True, "pExpiry": True,
     "level": True,  "xp": True, "elo": True, "deckScore": True, "deckRank": True,
     "cardSetNo": True,  "faction": True,
@@ -678,7 +679,7 @@ data_selection_sets = {
 
 
 GLOBAL_COLUMN_ORDER = [
-    'index', 'type', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B',
+    'index', 'type', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B','id',
     'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 
     'xp', 'elo', 'level', 'deckScore', 'deckRank',
     'cardSetNo', 'faction', 'crossFaction', 'forgebornId', 'cardTitles', 'Betrayers', 'SolBinds',

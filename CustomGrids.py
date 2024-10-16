@@ -71,7 +71,7 @@ class TemplateGrid:
         cm_tags = gv.cm_manager.cm_tags or []
         
         self.column_groups = {
-            'Base Data': ['Name', 'type', 'faction', 'forgebornId', 'cardTitles', 'FB2', 'FB3', 'FB4', 'Creatures', 'Spells', 'Exalts'],
+            'Base Data': ['Name', 'type', 'faction', 'forgebornId', 'cardTitles', 'FB2', 'FB3', 'FB4', 'Creatures', 'Spells', 'Exalt'],
             'Deck Data': ['registeredDate', 'UpdatedAt', 'pExpiry', 'cardSetNo', 'tags', 'Betrayers', 'SolBinds'],
             'Fusion Data': ['Deck A', 'Deck B', 'CreatedAt', 'faction', 'crossFaction'],
             'Deck Stats': ['elo', 'level', 'xp', 'deckRank', 'deckScore'],
@@ -83,7 +83,7 @@ class TemplateGrid:
             'Free' : [ 'Free' ],    
             'De/Buffs' : ['Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Attack Debuff', 'Health Buff'],
             'Utility' : ['Activate', 'Ready', 'Upgrade', 'Slay', 'Deploy', 'Reanimate'],
-            'Effects' : ['Removal', 'Silence', 'Face Burn' ],
+            'Effects' : ['Removal', 'Silence', 'Face Burn', ['FB Creature'] ],
             'Damage' : ['Destruction Others', 'Destruction Self', 'Self Damage' ],            
             'Keywords' : ['Breakthrough', 'Breakthrough Giver', 'Aggressive', 'Aggressive Giver', 'Defender', 'Defender Giver', 'Stealth', 'Stealth Giver', 'Armor', 'Armor Giver'],
             'Combos' : [

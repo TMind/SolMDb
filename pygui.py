@@ -344,12 +344,8 @@ def generate_central_dataframe(force_new=False):
 
 
 from CardLibrary import Forgeborn, ForgebornData
-def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds, df):
+def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
     try:
-        if item_name not in df.index:
-            display(df)
-            print(f"Fusion name '{item_name}' not found in DataFrame index.")
-            return        
         
         forgebornCounter = 0
         inspired_ability_cycle = 0
@@ -387,17 +383,27 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds, df):
                     
                     # Update the DataFrame with the ability name
                     if forgebornCounter == 1 or cycle == inspired_ability_cycle:
-                        df.loc[item_name, f'FB{cycle}'] = aName
+                        #df.loc[item_name, f'FB{cycle}'] = aName
+                        cycle_to_replace = cycle
+                        replace_with_ability = aName
 
-            df.loc[item_name, 'forgebornId'] = currentForgebornId[5:-3].title()
+            #df.loc[item_name, 'forgebornId'] = currentForgebornId[5:-3].title()
+            
+            
+            replace_forgebornId = currentForgebornId[5:-3].title()
+            
+            
     except KeyError as e:
         print(f"KeyError: {e}")
         print(f"Index: {item_name}, ForgebornId key: {forgebornIds}")
-        print(df.head())
+    
     except Exception as e:
         print(f"Unexpected error: {e}")
         print(f"Index: {item_name}, ForgebornId key: {forgebornIds}")
-        print(df.head())
+    
+    
+    return replace_forgebornId, cycle_to_replace, replace_with_ability    
+    
 
 def generate_deck_content_dataframe(deckNames):
     from CardLibrary import Card , CardData
@@ -668,7 +674,12 @@ def generate_fusion_statistics_dataframe():
             #print(f"Fusion Index = {fusion_name}")
             
             # Process the forgeborn data for each fusion
-            process_deck_forgeborn(fusion_name, fusion_row['forgebornId'], getattr(fusion_row, 'ForgebornIds', []), df_fusions_filtered)
+            #process_deck_forgeborn(fusion_name, fusion_row['forgebornId'], getattr(fusion_row, 'ForgebornIds', []))
+            
+            replace_forgebornId , cycle_replace, ability_replace =  process_deck_forgeborn(fusion_name, fusion_row['forgebornId'], getattr(fusion_row, 'ForgebornIds', []))
+            df_fusions_filtered.loc[fusion_name, 'forgebornId'] = replace_forgebornId
+            df_fusions_filtered.loc[fusion_name, f'FB{cycle_replace}'] = ability_replace
+            
             gv.update_progress('Fusion Stats', message=f"Processing Fusion Forgeborn: {fusion_name}")
 
             # Extract decks from children data
@@ -781,11 +792,12 @@ def get_combos_for_graph(myGraph: MyGraph, name: str) -> dict:
     combo_data = {'name': name}  
     for combo_name, (input_count, output_count) in myGraph.combo_data.items():  
         product = input_count * output_count  
-        text = f'{product:>2} = {input_count:>2} * {output_count:>2}'  
-        if output_count <= 0:  
+        text = f'{product:>2}'  
+        if product == 0:  
             text = ''  
-        if input_count < 0:  
-            text = f'{-input_count:>2}'  
+            if input_count > 0:  
+                text = f'{-input_count:>2}'  
+                
         combo_data[combo_name] = text  
     
     return combo_data
@@ -805,7 +817,7 @@ def generate_deck_statistics_dataframe():
 
     df_decks = pd.DataFrame(decks)
     df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
-    df_decks_filtered = df_decks[['name', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph']].copy()
+    df_decks_filtered = df_decks[['name', 'id', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph']].copy()
     df_decks_filtered['type'] = 'Deck'
     # Replace non-numeric values with NaN, then convert to int
     df_decks_filtered['cardSetNo'] = pd.to_numeric(df_decks_filtered['cardSetNo'], errors='coerce').fillna(0).astype(int)
@@ -819,19 +831,19 @@ def generate_deck_statistics_dataframe():
 
     df_decks_filtered.set_index('name', inplace=True)
 
-    # Process each deck
-    identifier = 'Forgeborn Data'
-    gv.update_progress(identifier, 0, number_of_decks, 'Fetching Forgeborn Data...')
-    for deck in decks:
-        gv.update_progress(identifier, message='Processing Deck Forgeborn: ' + deck['name'])
-        if 'forgebornId' in deck:
-            process_deck_forgeborn(deck['name'], deck['forgebornId'], [deck['forgebornId']], df_decks_filtered)
-
     df_list = []
     identifier = 'Stats Data'
     gv.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
     for deck in decks:
         gv.update_progress(identifier, message='Processing Deck Stats: ' + deck['name'])        
+        
+        # Process the forgeborn data for this deck
+        deck_name = deck['name']
+        forgebornId = deck['forgebornId']
+        replace_forgebornId , cycle_replace, ability_replace =  process_deck_forgeborn(deck_name, forgebornId, [forgebornId])
+        df_decks_filtered.loc[deck_name, 'forgebornId'] = replace_forgebornId
+        df_decks_filtered.loc[deck_name, f'FB{cycle_replace}'] = ability_replace
+        
         # Fetch all cards in deck from the database
         cards = []
         faction = deck.get('faction')
@@ -1720,7 +1732,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
         new_name = input("Enter new fusion name: ")  # Simple input method; you could use a dialog or widget
         
         # Proceed with the rename request using NetApi
-        net_api = NetApi()
+        net_api = NetApi(auth_token=text_box.value)
         
         # Provide your credentials and Cognito client information
         # client_id = "75mcr7j8relead00pia1dbse9c"

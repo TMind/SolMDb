@@ -25,7 +25,7 @@ class MultiProcess:
         with Pool(processes=self.num_processes, initializer=self.init_worker) as pool:  
             for chunk_size in pool.imap_unordered(create_fusion, self.data):  
                 accumulated += chunk_size
-                gv.update_progress('MultiProcess Fusions', value = chunk_size, message = f'Fusioning Decks {accumulated}/{self.num_items}')  
+                gv.update_progress('MultiProcess Fusions', value = chunk_size, message = f'Fusioning {chunk_size} Decks ')  
 
 def create_graph_for_object(object):
     # Graph creation

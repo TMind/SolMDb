@@ -1,9 +1,5 @@
-import sys
 import os, time, re, json
-from tkinter import Label
-from turtle import update
 import ipywidgets as widgets
-import numpy as np
 from pyvis.network import Network
 import networkx as nx
 import pickle
@@ -23,7 +19,7 @@ from UniversalLibrary import UniversalLibrary
 from DeckLibrary import DeckLibrary
 from MongoDB.DatabaseManager import DatabaseManager
 from MyGraph import MyGraph
-from NetApi import NetApi, CognitoAuth
+from NetApi import NetApi
 
 from soldb import parse_arguments
 from IPython.display import display, HTML
@@ -72,6 +68,8 @@ data_generation_functions = {}
 
 central_frame_output = widgets.Output()
 graph_output = widgets.Output()
+
+net_api = None
 
 # Manager Variables
 grid_manager = None 
@@ -259,6 +257,21 @@ def enforce_column_order(df, column_order):
     #print_dataframe(df_reindexed, 'Reindexed DataFrame')
     return df_reindexed
 
+def sum_card_types(df):
+    # Get the list of columns that are in gv.rotated_column_definitions
+    columns_to_sum = [col for col in df.columns if col in gv.rotated_column_definitions.keys()]
+
+    # Convert the specified columns to numeric (float) values, errors='coerce' will turn invalid parsing into NaN
+    df[columns_to_sum] = df[columns_to_sum].apply(pd.to_numeric, errors='coerce')
+
+    # Calculate the sum of the specified columns for each row
+    sum_column = df[columns_to_sum].sum(axis=1)
+
+    # Concatenate the original DataFrame with the new 'Sum' column
+    new_df = pd.concat([df, sum_column.rename('Sum')], axis=1)
+
+    return new_df
+
 
 user_dataframes = {}
 ### Dataframe Generation Functions ###
@@ -294,23 +307,26 @@ def generate_central_dataframe(force_new=False):
             if gv.fs:
                 gv.fs.delete(file_record['_id'])
 
-    gv.update_progress(identifier, 0, 100, 'Generating Central Dataframe...')
+    gv.update_progress(identifier, total=5, message='Generating Central Dataframe...')
     deck_stats_df = generate_deck_statistics_dataframe()
     validate_dataframe_attributes(deck_stats_df, 'Deck Stats', expected_index_name=None, disallow_columns=['name'])
 
+    gv.update_progress(identifier, message='Generating Card Type Count Dataframe...')
     card_type_counts_df = generate_cardType_count_dataframe()
     validate_dataframe_attributes(card_type_counts_df, 'Card Type Counts', expected_index_name=None, disallow_columns=['name'])
 
     central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
     validate_dataframe_attributes(central_df, 'Central DF after merging Card Type Counts', expected_index_name=None, disallow_columns=['name'])
 
-    fusion_stats_df = generate_fusion_statistics_dataframe()
+    gv.update_progress(identifier, message='Generating Fusion statistics Dataframe...')
+    fusion_stats_df = generate_fusion_statistics_dataframe(central_df)
     validate_dataframe_attributes(fusion_stats_df, 'Fusion Stats', expected_index_name=None, disallow_columns=['name'])
 
     central_df = merge_and_concat(central_df, fusion_stats_df)
     validate_dataframe_attributes(central_df, 'Central DF after merging Fusion Stats', expected_index_name=None, disallow_columns=['name'])
 
     # Clean the columns of the central DataFrame
+    gv.update_progress(identifier, message='Clean Central Dataframe...')
     central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo'])
     central_df = central_df.copy()
     validate_dataframe_attributes(central_df, 'Central DF after cleaning', expected_index_name=None, disallow_columns=['name'])
@@ -324,13 +340,13 @@ def generate_central_dataframe(force_new=False):
     if 'Name' not in central_df.columns:
         raise RuntimeError("The renaming of the index column to 'Name' failed.")
 
-    print("Central DataFrame After Resetting Index and Renaming:")
-    print("Columns:", central_df.columns)
+    #print("Central DataFrame After Resetting Index and Renaming:")
+    #print("Columns:", central_df.columns)
     
     # After all DataFrame processing is done, enforce the global column order
     central_df = enforce_column_order(central_df, GLOBAL_COLUMN_ORDER)
     
-    gv.update_progress(identifier, 100, 100, 'Central Dataframe Generated.')
+    gv.update_progress(identifier, message='Central Dataframe Generated.')
     user_dataframes[username] = central_df
 
     if gv.fs:
@@ -339,6 +355,7 @@ def generate_central_dataframe(force_new=False):
         
     update_deck_and_fusion_counts()
     update_central_frame_tab(central_df)
+    gv.update_progress(identifier, message='Central Dataframe Stored.')
     return central_df
 
 
@@ -573,6 +590,8 @@ def generate_cardType_count_dataframe():
         # Sort columns for consistency
         all_decks_df.sort_index(axis=1, inplace=True)
 
+        all_decks_df = sum_card_types(all_decks_df)
+
         # Clean numeric columns (convert NaNs to empty strings, etc.)
         all_decks_df = clean_columns(all_decks_df)
 
@@ -585,7 +604,7 @@ def generate_cardType_count_dataframe():
         return pd.DataFrame()
 
 deck_card_titles = {}    
-def generate_fusion_statistics_dataframe():
+def generate_fusion_statistics_dataframe(central_df=None):
     deck_card_ids_dict = {}
     if gv.myDB:
        # Get all deck documents from the database
@@ -606,9 +625,9 @@ def generate_fusion_statistics_dataframe():
         return deck_titles
 
     def get_card_titles_by_Ids(fusion_children_data):
-        deck_names = [name for name, dtype in fusion_children_data.items() if dtype == 'CardLibrary.Deck']
-        all_card_titles = {name: fetch_deck_titles([name]).get(name, []) for name in deck_names}
         gv.update_progress('Fusion Card Titles', message='Fetching Card Titles')
+        deck_names = [name for name, dtype in fusion_children_data.items() if dtype == 'CardLibrary.Deck']
+        all_card_titles = {name: fetch_deck_titles([name]).get(name, []) for name in deck_names}        
         return ', '.join(sorted(sum(all_card_titles.values(), [])))
 
     def get_items_from_child_data(children_data, item_type):
@@ -623,6 +642,8 @@ def generate_fusion_statistics_dataframe():
         replace_forgebornId, forgeborn_ability_texts = process_deck_forgeborn(
             fusion_name, fusion_row['forgebornId'], getattr(fusion_row, 'ForgebornIds', [])
         )
+        
+        # Update the DataFrame with the forgeborn ID and abilities
         fusion_row['forgebornId'] = replace_forgebornId
         for cycle , ability in forgeborn_ability_texts.items():
             fusion_row[f'FB{cycle}'] = ability
@@ -632,6 +653,52 @@ def generate_fusion_statistics_dataframe():
         if len(decks) > 1:
             fusion_row['Deck A'] = decks[0]
             fusion_row['Deck B'] = decks[1]
+
+
+        # Combine deck values to fusion 'digital' 
+        if central_df is not None:
+            fusion_name = fusion_row.name
+            for deck in ['Deck A', 'Deck B']:
+                
+                # Get deck Name from the fusion_row
+                deck_name = fusion_row[deck] if deck in fusion_row else ''
+                deck_row = None
+                
+                # Find the deck in the deck_stats_df
+                if deck_name:
+                    deck_row = central_df.loc[deck_name] if deck_name in central_df.index else None
+                
+                # If the deck is found, update the 'digital' and 'cardSetNo' values in the fusion_row
+                if deck_row is not None:
+                                                            
+                    # Set the digital value based on whether any of the decks is digital or not                 
+                    digital = deck_row.get('digital', '?')
+                    if digital == "0":   digital = 0
+                    elif digital == "1": digital = 1
+                    elif digital == "":  digital = 0                    
+                    
+                    if 'digital' not in fusion_row or not isinstance(fusion_row['digital'], set):
+                        fusion_row['digital'] = set()
+                    fusion_row['digital'].add(digital)
+                                    
+                    # Set the cardSetNo to combine the values from the decks in a list
+                    cardSetNo = deck_row.get('cardSetNo', None)
+                    if cardSetNo:
+                        if 'cardSetNo' not in fusion_row or not isinstance(fusion_row['cardSetNo'], set):
+                            fusion_row['cardSetNo'] = set()
+                        fusion_row['cardSetNo'].add(cardSetNo)
+                
+                else:
+                    print(f"Deck '{deck_name}' not found in the central DataFrame.")
+            
+            # Convert the set 'digital' to a comma-separated string for display in the DataFrame
+            if 'digital' in fusion_row and isinstance(fusion_row['digital'], set):
+                fusion_row['digital'] = ", ".join(str(item) for item in fusion_row['digital'])
+            
+            # Convert the set 'cardSetNo' to a comma-separated string for display in the DataFrame
+            if 'cardSetNo' in fusion_row and isinstance(fusion_row['cardSetNo'], set):
+                fusion_row['cardSetNo'] = ", ".join(str(item) for item in sorted(fusion_row['cardSetNo']))
+            
 
         # Generate graph data for the current fusion
         myGraph = MyGraph()
@@ -659,17 +726,17 @@ def generate_fusion_statistics_dataframe():
     if gv.myDB:
         fusion_count = gv.myDB.count_documents('Fusion', {})
         fusion_cursor = gv.myDB.find('Fusion', {}).batch_size(batch_size)
-        gv.update_progress('Fetching Fusions', total= fusion_count, message='Generating Basic Dataframe from fusions')
         
         batch = []
         for fusion in fusion_cursor:            
+            #gv.update_progress('Fetching Fusions', total= fusion_count, message=f'Generating Basic Dataframe from fusion {fusion["name"]}')
             batch.append(fusion)
             count += 1
 
             # If batch is full, process it
             if len(batch) >= batch_size:
                 fusion_list.extend(batch)
-                gv.update_progress('Fetching Fusions', value=1000,  message=f'Processed {count} fusions so far... size : {len(fusion_list) * len(fusion)/1000}KB')
+                gv.update_progress('Fetching Fusions', value=len(batch), total=fusion_count, message=f'Processed {count} fusio--ns so far... size : {len(fusion_list) * len(fusion)/1000}KB')
                 batch = []
 
         # Process any remaining documents in the batch
@@ -820,7 +887,7 @@ def generate_deck_statistics_dataframe():
 
     df_decks = pd.DataFrame(decks)
     df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
-    df_decks_filtered = df_decks[['name', 'id', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'faction', 'forgebornId', 'cardTitles', 'graph']].copy()
+    df_decks_filtered = df_decks[['name', 'id', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'digital', 'faction', 'forgebornId', 'cardTitles', 'graph']].copy()
     df_decks_filtered['type'] = 'Deck'
     # Replace non-numeric values with NaN, then convert to int
     df_decks_filtered['cardSetNo'] = pd.to_numeric(df_decks_filtered['cardSetNo'], errors='coerce').fillna(0).astype(int)
@@ -1449,13 +1516,13 @@ selected_db_label = widgets.Label(value='Selected Database: None')
 selected_items_label = widgets.Label(value='Selected Items: None')
 text_box = widgets.Text(  
     value='',  
-    placeholder='Enter information here',  
-    description='Bearer Token:',  
+    placeholder='Enter data here',  
+    description='Data:',  
     disabled=False  
 )  
 
 def setup_interface():
-    global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab
+    global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab, net_api
     global action_toolbar, selected_db_label, selected_items_label, text_box, graph_output
     
     # Function to update the action area with selected info
@@ -1687,9 +1754,13 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     
     # Create the labels that will be updated
     selected_db_label = widgets.Label(value="Selected Database: None")
-    selected_items_label = widgets.Label(value="Selected Items: None")
+    selected_items_label = widgets.Label(value="Selected Items: None")        
 
-
+    def authenticate(button):
+        username = gv.myDB.get_current_db_name()  
+        password = text_box.value  # Get the password from the text box
+        net_api = NetApi(username, password)
+        
     def save_grid_dataframe(change):
         """
         Function to save the DataFrame from the grid to a CSV file.
@@ -1705,7 +1776,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     def solbind_request(button):
         username = selected_db_label.value.split(': ')[1]  # Extract the username from the label
         selected_items_info = selected_items_label.value.split(': ')[1]  # Extract selected items from the label
-        bearer_token = text_box.value  # Get the bearer token from the text box
+        password = text_box.value  # Get the password from the text box
         
         # Here, handle multiple selected items if needed
         if ',' in selected_items_info:
@@ -1717,13 +1788,14 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
             deck_id = deck_data.get('id')
         
         # Proceed with the solbind request using NetApi
-        net_api = NetApi(auth_token=bearer_token)
-        net_api.post_solbind_request(username, deck_id)
+        net_api = NetApi(username, password)
+        net_api.post_solbind_request(deck_id)
 
     # Function for renaming a fusion
     def rename_fusion(button):
-        username = gv.myDB.get_current_db_name()  
+        #username = gv.myDB.get_current_db_name()  
         selected_items_info = selected_items_label.value.split(': ')[1]  # Extract selected items from the label
+        #password = text_box.value  # Get the password from the text box
         
         # Here, handle multiple selected items if needed
         if ',' in selected_items_info:
@@ -1733,31 +1805,15 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
         fusion = gv.myDB.find_one('Fusion', {'name': fusion_name})
                 
         # Prompt for new name
-        new_name = input("Enter new fusion name: ")  # Simple input method; you could use a dialog or widget
+        new_name = text_box.value
         
         # Proceed with the rename request using NetApi
-        net_api = NetApi(auth_token=text_box.value)
-        
-        # Provide your credentials and Cognito client information
-        # client_id = "75mcr7j8relead00pia1dbse9c"
-        # username = "stefan2581@gmail.com"
-        # password = "your_password"
-
-        # # Create an instance of CognitoAuth
-        # authenticator = CognitoAuth(client_id, username, password)
-
-        # # Get the access token
-        # access_token = authenticator.get_access_token()
-
-        # # If successful, print the access token
-        # if access_token:
-        #     print(f"Access Token: {access_token}")
-                        
-        net_api.update_fused_deck(username, fusion, new_name)
+        #net_api = NetApi(username, password)
+        net_api.update_fused_deck(fusion, new_name)
     
     # Initialize the ActionToolbar and pass the update function
     action_toolbar = ActionToolbar()
-    action_toolbar.assign_callback('Refresh', update_action_area)
+    action_toolbar.assign_callback('Authenticate', authenticate)
     action_toolbar.assign_callback('Solbind', solbind_request)
     action_toolbar.assign_callback('Rename', rename_fusion)
     action_toolbar.assign_callback('Export', save_grid_dataframe)

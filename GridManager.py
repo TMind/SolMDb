@@ -114,6 +114,25 @@ class GridManager:
         if grid:
             grid.update_main_widget(new_df)
             self.update_visible_columns(None, grid.main_widget)
+            updated_df = grid.main_widget.get_changed_df()
+            summed_df = self.update_sum_column(updated_df)
+            grid.update_main_widget(summed_df)
+
+    def update_sum_column(self, df):
+        if gv.rotated_column_definitions:
+            # Get the list of columns to sum, ensuring they exist in the DataFrame
+            columns_to_sum = [col for col in gv.rotated_column_definitions.keys() if col in df.columns]
+
+            # Ensure the columns to sum are numeric; replace non-numeric with NaN
+            numeric_df = df[columns_to_sum].apply(pd.to_numeric, errors='coerce')
+
+            # Calculate the sum for each row across the rotated columns
+            df['Sum'] = numeric_df.sum(axis=1)
+
+            # Fill the NaN values in the DataFrame with empty strings
+            df.fillna('', inplace=True)
+
+        return df
 
     def update_toggle_df(self, df, identifier):
         grid = self.grids.get(identifier)
@@ -847,6 +866,12 @@ class DynamicGridManager:
         self.ui = widgets.VBox([])
         self.update_ui()
         self.update_grid_layout()
+
+        # Register observer for DataSelectionManager
+        DataSelectionManager.register_observer(self.update_grids)
+
+    def update_grids(self, event, widget):
+        self.refresh_gridbox()        
 
     def reset_grid_layout(self, new_size):
         #self.ui.children = [self.selectionGrid, self.filterGrid] 

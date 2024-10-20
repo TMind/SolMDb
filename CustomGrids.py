@@ -36,7 +36,6 @@ class TemplateGrid:
         self.css_manager = CSSManager()        
         self.qgrid_filter = self.create_filter_qgrid()
         
-
     def create_filter_qgrid(self):
         
         column_definitions = copy.deepcopy(gv.all_column_definitions)
@@ -50,6 +49,8 @@ class TemplateGrid:
         column_definitions['Template Name'] = { 'width': 125 }
         column_definitions['type']['width'] = 50
         column_definitions['Name']['width'] = 200 
+        
+        
         
         # Create the qgrid widget
         qgrid_filter = qgrid.show_grid(self.df, column_definitions=column_definitions,
@@ -71,8 +72,8 @@ class TemplateGrid:
         cm_tags = gv.cm_manager.cm_tags or []
         
         self.column_groups = {
-            'Base Data': ['Name', 'type', 'faction', 'forgebornId', 'cardTitles', 'FB2', 'FB3', 'FB4', 'Creatures', 'Spells', 'Exalt'],
-            'Deck Data': ['registeredDate', 'UpdatedAt', 'pExpiry', 'cardSetNo', 'tags', 'Betrayers', 'SolBinds'],
+            'Base Data': ['Name', 'type', 'faction', 'forgebornId', 'cardTitles', 'FB2', 'FB3', 'FB4', 'Creatures', 'Spells', 'Exalt', 'Sum'],
+            'Deck Data': ['registeredDate', 'UpdatedAt', 'pExpiry', 'digital', 'cardSetNo', 'tags', 'Betrayers', 'SolBinds'],
             'Fusion Data': ['Deck A', 'Deck B', 'CreatedAt', 'faction', 'crossFaction'],
             'Deck Stats': ['elo', 'level', 'xp', 'deckRank', 'deckScore'],
             'Fusion Stats' : ['CreatedAt', 'id' ],
@@ -91,7 +92,7 @@ class TemplateGrid:
                 'ROBOT Combo', 'SCIENTIST Combo', 'SPIRIT Combo', 'BANISH SPIRIT', 'WARRIOR Combo', 'ZOMBIE Combo',
                 'MINION Combo', 'EXALT Combo', 'SPELL Combo', 'DEPLOY Combo', 'ARMOR Combo', 'ACTIVATE Combo',
                 'DESTRUCTION Combo', 'DESTROY Combo', 'HEALING Combo', 'MOVEMENT Combo','REPLACE Combo',
-                'READY Combo', 'REANIMATE Combo', 'SELFDAMAGE Combo','UPGRADE Combo' ],
+                'READY Combo', 'REANIMATE Combo', 'SELFDAMAGE Combo','UPGRADE Combo', 'INCREASED A Combo' ],
             'Custom': ['White Fang', 'Last Winter', 'Spicy', 'Cool', 'Fun', 'Annoying']
         }
 
@@ -290,8 +291,11 @@ class TemplateGrid:
             rows.append(row)
 
         template_df = pd.DataFrame(rows)
-        columns = ['Template Name'] + [col for col in template_df.columns if col != 'Template Name']
-        template_df = template_df[columns]
+        
+        # Align columns to match the GLOBAL_COLUMN_ORDER        
+        aligned_columns = ['Template Name'] + [col for col in GLOBAL_COLUMN_ORDER if  col in template_df.columns and col != 'Template Name']
+        #template_df = template_df[columns]
+        template_df = template_df.reindex(columns=aligned_columns)
         template_df = template_df.infer_objects()
 
         bool_columns = template_df.columns.difference(['Template Name', 'type'])
@@ -471,7 +475,7 @@ class ActionToolbar:
         if button_configs is None:
             # Default buttons if none are provided
             button_configs = {
-                "Refresh": {"description": "Refresh Selection", "button_style": 'info'},
+                "Authenticate": {"description": "Login", "button_style": 'info'},
                 "Solbind": {"description": "Solbind", "button_style": 'danger'},
                 "Rename": {"description": "Rename", "button_style": 'warning'},
                 "Export": {"description": "Export", "button_style": 'info'}

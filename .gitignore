@@ -19,4 +19,4 @@ source/*
 .eggs/*
 .idea/
 binder/soldb-gc-key.json
-
+html/

@@ -304,7 +304,7 @@ class MyGraph:
             'smooth': {'type': 'diagonalCross'} if source_type in ['Fusion', 'Deck', 'Forgeborn'] else {'smooth': False}
         }
 
-        if source_type not in ['Deck']:            
+        if source_type not in ['Fusion', 'Deck']:            
             root.add_edge(source_object, target_object, **edge_arguments)
 
     def _get_source_and_target_objects(self, db_object, parent_object, child_object):

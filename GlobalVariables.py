@@ -173,9 +173,7 @@ class GlobalVariables:
         container = self.get_or_create_progress_container(identifier)
         progress_bar = container['progress_bar']
         label = container['label']
-
-        if message:
-            label.value = message
+        
         if total is not None:
             progress_bar.max = total
         if value is not None:
@@ -401,6 +399,7 @@ non_rotated_column_defs = {
     'Creatures':        {'width': default_width},
     'Spells':           {'width': default_width},
     'Exalt':            {'width': default_width},
+    'Sum':              {'width': 50},
     'A1':               {'width': 50},
     'H1':               {'width': 50},
     'A2':               {'width': 50},
@@ -414,29 +413,33 @@ non_rotated_column_defs = {
 data_selection_sets = {
   "Deck Stats": {
     "Name": True, "name": True, "type": 'Deck', "id" : True,
-    "registeredDate": True, "UpdatedAt": True, "pExpiry": True,
+    "registeredDate": True, "UpdatedAt": True, "pExpiry": True, "digital" : True,
     "level": True,  "xp": True, "elo": True, "deckScore": True, "deckRank": True,
     "cardSetNo": True,  "faction": True,
     "forgebornId": True, "cardTitles": True, "Betrayers": True, "SolBinds": True,
-    "Creatures": True,  "Spells": True,
     "FB2": True,    "FB3": True,    "FB4": True,
+    "Creatures": True,  "Spells": True,
+    "Sum": True,
     "A1": True,     "A2": True,     "A3": True,
     "H1": True,     "H2": True,     "H3": True
   },
   "Fusion Stats": {
     "Name": True, "type": 'Fusion',
-    "CreatedAt": True, "UpdatedAt": True, 
+    "CreatedAt": True, "UpdatedAt": True, "digital" : True, 
     "faction": True, "crossFaction": True,
     "forgebornId": True, "cardTitles": True,
     "FB2": True,    "FB3": True,    "FB4": True,
-    "Creatures": True,  "Spells": True, "Exalt": True,    
-    #"A1": True,     "A2": True,     "A3": True,
-    #"H1": True,     "H2": True,     "H3": True
+    "Creatures": True,  "Spells": True, "Exalt": True,   
+    "Sum":  True, 
+    "A1": True,     "A2": True,     "A3": True,
+    "H1": True,     "H2": True,     "H3": True
   },
   "Deck Tags": {
     "Name": True,
     "type": 'Deck',
+    "digital" : True,
     "faction": True,
+    "Sum":  True,
     "Beast": True,
     "Beast Synergy": True,
     "Dinosaur": True,
@@ -513,6 +516,7 @@ data_selection_sets = {
    "Fusion Tags": {
     "Name": True,
     "type": 'Fusion',
+    "digital" : True, 
     "Deck A": True,
     "Deck B": True,
     "faction": True,
@@ -522,6 +526,7 @@ data_selection_sets = {
     "FB3": True,
     "FB4": True,
     "cardTitles": True,
+    "Sum":  True,
     "Beast": True,
     "Beast Synergy": True,
     "Dinosaur": True,
@@ -597,8 +602,9 @@ data_selection_sets = {
   },
   "Deck Combos": {
     "Name": True, "name": True, "type": 'Deck',
-    "cardSetNo": True,  "faction": True,
+    "cardSetNo": True,  "digital" : True, "faction": True,
     "forgebornId": True, "Betrayers": True, "SolBinds": True,
+    "Sum": True,
     'BEAST Combo':      True,
     'DINOSAUR Combo':   True,
     'DRAGON Combo':     True,
@@ -626,6 +632,7 @@ data_selection_sets = {
     'REANIMATE Combo' : True,
     'SELFDAMAGE Combo': True,    
     'UPGRADE Combo':    True,    
+    'INCREASED A Combo': True,
   },
   "Fusion Combos" :  {
     "Name": True,
@@ -638,7 +645,9 @@ data_selection_sets = {
     "FB2": True,
     "FB3": True,
     "FB4": True,
-    "cardTitles": True,  
+    "cardSetNo":        True,  
+    'digital':          True,
+    "Sum": True,
     'BEAST Combo':      True,
     'DINOSAUR Combo':   True,
     'DRAGON Combo':     True,
@@ -666,6 +675,7 @@ data_selection_sets = {
     'REANIMATE Combo' : True,
     'SELFDAMAGE Combo': True,    
     'UPGRADE Combo':    True,    
+    'INCREASED A Combo': True,
   },
   'Deck Content': {
     'name': True,
@@ -686,12 +696,13 @@ data_selection_sets = {
 
 GLOBAL_COLUMN_ORDER = [
     'index', 'type', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B','id',
-    'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 
+    'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'tags', 
     'xp', 'elo', 'level', 'deckScore', 'deckRank',
     'cardSetNo', 'faction', 'crossFaction', 'forgebornId', 'cardTitles', 'Betrayers', 'SolBinds',
     'cardType', 'cardSubType', 'FB2', 'FB3', 'FB4',
     'Creatures', 'Spells', 'Exalt', 
-    'A1', 'H1', 'A2', 'H2', 'A3', 'H3',    
+    'A1', 'H1', 'A2', 'H2', 'A3', 'H3', 
+    'Sum',   
     
     # Creatures
     'Abomination', 

@@ -251,9 +251,11 @@ class Deck(DatabaseObject):
                 # Collect all the card rarity types
                 if card_rarity:
                     if 'Solbind' == card_rarity:
-                        solbindId1 = card.get('solbindId1', None)[5:]
-                        solbindId2 = card.get('solbindId2', None)[5:]                                            
-                        self.cardIds.extend([solbindId1, solbindId2])
+                        solbindId1 = card.get('solbindId1', None) 
+                        solbindId2 = card.get('solbindId2', None)           
+                        for solbindId in [solbindId1, solbindId2]:
+                            if solbindId and solbindId not in self.cardIds:                                 
+                                self.cardIds.append(solbindId[5:])
                     else: 
                         for rarity in card_rarity.split(' '):
                             if rarity == 'Rare': 

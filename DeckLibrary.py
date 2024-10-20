@@ -110,19 +110,17 @@ class DeckLibrary:
                         deck_objects.append(new_deck)
                         
                         # Save all cards that are not already in the database
-                        gv.update_progress('DeckLibrary Cards', total= len(new_deck.cards.items()), message=f"Saving Cards for Deck {deckData['name']}")
                         for index, card in new_deck.cards.items():                            
-                            card_name = card['name'] if 'name' in card else card['title']                            
-                            gv.update_progress('DeckLibrary Cards', message=f"Saving Card {card_name}")
+                            card_name = card['name'] if 'name' in card else card['title']                                                        
                             id = new_deck.cardIds[int(index)-1]    
                             if card['rarity'] == 'Solbind':
                                 # Add Solbind Cards to the database as well
                                 for solbindCard in ['solbindId1', 'solbindId2']:
-                                    solbindId = card[solbindCard][5:]
-                                    if solbindId and solbindId not in cardIdsDatabase:                                        
-                                        solbind_entity = CardLibrary.Entity.lookup(solbindId)
+                                    solbindId = card.get(solbindCard, None)
+                                    if solbindId and solbindId[5:] not in cardIdsDatabase:                                        
+                                        solbind_entity = CardLibrary.Entity.lookup(solbindId[5:])
                                         if solbind_entity:  
-                                            solbind_data = extract_card_data_from_entity(solbind_entity, solbindId)
+                                            solbind_data = extract_card_data_from_entity(solbind_entity, solbindId[5:])
                                             solbind_data['cardType'] = 'Solbind'
                                             cardDataList.append(solbind_data)
                                         else:

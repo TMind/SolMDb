@@ -87,17 +87,25 @@ class UniversalLibrary:
                 read_synergies = True   
             elif read_synergies:
                 vrange   = ""
-                if value is not None:                             
-                    if not value.isnumeric():                        
-                        vrange = value
-                        if   value == '*':  value = 1                                        
-                        elif value == '+':  value = 1
-                        elif value == '.':  value = 0
-                        else:
-                            vrange = ''
-                            value = 0
+                if value is not None:  
+                    # Replace comma with dot if exists  
+                    value = value.replace(',', '.')  
+            
+                    # Check for special values  
+                    if value == '*':  
+                        value = 1  
+                    elif value == '+':  
+                        value = 1  
+                    elif value == '.':  
+                        value = 0  
+                    else:  
+                        # Try to convert to float  
+                        try:  
+                            value = float(value)  
+                        except ValueError:  
+                            value = 0 
                             
-                    if int(value) > 0:                                                                
+                    if value > 0:                                                                
                             interface_data = InterfaceData(tag, value, vrange)
                             Interface(interface_data).save()        
                             interfaceNames.append(tag) 

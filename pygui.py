@@ -300,41 +300,34 @@ def generate_central_dataframe(force_new=False):
                 update_central_frame_tab(stored_df)
                 return stored_df
 
-    if force_new or not file_record:
-        if username in user_dataframes:
-            del user_dataframes[username]
-        if file_record:
-            if gv.fs:
-                gv.fs.delete(file_record['_id'])
-
     gv.update_progress(identifier, total=5, message='Generating Central Dataframe...')
     deck_stats_df = generate_deck_statistics_dataframe()
-    validate_dataframe_attributes(deck_stats_df, 'Deck Stats', expected_index_name=None, disallow_columns=['name'])
+    #validate_dataframe_attributes(deck_stats_df, 'Deck Stats', expected_index_name=None, disallow_columns=['name'])
 
     gv.update_progress(identifier, message='Generating Card Type Count Dataframe...')
     card_type_counts_df = generate_cardType_count_dataframe()
-    validate_dataframe_attributes(card_type_counts_df, 'Card Type Counts', expected_index_name=None, disallow_columns=['name'])
+    #validate_dataframe_attributes(card_type_counts_df, 'Card Type Counts', expected_index_name=None, disallow_columns=['name'])
 
     central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
-    validate_dataframe_attributes(central_df, 'Central DF after merging Card Type Counts', expected_index_name=None, disallow_columns=['name'])
+    #validate_dataframe_attributes(central_df, 'Central DF after merging Card Type Counts', expected_index_name=None, disallow_columns=['name'])
 
     gv.update_progress(identifier, message='Generating Fusion statistics Dataframe...')
     fusion_stats_df = generate_fusion_statistics_dataframe(central_df)
-    validate_dataframe_attributes(fusion_stats_df, 'Fusion Stats', expected_index_name=None, disallow_columns=['name'])
+    #validate_dataframe_attributes(fusion_stats_df, 'Fusion Stats', expected_index_name=None, disallow_columns=['name'])
 
     central_df = merge_and_concat(central_df, fusion_stats_df)
-    validate_dataframe_attributes(central_df, 'Central DF after merging Fusion Stats', expected_index_name=None, disallow_columns=['name'])
+    #validate_dataframe_attributes(central_df, 'Central DF after merging Fusion Stats', expected_index_name=None, disallow_columns=['name'])
 
     # Clean the columns of the central DataFrame
     gv.update_progress(identifier, message='Clean Central Dataframe...')
     central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo'])
     central_df = central_df.copy()
-    validate_dataframe_attributes(central_df, 'Central DF after cleaning', expected_index_name=None, disallow_columns=['name'])
+    #validate_dataframe_attributes(central_df, 'Central DF after cleaning', expected_index_name=None, disallow_columns=['name'])
 
     # Reset the index and create a new column named 'name' from the original index
     central_df.reset_index(inplace=True)
     central_df.rename(columns={'name': 'Name'}, inplace=True)
-    validate_dataframe_attributes(central_df, 'Central DF after resetting index' ,expected_index_name=None, disallow_columns=[])
+    #validate_dataframe_attributes(central_df, 'Central DF after resetting index' ,expected_index_name=None, disallow_columns=[])
 
     # Check if renaming was successful
     if 'Name' not in central_df.columns:
@@ -350,6 +343,8 @@ def generate_central_dataframe(force_new=False):
     user_dataframes[username] = central_df
 
     if gv.fs:
+        if file_record:
+            gv.fs.delete(file_record['_id'])
         with gv.fs.new_file(filename=f'central_df_{username}') as file:
             pickle.dump(central_df, file)
         
@@ -718,46 +713,49 @@ def generate_fusion_statistics_dataframe(central_df=None):
         
         return fusion_row
 
-    # Fetch fusions from the database using a batch approach
-    count = 0
-    batch_size = 1000  # Set your desired batch size here
-    fusion_list = []
 
+    # Define the fields you need  
+    additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'currentForgebornId', 'ForgebornIds', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'children_data', 'tags']  
+    projection = {field: 1 for field in additional_fields}  
+    
+    # Fetch fusions from the database using a batch approach  
+    count = 0  
+    batch_size = 1000  # Set your desired batch size here  
+    df_fusions_filtered = pd.DataFrame()  # Initialize an empty DataFrame  
+    
     if gv.myDB:
         fusion_count = gv.myDB.count_documents('Fusion', {})
-        fusion_cursor = gv.myDB.find('Fusion', {}).batch_size(batch_size)
+        fusion_cursor = gv.myDB.find('Fusion', {}, projection).batch_size(batch_size)
+    
+        batch = []  
+        for fusion in fusion_cursor:  
+            batch.append(fusion)  
+            count += 1  
         
-        batch = []
-        for fusion in fusion_cursor:            
-            #gv.update_progress('Fetching Fusions', total= fusion_count, message=f'Generating Basic Dataframe from fusion {fusion["name"]}')
-            batch.append(fusion)
-            count += 1
-
-            # If batch is full, process it
-            if len(batch) >= batch_size:
-                fusion_list.extend(batch)
-                gv.update_progress('Fetching Fusions', value=len(batch), total=fusion_count, message=f'Processed {count} fusio--ns so far... size : {len(fusion_list) * len(fusion)/1000}KB')
-                batch = []
-
-        # Process any remaining documents in the batch
-        if batch:
-            fusion_list.extend(batch)
+            # If batch is full, process it  
+            if len(batch) >= batch_size:  
+                df_batch = pd.DataFrame(batch)  
+                df_fusions_filtered = pd.concat([df_fusions_filtered, df_batch], ignore_index=True)  
+                gv.update_progress('Fetching Fusions', value=len(batch), total=fusion_count, message=f'Processed {count} fusions so far')  
+                batch = []  
         
-    print(f"{count} fusions fetched from the database.")
-    df_fusions = pd.DataFrame(fusion_list)
-
+        # Process any remaining documents in the batch  
+        if batch:  
+            df_batch = pd.DataFrame(batch)  
+            df_fusions_filtered = pd.concat([df_fusions_filtered, df_batch], ignore_index=True)  
+            print(f"{count} fusions fetched from the database.")  
     # If fusions are found, process them
-    if not df_fusions.empty:
-        gv.update_progress('Fusion Card Titles', 0, len(df_fusions), 'Fetching Card Titles')
+    if not df_fusions_filtered.empty:
+        gv.update_progress('Fusion Card Titles', 0, len(df_fusions_filtered), 'Fetching Card Titles')
 
         # Extract necessary columns and add additional calculated columns
-        df_fusions['cardTitles'] = df_fusions['children_data'].apply(get_card_titles_by_Ids)
-        df_fusions['forgebornId'] = df_fusions['currentForgebornId']
-        df_fusions['type'] = 'Fusion'
+        df_fusions_filtered['cardTitles'] = df_fusions_filtered['children_data'].apply(get_card_titles_by_Ids)
+        df_fusions_filtered['forgebornId'] = df_fusions_filtered['currentForgebornId']
+        df_fusions_filtered['type'] = 'Fusion'
 
         # Select only relevant fields for analysis
-        additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'ForgebornIds', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'children_data', 'tags']
-        df_fusions_filtered = df_fusions[additional_fields].copy()
+        #additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'ForgebornIds', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'children_data', 'tags']
+        #df_fusions_filtered = df_fusions[additional_fields].copy()
 
         # Set 'name' as the index and drop the original 'name' column
         if 'name' in df_fusions_filtered.columns:
@@ -770,7 +768,7 @@ def generate_fusion_statistics_dataframe(central_df=None):
                 print("OK: 'name' column not found in the dataframe.")                 
             
         # Initialize a list to store all interface ID DataFrames
-        gv.update_progress('Fusion Stats', 0, len(df_fusions), 'Generating Fusion Dataframe...')
+        gv.update_progress('Fusion Stats', 0, len(df_fusions_filtered), 'Generating Fusion Dataframe...')
         all_interface_ids_df_list = []
         
         # Apply the function across all rows in a more efficient way

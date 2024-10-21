@@ -45,10 +45,11 @@ class GridManager:
             with self.debug_output:
                 print(f"GridManager::add_grid() - Grid {identifier} updated.")
         else:
-            grid = QGrid(identifier, df, options) if grid_type == 'qgrid' else print("Not QGrid Type!")
+            summed_df = self.update_sum_column(df)
+            grid = QGrid(identifier, summed_df, options) if grid_type == 'qgrid' else print("Not QGrid Type!")
             self.grids[identifier] = grid
             self.relationships[identifier] = dependent_identifiers
-            self._setup_grid_events(identifier, grid)
+            self._setup_grid_events(identifier, grid)            
             with self.debug_output:
                 print(f"GridManager::add_grid() - Grid {identifier} created with options {options}.")
             

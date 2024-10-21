@@ -351,6 +351,9 @@ rotated_column_defs = {
     'Health Debuff':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
     
     # Attack 
+    'Increased A':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Increased A Synergy': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'INCREASED A Combo': {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Battle':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Battle Synergy' :  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Slay':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -605,6 +608,7 @@ data_selection_sets = {
     "cardSetNo": True,  "digital" : True, "faction": True,
     "forgebornId": True, "Betrayers": True, "SolBinds": True,
     "Sum": True,
+    "Free": True,
     'BEAST Combo':      True,
     'DINOSAUR Combo':   True,
     'DRAGON Combo':     True,
@@ -648,6 +652,7 @@ data_selection_sets = {
     "cardSetNo":        True,  
     'digital':          True,
     "Sum": True,
+    "Free": True,
     'BEAST Combo':      True,
     'DINOSAUR Combo':   True,
     'DRAGON Combo':     True,

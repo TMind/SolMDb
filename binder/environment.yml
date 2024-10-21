@@ -16,6 +16,7 @@ dependencies:
   - pillow  
   - scipy  
   - tqdm  
+  - pycognito
   - requests  
   - pip  
   - pip:  

@@ -414,7 +414,153 @@ non_rotated_column_defs = {
     'node_data':        {'width': 50},
 }
 
-data_selection_sets = {
+
+
+info_selection_set = {
+    
+    "Basic": {
+        "Name": True, "type": True, "id": True, "CreatedAt": True, "UpdatedAt": True, "digital": True,
+        "faction": True, "cardSetNo": True, "forgebornId": True, "cardTitles": True,
+        "FB2": True, "FB3": True, "FB4": True, "Betrayers": True, "SolBinds": True,
+        "Spells": True, "Exalt": True,
+    },
+    
+    "Detail": {
+        "Name": True, "type": True, "id": True, "CreatedAt": True, "UpdatedAt": True, "digital": True,
+        "faction": True, "cardSetNo": True, "forgebornId": True, "cardTitles": True,
+        "FB2": True, "FB3": True, "FB4": True, "Betrayers": True, "SolBinds": True,
+        "Spells": True, "Exalt": True,
+        "Sum": True,
+        "A1": True, "H1": True, "A2": True, "H2": True, "A3": True, "H3": True,
+    },
+    
+    
+}
+
+
+tag_selection_set = {
+    
+    "Tags": {
+        "Sum":  True,
+        "Beast": True,        
+        "Dinosaur": True,        
+        "Mage": True,        
+        "Robot": True,
+        "Scientist": True,
+        "Spirit": True,        
+        "Warrior": True,        
+        "Zombie": True,        
+        "Dragon": True,
+        "Elemental": True,        
+        "Plant": True,        
+        "Replace Setup": True,
+        "Minion": True,        
+        "Spell": True,        
+        "Healing Source": True,
+        "Movement": True,
+        "Disruption": True,
+        "Movement Benefit": True,
+        "Armor": True,
+        "Armor Giver": True,
+        "Armor Synergy": True,
+        "Activate": True,
+        "Ready": True,
+        "Free": True,
+        "Upgrade": True,
+        "Upgrade Synergy": True,
+        "Face Burn": True,
+        "Removal": True,
+        "Breakthrough": True,
+        "Breakthrough Giver": True,
+        "Aggressive": True,
+        "Aggressive Giver": True,
+        "Defender": True,
+        "Defender Giver": True,
+        "Stealth": True,
+        "Stealth Giver": True,
+        "Stat Buff": True,
+        "Attack Buff": True,
+        "Health Buff": True,
+        "Stat Debuff": True,
+        "Attack Debuff": True,
+        "Health Debuff": True,
+        "Destruction Synergy": True,
+        "Destruction Activator": True,
+        "Self Damage Payoff": True,
+        "Self Damage Activator": True,
+        "Silence": True,
+        "Exalt": True,
+        "Exalt Synergy": True,
+        "Slay": True,
+        "Deploy": True,
+    },    
+    "Synergies": {
+    },
+    "Combos": {
+        "Sum": True,
+        "Free": True,
+        'BEAST Combo':      True,
+        'DINOSAUR Combo':   True,
+        'DRAGON Combo':     True,
+        'ELEMENTAL Combo':  True,    
+        'MAGE Combo':       True,
+        'PLANT Combo':      True,
+        'ROBOT Combo':      True,
+        'SCIENTIST Combo':  True,
+        'SPIRIT Combo':     True,
+        'BANISH SPIRIT Combo':     True,
+        'WARRIOR Combo':    True,
+        'ZOMBIE Combo':     True,
+        'MINION Combo':     True,
+        'EXALT Combo':      True,    
+        'SPELL Combo':      True,
+        'DEPLOY Combo' :    True,
+        'ARMOR Combo':      True,
+        'ACTIVATE Combo':   True,
+        'DESTRUCTION Combo': True,
+        'DESTROY Combo': True,
+        'HEALING Combo':    True,
+        'MOVEMENT Combo':   True,
+        'REPLACE Combo':    True,            
+        'READY Combo' :     True,    
+        'REANIMATE Combo' : True,
+        'SELFDAMAGE Combo': True,    
+        'UPGRADE Combo':    True,    
+        'INCREASED A Combo': True,
+    },        
+    
+}
+
+
+data_selection_sets = { 
+
+  "Common": {
+      "Name": True, 
+      "UpdatedAt": True, 
+      "faction": True,              
+      "cardSetNo": True,"digital": True,
+      "cardTitles": True,
+      "forgebornId": True,
+      "FB2" : True, "FB3" : True, "FB4" : True,
+      "Betrayers": True, "SolBinds": True,
+      "Spells": True, "Exalt": True,       
+  },
+  
+  "Deck": {
+    "registeredDate": True, "pExpiry": True, 
+    "level": True, "xp": True, "elo": True, "deckScore": True, "deckRank": True,      
+  },
+  
+  "Fusion": {
+    "CreatedAt": True,
+    "crossFaction" : True, "Deck A": True, "Deck B": True      
+  },
+      
+      
+    
+
+
+
   "Deck Stats": {
     "Name": True, "name": True, "type": 'Deck', "id" : True,
     "registeredDate": True, "UpdatedAt": True, "pExpiry": True, "digital" : True,

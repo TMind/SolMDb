@@ -320,7 +320,7 @@ def generate_central_dataframe(force_new=False):
 
     # Clean the columns of the central DataFrame
     gv.update_progress(identifier, message='Clean Central Dataframe...')
-    central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo'])
+    central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo', 'price', 'Free'])
     central_df = central_df.copy()
     #validate_dataframe_attributes(central_df, 'Central DF after cleaning', expected_index_name=None, disallow_columns=['name'])
 
@@ -682,6 +682,12 @@ def generate_fusion_statistics_dataframe(central_df=None):
                         if 'cardSetNo' not in fusion_row or not isinstance(fusion_row['cardSetNo'], set):
                             fusion_row['cardSetNo'] = set()
                         fusion_row['cardSetNo'].add(cardSetNo)
+                        
+                    for item in ['Creatures', 'Spells', 'Exalt']:
+                        count = deck_row.get(item, 0)
+                        if item not in fusion_row:
+                            fusion_row[item] = 0
+                        fusion_row[item] += count                    
                 
                 else:
                     print(f"Deck '{deck_name}' not found in the central DataFrame.")
@@ -893,7 +899,7 @@ def generate_deck_statistics_dataframe():
     df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
     df_decks_filtered['elo'] = pd.to_numeric(df_decks_filtered['elo'], errors='coerce').fillna(-1).round(2)
 
-    additional_columns = {'Creatures': 0, 'Spells': 0, 'FB2': '', 'FB3': '', 'FB4': '', 'A1': 0.0, 'H1': 0.0, 'A2': 0.0, 'H2': 0.0, 'A3': 0.0, 'H3': 0.0}
+    additional_columns = {'Creatures': 0, 'Spells': 0, 'Exalt': 0, 'FB2': '', 'FB3': '', 'FB4': '', 'A1': 0.0, 'H1': 0.0, 'A2': 0.0, 'H2': 0.0, 'A3': 0.0, 'H3': 0.0}
     for column, default_value in additional_columns.items():
         df_decks_filtered[column] = default_value
 
@@ -954,6 +960,8 @@ def generate_deck_statistics_dataframe():
         if 'stats' in deck:
             stats = deck.get('stats', {})
             card_type_count_dict = {'Creatures': stats['card_types']['Creature']['count'], 'Spells': stats['card_types']['Spell']['count']}
+            if 'Exalt Type' in stats['card_types']['Spell']: 
+                card_type_count_dict['Exalt'] = stats['card_types']['Spell']['Exalt Type']
             card_type_count_df = pd.DataFrame([card_type_count_dict], index=[deck['name']])
             attack_dict = stats['creature_averages']['attack']
             defense_dict = stats['creature_averages']['health']

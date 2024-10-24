@@ -229,7 +229,9 @@ class DeckData:
     rares: int = 0
     level: int = 0
     _id: str = ''
-    id: str = ''    
+    id: str = ''  
+    price: float = 0.0
+    owner: str = ''  
     children_data: dict = field(default_factory=dict)
     myCategories: dict = field(default_factory=dict)
     deckStats: dict = field(default_factory=dict)

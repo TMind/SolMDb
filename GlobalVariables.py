@@ -386,6 +386,7 @@ non_rotated_column_defs = {
     'deckScore':        {'width': 90},
     'deckRank':         {'width': 90},
     'pExpiry':          {'width': 200},
+    'digital':          {'width': 50},
     'cardSetNo':        {'width': 50},
     'faction':          {'width': 80},
     'crossFaction':     {'width': 100},
@@ -399,9 +400,9 @@ non_rotated_column_defs = {
     'FB4':              {'width': default_width},
     'FB2':              {'width': default_width},
     'FB3':              {'width': default_width},
-    'Creatures':        {'width': default_width},
-    'Spells':           {'width': default_width},
-    'Exalt':            {'width': default_width},
+    'Creatures':        {'width': 75},
+    'Spells':           {'width': 75},
+    'Exalt':            {'width': 75},
     'Sum':              {'width': 50},
     'A1':               {'width': 50},
     'H1':               {'width': 50},
@@ -421,7 +422,7 @@ data_selection_sets = {
     "cardSetNo": True,  "faction": True,
     "forgebornId": True, "cardTitles": True, "Betrayers": True, "SolBinds": True,
     "FB2": True,    "FB3": True,    "FB4": True,
-    "Creatures": True,  "Spells": True,
+    "Spells": True, "Exalt": True,    
     "Sum": True,
     "A1": True,     "A2": True,     "A3": True,
     "H1": True,     "H2": True,     "H3": True
@@ -607,6 +608,7 @@ data_selection_sets = {
     "Name": True, "name": True, "type": 'Deck',
     "cardSetNo": True,  "digital" : True, "faction": True,
     "forgebornId": True, "Betrayers": True, "SolBinds": True,
+    "Spells": True, "Exalt": True,    
     "Sum": True,
     "Free": True,
     'BEAST Combo':      True,
@@ -651,6 +653,7 @@ data_selection_sets = {
     "FB4": True,
     "cardSetNo":        True,  
     'digital':          True,
+    "Spells": True, "Exalt": True,    
     "Sum": True,
     "Free": True,
     'BEAST Combo':      True,
@@ -695,13 +698,24 @@ data_selection_sets = {
     'FB2': True,
     'FB3': True,
     'FB4': True,
+  },
+  'Listing': {
+    "Name": True, "name": True, "type": 'Deck', "id" : True,
+    "price": True, "owner": True, "registeredDate": True, "pExpiry": True, 
+    "deckScore": True, "deckRank": True,
+    "cardSetNo": True,  "faction": True,
+    "forgebornId": True, "cardTitles": True, "Betrayers": True, "SolBinds": True,
+    "FB2": True,    "FB3": True,    "FB4": True,
+    "Creatures": True,  "Spells": True, "Exalt": True,    
+    "A1": True,     "A2": True,     "A3": True,
+    "H1": True,     "H2": True,     "H3": True    
   }
 }
 
 
 GLOBAL_COLUMN_ORDER = [
     'index', 'type', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B','id',
-    'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'tags', 
+    'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'tags', 'price', 'owner',
     'xp', 'elo', 'level', 'deckScore', 'deckRank',
     'cardSetNo', 'faction', 'crossFaction', 'forgebornId', 'cardTitles', 'Betrayers', 'SolBinds',
     'cardType', 'cardSubType', 'FB2', 'FB3', 'FB4',

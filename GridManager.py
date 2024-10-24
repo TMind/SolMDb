@@ -29,7 +29,7 @@ class GridManager:
         self.custom_css_class = self.css_manager.create_and_inject_css('filter_grids', rotate_suffix)
         self.grid_initializer = GridInitializer(self.sorting_manager, self.css_manager, gv.rotated_column_definitions, self.custom_css_class, debug_output)
 
-    def add_grid(self, identifier, df, options=None, dependent_identifiers=None, grid_type='qgrid', enable_sorting=False, include_totals=False):
+    def add_grid(self, identifier, df, options=None, dependent_identifiers=None, grid_type='qgrid', enable_sorting=False, rebuild=False):
         """Add or update a grid to the GridManager."""
         if dependent_identifiers is None:
             dependent_identifiers = []
@@ -38,7 +38,7 @@ class GridManager:
         with self.debug_output:
             print(f"GridManager::add_grid() - Options passed for {identifier}: {options}")
 
-        if identifier in self.grids:
+        if identifier in self.grids and not rebuild:
             grid = self.grids[identifier]
             self.set_default_data(identifier, df)
             self.update_dataframe(identifier, df)
@@ -872,7 +872,7 @@ class DynamicGridManager:
         DataSelectionManager.register_observer(self.update_grids)
 
     def update_grids(self, event, widget):
-        self.refresh_gridbox()        
+        self.refresh_gridbox(rebuild = True)        
 
     def reset_grid_layout(self, new_size):
         #self.ui.children = [self.selectionGrid, self.filterGrid] 
@@ -900,7 +900,7 @@ class DynamicGridManager:
         return filtered_df            
         
 
-    def refresh_gridbox(self, change=None):
+    def refresh_gridbox(self, change=None, rebuild = False):
         #print(f"DynamicGridManager::refresh_gridbox() - Refreshing grid box with change: {change}")        
         collection_df = self.qm.get_default_data('collection')
         if collection_df.empty or (change and 'type' in change and (change['type'] == 'username' or change['type'] == 'generation')):            
@@ -923,7 +923,7 @@ class DynamicGridManager:
                 grid_widget  = None 
 
                 grid_identifier = f"filtered_grid_{index}"
-                grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options, enable_sorting=True)
+                grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options, rebuild = rebuild)
                 
                 # Register selection event callback using GridManager's register_callback
                 with self.out_debug:

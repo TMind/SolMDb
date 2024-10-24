@@ -93,6 +93,8 @@ def process_magiceden_listings(listings, myApi, args):
         gv.update_progress(identifier, 0, len(listings))
         for idx, listing in enumerate(listings, start=1):            
             token = listing.get('token', {})
+            price = listing.get('price', 0.0)
+            owner = token.get('owner', '')
             attributes = token.get('attributes', [])
             deck_link = None
             
@@ -122,6 +124,8 @@ def process_magiceden_listings(listings, myApi, args):
                     )
                     
                     if deck_data:
+                        deck_data[0]['price'] = price  # Add the price to the deck data
+                        deck_data[0]['owner'] = owner  # Add the owner to the deck data
                         net_data.extend(deck_data)  # Append the fetched deck data to the list
                     else:
                         print(f"No data returned for deck with ID: {deck_id}")

@@ -20,3 +20,4 @@ source/*
 .idea/
 binder/soldb-gc-key.json
 html/
+kai/soldb.parquet

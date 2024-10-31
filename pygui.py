@@ -342,10 +342,13 @@ def generate_central_dataframe(force_new=False):
     gv.update_progress(identifier, message='Central Dataframe Generated.')
     user_dataframes[username] = central_df
 
+    NuOfDecks = len(deck_stats_df)
+    NuOfFusions = len(fusion_stats_df)
+
     if gv.fs:
         if file_record:
             gv.fs.delete(file_record['_id'])
-        with gv.fs.new_file(filename=f'central_df_{username}') as file:
+        with gv.fs.new_file(filename=f'central_df_{username}', metadata={'decks': NuOfDecks, 'fusions' : NuOfFusions}) as file:
             pickle.dump(central_df, file)
         
     update_deck_and_fusion_counts()
@@ -689,6 +692,18 @@ def generate_fusion_statistics_dataframe(central_df=None):
                             fusion_row[item] = 0
                         fusion_row[item] += count                    
                 
+                    Betrayer = deck_row.get('Betrayers', '')
+                    if Betrayer:
+                        if 'Betrayers' not in fusion_row:
+                            fusion_row['Betrayers'] = []
+                        fusion_row['Betrayers'].append(Betrayer)
+                        
+                    SolBind = deck_row.get('SolBinds', '')
+                    if SolBind:
+                        if 'SolBinds' not in fusion_row:
+                            fusion_row['SolBinds'] = []
+                        fusion_row['SolBinds'].append(SolBind)
+                
                 else:
                     print(f"Deck '{deck_name}' not found in the central DataFrame.")
             
@@ -700,11 +715,17 @@ def generate_fusion_statistics_dataframe(central_df=None):
             if 'cardSetNo' in fusion_row and isinstance(fusion_row['cardSetNo'], set):
                 fusion_row['cardSetNo'] = ", ".join(str(item) for item in sorted(fusion_row['cardSetNo']))
             
+            if 'Betrayers' in fusion_row and isinstance(fusion_row['Betrayers'], list):
+                fusion_row['Betrayers'] = ", ".join(str(item) for item in sorted(fusion_row['Betrayers']))
+            
+            if 'SolBinds' in fusion_row and isinstance(fusion_row['SolBinds'], list):
+                fusion_row['SolBinds'] = ", ".join(str(item) for item in sorted(fusion_row['SolBinds']))
+             
 
         # Generate graph data for the current fusion
         myGraph = MyGraph()
         myGraph.from_dict(fusion_row['graph'])
-        interface_ids = myGraph.get_length_interface_ids()
+        interface_ids = myGraph.get_length_interface_ids()    # Store the interface IDs in the database instead of generating it here
 
         # Generate combo data directly for this fusion
         combo_data = get_combos_for_graph(myGraph, fusion_name)
@@ -732,7 +753,7 @@ def generate_fusion_statistics_dataframe(central_df=None):
     if gv.myDB:
         fusion_count = gv.myDB.count_documents('Fusion', {})
         fusion_cursor = gv.myDB.find('Fusion', {}, projection).batch_size(batch_size)
-    
+        
         batch = []  
         for fusion in fusion_cursor:  
             batch.append(fusion)  
@@ -742,14 +763,16 @@ def generate_fusion_statistics_dataframe(central_df=None):
             if len(batch) >= batch_size:  
                 df_batch = pd.DataFrame(batch)  
                 df_fusions_filtered = pd.concat([df_fusions_filtered, df_batch], ignore_index=True)  
-                gv.update_progress('Fetching Fusions', value=len(batch), total=fusion_count, message=f'Processed {count} fusions so far')  
+                gv.update_progress('Fetching Fusions', value=count, total=fusion_count, message=f'{count} Fusions fetched so far')  
                 batch = []  
         
         # Process any remaining documents in the batch  
         if batch:  
             df_batch = pd.DataFrame(batch)  
             df_fusions_filtered = pd.concat([df_fusions_filtered, df_batch], ignore_index=True)  
+            gv.update_progress('Fetching Fusions', value=count, total=fusion_count, message=f'{count} Fusions fetched in total')  
             print(f"{count} fusions fetched from the database.")  
+            
     # If fusions are found, process them
     if not df_fusions_filtered.empty:
         gv.update_progress('Fusion Card Titles', 0, len(df_fusions_filtered), 'Fetching Card Titles')
@@ -1139,7 +1162,7 @@ def reload_data_on_click(button, value):
         if username_value in valid_db_names:
             #print(f'Setting db_list value to {username_value}')
             # Force update the central DataFrame for the username after reloading the data 
-            #update_deck_and_fusion_counts()
+            update_deck_and_fusion_counts()
             #generate_central_dataframe(force_new=True)
             db_list.value = username_value
         else:
@@ -1422,11 +1445,11 @@ def update_count_display():
     # Initialize a list to hold rows for the DataFrame
     rows = []
 
-    for key, value in display_data.items():
+    for key, value in sorted(display_data.items()):
         if value:  # Only proceed if the value is not empty
             if isinstance(value, dict):
                 # Add each key-value pair in the dictionary as new rows with Info Type
-                for sub_key, sub_value in value.items():
+                for sub_key, sub_value in sorted(value.items()):
                     rows.append((key, sub_key, sub_value))
 
     # Create a DataFrame from the rows
@@ -1449,9 +1472,11 @@ def update_deck_and_fusion_counts():
     # Ensure we are querying the right database based on the selected username
     db_manager = gv.myDB
     if db_manager:
+        
+        # Count the number of decks and fusions in the database
         deck_count = db_manager.count_documents('Deck', {})
         fusion_count = db_manager.count_documents('Fusion', {})
-        username = db_manager.get_current_db_name()
+        username = db_manager.get_current_db_name()        
 
         # Query the GridFS for the 'central_df' file
         file_record = db_manager.find_one('fs.files', {'filename': f"central_df_{username}"})
@@ -1460,9 +1485,20 @@ def update_deck_and_fusion_counts():
             # Get the local timezone from your system
             utc_upload_date = file_record['uploadDate']
             local_timezone = get_localzone()
+            NuOfDecks = file_record['metadata']['decks'] if 'metadata' in file_record else 0
+            NuOfFusions = file_record['metadata']['fusions'] if 'metadata' in file_record else 0
+            
             # Convert UTC to your local timezone
             creation_date = utc_upload_date.replace(tzinfo=pytz.utc).astimezone(local_timezone)
             creation_date_str = creation_date.strftime('%Y-%m-%d %H:%M:%S')
+            
+            # Store the DataFrame information in the dictionary
+            display_data['DataFrame'] = {
+                'Timestamp':    creation_date_str,
+                'Decks':        NuOfDecks,
+                'Fusions' :     NuOfFusions                
+            }
+            
         else:
             creation_date_str = "No previous update found"
         
@@ -1472,6 +1508,10 @@ def update_deck_and_fusion_counts():
             'Decks': deck_count,
             'Fusions': fusion_count
         }
+        
+        
+        
+        
         # Call the helper function to update the display
         update_count_display()
     else:

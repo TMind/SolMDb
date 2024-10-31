@@ -279,7 +279,7 @@ rotated_column_defs = {
     'DESTRUCTION Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},    
     'FB Creature':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'FB Creature Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'FACE DMG Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'FACE DMG Combo':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Self Damage Payoff':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Self Damage Activator':{'width': rotated_width, 'headerCssClass': rotate_suffix},
     'SELFDAMAGE Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -533,33 +533,6 @@ tag_selection_set = {
 
 
 data_selection_sets = { 
-
-  "Common": {
-      "Name": True, 
-      "UpdatedAt": True, 
-      "faction": True,              
-      "cardSetNo": True,"digital": True,
-      "cardTitles": True,
-      "forgebornId": True,
-      "FB2" : True, "FB3" : True, "FB4" : True,
-      "Betrayers": True, "SolBinds": True,
-      "Spells": True, "Exalt": True,       
-  },
-  
-  "Deck": {
-    "registeredDate": True, "pExpiry": True, 
-    "level": True, "xp": True, "elo": True, "deckScore": True, "deckRank": True,      
-  },
-  
-  "Fusion": {
-    "CreatedAt": True,
-    "crossFaction" : True, "Deck A": True, "Deck B": True      
-  },
-      
-      
-    
-
-
 
   "Deck Stats": {
     "Name": True, "name": True, "type": 'Deck', "id" : True,
@@ -863,9 +836,9 @@ GLOBAL_COLUMN_ORDER = [
     'index', 'type', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B','id',
     'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'tags', 'price', 'owner',
     'xp', 'elo', 'level', 'deckScore', 'deckRank',
-    'cardSetNo', 'faction', 'crossFaction', 'forgebornId', 'cardTitles', 'Betrayers', 'SolBinds',
-    'cardType', 'cardSubType', 'FB2', 'FB3', 'FB4',
-    'Creatures', 'Spells', 'Exalt', 
+    'cardSetNo', 'faction', 'crossFaction', 'cardTitles', 
+    'cardType', 'cardSubType', 'forgebornId', 'FB2', 'FB3', 'FB4', 'Betrayers', 'SolBinds',
+    'Spells', 'Exalt', 
     'A1', 'H1', 'A2', 'H2', 'A3', 'H3', 
     'Sum',   
     
@@ -915,7 +888,7 @@ GLOBAL_COLUMN_ORDER = [
     'Free', 'Free Attack Buff', 'Free Healing Source', 'Free Mage', 'Free Spell', 'Free Replace', 'Free Self Damage', 'Free SelfDestruction', 'Free Upgrade',
     
     # Removal    
-    'Face Burn', 'FB Creature', 'FB Creature Synergy', 'FB CREATURE Combo',
+    'Face Burn', 'FB Creature', 'FB Creature Synergy', 'FACE DMG Combo',
     'Disruption', 'Removal', 'Silence', 
     
     # Keywords

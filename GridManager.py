@@ -21,8 +21,8 @@ from SortingManager import SortingManager
 
 
 DEFAULT_FILTER =  pd.DataFrame({
-            'Type': ['Fusion'],
-            'Name': ['The Timing Automated Oath Pistons: Snakes of Iniog: The Lone Purposeful Throng' ],
+            'Type': ['Deck'],
+            'Name': ['' ],
             'Modifier': [''],
             'Creature': [''],
             'Spell': [''],            

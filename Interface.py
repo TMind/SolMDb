@@ -252,7 +252,7 @@ class InterfaceCollection:
 @dataclass
 class InterfaceData:
     tag:  str       = ''
-    value: any      = 0
+    value: float      = 0.0
     ranges: str     = ''
     types: list       = field(default_factory=list)
     children_data: dict = field(default_factory=dict)

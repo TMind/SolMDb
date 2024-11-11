@@ -1,7 +1,11 @@
 import os
 from datetime import datetime
 from gc import enable
+from unittest.mock import DEFAULT
+from click import option
 import pandas as pd
+
+from CardLibrary import ForgebornAbility
 try:      import qgridnext as qgrid
 except ImportError:    import qgrid
 import ipywidgets as widgets
@@ -15,6 +19,17 @@ from SortingManager import SortingManager
 
 # module global variables 
 
+
+DEFAULT_FILTER =  pd.DataFrame({
+            'Type': ['Fusion'],
+            'Name': ['The Timing Automated Oath Pistons: Snakes of Iniog: The Lone Purposeful Throng' ],
+            'Modifier': [''],
+            'Creature': [''],
+            'Spell': [''],            
+            'Forgeborn Ability': [''],
+            'Active': [True],
+            'Mandatory Fields': ['Name, Forgeborn Ability']
+        })
 class GridManager:
     EVENT_DF_STATUS_CHANGED = 'df_status_changed'
 
@@ -29,43 +44,39 @@ class GridManager:
         self.custom_css_class = self.css_manager.create_and_inject_css('filter_grids', rotate_suffix)
         self.grid_initializer = GridInitializer(self.sorting_manager, self.css_manager, gv.rotated_column_definitions, self.custom_css_class, debug_output)
 
-    def add_grid(self, identifier, df, options=None, dependent_identifiers=None, grid_type='qgrid', enable_sorting=False, rebuild=False):
+    def add_grid(self, identifier, df, options=None, grid_type='qgrid', enable_sorting=False, rebuild=False):
         """Add or update a grid to the GridManager."""
-        if dependent_identifiers is None:
-            dependent_identifiers = []
-
+        
         # Log the incoming options
-        with self.debug_output:
-            print(f"GridManager::add_grid() - Options passed for {identifier}: {options}")
+        #with self.debug_output:
+        #    print(f"GridManager::add_grid() - Options passed for {identifier}: {options}")
 
         if identifier in self.grids and not rebuild:
             grid = self.grids[identifier]
             self.set_default_data(identifier, df)
             self.update_dataframe(identifier, df)
-            with self.debug_output:
-                print(f"GridManager::add_grid() - Grid {identifier} updated.")
+            #with self.debug_output:
+            #    print(f"GridManager::add_grid() - Grid {identifier} updated.")
         else:
-            summed_df = self.update_sum_column(df)
-            grid = QGrid(identifier, summed_df, options) if grid_type == 'qgrid' else print("Not QGrid Type!")
-            self.grids[identifier] = grid
-            self.relationships[identifier] = dependent_identifiers
-            self._setup_grid_events(identifier, grid)            
-            with self.debug_output:
-                print(f"GridManager::add_grid() - Grid {identifier} created with options {options}.")
-            
-            # Optionally enable sorting for the grid
-            if enable_sorting:
-                self._setup_sorting_events(identifier, grid)
-        
-        # Apply CSS if needed
-        if self.css_manager.needs_custom_styles(grid.main_widget, rotate_suffix):
-            self.css_manager.apply_css_to_widget(grid.main_widget, self.custom_css_class)
-            with self.debug_output:
-                print(f"GridManager::add_grid() - Applying Custom CSS {self.custom_css_class} for {identifier} : {rotate_suffix}")
-        else:
-            grid.main_widget.remove_class(self.custom_css_class)
-            with self.debug_output:
-                print(f"GridManager::add_grid() - Removing Custom CSS {self.custom_css_class} for {identifier} : {rotate_suffix}")
+            #summed_df = self.update_sum_column(df)
+            grid = QGrid(identifier, df, options) if grid_type == 'qgrid' else print("Not QGrid Type!")
+            if grid:
+                grid.update_sum_column()
+                self.grids[identifier] = grid        
+                self._setup_grid_events(identifier, grid)            
+            #with self.debug_output:
+                #print(f"GridManager::add_grid() - Grid {identifier} created with options {options}.")            
+                                
+        self.css_manager.apply_conditional_class(grid.main_widget, rotate_suffix, self.custom_css_class)
+        # # Apply CSS if needed
+        # if self.css_manager.needs_custom_styles(grid.main_widget, rotate_suffix):
+        #     self.css_manager.apply_css_to_widget(grid.main_widget, self.custom_css_class)
+        #     #with self.debug_output:
+        #     #    print(f"GridManager::add_grid() - Applying Custom CSS {self.custom_css_class} for {identifier} : {rotate_suffix}")
+        # else:
+        #     grid.main_widget.remove_class(self.custom_css_class)
+        #     #with self.debug_output:
+        #     #    print(f"GridManager::add_grid() - Removing Custom CSS {self.custom_css_class} for {identifier} : {rotate_suffix}")
 
         return grid
         
@@ -111,29 +122,15 @@ class GridManager:
         return pd.DataFrame()
 
     def update_dataframe(self, identifier, new_df):
+        
         grid = self.grids.get(identifier)
         if grid:
             grid.update_main_widget(new_df)
             self.update_visible_columns(None, grid.main_widget)
-            updated_df = grid.main_widget.get_changed_df()
-            summed_df = self.update_sum_column(updated_df)
-            grid.update_main_widget(summed_df)
-
-    def update_sum_column(self, df):
-        if gv.rotated_column_definitions:
-            # Get the list of columns to sum, ensuring they exist in the DataFrame
-            columns_to_sum = [col for col in gv.rotated_column_definitions.keys() if col in df.columns]
-
-            # Ensure the columns to sum are numeric; replace non-numeric with NaN
-            numeric_df = df[columns_to_sum].apply(pd.to_numeric, errors='coerce')
-
-            # Calculate the sum for each row across the rotated columns
-            df['Sum'] = numeric_df.sum(axis=1)
-
-            # Fill the NaN values in the DataFrame with empty strings
-            df.fillna('', inplace=True)
-
-        return df
+            grid.update_sum_column()
+            
+            self.css_manager.apply_conditional_class(grid.main_widget, rotate_suffix, self.custom_css_class)                        
+            #self.update_toggle_df(grid.main_widget.df,identifier)
 
     def update_toggle_df(self, df, identifier):
         grid = self.grids.get(identifier)
@@ -283,8 +280,12 @@ class BaseGrid:
         #print(f"BaseGrid::__init__() - options = {options}")
         self.qgrid_options = options if options else {}
         self.main_widget = None
-        self.toggle_widget = self.create_toggle_widget(df)
+        #self.toolbar_widget = self.create_toolbar()
+        self.toggle_widget = self.create_toggle_widget(df)        
         self.create_main_widget(df)
+        
+         # Create a VBox to hold the toolbar, toggle widget, and main grid widget
+        self.grid_layout = widgets.VBox([self.toggle_widget, self.main_widget])
 
     def create_main_widget(self, df):
         raise NotImplementedError("Subclasses should implement this method.")
@@ -296,10 +297,27 @@ class BaseGrid:
         return toggle_grid
 
     def get_grid_box(self):
-        return widgets.VBox([self.toggle_widget, self.main_widget])
+        #return widgets.VBox([self.toggle_widget, self.main_widget])
+        return self.grid_layout
 
     def update_main_widget(self, new_df):
         raise NotImplementedError("Subclasses should implement this method.")
+
+    def update_sum_column(self):
+        df = self.main_widget.get_changed_df()
+        if gv.rotated_column_definitions:
+            # Get the list of columns to sum, ensuring they exist in the DataFrame
+            columns_to_sum = [col for col in gv.rotated_column_definitions.keys() if col in df.columns]
+            if columns_to_sum:
+                # Ensure the columns to sum are numeric; replace non-numeric with NaN
+                numeric_df = df[columns_to_sum].apply(pd.to_numeric, errors='coerce')
+
+                # Calculate the sum for each row across the rotated columns
+                df['Sum'] = numeric_df.sum(axis=1)
+
+                # Fill the NaN values in the DataFrame with empty strings
+                df.fillna('', inplace=True)
+                self.update_main_widget(df)
 
     def set_dataframe_version(self, version, df):
         self.df_versions[version] = df
@@ -344,7 +362,7 @@ class QGrid(BaseGrid):
         # Confirm creation of the main widget and options passed
         #print(f"QGrid::create_main_widget() - Final grid options passed to qgrid: {default_grid_options}")
         
-    def update_main_widget(self, new_df):
+    def update_main_widget(self, new_df):        
         self.main_widget.df = new_df
         self.set_dataframe_version('filtered', new_df)
 
@@ -414,6 +432,7 @@ class GridInitializer:
 
             return widget
 
+from mywidgets import EnhancedSelectMultiple
 class FilterGrid:
     """
     Manages the grid for filtering data based on user-defined criteria.
@@ -428,7 +447,7 @@ class FilterGrid:
         self.refresh_function = function_refresh
         self.df = self.create_initial_dataframe()
         self.qgrid_filter = self.create_filter_qgrid()
-        self.selection_box, self.selection_widgets = self.create_selection_box()
+        self.selection_box, self.selection_widgets, self.toggle_buttons_dict = self.create_selection_box()
         DataSelectionManager.register_observer(self.update)
 
     def create_filter_qgrid(self):
@@ -458,17 +477,21 @@ class FilterGrid:
         Returns:
             pandas.DataFrame: The initial dataframe.
         """
-        return pd.DataFrame({
-            'Type': ['Deck'],
-            'Modifier': [''],
-            'op1': [''],
-            'Creature': [''],
-            'op2': [''],
-            'Spell': [''],            
-            'Forgeborn Ability': [''],
-            'Data Set': ['Deck Combos'],
-            'Active': [True],
-        })
+        
+        #initial_type = 'Deck'
+        
+        return DEFAULT_FILTER
+    
+    # pd.DataFrame({
+    #         'Type': [initial_type],
+    #         'Name': [''],
+    #         'Modifier': [''],
+    #         'Creature': [''],
+    #         'Spell': [''],            
+    #         'Forgeborn Ability': [''],
+    #         'Active': [True],
+    #         'Mandatory Fields': ['Name, Forgeborn Ability']
+    #     })
 
     def grid_filter_on_row_removed(self, event, widget):
         """
@@ -481,23 +504,25 @@ class FilterGrid:
         if gv.out_debug:
             with gv.out_debug:
                 print(f"FilterClass::grid_filter_on_row_removed() - Removing row {event['indices']} from filter grid")
+        
+        num_rows = len(widget.get_changed_df())
+        #print(f"Number of rows in filter grid: {num_rows}")
         active_rows = []
-        if 0 in event['indices']:
+        
+        if num_rows == 0:                                
             df = pd.DataFrame({
-                'Type': [''],
+                'Type': ['Deck'],
+                'Name': [''],
                 'Modifier': [''],
-                'op1': [''],
-                'Creature': [''],
-                'op2': [''],
+                'Creature': [''],                
                 'Spell': [''],            
-                'Forgeborn Ability': [''],
-                'Data Set': [''],
-                'Active': [False],
+                'Forgeborn Ability': [''],                
+                'Active': [False],                
+                'Mandatory Fields': ['Name, Forgeborn Ability']
             })
-            widget.df = pd.concat([df, widget.get_changed_df()], ignore_index=True)
-            event['indices'].remove(0)
-        else:
-            widget.df = widget.get_changed_df()
+            widget.df = df
+                          
+        widget.df = widget.get_changed_df()
 
         active_rows = widget.df[widget.df['Active'] == True]
         
@@ -515,27 +540,52 @@ class FilterGrid:
         if gv.out_debug:
             with gv.out_debug:
                 print(f"FilterClass::grid_filter_on_row_added() - Adding new row to filter grid")
-        new_row_index = event['index']
-        df = widget.get_changed_df()
+                
+                new_row_index = event['index']
+                df = widget.get_changed_df()
 
-        #print(f"Adding new row at index {new_row_index} with values: {event}")
+                mandatory_fields = []
 
-        # Set the values for each column in the new row
-        for column in df.columns:
-            if column in ['Type', 'op1', 'op2', 'Data Set']:  # Directly use the value for these fields
-                df.at[new_row_index, column] = self.selection_widgets[column].value
-            elif column == 'Active':  # Assume these are multi-select fields and join their values
+                # Set the values for each column in the new row
+                for column in df.columns:
+                    if column in self.selection_widgets:
+                        widget_value = self.selection_widgets[column].value
+
+                        # Special handling for the 'Forgeborn Ability' column
+                        if column == 'Forgeborn Ability':
+                            fb_ability_list = [fb_ability.split(' : ')[1] for fb_ability in widget_value]
+                            value = '; '.join(fb_ability_list)
+                        else:
+                            # Convert the widget value to string, handling different possible types
+                            if isinstance(widget_value, (list, set, tuple)):
+                                if len(widget_value) == 1:
+                                    # If there's only one element in the list/set/tuple, use that element directly
+                                    value = str(widget_value[0])
+                                else:
+                                    # Join multiple values into a semicolon-separated string
+                                    value = '; '.join([str(v) for v in widget_value])
+                            elif isinstance(widget_value, str):
+                                value = widget_value
+                            else:
+                                value = str(widget_value)
+
+                        # Assign the flattened string value to the DataFrame
+                        df.at[new_row_index, column] = value
+
+                        # Check if the field is mandatory
+                        if column in self.toggle_buttons_dict and self.toggle_buttons_dict[column].value:
+                            mandatory_fields.append(column)
+                            
+
+                # Always set the "Active" column to True for new rows    
                 df.at[new_row_index, 'Active'] = True
-            elif column == 'Forgeborn Ability':
-                fb_ability_list = self.selection_widgets[column].value
-                fb_ability_list = [fb_ability.split(' : ')[1] for fb_ability in fb_ability_list]
-                df.at[new_row_index, column] = ';'.join(fb_ability_list)
-            else:
-                df.at[new_row_index, column] = '; '.join(self.selection_widgets[column].value)
 
-        widget.df = df
+                # Update the "Mandatory Fields" column
+                df.at[new_row_index, 'Mandatory Fields'] = ', '.join(mandatory_fields)
 
-        self.refresh_function({'new': new_row_index, 'old': None, 'owner': 'filter'})
+                widget.df = df
+
+                self.refresh_function({'new': new_row_index, 'old': None, 'owner': 'filter'})
 
     def grid_filter_on_cell_edit(self, event, widget):
         """
@@ -581,66 +631,101 @@ class FilterGrid:
             for cardType in ['Modifier', 'Creature', 'Spell']:
                 widget = self.selection_widgets[cardType]
                 widget.options = [''] + get_cardType_entity_names(cardType)
+            
+            if gv.myDB: 
+                dbDeckNames = gv.myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
+                # Extract the 'name' field from each result and sort alphabetically
+                sorted_deckNames = [''] + sorted([deck.get('name', '') for deck in dbDeckNames if 'name' in deck], key=lambda x: x.lower())
+                self.selection_widgets['Name'].options = sorted_deckNames
+                #print(f"DeckNames = {self.selection_widgets['Name'].options}")
 
     def create_cardType_names_selector(self, cardType, options=None):
-        """
-        Creates a selector for the names of card types.
-
-        Args:
-            cardType (str): The type of card.
-
-        Returns:
-            ipywidgets.SelectMultiple: The selector widget.
-        """
         if options is None:
             options = {}
+        layout_options = {
+            'width': '20%',  # Default width
+            'height': 'auto',
+            'align_items': 'center',
+            'justify_content': 'center',
+            'overflow': 'hidden',
+        }
+        # Update default options with any overrides from 'options'
+        layout_options.update(options)
         cardType_entity_names = [''] + get_cardType_entity_names(cardType)
-        cardType_name_widget = widgets.SelectMultiple(
+        cardType_name_widget = EnhancedSelectMultiple(
             options=cardType_entity_names,
+            toggle_description = cardType,
             description='',
-            layout=widgets.Layout(width='200px', height='auto', align_items='center', justify_content='center', **options)
+            layout=widgets.Layout(**layout_options)
         )
         return cardType_name_widget
 
+    
+    # Create a function to use the EnhancedSelectMultiple widget
+    def create_deckName_selector(self):
+        deckNames = []
+        if gv.myDB:
+            # Query the database to find all deck names
+            dbDeckNames = gv.myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
+            # Extract the 'name' field from each result
+            deckNames = [deck.get('name', '') for deck in dbDeckNames if 'name' in deck]
+            # Sort the deck names alphabetically
+            deckNames = sorted(deckNames, key=lambda x: x.lower())  # Sort case-insensitively
+
+        # Add an empty option to the beginning of the list
+        deckNames.insert(0, '')
+
+        # Create the enhanced SelectMultiple widget with search functionality
+        deckName_widget = EnhancedSelectMultiple(
+            options=deckNames,
+            description='',
+            toggle_description='Name',
+            layout=widgets.Layout(width='30%', height='auto', align_items='center', justify_content='center', overflow='hidden'),
+            toggle_default=True
+        )
+        return deckName_widget
+
+    # Function to create aligned selection box with labels
     def create_selection_box(self):
         # Define widgets with their layout settings
         widgets_dict = {
-            'Type': widgets.Dropdown(
+            'Type': EnhancedSelectMultiple(
                 options=['Deck', 'Fusion'],
                 description='',
-                layout=widgets.Layout(width='100px', border='1px solid cyan', align_items='center', justify_content='center')
+                toggle_description='Type',
+                toggle_default=True,
+                layout=widgets.Layout(width='10%', border='1px solid cyan', align_items='center', justify_content='center')
             ),
+            'Name': self.create_deckName_selector(),
             'Modifier': self.create_cardType_names_selector('Modifier', options={'border': '1px solid blue'}),
-            'op1': widgets.Dropdown(options=['', 'AND', 'OR', '+'], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center', margin='5px')),
             'Creature': self.create_cardType_names_selector('Creature', options={'border': '1px solid green'}),
-            'op2': widgets.Dropdown(options=['', 'AND', 'OR'], description='', layout=widgets.Layout(width='75px', border='1px solid purple', align_items='center', justify_content='center')),
-            'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),            
-            'Forgeborn Ability': widgets.SelectMultiple(options=[''] + get_forgeborn_abilities(), description='', layout=widgets.Layout(width='300px', border='1px solid orange', align_items='center', justify_content='center')),
-            'Data Set': widgets.Dropdown(
-                options=gv.data_selection_sets.keys(),
-                description='',
-                layout=widgets.Layout(width='150px', border='1px solid purple', align_items='center', justify_content='center')
-            ),
+            'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),
+            'Forgeborn Ability': EnhancedSelectMultiple(options=[''] + get_forgeborn_abilities(), description='', toggle_description='Forgeborn Ability', 
+                                                        layout=widgets.Layout(width='30%', height='auto', border='1px solid orange', align_items='center', justify_content='center', overflow='hidden')),
         }
 
-        # Create widget row first and add a fixed-width spacer
+        # Create widget row with all selection widgets
         widget_row_items = [widgets_dict[key] for key in widgets_dict]
-        fixed_spacer = widgets.Box(layout=widgets.Layout(width='50px'))  # Fixed-width spacer
-        widget_row_items.append(fixed_spacer)
+        widget_row = widgets.HBox(widget_row_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%', align_items='center', justify_content='flex-start', gap='5px'))
 
-        widget_row = widgets.HBox(widget_row_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%', ))
-
+        # Remove the toggle button row creation
+        toggle_buttons_dict = {}
+        
         # Creating label row using the same layout settings from widget_row
-        label_items = [widgets.Label(key, layout=widgets_dict[key].layout) for key in widgets_dict]
-        label_fixed_spacer = widgets.Label('', layout=widgets.Layout(width='50px'))
-        label_items.append(label_fixed_spacer)
+        #label_items = []
+        #for key in widgets_dict:
+        #    label_item = widgets.Label(key, layout=widgets.Layout(width=widgets_dict[key].layout.width, border=widgets_dict[key].layout.border, align_items='center', justify_content='center'))
+        #    label_items.append(label_item)
 
-        label_row = widgets.HBox(label_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%'))
+        # Create a widget row and a label row
+        #label_row = widgets.HBox(label_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%', align_items='center', justify_content='flex-start', gap='5px'))
 
         # Vertical box to hold both rows
-        selection_box = widgets.VBox([label_row, widget_row])
+        selection_box = widgets.VBox([widget_row], layout=widgets.Layout(width='100%'))
 
-        return selection_box, widgets_dict
+        return selection_box, widgets_dict, toggle_buttons_dict
+
+
 
     def get_changed_df(self):
         """
@@ -704,125 +789,118 @@ def get_forgeborn_abilities():
 
 import re
 
-def apply_cardname_filter_to_dataframe(df_to_filter, filter_df, update_progress=None):
-    with gv.out_debug:
-        def filter_by_substring(df, filter_row):    
-            def apply_filter(df, substrings, filter_fields=['cardTitles'], apply_operator='OR'):
-                if not substrings or not filter_fields:
-                    return df
+def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
+    def filter_by_substring(df, filter_row):
+        def apply_filter(df, substrings, filter_fields=['cardTitles'], operator='OR'):
+            if not substrings or not filter_fields:
+                return df
 
-                if apply_operator == 'AND':
-                    # Create a boolean mask initialized to True for "AND" logic
-                    mask = pd.Series([True] * len(df), index=df.index)
-                    for substring in substrings:
-                        # Create a temporary mask for each substring
-                        temp_mask = pd.Series([False] * len(df), index=df.index)
-                        for field in filter_fields:
-                            if field in df.columns:
-                                # If the substring is found in any of the field‚s, update the temp_mask
-                                temp_mask |= df[field].apply(lambda title: substring.lower() in str(title).lower())
-                        # Update the main mask with the temp_mask using AND logic
-                        mask &= temp_mask
-                else:
-                    # Create a boolean mask initialized to False for "OR" logic
-                    mask = pd.Series([False] * len(df), index=df.index)
-                    for field in filter_fields:
-                        if field in df.columns:
-                            for substring in substrings:
-                                mask |= df[field].apply(lambda title: substring.lower() in str(title).lower())
+            # Initialize the mask based on the operator
+            mask = pd.Series([True] * len(df), index=df.index) if operator == 'AND' else pd.Series([False] * len(df), index=df.index)
 
-                # Filter the DataFrame using the boolean mask
-                current_filter_results = df[mask].copy()
+            # Apply the filter to each field
+            for field in filter_fields:
+                field_mask = pd.Series([False] * len(df), index=df.index)
+                for substring in substrings:
+                    regex = fr'\b{re.escape(substring)}\b'
+                    field_mask |= df[field].apply(lambda title: bool(re.search(regex, str(title))))
 
-                return current_filter_results   
-
-            def determine_operator_and_substrings(string): 
-                and_symbols = {
-                    ':': r'\s*:\s*',
-                    '&': r'\s*&\s*',
-                    '+': r'\s*\+\s*'
-                }            
-                or_symbols = {
-                    '|': r'\s*\|\s*',
-                    '-': r'\s*-\s*'             
-                }
-                
-                for symbol, pattern in and_symbols.items():
-                    if symbol in string:
-                        #print(f"Found AND symbol '{symbol}' in '{string}'")
-                        return 'AND', re.split(pattern, string)
-                
-                for symbol, pattern in or_symbols.items():
-                    if symbol in string:
-                        #print(f"Found OR symbol '{symbol}' in '{string}'")
-                        return 'OR', re.split(pattern, string)
-                
-                #print(f"Falling back on standard '{string}'")
-                return 'OR', re.split(r'\s*;\s*', string)                                                   
-
-
-            # Apply the first filter outside the loop
-            df_filtered = df_to_filter
-            #substrings = re.split(r'\s*;\s*', filter_row['Modifier']) if filter_row['Modifier'] else []
-            apply_operator, substrings = determine_operator_and_substrings(filter_row['Modifier']) if filter_row['Modifier'] else ('OR', [])
-            if substrings:
-                df_filtered = apply_filter(df, substrings)
-
-            # Apply the remaining filters in the loop
-            for i, filter_type in enumerate(['Creature', 'Spell', 'Forgeborn Ability', 'Type'], start=1):
-                operator = ''
-                if f'op{i}' in filter_row:
-                    operator = filter_row[f'op{i}']
-                
-                filter_fields = ['cardTitles'] 
-                if filter_type == 'Forgeborn Ability': 
-                    filter_fields = ['FB2', 'FB3', 'FB4'] 
-                    operator = 'AND'            
-
-                if filter_type == 'Type':
-                    filter_fields = ['type']
-                    operator = 'AND'
-
-                previous_substrings = substrings
-                # Determine if we should use AND or OR logic based on the operator            
-                apply_operator, substrings = determine_operator_and_substrings(filter_row[filter_type]) if filter_row[filter_type] else ("",[])
-                #substrings = re.split(r'\s*;\s*', filter_row[filter_type]) if filter_row[filter_type] else []
-                #print(f"Substrings = '{substrings}'")            
-                
-                if operator == '+':                
-                    substrings = [f"{s1} {s2}" for s1 in previous_substrings for s2 in substrings]
-                
-                # If previous_substrings is empty treat the operator as ''
-                if not previous_substrings:
-                    operator = ''
-
-                # If substrings is empty, skip this iteration
-                if not substrings:
-                    substrings = previous_substrings
-                    continue
-
-                # Apply the filter to the DataFrame
-                current_filter_results = apply_filter(df, substrings, filter_fields, apply_operator=apply_operator)
-
-                # Handle the operator logic in the outer loop
+                    # Debugging information for temp_mask
+                    #matched_indices = field_mask[field_mask].index.tolist()
+                    #print(f"Substring '{substring}' matched indices: {matched_indices}")
+                    #print(f"Field mask for substring '{substring}': {field_mask.sum()} matches")
+                    
+                    # Print debugging information for each match attempt
+                    #print(f"Field: {field}, Substring: '{substring}'")
+                    #print(f"Values being compared against:\n{df[field]}")
+                    #print(f"Matches:\n{df[field][field_mask]}")
+                # Combine the field mask with the main mask based on the operator
                 if operator == 'AND':
-                    df_filtered = df_filtered[df_filtered.index.isin(current_filter_results.index)]
-                elif operator == 'OR' :
-                    df_filtered = pd.concat([df_filtered, current_filter_results]).drop_duplicates()
-                elif operator == '+' or operator == '':
-                    df_filtered = current_filter_results
-                else:
-                    print(f"Operator '{operator}' not recognized")
+                    mask &= field_mask
+                else:  # OR logic
+                    mask |= field_mask
 
-            return df_filtered
+            return df[mask]
+
+        def determine_operator_and_substrings(string):
+            if not isinstance(string, str):
+                return '', []
+
+            and_symbols = {':': r'\s*:\s*', '&': r'\s*&\s*', '+': r'\s*\+\s*'}
+            or_symbols = {'|': r'\s*\|\s*', '-': r'\s*-\s*'}
+
+            for symbol, pattern in and_symbols.items():
+                if symbol in string:
+                    return 'AND', re.split(pattern, string)
+
+            for symbol, pattern in or_symbols.items():
+                if symbol in string:
+                    return 'OR', re.split(pattern, string)
+
+            return 'OR', re.split(r'\s*;\s*', string)
+
+        def determine_filter_fields(column, filter_row):
+            # Default filter fields
+            filter_fields = ['cardTitles']
+            if column == 'Name':
+                if filter_row['Type'] == 'Fusion':
+                    filter_fields = ['Deck A', 'Deck B']
+                else:
+                    filter_fields = ['Name']
+            elif column == 'Forgeborn Ability':
+                filter_fields = ['FB2', 'FB3', 'FB4']
+
+            return filter_fields
 
         df_filtered = df_to_filter
-        active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
 
-        for _, filter_row in active_filters.iterrows():
-            df_filtered = filter_by_substring(df_filtered, filter_row)
+        # Apply Type filter first (always mandatory)
+        if 'Type' in filter_row and isinstance(filter_row['Type'], str) and filter_row['Type']:
+            type_substrings = filter_row['Type'].split(',')
+            df_filtered = apply_filter(df_filtered, type_substrings, ['type'], operator='AND')
+
+        # Apply mandatory fields with mandatory_operator logic
+        mandatory_fields = filter_row.get('Mandatory Fields', '')
+        if isinstance(mandatory_fields, str):
+            mandatory_fields = mandatory_fields.split(', ')
+        else:
+            mandatory_fields = []
+        mandatory_fields = [column.strip() for column in mandatory_fields]
+        
+        # Apply mandatory fields (all must match)
+        for column in mandatory_fields:
+            if column and isinstance(filter_row[column], str) and filter_row[column]:
+                entry_operator, substrings = determine_operator_and_substrings(filter_row[column])
+                if substrings:
+                    filter_fields = determine_filter_fields(column, filter_row)
+                    df_filtered = apply_filter(df_filtered, substrings, filter_fields, operator=entry_operator)
+
+        # Apply optional fields (at least one must match)
+        optional_results = []
+        for column in filter_row.index:
+            if column not in mandatory_fields and column not in ['Type', 'Mandatory Fields', 'Active'] and isinstance(filter_row[column], str) and filter_row[column]:
+                entry_operator, substrings = determine_operator_and_substrings(filter_row[column])
+                if substrings:
+                    filter_fields = determine_filter_fields(column, filter_row)
+                    # Apply the filter to the already filtered DataFrame (df_filtered)
+                    current_filter_results = apply_filter(df_filtered, substrings, filter_fields, operator=entry_operator)
+                    optional_results.append(current_filter_results)
+
+        # Combine all optional results with OR logic
+        if optional_results:
+            combined_optional_results = pd.concat(optional_results).drop_duplicates()
+            df_filtered = df_filtered[df_filtered.index.isin(combined_optional_results.index)]
 
         return df_filtered
+
+    df_filtered = df_to_filter
+    active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
+
+    for _, filter_row in active_filters.iterrows():
+        df_filtered = filter_by_substring(df_filtered, filter_row)
+
+    return df_filtered
+
 
 # Function to create a styled HTML widget with a background color
 def create_styled_html(text, text_color, bg_color, border_color):
@@ -848,6 +926,7 @@ deck_content_bar = create_styled_html(
     text_color='white', bg_color='#AA4465', border_color='#4A4A4A'  
 )
 
+import FieldUnifier
 class DynamicGridManager:
 
     def __init__(self, data_generate_functions, qg_options, out_debug):
@@ -861,23 +940,24 @@ class DynamicGridManager:
         self.sorting_info = {}
         self.css_manager = CSSManager()        
         self.custom_css_class = self.css_manager.create_and_inject_css('deck_content', rotate_suffix)        
+        self.grid_widget_states = {}
 
         # UI elements
         self.selectionGrid, self.filterGrid = self.filterGridObject.get_widgets()
         self.ui = widgets.VBox([])
-        self.update_ui()
-        self.update_grid_layout()
-
+        #self.update_ui()
+        self.update_grid_layout()        
+        
         # Register observer for DataSelectionManager
         DataSelectionManager.register_observer(self.update_grids)
 
     def update_grids(self, event, widget):
         self.refresh_gridbox(rebuild = True)        
 
-    def reset_grid_layout(self, new_size):
-        #self.ui.children = [self.selectionGrid, self.filterGrid] 
-        self.grid_layout = widgets.GridspecLayout(new_size, 1)
-        #print(f"Resetting grid layout to size {new_size} : {self.grid_layout}")
+    def reset_grid_layout(self, new_size):           
+        #print(f"Resetting grid layout to size {new_size} : {self.grid_layout}")            
+        self.grid_layout = widgets.GridspecLayout(new_size or 1, 1)
+        self.grid_widget_states = {}        
         self.update_ui()
 
     def update_grid_layout(self):
@@ -890,14 +970,21 @@ class DynamicGridManager:
         self.grid_layout = new_grid
         self.update_ui()
 
-    def apply_filters(self, df, filter_row):
-        # Filter columns based on the data_selection_list, remove all values not in the list                
-        filtered_df = apply_cardname_filter_to_dataframe(df, pd.DataFrame([filter_row]))
-        data_set_type = filter_row['Data Set']
-        existing_columns = [col for col in gv.data_selection_sets[data_set_type] if col in filtered_df.columns]
-        filtered_df = filtered_df.loc[:, existing_columns]    
+    def apply_filters(self, df, widget_states):
+        # Filter columns based on the filter_row
+        info_level = widget_states['info_level']
+        data_set = widget_states['data_set']
+        filter_row = widget_states['filter_row']
+        filtered_df = apply_cardname_filter_to_dataframe(df, pd.DataFrame([filter_row]))        
+        return self.determine_columns(filtered_df, info_level, data_set, filter_row['Type'])
         
-        return filtered_df            
+    def determine_columns(self, df, info_level, data_set, item_type):
+        
+        data_set_columns = FieldUnifier.generate_final_fields(info_level, data_set, item_type)        
+        existing_columns = [col for col in data_set_columns if col in df.columns]
+        filtered_df = df.loc[:, existing_columns]    
+        
+        return filtered_df
         
 
     def refresh_gridbox(self, change=None, rebuild = False):
@@ -911,37 +998,122 @@ class DynamicGridManager:
         filter_df = self.filterGridObject.get_changed_df()
         active_filters_df = filter_df[filter_df['Active']]
         #print(f"{len(active_filters_df)} Active Filters: {active_filters_df} ")
-        self.reset_grid_layout(len(active_filters_df))
+
+        #print(f"Number of active filters: {len(active_filters_df)}")
+        if len(active_filters_df) != len(self.grid_layout.children) or len(active_filters_df) == 0 :
+            print("Resetting grid layout")
+            self.reset_grid_layout(len(active_filters_df))
+        
+        #self.reset_grid_layout(len(active_filters_df))
 
         gv.update_progress('Gridbox', 0, len(active_filters_df), "Refreshing Gridbox - Applying Filters")
         for index, (row_index, filter_row) in enumerate(active_filters_df.iterrows()):            
-            if filter_row['Active']:
-                gv.update_progress("Gridbox", message = f"Applying filter {index+1}/{len(active_filters_df)} {filter_row['Type']} {filter_row['Modifier']} {filter_row['Creature']} {filter_row['Spell']} {filter_row['Forgeborn Ability']} {filter_row['Data Set']}")
-                filtered_df = self.apply_filters(collection_df, filter_row)
-
-                filter_widget = None
-                grid_widget  = None 
-
-                grid_identifier = f"filtered_grid_{index}"
-                grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options, rebuild = rebuild)
+            
+            grid_identifier = f"filtered_grid_{index}"                
+            
+            # Check if this grid needs to be updated based on recent changes
+            grid_state = self.grid_widget_states.get(grid_identifier, {})
+            filter_changed = grid_state.get('filter_row') != filter_row.to_dict()
+            
+            if filter_changed or rebuild:            
+            #if filter_row['Active']:
+                gv.update_progress("Gridbox", message = f"Applying filter {index+1}/{len(active_filters_df)} {filter_row['Type']} {filter_row['Modifier']} {filter_row['Creature']} {filter_row['Spell']} {filter_row['Forgeborn Ability']}")
                 
-                # Register selection event callback using GridManager's register_callback
-                with self.out_debug:
-                    print(f"Registering selection_changed callback for grid {grid_identifier}")
+                # Update stored state                
+                self.grid_widget_states[grid_identifier] = {
+                    "info_level": grid_state.get("info_level", 'Basic'),
+                    "data_set": grid_state.get("data_set", 'Stats'),
+                    "filter_row": filter_row.to_dict()  # Store the current filter row state
+                }                
+                filtered_df = self.apply_filters(collection_df, self.grid_widget_states[grid_identifier])
+
+                # Modify DataFrame based on toolbar state if available                
+                #if info_level and data_set:
+                #    filtered_df = self.determine_columns(filtered_df, info_level, data_set, filter_row['Type'])
+               
+                # Update or create the grid
+                grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options, rebuild=rebuild)                
+
+                # Register the selection event callback for the grid
                 self.qm.on(grid_identifier, 'selection_changed', self.update_deck_content)
-                #self.qm.display_registered_events()
 
-                filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False, grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': False})
-                filter_row_widget.layout = widgets.Layout(height='70px') #, border='1px solid blue')
+                # Set up the layout for this grid
+                toolbar_widget = self.create_toolbar(grid_identifier)
+                filter_row_widget = qgrid.show_grid(pd.DataFrame([filter_row]), show_toolbar=False,
+                                                    grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': True})
+                filter_row_widget.layout = widgets.Layout(height='70px')
 
-                filter_widget = filter_row_widget
-                grid_widget = grid.get_grid_box()
                 
-                self.grid_layout[index, 0] = widgets.VBox([filter_widget, grid_widget], layout=widgets.Layout(border='2px solid black'))
-                        
-        # After updating, reassign children to trigger update
-        #print(f"Refresh Gridbox. Layout = {self.grid_layout}")
+                 # Add filter row observer
+                def on_filter_row_change(event, qgrid_widget=filter_row_widget):
+                    self.refresh_grid_using_toolbar_and_filter(grid_identifier)
+
+                filter_row_widget.on('cell_edited', on_filter_row_change)
+
+                # Update the overall layout
+                self.grid_layout[index, 0] = widgets.VBox([toolbar_widget, filter_row_widget, grid.get_grid_box()],
+                                                          layout=widgets.Layout(border='2px solid black'))
+
         self.update_ui()
+
+    def create_toolbar(self, grid_identifier):
+        # Create and setup toolbar widgets with observer functions
+        info_level_button = widgets.ToggleButtons(
+            options=['Basic', 'Detail'],
+            value='Basic',
+            description='Info Level:',
+            button_style='info',
+            layout=widgets.Layout(width='30%', height='25px', display='flex', flex_flow='row', align_items='center')
+        )
+
+        spacer = widgets.Box(layout=widgets.Layout(flex='1'))
+
+        data_set_dropdown = widgets.Dropdown(
+            options=gv.data_selection_sets.keys(),
+            value=list(gv.data_selection_sets.keys())[0] if gv.data_selection_sets else None,
+            description='Data Set:',
+            layout=widgets.Layout(width='25%', align_self='flex-end')
+        )
+
+        def on_info_level_change(change):
+            if change['type'] == 'change' and change['name'] == 'value':
+                # Update state and refresh grid
+                self.grid_widget_states[grid_identifier]['info_level'] = change['new']
+                self.refresh_grid_using_toolbar_and_filter(grid_identifier)
+
+        def on_data_set_change(change):
+            if change['type'] == 'change' and change['name'] == 'value':
+                # Update state and refresh grid
+                self.grid_widget_states[grid_identifier]['data_set'] = change['new']
+                self.refresh_grid_using_toolbar_and_filter(grid_identifier)
+
+        info_level_button.observe(on_info_level_change, names='value')
+        data_set_dropdown.observe(on_data_set_change, names='value')
+
+        return widgets.HBox([info_level_button, spacer, data_set_dropdown], layout=widgets.Layout(padding='5px 5px', align_items='center', width='100%'))
+
+
+    def refresh_grid_using_toolbar_and_filter(self, grid_identifier):
+            # Retrieve current state for this grid
+            grid_state = self.grid_widget_states.get(grid_identifier)
+            if not grid_state:
+                return
+
+            # Retrieve the grid to be updated
+            grid = self.qm.grids.get(grid_identifier)
+            if not grid:
+                return
+
+            collection_df = self.qm.get_default_data('collection').copy()
+
+            # Apply the filters from the filter row first
+            filtered_df = self.apply_filters(collection_df, grid_state)
+            
+            # Update the grid with the filtered DataFrame            
+            #grid.update_main_widget(filtered_df)
+            self.qm.update_dataframe(grid_identifier, filtered_df)            
+            #grid.update_sum_column()
+            
 
     def create_deck_content_Grid(self):
         # Define the default grid options
@@ -1029,7 +1201,8 @@ class DynamicGridManager:
             
     def update_ui(self):
         """Helper method to update the self.ui.children with the common layout."""
-        self.ui.children = [widget for widget in [
+        #self.ui.children = []
+        new_children =  [widget for widget in [
             self.selectionGrid, 
             filter_grid_bar, 
             self.filterGrid, 
@@ -1038,6 +1211,8 @@ class DynamicGridManager:
             deck_content_bar,
             self.deck_content_Grid.get_grid_box()
         ] if widget is not None]
+        #print(f"New UI children: {[type(child) for child in new_children]}") 
+        self.ui.children = new_children
 
     def get_ui(self):
         return self.ui
@@ -1056,9 +1231,13 @@ class DynamicGridManager:
         for index, widget_box in enumerate(self.grid_layout.children):
             # Access the VBox that contains the filter and grid widgets
             if isinstance(widget_box, widgets.VBox) and len(widget_box.children) > 1:
-                # Get the grid widget (the second child of the VBox)
+                # Get the grid widget (the second child of the VBox)                
                 grid_widget_box = widget_box.children[1]  
-                grid_widget = grid_widget_box.children[1]  # This is the actual grid widget we need
+                if isinstance(grid_widget_box, widgets.VBox) and len(grid_widget_box.children) > 1:
+                    grid_widget = grid_widget_box.children[1]  # This is the actual grid widget we need
+                else:
+                    print(f"Grid Widget has not enough children {grid_widget_box}")
+                    continue
 
                 # Check if this grid_widget_box matches any registered grids in the GridManager
                 for grid_id, grid in self.qm.grids.items():
@@ -1070,6 +1249,10 @@ class DynamicGridManager:
                         if not selected_df.empty and 'Name' in selected_df.columns:
                             selected_names = selected_df['Name'].tolist()  # Get the 'Name' column values for selected rows
                             selected_items[grid_id] = selected_names  # Store selected 'Name' values as a list
+                            
+                            # Convert the DataFrame to a list of dictionaries, each representing a row
+                            #selected_rows = selected_df.to_dict(orient='records')
+                            #selected_items[grid_id] = selected_rows  # Store selected rows as a list of dictionaries
 
         return selected_items
         

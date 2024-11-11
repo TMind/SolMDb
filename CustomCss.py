@@ -100,6 +100,12 @@ class CSSManager:
 
         return found_matching_columns
 
+    def apply_conditional_class(self, qgrid_widget, condition, custom_class):    
+        if self.needs_custom_styles(qgrid_widget, condition):
+            self.apply_css_to_widget(qgrid_widget, custom_class)            
+        else:
+            qgrid_widget.remove_class(custom_class)
+
     def apply_column_styles(self, qgrid_widget, sorted_columns=[], filtered_columns=[]):
         """
         Apply custom CSS styles to columns that are sorted or filtered.

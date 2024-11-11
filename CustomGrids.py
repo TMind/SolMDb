@@ -85,7 +85,7 @@ class TemplateGrid:
             'De/Buffs' : ['Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Attack Debuff', 'Health Debuff'],
             'Utility' : ['Activate', 'Ready', 'Upgrade', 'Slay', 'Deploy', 'Reanimate'],
             'Effects' : ['Removal', 'Silence', 'Face Burn', 'FB Creature'],
-            'Damage' : ['Destruction Others', 'Destruction Self', 'Self Damage' ],            
+            'Damage' : ['Destruction Others', 'Destruction Self', 'Self Damage Activator' ],            
             'Keywords' : ['Breakthrough', 'Breakthrough Giver', 'Aggressive', 'Aggressive Giver', 'Defender', 'Defender Giver', 'Stealth', 'Stealth Giver', 'Armor', 'Armor Giver'],
             'Combos' : [
                 'Free', 'BEAST Combo', 'DINOSAUR Combo', 'DRAGON Combo', 'ELEMENTAL Combo', 'MAGE Combo', 'PLANT Combo',

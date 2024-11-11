@@ -5,6 +5,7 @@ import logging
 import pandas as pd
 
 from CMManager import CMManager
+from CustomCss import CSSManager
 from GSheetsClient import GoogleSheetsClient
 
 # Configure logging
@@ -58,8 +59,8 @@ class GlobalVariables:
         self._host = os.getenv('HOST', 'localhost')
         self._port = os.getenv('MONGODB_PORT', 27017)
         self.uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')        
-        self.debug = os.getenv('DEBUG_MODE', 'False').lower() in ('true', '1', 't')
-        self.sheet_url = os.getenv('SHEET_URL', 'https://docs.google.com/spreadsheets/d/1HFDXfrO4uE70-HyNAxdHuCVlt_ALjBK9f6tpveRudZY/edit')
+        self.debug = os.getenv('DEBUG_MODE', 'False').lower() in ('true', '1', 't')        
+        self.sheet_url = os.getenv('SHEET_URL', 'https://docs.google.com/spreadsheets/d/17aYAWS5R1hg-8mxFEjQEcNlMZ9kocJhnDTjLU9anzw8')
         self.rotate_suffix = rotate_suffix
         
         self.myDB = None
@@ -86,6 +87,8 @@ class GlobalVariables:
             # If there are already progress containers, add them to the progressbar_container
             for identifier, container_dict in self.progress_containers.items():
                 self.progressbar_container.children += (container_dict['container'],)  # Add to VBox        
+            
+            self.css_manager = CSSManager()
             
             # Initialize CMManager for handling the CM sheet
             self.GoogleSheetsClient = GoogleSheetsClient()
@@ -193,7 +196,8 @@ class GlobalVariables:
         if progress_bar.value >= progress_bar.max:
             progress_bar.bar_style = 'success'
             progress_bar.style.bar_color = 'lightgreen'
-            label.value = f"{message} -> Finished!"
+            percentage_message = f"[{progress_bar.max: >5}/{progress_bar.max:<5}] "
+            label.value = f"{percentage_message}{message}!"
             
     def reset_progress(self, identifier):
         container = self.get_or_create_progress_container(identifier)
@@ -262,7 +266,7 @@ rotated_column_defs = {
     
     # Activate / Ready / Deploy 
     'Activate':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'ACTIVATE Combo':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'ACTIVATION Combo': {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Ready':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'READY Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Deploy':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -272,11 +276,11 @@ rotated_column_defs = {
     
     'Destruction Others'   :{'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Good Destroyed':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'DESTROY Combo':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'Destruction Activator':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'DESTROYED Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Destruction Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Destruction Self'     :{'width': rotated_width, 'headerCssClass': rotate_suffix},
     'DESTRUCTION Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},    
+    'Face Burn':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'FB Creature':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'FB Creature Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'FACE DMG Combo':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -328,7 +332,6 @@ rotated_column_defs = {
     'Free Upgrade':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
     
     # Removal 
-    'Face Burn':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Removal':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Silence':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
     
@@ -353,7 +356,7 @@ rotated_column_defs = {
     # Attack 
     'Increased A':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Increased A Synergy': {'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'INCREASED A Combo': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'INC ATTACK Combo': {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Battle':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Battle Synergy' :  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Slay':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -414,30 +417,6 @@ non_rotated_column_defs = {
     'node_data':        {'width': 50},
 }
 
-
-
-info_selection_set = {
-    
-    "Basic": {
-        "Name": True, "type": True, "id": True, "CreatedAt": True, "UpdatedAt": True, "digital": True,
-        "faction": True, "cardSetNo": True, "forgebornId": True, "cardTitles": True,
-        "FB2": True, "FB3": True, "FB4": True, "Betrayers": True, "SolBinds": True,
-        "Spells": True, "Exalt": True,
-    },
-    
-    "Detail": {
-        "Name": True, "type": True, "id": True, "CreatedAt": True, "UpdatedAt": True, "digital": True,
-        "faction": True, "cardSetNo": True, "forgebornId": True, "cardTitles": True,
-        "FB2": True, "FB3": True, "FB4": True, "Betrayers": True, "SolBinds": True,
-        "Spells": True, "Exalt": True,
-        "Sum": True,
-        "A1": True, "H1": True, "A2": True, "H2": True, "A3": True, "H3": True,
-    },
-    
-    
-}
-
-
 tag_selection_set = {
     
     "Tags": {
@@ -485,7 +464,8 @@ tag_selection_set = {
         "Attack Debuff": True,
         "Health Debuff": True,
         "Destruction Synergy": True,
-        "Destruction Activator": True,
+        "Destruction Self": True,
+        "Destruction Others": True,
         "Self Damage Payoff": True,
         "Self Damage Activator": True,
         "Silence": True,
@@ -494,8 +474,6 @@ tag_selection_set = {
         "Slay": True,
         "Deploy": True,
     },    
-    "Synergies": {
-    },
     "Combos": {
         "Sum": True,
         "Free": True,
@@ -534,34 +512,11 @@ tag_selection_set = {
 
 data_selection_sets = { 
 
-  "Deck Stats": {
-    "Name": True, "name": True, "type": 'Deck', "id" : True,
-    "registeredDate": True, "UpdatedAt": True, "pExpiry": True, "digital" : True,
-    "level": True,  "xp": True, "elo": True, "deckScore": True, "deckRank": True,
-    "cardSetNo": True,  "faction": True,
-    "forgebornId": True, "cardTitles": True, "Betrayers": True, "SolBinds": True,
-    "FB2": True,    "FB3": True,    "FB4": True,
-    "Spells": True, "Exalt": True,    
-    "Sum": True,
+  "Stats": {
     "A1": True,     "A2": True,     "A3": True,
     "H1": True,     "H2": True,     "H3": True
   },
-  "Fusion Stats": {
-    "Name": True, "type": 'Fusion',
-    "CreatedAt": True, "UpdatedAt": True, "digital" : True, 
-    "faction": True, "crossFaction": True,
-    "forgebornId": True, "cardTitles": True,
-    "FB2": True,    "FB3": True,    "FB4": True,
-    "Creatures": True,  "Spells": True, "Exalt": True,   
-    "Sum":  True, 
-    "A1": True,     "A2": True,     "A3": True,
-    "H1": True,     "H2": True,     "H3": True
-  },
-  "Deck Tags": {
-    "Name": True,
-    "type": 'Deck',
-    "digital" : True,
-    "faction": True,
+   "Tags": {
     "Sum":  True,
     "Beast": True,
     "Beast Synergy": True,
@@ -604,7 +559,13 @@ data_selection_sets = {
     "Free": True,
     "Upgrade": True,
     "Upgrade Synergy": True,
+    "Destruction Self": True,
+    "Destruction Others": True,
+    "Good Destroyed": True,
+    "Destruction Snyergy": True,
     "Face Burn": True,
+    "FB Creature": True,
+    "FB Creature Synergy": True,
     "Removal": True,
     "Breakthrough": True,
     "Breakthrough Giver": True,
@@ -620,8 +581,6 @@ data_selection_sets = {
     "Stat Debuff": True,
     "Attack Debuff": True,
     "Health Debuff": True,
-    "Destruction Synergy": True,
-    "Destruction Activator": True,
     "Self Damage Payoff": True,
     "Self Damage Activator": True,
     "Silence": True,
@@ -629,150 +588,12 @@ data_selection_sets = {
     "Exalt Synergy": True,
     "Slay": True,
     "Deploy": True,
-    "White Fang": True,
-    "Last Winter": True,
     "Spicy": True,
     "Cool": True,
     "Fun": True,
     "Annoying": True
   },
-   "Fusion Tags": {
-    "Name": True,
-    "type": 'Fusion',
-    "digital" : True, 
-    "Deck A": True,
-    "Deck B": True,
-    "faction": True,
-    "crossFaction": True,
-    "forgebornId": True,
-    "FB2": True,
-    "FB3": True,
-    "FB4": True,
-    "cardTitles": True,
-    "Sum":  True,
-    "Beast": True,
-    "Beast Synergy": True,
-    "Dinosaur": True,
-    "Dinosaur Synergy": True,
-    "Mage": True,
-    "Mage Synergy": True,
-    "Robot": True,
-    "Robot Synergy": True,
-    "Scientist": True,
-    "Scientist Synergy": True,
-    "Spirit": True,
-    "Spirit Synergy": True,
-    "Warrior": True,
-    "Warrior Synergy": True,
-    "Zombie": True,
-    "Zombie Synergy": True,
-    "Dragon": True,
-    "Dragon Synergy": True,
-    "Elemental": True,
-    "Elemental Synergy": True,
-    "Plant": True,
-    "Plant Synergy": True,
-    "Replace Setup": True,
-    "Replace Profit": True,
-    "Minion": True,
-    "Minion Synergy": True,
-    "Spell": True,
-    "Spell Synergy": True,
-    "Healing Source": True,
-    "Healing Synergy": True,
-    "Movement": True,
-    "Disruption": True,
-    "Movement Benefit": True,
-    "Armor": True,
-    "Armor Giver": True,
-    "Armor Synergy": True,
-    "Activate": True,
-    "Ready": True,
-    "Free": True,
-    "Upgrade": True,
-    "Upgrade Synergy": True,
-    "Face Burn": True,
-    "Removal": True,
-    "Breakthrough": True,
-    "Breakthrough Giver": True,
-    "Aggressive": True,
-    "Aggressive Giver": True,
-    "Defender": True,
-    "Defender Giver": True,
-    "Stealth": True,
-    "Stealth Giver": True,
-    "Stat Buff": True,
-    "Attack Buff": True,
-    "Health Buff": True,
-    "Stat Debuff": True,
-    "Attack Debuff": True,
-    "Health Debuff": True,
-    "Destruction Synergy": True,
-    "Destruction Activator": True,
-    "Self Damage Payoff": True,
-    "Self Damage Activator": True,
-    "Silence": True,
-    "Exalt": True,
-    "Exalt Synergy": True,
-    "Slay": True,
-    "Deploy": True,
-    "White Fang": True,
-    "Last Winter": True,
-    "Spicy": True,
-    "Cool": True,
-    "Fun": True,
-    "Annoying": True
-  },
-  "Deck Combos": {
-    "Name": True, "name": True, "type": 'Deck',
-    "cardSetNo": True,  "digital" : True, "faction": True,
-    "forgebornId": True, "Betrayers": True, "SolBinds": True,
-    "Spells": True, "Exalt": True,    
-    "Sum": True,
-    "Free": True,
-    'BEAST Combo':      True,
-    'DINOSAUR Combo':   True,
-    'DRAGON Combo':     True,
-    'ELEMENTAL Combo':  True,    
-    'MAGE Combo':       True,
-    'PLANT Combo':      True,
-    'ROBOT Combo':      True,
-    'SCIENTIST Combo':  True,
-    'SPIRIT Combo':     True,
-    'BANISH SPIRIT Combo':     True,
-    'WARRIOR Combo':    True,
-    'ZOMBIE Combo':     True,
-    'MINION Combo':     True,
-    'EXALT Combo':      True,    
-    'SPELL Combo':      True,
-    'DEPLOY Combo' :    True,
-    'ARMOR Combo':      True,
-    'ACTIVATE Combo':   True,
-    'DESTRUCTION Combo': True,
-    'DESTROY Combo': True,
-    'HEALING Combo':    True,
-    'MOVEMENT Combo':   True,
-    'REPLACE Combo':    True,            
-    'READY Combo' :     True,    
-    'REANIMATE Combo' : True,
-    'SELFDAMAGE Combo': True,    
-    'UPGRADE Combo':    True,    
-    'INCREASED A Combo': True,
-  },
-  "Fusion Combos" :  {
-    "Name": True,
-    "type": 'Fusion',
-    "Deck A": True,
-    "Deck B": True,
-    "faction": True,
-    "crossFaction": True,
-    "forgebornId": True,
-    "FB2": True,
-    "FB3": True,
-    "FB4": True,
-    "cardSetNo":        True,  
-    'digital':          True,
-    "Spells": True, "Exalt": True,    
+  "Combos" :  {
     "Sum": True,
     "Free": True,
     'BEAST Combo':      True,
@@ -835,12 +656,12 @@ data_selection_sets = {
 GLOBAL_COLUMN_ORDER = [
     'index', 'type', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B','id',
     'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'tags', 'price', 'owner',
-    'xp', 'elo', 'level', 'deckScore', 'deckRank',
+    'xp', 'elo', 'level', 'deckScore', 'deckRank', 'rarity',
     'cardSetNo', 'faction', 'crossFaction', 'cardTitles', 
     'cardType', 'cardSubType', 'forgebornId', 'FB2', 'FB3', 'FB4', 'Betrayers', 'SolBinds',
     'Spells', 'Exalt', 
     'A1', 'H1', 'A2', 'H2', 'A3', 'H3', 
-    'Sum',   
+    'Sum', 'Free',
     
     # Creatures
     'Abomination', 
@@ -869,7 +690,7 @@ GLOBAL_COLUMN_ORDER = [
     
     # Damage 
     'Destruction Self'      ,'Destruction Synergy'      ,'DESTRUCTION Combo'        ,
-    'Destruction Others'    ,'Good Destroyed'           ,'DESTROY Combo'            ,
+    'Destruction Others'    ,'Good Destroyed'           ,'DESTROYED Combo'          ,
     'Self Damage Activator' ,'Self Damage Payoff'       ,'SELFDAMAGE Combo'         ,
     
     # Exalts / Spells
@@ -885,7 +706,7 @@ GLOBAL_COLUMN_ORDER = [
     'Upgrade', 'Upgrade Synergy', 'UPGRADE Combo', 
     
     # Free
-    'Free', 'Free Attack Buff', 'Free Healing Source', 'Free Mage', 'Free Spell', 'Free Replace', 'Free Self Damage', 'Free SelfDestruction', 'Free Upgrade',
+    'Free Attack Buff', 'Free Healing Source', 'Free Mage', 'Free Spell', 'Free Replace', 'Free Self Damage', 'Free SelfDestruction', 'Free Upgrade',
     
     # Removal    
     'Face Burn', 'FB Creature', 'FB Creature Synergy', 'FACE DMG Combo',
@@ -898,7 +719,7 @@ GLOBAL_COLUMN_ORDER = [
     'Stealth', 'Stealth Giver',
     
     # Stats
-    'Increased A', 'Increased A Synergy', 'INCREASED A Combo',
+    'Increased A', 'Increased A Synergy', 'INC ATTACK Combo',
     
     
     'Stat Buff', 'Attack Buff', 'Health Buff',

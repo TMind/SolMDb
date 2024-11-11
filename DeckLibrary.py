@@ -216,9 +216,9 @@ class DeckLibrary:
             deckCombinationData.append([allDeckData[deckName] for deckName in combination])
 
         # Create new fusions with the newCombinations
-        if deckCombinationData:
-            print(f'Creating fusions with username: {gv.username}')
+        if deckCombinationData:            
             multi_process = MultiProcess(gv.username, deckCombinationData)
             multi_process.run()
+            
          
 

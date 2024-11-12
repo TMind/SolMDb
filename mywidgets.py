@@ -12,7 +12,7 @@ class EnhancedSelectMultiple(widgets.VBox):
         # Create the SelectMultiple widget with all available options and settings
         self.select_widget = widgets.SelectMultiple(
             options=self._original_options,
-            layout=widgets.Layout(width='100%', height='150px',  flex='1 1 auto', overflow='visible'),  # Set consistent height and prevent scrollbars
+            layout=widgets.Layout(width='100%', height='150px', flex='1 1 auto', overflow='visible'),  # Set consistent height and prevent scrollbars
             **kwargs  # Pass all kwargs to the original SelectMultiple widget
         )
 
@@ -26,10 +26,10 @@ class EnhancedSelectMultiple(widgets.VBox):
         # Observe changes in the search bar
         self.search_widget.observe(self.update_options, names='value')
 
-        # Create a toggle button for this selection
-        toggle_default = kwargs.pop('toggle_default', False)
+        # Create a toggle button for this selection        
         self.toggle_button = widgets.ToggleButton(
-            value=toggle_default,
+            value=kwargs.pop('toggle_default', False),
+            disabled=kwargs.pop('toggle_disable', False),
             description=kwargs.pop('toggle_description', ''),
             layout=widgets.Layout(width='100%', height='30px', margin='0px', padding='0px', box_sizing='border-box'),
             button_style='',
@@ -44,11 +44,13 @@ class EnhancedSelectMultiple(widgets.VBox):
 
     @property
     def options(self):
-        return self.select_widget.options
+        return self._original_options
 
     @options.setter
     def options(self, new_options):
+        print(f"Setting new options: {new_options}")
         self._original_options = sorted(new_options, key=lambda x: x.lower())
+        # Directly set options to avoid redundant setter call
         self.select_widget.options = self._original_options
         self.select_widget.value = ()  # Reset selection to avoid invalid values
 
@@ -58,20 +60,27 @@ class EnhancedSelectMultiple(widgets.VBox):
 
     @value.setter
     def value(self, new_value):
-        self.select_widget.value = new_value
+        self.select_widget.value = new_value       
 
     def update_options(self, change):
         search_value = change['new'].lower()
+        
         if search_value == '':
             # If the search bar is empty, show all options including an empty option
-            filtered_options = self._original_options
+            filtered_options = self._original_options        
         else:
             # Filter options based on the search value
-            filtered_options = [name for name in self._original_options if search_value in name.lower()]
-
+            filtered_options = [name for name in self._original_options if search_value in name.lower()]        
         # Ensure the filtered options are displayed properly
         self.select_widget.options = filtered_options
         self.select_widget.value = ()  # Reset selection to avoid invalid values
+
+    def update_options_from_db(self, new_options):
+        """
+        Update the options after the database becomes available.
+        """
+        self.options = new_options
+        self._original_options = new_options       
 
     def __getattr__(self, name):
         # Only delegate attribute access if select_widget is already set

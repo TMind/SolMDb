@@ -57,7 +57,10 @@ factionToggles = []
 dropdowns = []
 factionNames = ['Alloyin', 'Nekrium', 'Tempys', 'Uterra']
 types = ['Decks', 'Fusions']
-username_widget = widgets.Text(value=os.getenv('SFF_USERNAME', 'sff'), description='Username:', disabled=False)
+username_sff = os.getenv('SFF_USERNAME', 'sff')
+username_jhub = os.getenv('JUPYTERHUB_USER', username_sff)
+username_widget = widgets.Text(value=username_sff, description='Username:', disabled=False)
+
 button_load = None
 db_list = None 
 cardTypes_names_widget = {}
@@ -1567,10 +1570,211 @@ text_box = widgets.Text(
     disabled=False  
 )  
 
+def setup_restricted_interface():
+    global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab, net_api
+    global action_toolbar, selected_db_label, selected_items_label, text_box, graph_output, username_jhub
+
+
+    for i in range(2):            
+        factionToggle, dropdown = initialize_widgets()
+        factionToggles.append(factionToggle)
+        dropdowns.append(dropdown)
+
+    # Button to create network graph
+    button_graph = widgets.Button(description='Show Graph')
+    button_graph.on_click(lambda button: display_graph()) #display_graph_on_click(button))
+
+    # Toggle buttons to select load items
+    loadToggle = widgets.ToggleButtons(
+        options=['Load Decks/Fusions', 'Update Decks/Fusions', 'Generate Dataframe', 'Update CM Sheet'],
+        description='Action:',
+        disabled=False,
+        button_style='warning', # 'success', 'info', 'warning', 'danger' or ''
+        tooltips=['Load Decks and Fusions from the website', 'Update Decks and Fusions in the database', 'Generate table from database', 'Get the latest version from Collection Manager'])
+
+    # Button to load decks / fusions / forgborns 
+    button_load = widgets.Button(description='Execute', button_style='info', tooltip='Execute the selected action')
+    button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
+
+    # Database selection widget
+    db_list = create_database_selection_widget()
+    db_list.observe(handle_db_list_change, names='value')
+    
+    # Create a Checkbox widget to toggle debugging
+    debug_toggle = widgets.Checkbox(value=False, description='Debugging', disabled=False)    
+    debug_toggle.observe(handle_debug_toggle, 'value')
+    
+    data_generation_functions = {
+        'central_dataframe' : generate_central_dataframe, 
+        'deck_content' : generate_deck_content_dataframe,
+        'update_selection_area' : None,}
+    
+    # Create an instance of the manager
+    grid_manager = DynamicGridManager(data_generation_functions, qg_options, gv.out_debug)
+
+    # Update the filter grid on db change
+    db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')
+
+    # Create styled HTML widgets with background colors
+    db_helper = create_styled_html(
+        "Database Tab: This tab allows you to load and manage a database for a username on Solforge Fusion.",
+        text_color='white', bg_color='blue', border_color='blue'
+    )
+
+    # Create the guidance text
+    db_guide_text = """
+### **Creating a New Database**
+
+1. **Select a Database:**
+    - Use the "Databases" list to select an existing database or leave it empty if you want to create a new one.
+
+2. **Set Your Username:**
+    - Enter your username in the "Username" text box. This username will be associated with your Solforge Fusion account.
+
+3. **Choose an Action:**
+
+    - **Load Decks/Fusions:**  
+      Select this option to fetch and load decks and fusions from the network. This action is necessary to populate your database with existing data.
+    
+    - **Create All Fusions:**  
+      Choose this option to generate all possible fusions based on the decks currently available in the database. This is helpful for exploring new combinations and strategies.
+    
+    - **Generate Dataframe:**  
+      This option generates a comprehensive dataframe summarizing your decks, fusions, and other related statistics. The dataframe contains all relevant information in a non-structured format.
+
+4. **Execute the Action:**
+    - Once you’ve selected the desired action, click the "Execute" button to perform the operation. The system will process your request and update the database accordingly.
+
+5. **Review Data Counts:**
+    - The label below the action buttons will display the current counts of decks and fusions in your database, along with the timestamp of the last update. This helps you monitor the content of your database.
+
+### **Button Descriptions**
+
+- **Load Decks/Fusions:**  
+  Fetches and loads online decks and fusions into the selected database. Creates a new database if none exists.
+
+- **Create All Fusions:**  
+  Creates all possible fusions based on the decks in the database. Useful for exploring new combinations.
+
+- **Generate Dataframe:**  
+  Aggregates data from the database into a central dataframe, providing a summary of all relevant statistics.
+
+- **Execute:**  
+  Executes the selected action (loading data, creating fusions, or generating the dataframe).
+"""
+
+    deck_guide_text = """
+### **FilterGrid Guide**
+
+The **FilterGrid** is a dynamic filtering tool that allows you to apply custom filters to your data and view the results in an interactive grid. Below is a guide on how to use the FilterGrid and its features.
+
+---
+
+#### **Using the FilterGrid**
+
+1. **Creating and Managing Filters:**
+   - The FilterGrid allows you to create multiple filters by defining criteria across different columns of your dataset. Each filter is represented by a row in the filter grid.
+   - You can specify conditions for different types of data (e.g., `Creature`, `Spell`, `Forgeborn Ability`) and combine them using logical operators such as `AND`, `OR`, and `+`.
+     - **`AND`**: Filters will match only if both surrounding fields are met (mandatory).
+     - **`OR`**: Filters will match if either of the surrounding fields is met (optional).
+   - Within each field, you can make specific items mandatory or optional:
+     - **`+`**: Use `+` to delimit items that must be included in the filter. For example, `+Dragon+` will make "Dragon" a mandatory match.
+     - **`-`**: Use `-` to delimit items that are optional. For example, `-Elf-` will make "Elf" an optional match.
+   - The **Forgeborn Ability** field is mandatory in every filter row and must be filled in to apply the filter.
+   - For each filter, you can decide whether it is active or not by toggling the **Active** checkbox. Only active filters will be applied to the data.
+
+2. **Adding a New Filter Row:**
+   - To add a new filter row, click the **"Add Row"** button. A new row will appear in the filter grid where you can define your filter criteria.
+   - The available fields include:
+     - **Type**: Choose between `Deck` and `Fusion`.
+     - **Modifier**, **Creature**, **Spell**: Select the entities or card types that you want to filter.
+     - **Forgeborn Ability**: Select specific abilities from the Forgeborn cards.
+     - **Data Set**: Choose the dataset to apply the filter to (e.g., `Fusion Tags`).
+
+3. **Removing a Filter Row:**
+   - To remove a filter row, select the row you want to remove and click the **"Remove Row"** button. The row will be deleted, and the remaining filters will be automatically adjusted.
+
+4. **Editing Filters:**
+   - You can edit any existing filter by clicking on its cells and modifying the content. The filter will be applied in real-time as you make changes.
+
+5. **Visualizing Filtered Data:**
+   - Once the filters are applied, the FilterGrid will dynamically generate and display the filtered datasets in individual grids below the filter row. Each grid corresponds to the specific filter applied to the data, bearing the same number.
+   - The filtered results are shown in a tabular format, allowing you to analyze the data that meets your specified criteria.
+
+"""
+
+
+    # Convert Markdown to HTML using the markdown module
+    guide_html_content = md.markdown(db_guide_text)
+    # Create an HTML widget to display the converted Markdown
+    guide_html = widgets.HTML(value=guide_html_content)
+    # Create an Accordion widget with the guidance text
+    db_accordion = widgets.Accordion(children=[guide_html], selected_index=None)
+    db_accordion.set_title(0, 'Guide: How to Create and Manage your Database')
+
+    deck_helper = create_styled_html(
+        "Decks Tab: Manage and view decks in this section.",
+        text_color='white', bg_color='#3D2B56', border_color='#4A3E6D'  # Slightly lighter purple to match the background
+    )
+
+    deck_filter_bar = create_styled_html(
+        "Filter Selection: Set custom filters to your deck base.",
+        text_color='white', bg_color='#2E86AB', border_color='#205E86'  # Darker blue for contrast
+    )
+
+    # Convert Markdown to HTML using the markdown module
+    guide_html_content = md.markdown(deck_guide_text)
+    # Create an HTML widget to display the converted Markdown
+    guide_html = widgets.HTML(value=guide_html_content)
+    # Create an Accordion widget with the guidance text
+    deck_accordion = widgets.Accordion(children=[guide_html], selected_index=None)
+    deck_accordion.set_title(0, 'Guide: How to filter Decks and Fusions')
+    
+    central_frame_helper = create_styled_html(
+        "Central Dataframe Tab: View and manage the central dataframe.",
+        text_color='white', bg_color='teal', border_color='teal'
+    )
+    
+    progressbar_header = create_styled_html(
+        "Progress Bars Section",
+        text_color='white', bg_color='#2E86AB', border_color='#205E86'  # Darker blue for contrast
+    )
+              
+    # Updated Tab content with styled text boxes
+    db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
+    deck_tab = widgets.VBox([deck_helper, deck_accordion, deck_filter_bar, grid_manager.get_ui()])    
+    central_frame_tab = widgets.VBox([central_frame_helper, central_frame_output])
+
+    # Create the Tab widget with children
+    tab = widgets.Tab(children=[db_tab, deck_tab, central_frame_tab])
+    tab.set_title(0, 'Database')
+    tab.set_title(1, 'Decks')
+    tab.set_title(2, 'CentralDataframe')
+
+    # Set the default selected tab
+    tab.selected_index = 1
+
+
+    # Layout: Progress bars at the top, then the tab widget below
+    layout = widgets.VBox([progressbar_header,gv.progressbar_container,tab])
+    display(layout)
+
+    update_sheet_stats()
+    
+    if db_list and 'magiceden' in db_list.options:
+        db_list.value = 'magiceden'
+    else:
+        username_widget.value = 'magiceden'
+        reload_data_on_click(None, 'Load Decks/Fusions')
+    
+
 def setup_interface():
     global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab, net_api
-    global action_toolbar, selected_db_label, selected_items_label, text_box, graph_output
-    
+    global action_toolbar, selected_db_label, selected_items_label, text_box, graph_output, username_jhub
+
+    if username_jhub == 'magiceden' : 
+        return setup_restricted_interface()
+            
     # Function to update the action area with selected info
     def update_action_area():
         # Get selected DB info and selected items from the grid manager

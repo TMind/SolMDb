@@ -970,6 +970,36 @@ class DynamicGridManager:
         
         return filtered_df
         
+    def updateFilterGridObject(self, event, widget):
+        """
+        Update the filter grid object when a cell is edited.
+
+        Args:
+            event (dict): The event data that contains details about the edit.
+            widget: The widget where the event occurred.
+        """
+        # Extract row index, column name, and new value from the event data
+        row_index = event['index']
+        column_name = event['column']
+        new_value = event['new']
+
+        # Get the current filter DataFrame from the filter grid object
+        filter_df = self.filterGridObject.qgrid_filter.get_changed_df()
+
+        # Check if the row index and column name are valid in the filter DataFrame
+        if row_index in filter_df.index and column_name in filter_df.columns:
+            # Update the DataFrame with the new value
+            filter_df.at[row_index, column_name] = new_value
+
+            # Sync the changes back to the filterGridObject's DataFrame
+            self.filterGridObject.qgrid_filter.df = filter_df
+
+            # Debugging output to verify the update
+            print(f"Updated filter grid: row {row_index}, column '{column_name}' set to '{new_value}'")
+            grid_identifier = f"filtered_grid_{row_index}"
+            self.grid_widget_states[grid_identifier]['filter_row'] = filter_df.loc[row_index].to_dict()
+            self.refresh_grid_using_toolbar_and_filter(f"filtered_grid_{row_index}")
+
 
     def refresh_gridbox(self, change=None, rebuild = False):
         #print(f"DynamicGridManager::refresh_gridbox() - Refreshing grid box with change: {change}")        
@@ -1029,9 +1059,9 @@ class DynamicGridManager:
                                                     grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': True})
                 filter_row_widget.layout = widgets.Layout(height='70px')
                 
-                filter_row_widget.on('row_added', self.filterGridObject.grid_filter_on_row_added)
-                filter_row_widget.on('row_removed', self.filterGridObject.grid_filter_on_row_removed)
-                filter_row_widget.on('cell_edited', self.filterGridObject.grid_filter_on_cell_edit)  
+                #filter_row_widget.on('row_added', self.refresh_gridbox())
+                #filter_row_widget.on('row_removed', self.filterGridObject.grid_filter_on_row_removed)
+                filter_row_widget.on('cell_edited', self.updateFilterGridObject)  
                 
                  # Add filter row observer
                 def on_filter_row_change(event, qgrid_widget=filter_row_widget):
@@ -1083,23 +1113,32 @@ class DynamicGridManager:
 
 
     def refresh_grid_using_toolbar_and_filter(self, grid_identifier):
-            # Retrieve current state for this grid
-            grid_state = self.grid_widget_states.get(grid_identifier)
-            if not grid_state:
-                return
+        # Retrieve current state for this grid
+        grid_state = self.grid_widget_states.get(grid_identifier)
+        if not grid_state:
+            print(f"No state found for grid identifier: {grid_identifier}")
+            return
+        print(f"Grid state retrieved for identifier {grid_identifier}: {grid_state}")
 
-            # Retrieve the grid to be updated
-            grid = self.qm.grids.get(grid_identifier)
-            if not grid:
-                return
+        # Retrieve the grid to be updated
+        grid = self.qm.grids.get(grid_identifier)
+        if not grid:
+            print(f"No grid found for grid identifier: {grid_identifier}")
+            return
+        print(f"Grid retrieved for identifier {grid_identifier}")
 
-            collection_df = self.qm.get_default_data('collection').copy()
+        # Retrieve and copy the default data from the collection
+        collection_df = self.qm.get_default_data('collection').copy()
+        print(f"Default collection DataFrame retrieved with {len(collection_df)} rows and {len(collection_df.columns)} columns")
 
-            # Apply the filters from the filter row first
-            filtered_df = self.apply_filters(collection_df, grid_state)
-            
-            # Update the grid with the filtered DataFrame            
-            self.qm.update_dataframe(grid_identifier, filtered_df)                       
+        # Apply the filters from the filter row first
+        filtered_df = self.apply_filters(collection_df, grid_state)
+        print(f"Filtered DataFrame has {len(filtered_df)} rows after applying filters")
+
+        # Update the grid with the filtered DataFrame
+        self.qm.update_dataframe(grid_identifier, filtered_df)
+        print(f"Grid {grid_identifier} updated with filtered data")
+                  
             
 
     def create_deck_content_Grid(self):

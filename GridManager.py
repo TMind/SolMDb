@@ -432,7 +432,7 @@ class GridInitializer:
 
             return widget
 
-from mywidgets import EnhancedSelectMultiple
+from MyWidgets import EnhancedSelectMultiple
 class FilterGrid:
     """
     Manages the grid for filtering data based on user-defined criteria.
@@ -708,8 +708,8 @@ class FilterGrid:
         widget_row_items = [widgets_dict[key] for key in widgets_dict]
         widget_row = widgets.HBox(widget_row_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%', align_items='center', justify_content='flex-start', gap='5px'))
 
-        # Remove the toggle button row creation
-        toggle_buttons_dict = {}
+        # Create toggle button dictionary from widgets_dict 
+        toggle_buttons_dict = { name :  widget.toggle_button for name,widget in widgets_dict.items() }
         
         # Creating label row using the same layout settings from widget_row
         #label_items = []

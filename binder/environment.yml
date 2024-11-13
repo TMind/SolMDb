@@ -27,6 +27,7 @@ dependencies:
   - nodejs
   - numpy  
   - oauthenticator
+  - google-api-python-client
   - pillow  
   - scipy  
   - tqdm  

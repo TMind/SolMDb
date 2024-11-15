@@ -32,11 +32,8 @@ class GlobalVariables:
     def __new__(cls,):
         if cls._instance is None:
             cls._instance = super(GlobalVariables, cls).__new__(cls)
-            logging.info("Initializing GlobalVariables instance.")
             cls._instance._initialize_env()
             cls._instance._initialize_objects()
-        else:
-            logging.info("GlobalVariables instance already initialized.")
         return cls._instance
 
     def get_universal_library(self):
@@ -172,7 +169,7 @@ class GlobalVariables:
             self.progressbar_container.children += (hbox,)  # Add the HBox to the VBox
         return self.progress_containers[identifier]
 
-    def update_progress(self, identifier, value=None, total=None, message=None):
+    def update_progress(self, identifier, value=None, total=None, set=False, message=None):
         container = self.get_or_create_progress_container(identifier)
         progress_bar = container['progress_bar']
         label = container['label']
@@ -180,7 +177,8 @@ class GlobalVariables:
         if total is not None:
             progress_bar.max = total
         if value is not None:
-            progress_bar.value += value
+            if set : progress_bar.value = value
+            else:    progress_bar.value += value
             if value == 0:
                 progress_bar.bar_style = 'info'
                 progress_bar.style.bar_color = 'lightblue'

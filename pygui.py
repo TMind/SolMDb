@@ -1,4 +1,4 @@
-import os, time, re, json
+import os, re
 import ipywidgets as widgets
 from pyvis.network import Network
 import networkx as nx
@@ -1153,8 +1153,8 @@ def reload_data_on_click(button, value):
     load_deck_data(args)    
     # Refresh db_list widget
     db_names = []
-    if gv.myDB:
-        db_names = gv.myDB.mdb.client.list_database_names()
+    if not gv.myDB: gv.set_myDB()
+    db_names = gv.myDB.mdb.client.list_database_names()    
     valid_db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
 
     if valid_db_names:
@@ -1766,6 +1766,9 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     else:
         username_widget.value = 'magiceden'
         reload_data_on_click(None, 'Load Decks/Fusions')
+    
+    username_widget.disabled = True 
+    db_list.disabled = True 
     
 
 def setup_interface():

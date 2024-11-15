@@ -25,7 +25,7 @@ DEFAULT_FILTER =  pd.DataFrame({
             'Name': ['' ],
             'Modifier': [''],
             'Creature': [''],
-            'Spell': [''],            
+            'Spell': ['Aerial Assault'],            
             'Forgeborn Ability': [''],
             'Active': [True],
             'Mandatory Fields': ['Name, Forgeborn Ability']
@@ -790,10 +790,10 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
 
                     # Debugging information for temp_mask
                     matched_indices = df[field][field_mask].index.tolist()
-                    #print(f"Substring '{substring}' matched indices: {matched_indices}")
-                    #print(f"Field: {field}, Substring: '{substring}'")
-                    #print(f"Values being compared against:\n{df[field]}")
-                    #print(f"Matches:\n{df[field][field_mask]}")
+                    print(f"Substring '{substring}' matched indices: {matched_indices}")
+                    print(f"Field: {field}, Substring: '{substring}'")
+                    print(f"Values being compared against:\n{df[field]}")
+                    print(f"Matches:\n{df[field][field_mask]}")
                     
                 # Combine the field mask with the main mask based on the operator
                 if operator == 'AND':

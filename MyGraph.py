@@ -193,8 +193,6 @@ class MyGraph:
         if not cls or not child_type:
             return
 
-        #print(f"Child Name = {child_name}[{child_type}]")
-
         # Increase the number of child_name in the node_data dictionary
         self.node_data['tags'].setdefault(child_name, 0)
         self.node_data['tags'][child_name] += 1
@@ -287,7 +285,12 @@ class MyGraph:
         if target_type != 'Entity' or source_type == 'Forgeborn':
             # Add the node with provided attributes (color, node_type, etc.)
             root.add_node(target_object, **node_attributes)
-        else:
+        elif target_type == 'Entity':
+            # Save interfaces in node of parent object
+            parent_node = root.G.nodes[self.get_node_id(source_object)]
+            parent_node.setdefault('interfaces', {}).update(target_object.data.interfaces)
+
+        else:    
             return
 
         # Initialize the edge type as None
@@ -316,10 +319,6 @@ class MyGraph:
             source_object = parent_object
 
         return source_object, target_object, source_object.__class__.__name__, target_object.__class__.__name__
-
-    # def _add_parent_to_child(self, root, source_object, target_object):
-    #     child_node = root.G.nodes[self.get_node_id(target_object)]
-    #     child_node.setdefault('parents', []).append(self.get_node_id(source_object))
 
     def get_length_interface_ids(self):
         return {interface_id: self.node_data['tags'][interface_id]

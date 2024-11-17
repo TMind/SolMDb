@@ -1184,21 +1184,32 @@ class DynamicGridManager:
                 selected_rows = grid_df.iloc[selected_indices]
 
                 # Fetch the 'collection' DataFrame
-                collection_df = self.qm.get_default_data('collection')
+                collection_df = self.qm.get_grid_df('collection')
 
                 # Initialize a list to collect all selected deck names
                 selected_deck_names = []
 
-                for _, row in selected_rows.iterrows():
+                for row in selected_rows.itertuples(index=False):
                     # Find the corresponding row in the collection DataFrame
-                    collection_row = collection_df.loc[collection_df['Name'] == row['Name']]
+                    row_name = None
+                    if not hasattr(row, 'Name') or 'Name' not in collection_df.columns:
+                        print(f"Name not found in row or collection_df: {row}")
+                        # Try 'name' instead of 'Name'
+                        if hasattr(row, 'name') :
+                            print(f"Row with 'name' attribute: {row}")
+                            row_name = row.name
+                    else:
+                        row_name = row.Name
+
+                    # Locate the matching row in collection_df
+                    collection_row = collection_df.loc[collection_df['Name'] == row_name]
 
                     if not collection_row.empty:
                         item_type = collection_row['type'].values[0]
 
                         if item_type.lower() == 'fusion':
                             # If it's a fusion, add both Deck A and Deck B names
-                            if 'Deck A' in collection_row and 'Deck B' in collection_row:
+                            if 'Deck A' in collection_row.columns and 'Deck B' in collection_row.columns:
                                 selected_deck_names.extend([collection_row['Deck A'].values[0], collection_row['Deck B'].values[0]])
                         elif item_type.lower() == 'deck':
                             # If it's a deck, add the Name

@@ -47,7 +47,7 @@ except KeyError:
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
-#synergy_template = SynergyTemplate()    
+synergy_template = SynergyTemplate()    
 
 #Read Entities and Forgeborns from Files into Database
 deckCollection = None
@@ -353,7 +353,7 @@ def generate_central_dataframe(force_new=False):
             gv.fs.delete(file_record['_id'])
         with gv.fs.new_file(filename=f'central_df_{username}', metadata={'decks': NuOfDecks, 'fusions' : NuOfFusions}) as file:
             pickle.dump(central_df, file)
-        
+
     update_deck_and_fusion_counts()
     update_central_frame_tab(central_df)
     gv.update_progress(identifier, message='Central Dataframe Stored.')
@@ -1102,79 +1102,92 @@ def handle_db_list_change(change):
             pass 
             #print('No valid database selected.')
 
+operation_in_progress = False  # Add this global variable to track the in-progress state
+
 def reload_data_on_click(button, value):
-    global db_list, username_widget
-    username_value = username_widget.value if username_widget else gv.username
-    if not username_value:
-        print('Username cannot be empty.')
+    global db_list, username_widget, operation_in_progress
+
+    # Prevent multiple concurrent operations
+    if operation_in_progress:
+        print('Operation is already in progress. Please wait.')
         return
 
-    gv.username = username_value
+    # Set the flag to indicate that the operation is ongoing
+    operation_in_progress = True
 
-    if not db_list:
-        print('No database list found.')
-        return
-    
-    #print(f'{value} for username: {username_value}')
-    if value == 'Load Decks/Fusions':
-        arguments = ['--username', username_value,
-                     '--mode', 'create',
-                     '--type', 'deck,fuseddeck']
-        #print(f'Loading Decks/Fusions with arguments {arguments}')
-        args = parse_arguments(arguments)    
-    elif value == 'Update Decks/Fusions':
-        arguments = ['--username', username_value,
-                     '--mode', 'update',
-                     '--type', 'deck,fuseddeck']        
-        args = parse_arguments(arguments)         
-    elif value == 'Create all Fusions':
-        arguments = ['--username', username_value,
-                     '--mode', 'fuse' ]
-        #print(f'Loading Fusions with arguments {arguments}')
-        args = parse_arguments(arguments)    
-    elif value == 'Generate Dataframe':
-        generate_central_dataframe(force_new=True)
-        grid_manager.refresh_gridbox({'type': 'generation', 'new': 'central_dataframe'})
-        return
-    elif value == 'Update CM Sheet':
-        # Update the local CSV using CMManager
-        if gv.commonDB:
-            gv.commonDB.drop_database()
-        if gv.cm_manager:
-            gv.cm_manager.update_local_csv('Card Database')
-        gv.reset_universal_library()
-        # Update and display sheet statistics
-        update_sheet_stats()
-        return
-    elif value == 'Find Combos':
-        combo_df = generate_combo_dataframe()
-        return combo_df
+    try:
+        username_value = username_widget.value if username_widget else gv.username
+        if not username_value:
+            print('Username cannot be empty.')
+            return
 
-    load_deck_data(args)    
-    # Refresh db_list widget
-    db_names = []
-    if not gv.myDB: gv.set_myDB()
-    db_names = gv.myDB.mdb.client.list_database_names()    
-    valid_db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
+        gv.username = username_value
 
-    if valid_db_names:
-        db_list.options = [''] + valid_db_names
-        #print(f'Valid DB Names: {valid_db_names}')
-        #print(f'Username Value: {username_value}')
-        
-        if username_value in valid_db_names:
-            #print(f'Setting db_list value to {username_value}')
-            # Force update the central DataFrame for the username after reloading the data 
-            update_deck_and_fusion_counts()
-            #generate_central_dataframe(force_new=True)
-            db_list.value = username_value
+        if not db_list:
+            print('No database list found.')
+            return
+
+        # Set button to disabled, if button object exists
+        if button:
+            button.disabled = True
+
+        # Handle the different values
+        if value == 'Load Decks/Fusions':
+            arguments = ['--username', username_value,
+                         '--mode', 'create',
+                         '--type', 'deck,fuseddeck']
+            args = parse_arguments(arguments)
+        elif value == 'Update Decks/Fusions':
+            arguments = ['--username', username_value,
+                         '--mode', 'update',
+                         '--type', 'deck,fuseddeck']
+            args = parse_arguments(arguments)
+        elif value == 'Create all Fusions':
+            arguments = ['--username', username_value,
+                         '--mode', 'fuse']
+            args = parse_arguments(arguments)
+        elif value == 'Generate Dataframe':
+            generate_central_dataframe(force_new=True)
+            grid_manager.refresh_gridbox({'type': 'generation', 'new': 'central_dataframe'})
+            return
+        elif value == 'Update CM Sheet':
+            # Update the local CSV using CMManager
+            if gv.commonDB:
+                gv.commonDB.drop_database()
+            if gv.cm_manager:
+                gv.cm_manager.update_local_csv('Card Database')
+            gv.reset_universal_library()
+            # Update and display sheet statistics
+            update_sheet_stats()
+            return
+        elif value == 'Find Combos':
+            combo_df = generate_combo_dataframe()
+            return combo_df
+
+        # Execute main task if other tasks are not returning early
+        load_deck_data(args)
+        # Refresh db_list widget
+        db_names = []
+        if not gv.myDB:
+            gv.set_myDB()
+        db_names = gv.myDB.mdb.client.list_database_names()
+        valid_db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
+
+        if valid_db_names:
+            db_list.options = [''] + valid_db_names
+            if username_value in valid_db_names:
+                update_deck_and_fusion_counts()
+                db_list.value = username_value
+            else:
+                db_list.value = valid_db_names[0]
         else:
-            #print(f'Setting db_list value to {valid_db_names[0]} because {username_value} not in {valid_db_names}')
-            db_list.value = valid_db_names[0]
-        
-    else:
-        db_list.options = ['']
-        db_list.value = ''  # Set to an empty string if no valid databases
+            db_list.options = ['']
+            db_list.value = ''  # Set to an empty string if no valid databases
+    finally:
+        # Ensure we reset the progress flag and button state
+        operation_in_progress = False
+        if button:
+            button.disabled = False
 
 def display_graph_on_click(button):
     myDecks = []

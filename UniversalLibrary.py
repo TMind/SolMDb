@@ -77,8 +77,8 @@ class UniversalLibrary:
                     'attack': attack,
                     'health': health
                 }
-                                                            
-        interfaceNames = []
+                                  
+        interfaces = {}                          
         vrange = ''
         
         read_synergies = False
@@ -108,13 +108,13 @@ class UniversalLibrary:
                     if value > 0:                                                                
                             interface_data = InterfaceData(tag, value, vrange)
                             Interface(interface_data).save()        
-                            interfaceNames.append(tag) 
+                            interfaces[tag] = value 
 
         is_forgeborn_ability = attributes['cardType'] == 'forgeborn-ability'
         is_fraud_ability = attributes['cardType'] == 'Fraud' or 'fraud-legs' in attributes['id']
 
         name = entityName
-        entity_data = CardLibrary.EntityData(name, faction, attributes, abilities, vrange, interfaceNames)
+        entity_data = CardLibrary.EntityData(name, faction, attributes, abilities, vrange, interfaces)
         entity = CardLibrary.Entity(entity_data)        
         result = entity.save()
 

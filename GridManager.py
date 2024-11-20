@@ -21,11 +21,11 @@ from SortingManager import SortingManager
 
 
 DEFAULT_FILTER =  pd.DataFrame({
-            'Type': ['Deck'],
-            'Name': ['' ],
+            'Type': ['Fusion'],
+            'Name': ['The Hating Henchman Detachment' ],
             'Modifier': [''],
             'Creature': [''],
-            'Spell': ['Aerial Assault'],            
+            'Spell': [''],            
             'Forgeborn Ability': [''],
             'Active': [True],
             'Mandatory Fields': ['Name, Forgeborn Ability']
@@ -767,80 +767,141 @@ def get_forgeborn_abilities():
 
 import re
 
-def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
+def apply_filter_to_dataframe(df_to_filter, filter_df):
     def filter_by_substring(df, filter_row):
-        def apply_filter(df, substrings, filter_fields=['cardTitles'], operator='OR'):
-            if not substrings or not filter_fields:
+        def apply_filter(df, filter_step):
+            # Extract information from filter step
+            first_target = filter_step.get('first_target', None)
+            second_target = filter_step.get('second_target', None)
+            first_operator = filter_step.get('first_operator', 'OR')
+            second_operator = filter_step.get('second_operator', 'OR')
+
+            if not first_target or not second_target:
                 return df
 
-            # Initialize the mask based on the operator
-            mask = pd.Series([True] * len(df), index=df.index) if operator == 'AND' else pd.Series([False] * len(df), index=df.index)
+            # Initialize the mask based on the first operator
+            mask = pd.Series([first_operator == 'AND'] * len(df), index=df.index)
 
-            # Apply the filter to each field
-            for field in filter_fields:
-                field_mask = pd.Series([False] * len(df), index=df.index)
-                for substring in substrings:
-                    regex = fr'\b{re.escape(substring)}(?=[^\w\s]|\s|$)'  # Match word boundaries but allow space as part of the match
-                    field_mask |= df[field].apply(lambda title: bool(re.search(regex, str(title), re.IGNORECASE)))
-                    # for idx, title in df[field].items():
-                    #     match = re.search(regex, str(title), re.IGNORECASE)
-                    #     if match:
-                    #         field_mask.at[idx] = True
-                            #print(f"Match found: Substring '{substring}' in field '{field}' for index {idx}: '{title}'")
+            # Iterate over the first target (either fields or substrings)
+            for first_item in first_target:
+                item_mask = pd.Series([second_operator == 'AND'] * len(df), index=df.index)
 
-                    # Debugging information for temp_mask
-                    matched_indices = df[field][field_mask].index.tolist()
-                    print(f"Substring '{substring}' matched indices: {matched_indices}")
-                    print(f"Field: {field}, Substring: '{substring}'")
-                    print(f"Values being compared against:\n{df[field]}")
-                    print(f"Matches:\n{df[field][field_mask]}")
-                    
-                # Combine the field mask with the main mask based on the operator
-                if operator == 'AND':
-                    mask &= field_mask
+                # Check if the field is in the DataFrame (if applicable)
+                if filter_step['first_target_type'] == 'field' and first_item not in df.columns:
+                    print(f"Field '{first_item}' not found in DataFrame")
+                    continue
+
+                # Iterate over the second target (either substrings or fields)
+                for second_item in second_target:
+                    if filter_step['first_target_type'] == 'field':
+                        # First target is field, second is substring
+                        string_item = second_item
+                        field_item = first_item
+                    else:
+                        # First target is substring, second is field
+                        string_item = first_item
+                        field_item = second_item
+
+                    regex = fr'\b{re.escape(string_item)}(?=[^\w\s]|\s|$)'  # Match word boundaries but allow space as part of the match
+
+                    # Apply the regex to the entire column using .apply() and combine based on the second operator
+                    substring_mask = df[field_item].apply(lambda title: bool(re.search(regex, str(title), re.IGNORECASE)))
+
+                    # Debugging information for each match
+                    matched_indices = df[field_item][substring_mask].index.tolist()
+                    #print(f"Substring '{string_item}' matched indices: {matched_indices} in field '{field_item}'")
+
+
+                    # Combine the substring mask with the item mask based on the second operator
+                    if second_operator == 'AND':
+                        item_mask &= substring_mask
+                    else:  # OR logic
+                        item_mask |= substring_mask
+
+                # Debugging information after applying item mask
+                matched_indices_after_item = df[item_mask].index.tolist()
+                #print(f"Item mask after combining substrings: {matched_indices_after_item} for first_item '{first_item}'")
+
+                # Combine the item mask with the main mask based on the first operator
+                if first_operator == 'AND':
+                    mask &= item_mask
                 else:  # OR logic
-                    mask |= field_mask
+                    mask |= item_mask
+
+            # Debugging information after applying the main mask
+            matched_indices_after_main = df[mask].index.tolist()
+            #print(f"Main mask after combining items: {matched_indices_after_main}")
 
             matched_count = mask.sum()
-            #print(f"apply_filter: {matched_count} rows matched for substrings {substrings} in fields {filter_fields} with operator '{operator}'")
+            print(f"apply_filter: {matched_count} rows matched for first_target '{first_target}' and second_target '{second_target}' with first_operator '{first_operator}' and second_operator '{second_operator}'")
             return df[mask]
 
-        def determine_operator_and_substrings(string):
-            if not isinstance(string, str):
-                return '', []
-
+        def determine_filter_config(column, filter_row, string):
+            # Determine operator and split substrings
             and_symbols = {':': r'\s*:\s*', '&': r'\s*&\s*', '+': r'\s*\+\s*'}
             or_symbols = {'|': r'\s*\|\s*', '-': r'\s*-\s*'}
 
+            substring_operator = 'OR'
+            substrings = re.split(r'\s*;\s*', string)
             for symbol, pattern in and_symbols.items():
                 if symbol in string:
-                    return 'AND', re.split(pattern, string)
+                    substring_operator = 'AND'
+                    substrings = re.split(pattern, string)
+                    break
+            else:
+                for symbol, pattern in or_symbols.items():
+                    if symbol in string:
+                        substring_operator = 'OR'
+                        substrings = re.split(pattern, string)
+                        break
 
-            for symbol, pattern in or_symbols.items():
-                if symbol in string:
-                    return 'OR', re.split(pattern, string)
-
-            return 'OR', re.split(r'\s*;\s*', string)
-
-        def determine_filter_fields(column, filter_row):
-            # Default filter fields
-            filter_fields = ['cardTitles']
+            # Determine fields to filter on and field operator
+            # Standard case (default) 
+            first_operator = 'OR'
+            second_operator = substring_operator
+            first_target = ['cardTitles']
+            second_target = substrings
+            first_target_type = 'field'
+            
+            
             if column == 'Name':
+                second_target = substrings
                 if filter_row['Type'] == 'Fusion':
-                    filter_fields = ['Deck A', 'Deck B']
+                    first_target = ['Deck A', 'Deck B']
+                    first_operator = substring_operator
+                    second_operator = 'OR'
                 else:
-                    filter_fields = ['Name']
+                    first_target = ['Name']
             elif column == 'Forgeborn Ability':
-                filter_fields = ['FB2', 'FB3', 'FB4']
+                second_target = ['FB2', 'FB3', 'FB4']
+                second_operator = 'OR'
+                first_operator = substring_operator
+                first_target = substrings
+                first_target_type = 'substring'
 
-            return filter_fields
+            # Return the filter configuration
+            return {
+                'first_target': first_target,
+                'second_target': second_target,
+                'first_operator': first_operator,
+                'second_operator': second_operator,
+                'first_target_type': first_target_type 
+            }
 
-        df_filtered = df_to_filter
+        # Beginning of the filter_by_substring function
+        df_filtered = df
 
         # Apply Type filter first (always mandatory)
         if 'Type' in filter_row and isinstance(filter_row['Type'], str) and filter_row['Type']:
             type_substrings = filter_row['Type'].split(',')
-            df_filtered = apply_filter(df_filtered, type_substrings, ['type'], operator='AND')
+            filter_step = {
+                'first_target': ['type'],
+                'second_target': type_substrings,
+                'first_operator': 'OR',
+                'second_operator': 'OR',
+                'first_target_type': 'field'
+            }
+            df_filtered = apply_filter(df_filtered, filter_step)
 
         # Apply mandatory fields with mandatory_operator logic
         mandatory_fields = filter_row.get('Mandatory Fields', '')
@@ -849,33 +910,29 @@ def apply_cardname_filter_to_dataframe(df_to_filter, filter_df):
         else:
             mandatory_fields = []
         mandatory_fields = [column.strip() for column in mandatory_fields]
-        
+
         # Apply mandatory fields (all must match)
         for column in mandatory_fields:
-            if column and isinstance(filter_row[column], str) and filter_row[column]:
-                entry_operator, substrings = determine_operator_and_substrings(filter_row[column])
-                if substrings:
-                    filter_fields = determine_filter_fields(column, filter_row)
-                    df_filtered = apply_filter(df_filtered, substrings, filter_fields, operator=entry_operator)
-
+            filter_step = determine_filter_config(column, filter_row, filter_row[column])            
+            df_filtered = apply_filter(df_filtered, filter_step) 
+ 
         # Apply optional fields (at least one must match)
         optional_results = []
         for column in filter_row.index:
             if column not in mandatory_fields and column not in ['Type', 'Mandatory Fields', 'Active'] and isinstance(filter_row[column], str) and filter_row[column]:
-                entry_operator, substrings = determine_operator_and_substrings(filter_row[column])
-                if substrings:
-                    filter_fields = determine_filter_fields(column, filter_row)
-                    # Apply the filter to the already filtered DataFrame (df_filtered)
-                    current_filter_results = apply_filter(df_filtered, substrings, filter_fields, operator=entry_operator)
-                    optional_results.append(current_filter_results)
+                filter_step = determine_filter_config(column, filter_row, filter_row[column]) 
+                current_filter_results = apply_filter(df_filtered, filter_step)
+                optional_results.append(current_filter_results)  # Duplicates will be removed later 
+                
 
         # Combine all optional results with OR logic
         if optional_results:
             combined_optional_results = pd.concat(optional_results).drop_duplicates()
             df_filtered = df_filtered[df_filtered.index.isin(combined_optional_results.index)]
-            #print(f"Combined optional results: {len(combined_optional_results)} rows matched")
 
         return df_filtered
+
+    # Beginning of the apply_cardname_filter_to_dataframe function
 
     df_filtered = df_to_filter
     active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
@@ -946,7 +1003,7 @@ class DynamicGridManager:
 
     def update_grid_layout(self):
         filter_df = self.filterGridObject.get_changed_df()
-        active_filters_count = len(filter_df[filter_df['Active']])
+        active_filters_count = len(filter_df[filter_df['Active']]) or 1
         new_grid = widgets.GridspecLayout(active_filters_count, 1)
         for idx, child in enumerate(self.grid_layout.children):
             if idx < active_filters_count:
@@ -959,7 +1016,7 @@ class DynamicGridManager:
         info_level = widget_states['info_level']
         data_set = widget_states['data_set']
         filter_row = widget_states['filter_row']
-        filtered_df = apply_cardname_filter_to_dataframe(df, pd.DataFrame([filter_row]))        
+        filtered_df = apply_filter_to_dataframe(df, pd.DataFrame([filter_row]))        
         return self.determine_columns(filtered_df, info_level, data_set, filter_row['Type'])
         
     def determine_columns(self, df, info_level, data_set, item_type):

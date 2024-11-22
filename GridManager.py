@@ -3,7 +3,10 @@ from datetime import datetime
 from gc import enable
 from unittest.mock import DEFAULT
 from click import option
+from matplotlib.pyplot import grid
+from numpy import isin
 import pandas as pd
+from qgridnext import QgridWidget
 
 from CardLibrary import ForgebornAbility
 try:      import qgridnext as qgrid
@@ -12,6 +15,7 @@ import ipywidgets as widgets
 from GlobalVariables import global_vars as gv
 from GlobalVariables import rotate_suffix
 from CustomCss import CSSManager
+from CustomGrids import ActionToolbar
 
 from DataSelectionManager import DataSelectionManager
 from MongoDB.DatabaseManager import DatabaseManager
@@ -21,14 +25,14 @@ from SortingManager import SortingManager
 
 
 DEFAULT_FILTER =  pd.DataFrame({
-            'Type': ['Fusion'],
-            'Name': ['The Hating Henchman Detachment' ],
-            'Modifier': [''],
-            'Creature': [''],
-            'Spell': [''],            
-            'Forgeborn Ability': [''],
-            'Active': [True],
-            'Mandatory Fields': ['Name, Forgeborn Ability']
+            'Type': ['Deck', 'Deck'],
+            'Name': ['','' ],
+            'Modifier': ['',''],
+            'Creature': ['',''],
+            'Spell': ['',''],            
+            'Forgeborn Ability': ['',''],
+            'Active': [True,True],
+            'Mandatory Fields': ['Name, Forgeborn Ability','Name, Forgeborn Ability']
         })
 class GridManager:
     EVENT_DF_STATUS_CHANGED = 'df_status_changed'
@@ -61,7 +65,7 @@ class GridManager:
 
         return grid
         
-    def get_grid_df(self, identifier, version='default'):
+    def get_grid_df_version(self, identifier, version='default'):
         grid = self.grids.get(identifier)
         if grid:
             version_passed = False
@@ -72,6 +76,13 @@ class GridManager:
                 if version_passed and df is not None and not df.empty:
                     return df
         return None
+
+    def get_grid_df(self, identifier):
+        grid = self.grids.get(identifier)
+        if grid:
+           return grid.main_widget.get_changed_df()
+        return None
+
 
     def replace_grid(self, identifier, new_df):
         #print(f"GridManager::replace_grid() - Replacing grid {identifier} with new DataFrame")
@@ -161,7 +172,7 @@ class GridManager:
             grid.df_versions['changed'] = changed_df.copy()
             self.update_visible_columns(event, grid.main_widget)
             self.update_toggle_df(changed_df, identifier)
-            self.synchronize_widgets(identifier)
+            #self.synchronize_widgets(identifier)
             grid.df_status['current'] = 'changed'
             grid.df_status['last_set']['changed'] = datetime.now()
             self.trigger(self.EVENT_DF_STATUS_CHANGED, identifier, grid.df_status)
@@ -771,12 +782,12 @@ def apply_filter_to_dataframe(df_to_filter, filter_df):
     def filter_by_substring(df, filter_row):
         def apply_filter(df, filter_step):
             # Extract information from filter step
-            first_target = filter_step.get('first_target', None)
-            second_target = filter_step.get('second_target', None)
+            first_target = filter_step.get('first_target', [''])
+            second_target = filter_step.get('second_target', [''])
             first_operator = filter_step.get('first_operator', 'OR')
             second_operator = filter_step.get('second_operator', 'OR')
 
-            if not first_target or not second_target:
+            if first_target == [''] or second_target == ['']:
                 return df
 
             # Initialize the mask based on the first operator
@@ -967,7 +978,10 @@ deck_content_bar = create_styled_html(
     text_color='white', bg_color='#AA4465', border_color='#4A4A4A'  
 )
 
+from functools import partial
+import webbrowser
 import FieldUnifier
+from GraphVis import display_graph
 class DynamicGridManager:
 
     def __init__(self, data_generate_functions, qg_options, out_debug):
@@ -975,19 +989,24 @@ class DynamicGridManager:
         self.data_generate_functions = data_generate_functions
         self.qg_options = qg_options
         self.qm = GridManager(out_debug)
-        self.grid_layout = widgets.GridspecLayout(1, 1)        
+        
         self.filterGridObject = FilterGrid(self.refresh_gridbox)
         self.deck_content_Grid = self.create_deck_content_Grid()
         self.sorting_info = {}
         self.css_manager = CSSManager()        
         self.custom_css_class = self.css_manager.create_and_inject_css('deck_content', rotate_suffix)        
         self.grid_widget_states = {}
+    
+        # GridSpecLayout
+        self.rows = 1
+        self.columns = 1    
+        self.grid_layout = widgets.GridspecLayout(self.rows, self.columns)        
 
         # UI elements
         self.selectionGrid, self.filterGrid = self.filterGridObject.get_widgets()
         self.ui = widgets.VBox([])
-        #self.update_ui()
-        self.update_grid_layout()        
+    
+        self.update_grid_layout(self.rows)        
         
         # Register observer for DataSelectionManager
         DataSelectionManager.register_observer(self.update_grids)
@@ -1001,15 +1020,68 @@ class DynamicGridManager:
         self.grid_widget_states = {}        
         self.update_ui()
 
-    def update_grid_layout(self):
-        filter_df = self.filterGridObject.get_changed_df()
-        active_filters_count = len(filter_df[filter_df['Active']]) or 1
-        new_grid = widgets.GridspecLayout(active_filters_count, 1)
-        for idx, child in enumerate(self.grid_layout.children):
-            if idx < active_filters_count:
-                new_grid[idx, 0] = child
-        self.grid_layout = new_grid
-        self.update_ui()
+    # def update_grid_layout(self):
+    #     filter_df = self.filterGridObject.get_changed_df()
+    #     active_filters_count = len(filter_df[filter_df['Active']]) or 1
+    #     new_grid = widgets.GridspecLayout(active_filters_count, 1)
+    #     for idx, child in enumerate(self.grid_layout.children):
+    #         if idx < active_filters_count:
+    #             new_grid[idx, 0] = child
+    #     self.grid_layout = new_grid
+    #     self.update_ui()
+        
+        
+    def update_grid_layout(self, active_filters_count = 1):
+        """
+        Updates the GridspecLayout based on active filters.
+        """
+        try:
+            # Retrieve the latest filter DataFrame
+            #filter_df = self.filterGridObject.qgrid_filter.get_changed_df()
+            
+            # Validate the presence of the 'Active' column
+            #if 'Active' not in filter_df.columns:
+            #    raise ValueError("The filter DataFrame must contain an 'Active' column.")
+            
+            # Determine the number of active filters; default to 1 if none are active
+            #active_filters_count = filter_df['Active'].sum()
+            active_filters_count = active_filters_count if active_filters_count > 0 else 1
+            
+            # Check if the grid needs to be resized
+            if active_filters_count != self.rows:
+                # Create a new GridspecLayout with updated rows, preserving columns
+                new_grid = widgets.GridspecLayout(
+                    active_filters_count,
+                    self.columns,
+                    height=self.grid_layout.layout.height,
+                    width=self.grid_layout.layout.width
+                )
+                
+                # Reassign existing children to the new grid
+                for idx in range(min(active_filters_count, self.rows)):
+                    for col in range(self.columns):
+                        child_idx = idx * self.columns + col
+                        if child_idx < len(self.grid_layout.children):
+                            new_grid[idx, col] = self.grid_layout.children[child_idx]
+                
+                # **Update the stored row count**
+                self.rows = active_filters_count
+                
+                # Update the UI by replacing the old grid with the new grid
+                self.ui.children = [new_grid]
+                
+                # Replace the old grid with the new grid
+                self.grid_layout = new_grid
+                
+                print(f"Grid layout updated to {self.rows} rows and {self.columns} columns.")
+            else:
+                print("Grid layout size remains unchanged.")
+            
+            # Refresh or re-render additional UI components if necessary
+            self.update_ui()
+        
+        except Exception as e:
+            print(f"Error updating grid layout: {e}")
 
     def apply_filters(self, df, widget_states):
         # Filter columns based on the filter_row
@@ -1073,11 +1145,10 @@ class DynamicGridManager:
         #print(f"Number of active filters: {len(active_filters_df)}")
         if len(active_filters_df) != len(self.grid_layout.children) or len(active_filters_df) == 0 :
             print("Resetting grid layout")
-            self.reset_grid_layout(len(active_filters_df))
-        
-        #self.reset_grid_layout(len(active_filters_df))
+            #self.reset_grid_layout(len(active_filters_df))
+            self.update_grid_layout(len(active_filters_df))
 
-        gv.update_progress('Gridbox', 0, len(active_filters_df), "Refreshing Gridbox - Applying Filters")
+        gv.update_progress('Gridbox', 0, len(active_filters_df), message="Refreshing Gridbox - Applying Filters")
         for index, (row_index, filter_row) in enumerate(active_filters_df.iterrows()):            
             
             grid_identifier = f"filtered_grid_{index}"                
@@ -1132,6 +1203,19 @@ class DynamicGridManager:
 
         self.update_ui()
 
+    def create_action_toolbar(self, grid_id):
+        """
+        Creates an ActionToolbar instance and assigns callbacks specific to the grid_id.
+        """
+        action_toolbar = ActionToolbar()
+        # Assign callbacks using partial to bind grid_id
+        #action_toolbar.assign_callback('Solbind', partial(self.solbind_request, grid_id))
+        #action_toolbar.assign_callback('Rename', partial(self.rename_fusion, grid_id))
+        action_toolbar.assign_callback('Export', partial(self.save_dataframes_to_csv, grid_id))
+        action_toolbar.add_button('Open', 'Open (web)', callback_function=partial(self.open_deck, grid_id))
+        action_toolbar.add_button('Graph', 'Show Graph', callback_function=partial(self.show_graph, grid_id))
+        return action_toolbar.get_ui()
+
     def create_toolbar(self, grid_identifier):
         # Create and setup toolbar widgets with observer functions
         info_level_button = widgets.ToggleButtons(
@@ -1166,7 +1250,19 @@ class DynamicGridManager:
         info_level_button.observe(on_info_level_change, names='value')
         data_set_dropdown.observe(on_data_set_change, names='value')
 
-        return widgets.HBox([info_level_button, spacer, data_set_dropdown], layout=widgets.Layout(padding='5px 5px', align_items='center', width='100%'))
+        per_grid_controls = widgets.HBox([info_level_button, spacer, data_set_dropdown], layout=widgets.Layout(padding='5px 5px', align_items='center', width='100%'))
+
+         # Create Action Toolbar
+        action_toolbar_ui = self.create_action_toolbar(grid_identifier)
+
+        # Combine Per-Grid Controls and Action Toolbar
+        combined_toolbar = widgets.VBox([
+            per_grid_controls,    # Per-grid controls
+            action_toolbar_ui     # Action buttons
+        ], layout=widgets.Layout(width='100%'))
+        
+        return combined_toolbar
+        #return widgets.HBox([info_level_button, spacer, data_set_dropdown], layout=widgets.Layout(padding='5px 5px', align_items='center', width='100%'))
 
 
     def refresh_grid_using_toolbar_and_filter(self, grid_identifier):
@@ -1185,7 +1281,7 @@ class DynamicGridManager:
         print(f"Grid retrieved for identifier {grid_identifier}")
 
         # Retrieve and copy the default data from the collection
-        collection_df = self.qm.get_default_data('collection').copy()
+        collection_df = self.qm.get_default_data('collection')
         print(f"Default collection DataFrame retrieved with {len(collection_df)} rows and {len(collection_df.columns)} columns")
 
         # Apply the filters from the filter row first
@@ -1311,47 +1407,71 @@ class DynamicGridManager:
     def get_ui(self):
         return self.ui
     
-    
     def get_selected_grid_items(self):
         """
-        Retrieves the currently selected items from the grids currently displayed in the grid layout.
+        Retrieves the currently selected 'Name' items from all main_qgrid_widgets within the GridspecLayout.
         
         Returns:
-            dict: A dictionary where the keys are grid identifiers and the values are lists of selected items.
+            dict: A dictionary where keys are grid_ids and values are lists of selected 'Name' items.
         """
         selected_items = {}
-
-        # Iterate through the grid layout's children
-        for index, widget_box in enumerate(self.grid_layout.children):
-            # Access the VBox that contains the filter and grid widgets
-            if isinstance(widget_box, widgets.VBox) and len(widget_box.children) > 1:
-                # Get the grid widget (the second child of the VBox)                
-                grid_widget_box = widget_box.children[1]  
-                if isinstance(grid_widget_box, widgets.VBox) and len(grid_widget_box.children) > 1:
-                    grid_widget = grid_widget_box.children[1]  # This is the actual grid widget we need
-                else:
-                    print(f"Grid Widget has not enough children {grid_widget_box}")
-                    continue
-
-                # Check if this grid_widget_box matches any registered grids in the GridManager
-                for grid_id, grid in self.qm.grids.items():
-                    if grid.main_widget == grid_widget:
-                    # Use get_selected_df() to directly get the DataFrame of selected rows
-                        selected_df = grid.main_widget.get_selected_df()
-
-                        # Only include the grid if there are selected items and the 'Name' column exists
-                        if not selected_df.empty and 'Name' in selected_df.columns:
-                            selected_names = selected_df['Name'].tolist()  # Get the 'Name' column values for selected rows
-                            selected_items[grid_id] = selected_names  # Store selected 'Name' values as a list
-                            
-                            # Convert the DataFrame to a list of dictionaries, each representing a row
-                            #selected_rows = selected_df.to_dict(orient='records')
-                            #selected_items[grid_id] = selected_rows  # Store selected rows as a list of dictionaries
-
-        return selected_items
         
-       
-    def save_dataframes_to_csv(self, directory='dataframes'):
+        # Iterate over all rows and columns in the grid_layout
+        for row in range(self.rows):
+            for col in range(self.columns):
+                cell = self.grid_layout[row, col]
+                
+                # Check if the cell is a VBox with at least 3 children
+                if isinstance(cell, widgets.VBox) and len(cell.children) >= 3:
+                    # Extract inner_vbox which contains toggle and main_qgrid_widget
+                    inner_vbox = cell.children[2]
+                    
+                    # Verify inner_vbox structure
+                    if isinstance(inner_vbox, widgets.VBox) and len(inner_vbox.children) >= 2:
+                        # Access the main_qgrid_widget
+                        main_qgrid_widget = inner_vbox.children[1]
+                        
+                        # Ensure the main_qgrid_widget has the method to retrieve selected data
+                        if hasattr(main_qgrid_widget, 'get_selected_df'):
+                            selected_df = main_qgrid_widget.get_selected_df()
+                            
+                            # Identify the corresponding grid_id from GridManager
+                            grid_id = next((gid for gid, grid in self.qm.grids.items() if grid.main_widget is main_qgrid_widget), None)
+                            
+                            if grid_id:
+                                if not selected_df.empty and 'Name' in selected_df.columns:
+                                    selected_names = selected_df['Name'].tolist()
+                                    selected_items[grid_id] = selected_names
+                                    self.grid_widget_states[grid_id]['Selection'] = selected_names
+                                    print(f"Selected names for grid_id '{grid_id}': {selected_names}")
+                                else:
+                                    print(f"No selected items in grid_id '{grid_id}' or 'Name' column missing.")
+                            else:
+                                print(f"No matching grid_id found for main_qgrid_widget ID {id(main_qgrid_widget)}.")
+                    else:
+                        print(f"Skipping cell [{row}, {col}] as inner_vbox does not contain enough children.")
+                else:
+                    print(f"Skipping cell [{row}, {col}] as it does not contain a valid VBox with at least 3 children.")
+        
+        print(f"\nFinal selected_items: {selected_items}")
+        
+        return selected_items
+
+    def save_dataframes_to_csv(self, identifier=None, directory='dataframes'):
+        def df_to_disk(widget):
+            # Get the DataFrame of the current grid
+            df = widget.get_changed_df()
+
+            # If the DataFrame is not empty, save it as CSV
+            if df is not None and not df.empty:
+                csv_filename = os.path.join(directory, f"{identifier}.csv")
+                df.to_csv(csv_filename, index=False)
+                with self.out_debug:
+                    print(f"Saved DataFrame '{identifier}' to {csv_filename}")
+            else:
+                with self.out_debug:
+                    print(f"No data available for grid '{identifier}', skipping...")
+        
         """
         Saves the DataFrames of grids that are currently children of the GridSpecLayout as CSV files.
 
@@ -1361,6 +1481,16 @@ class DynamicGridManager:
         # Create the directory if it doesn't exist
         if not os.path.exists(directory):
             os.makedirs(directory)
+
+        if identifier:
+            # Find the corresponding grid in the GridManager
+            grid = self.qm.grids.get(identifier)
+            if grid is not None:
+                df_to_disk(grid.main_widget)
+            else:
+                with self.out_debug:
+                    print(f"Grid '{identifier}' not found in GridManager, skipping...")
+            return # Exit the function early if an identifier is provided
 
         # Iterate through the current children in GridSpecLayout
         for index, widget_box in enumerate(self.grid_layout.children):
@@ -1372,18 +1502,87 @@ class DynamicGridManager:
                 # Find the corresponding grid in the GridManager
                 for grid_id, grid in self.qm.grids.items():
                     if grid.main_widget == grid_widget:
-                        # Get the DataFrame of the current grid
-                        df = grid.main_widget.get_changed_df()
-
-                        # If the DataFrame is not empty, save it as CSV
-                        if df is not None and not df.empty:
-                            csv_filename = os.path.join(directory, f"{grid_id}.csv")
-                            df.to_csv(csv_filename, index=False)
-                            with self.out_debug:
-                                print(f"Saved DataFrame '{grid_id}' to {csv_filename}")
-                        else:
-                            with self.out_debug:
-                                print(f"No data available for grid '{grid_id}', skipping...")
-
+                        df_to_disk(grid.main_widget)
         with self.out_debug:
             print(f"All applicable DataFrames saved to {directory}:")
+            
+    # Function to open the selected deck in the browser
+    def open_deck(self, grid_id, button):
+        
+        if not grid_id in self.grid_widget_states or not 'Selection' in self.grid_widget_states[grid_id]: 
+            print(f"No selection found for grid_id '{grid_id}', skipping...")
+            return
+        
+        selected_items_list = self.grid_widget_states[grid_id]['Selection']
+
+        # Get the rows from the central dataframe based on the selected names
+        central_df = self.qm.get_grid_df('collection').copy()
+
+        for item in selected_items_list:
+            # Get the row corresponding to the selected item
+            item_row = central_df[central_df['Name'] == item]
+            
+            if not item_row.empty:
+                # Convert the single-row DataFrame to a dictionary
+                item_dict = item_row.to_dict(orient='records')[0]
+
+                # Access 'id' and 'type' directly from the dictionary
+                item_id = item_dict['id']
+                item_type = item_dict['type']
+
+                # Determine the correct URL path based on the item type
+                if item_type == 'Fusion':
+                    item_type = 'fused'
+                elif item_type == 'Deck':
+                    item_type = 'decks'
+
+                # Create the link and open it in the web browser
+                item_link = f'https://solforgefusion.com/{item_type}/{item_id}'
+                webbrowser.open(item_link)
+            else:
+                print(f"Item '{item}' not found in the central dataframe.")
+
+    def show_graph(self, grid_id, button):
+        selected_items_list = self.grid_widget_states[grid_id]['Selection']        
+        display_graph(selected_items_list)    
+
+
+    # # Function for making a solbind request
+    # def solbind_request(self, grid_id):
+        
+    #     selected_items_info = self.grid_widget_states[grid_id]['Selection']
+    #     password = text_box.value  # Get the password from the text box
+        
+    #     # Here, handle multiple selected items if needed
+    #     if ',' in selected_items_info:
+    #         print("Multiple items selected, please select only one deck.")
+    #         return
+    #     deck_name = selected_items_info  # Assuming single selection
+    #     deck_data = gv.myDB.find_one('Deck', {'name': deck_name})
+    #     if deck_data:
+    #         deck_id = deck_data.get('id')
+        
+    #     # Proceed with the solbind request using NetApi
+    #     net_api = NetApi(username, password)
+    #     net_api.post_solbind_request(deck_id)
+
+    # # Function for renaming a fusion
+    # def rename_fusion(self, button):
+    #     #username = gv.myDB.get_current_db_name()  
+    #     selected_items_info = selected_items_label.value.split(': ')[1]  # Extract selected items from the label
+    #     #password = text_box.value  # Get the password from the text box
+        
+    #     # Here, handle multiple selected items if needed
+    #     if ',' in selected_items_info:
+    #         print("Multiple items selected, please select only one fusion.")
+    #         return
+    #     fusion_name = selected_items_info.strip(" ")  # Assuming single selection
+    #     fusion = gv.myDB.find_one('Fusion', {'name': fusion_name})
+                
+    #     # Prompt for new name
+    #     new_name = text_box.value
+        
+    #     # Proceed with the rename request using NetApi
+    #     net_api = NetApi(username, password)
+    #     net_api.update_fused_deck(fusion, new_name)
+        

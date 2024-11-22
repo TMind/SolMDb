@@ -2074,27 +2074,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
                 webbrowser.open(item_link)
             else:
                 print(f"Item '{item}' not found in the central dataframe.")
-        
 
-        # # Iterate over the dictionary items
-        # item_links = []
-        # for grid_id, selected_rows in selected_dfs.items():
-        #     # selected_rows is a list of dictionaries representing rows
-        #     for item_row in selected_rows:
-        #         # Access the 'id' field from each row dictionary
-        #         item_id = item_row.get('id')
-        #         item_type = item_row.get('type')
-                
-        #         if item_type == 'Fusion' : item_type = 'fused'
-        #         if item_type == 'Deck'   : item_type = 'decks'
-                
-        #         if item_type:
-        #             item_link = f'https://solforgefusion.com/{item_type}/{item_id}'                                
-        #             item_links.append(item_link)
-        
-        # for item_link in item_links:
-        #     webbrowser.open(item_link)        
-        #     pass
 
     # Function for making a solbind request
     def solbind_request(button):
@@ -2137,12 +2117,12 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     
     # Initialize the ActionToolbar and pass the update function
     action_toolbar = ActionToolbar()
-    action_toolbar.assign_callback('Authenticate', authenticate)
-    action_toolbar.assign_callback('Solbind', solbind_request)
-    action_toolbar.assign_callback('Rename', rename_fusion)
+    #action_toolbar.assign_callback('Authenticate', authenticate)
+    #action_toolbar.assign_callback('Solbind', solbind_request)
+    #action_toolbar.assign_callback('Rename', rename_fusion)
     #action_toolbar.assign_callback('Open (Web)', open_deck)
-    action_toolbar.assign_callback('Export', save_grid_dataframe)
-    action_toolbar.add_button('Open', 'Open (web)', callback_function=open_deck)
+    #action_toolbar.assign_callback('Export', save_grid_dataframe)
+    #action_toolbar.add_button('Open', 'Open (web)', callback_function=open_deck)
 
     # Action area where the toolbar and the labels are displayed
     action_area = widgets.VBox([selected_db_label, selected_items_label, text_box, action_toolbar.get_ui()])

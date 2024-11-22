@@ -475,7 +475,7 @@ class ActionToolbar:
         if button_configs is None:
             # Default buttons if none are provided
             button_configs = {
-                "Authenticate": {"description": "Login", "button_style": 'info'},
+                #"Authenticate": {"description": "Login", "button_style": 'info'},
                 "Solbind": {"description": "Solbind", "button_style": 'danger'},
                 "Rename": {"description": "Rename", "button_style": 'warning'},
                 "Export": {"description": "Export", "button_style": 'info'}

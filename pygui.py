@@ -534,7 +534,7 @@ def generate_cardType_count_dataframe():
     if gv.myDB:
         deck_iterator = gv.myDB.find('Deck', {})
         deck_list = list(deck_iterator)
-    gv.update_progress(identifier, 0, len(deck_list), 'Generating CardType Count Data...')
+    gv.update_progress(identifier, 0, len(deck_list), message = 'Generating CardType Count Data...')
     
     all_decks_list = []
     
@@ -778,7 +778,7 @@ def generate_fusion_statistics_dataframe(central_df=None):
             
     # If fusions are found, process them
     if not df_fusions_filtered.empty:
-        gv.update_progress('Fusion Card Titles', 0, len(df_fusions_filtered), 'Fetching Card Titles')
+        gv.update_progress('Fusion Card Titles', 0, len(df_fusions_filtered), message = 'Fetching Card Titles')
 
         # Extract necessary columns and add additional calculated columns
         df_fusions_filtered['cardTitles'] = df_fusions_filtered['children_data'].apply(get_card_titles_by_Ids)
@@ -800,7 +800,7 @@ def generate_fusion_statistics_dataframe(central_df=None):
                 print("OK: 'name' column not found in the dataframe.")                 
             
         # Initialize a list to store all interface ID DataFrames
-        gv.update_progress('Fusion Stats', 0, len(df_fusions_filtered), 'Generating Fusion Dataframe...')
+        gv.update_progress('Fusion Stats', 0, len(df_fusions_filtered), message = 'Generating Fusion Dataframe...')
         all_interface_ids_df_list = []
         
         # Apply the function across all rows in a more efficient way
@@ -845,6 +845,7 @@ def extract_forgeborn_ids_and_factions(my_decks, fusion_data):
             break  # Exit loop since we handled this case
 
     return forgeborn_ids, factions
+
 def generate_combo_dataframe(df: pd.DataFrame=None) -> pd.DataFrame:
     # If no DataFrame is provided, fetch Deck and Fusion names and graphs from the database  
     if df is None:  
@@ -866,7 +867,7 @@ def generate_combo_dataframe(df: pd.DataFrame=None) -> pd.DataFrame:
     combos_list = []
   
     # For each deck and fusion, process the graph data to generate combos  
-    gv.update_progress(f'Combo Data', 0, len(df), 'Generating Combo Data...')  
+    gv.update_progress(f'Combo Data', 0, len(df), message = 'Generating Combo Data...')  
     #print_dataframe(df, 'Input DataFrame')
     for _, item in df.iterrows():  
         # Process the current item and graph and get its combo data as a dictionary 
@@ -933,7 +934,7 @@ def generate_deck_statistics_dataframe():
 
     df_list = []
     identifier = 'Stats Data'
-    gv.update_progress(identifier, 0, number_of_decks, 'Generating Statistics Data...')
+    gv.update_progress(identifier, 0, number_of_decks, message = 'Generating Statistics Data...')
     for deck in decks:
         gv.update_progress(identifier, message='Processing Deck Stats: ' + deck['name'])        
         
@@ -1090,14 +1091,17 @@ def handle_db_list_change(change):
 
         if new_username:
 
-            change['type'] = 'username'
+            #change['type'] = 'username'
             # Update the Global Username Variable
             gv.username = new_username
 
             # Update Username Widget
             username_widget.value = new_username  # Reflect change in username widget
             
-            grid_manager.refresh_gridbox(change)
+            grid_manager.handle_database_change()
+            #grid_manager.refresh_gridbox(change)
+            #TODO: grid_manager.
+            
         else:
             pass 
             #print('No valid database selected.')
@@ -2116,7 +2120,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
         net_api.update_fused_deck(fusion, new_name)
     
     # Initialize the ActionToolbar and pass the update function
-    action_toolbar = ActionToolbar()
+    #action_toolbar = ActionToolbar()
     #action_toolbar.assign_callback('Authenticate', authenticate)
     #action_toolbar.assign_callback('Solbind', solbind_request)
     #action_toolbar.assign_callback('Rename', rename_fusion)
@@ -2125,10 +2129,10 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     #action_toolbar.add_button('Open', 'Open (web)', callback_function=open_deck)
 
     # Action area where the toolbar and the labels are displayed
-    action_area = widgets.VBox([selected_db_label, selected_items_label, text_box, action_toolbar.get_ui()])
+    #action_area = widgets.VBox([selected_db_label, selected_items_label, text_box, action_toolbar.get_ui()])
     
     # Layout: Progress bars at the top, then the tab widget below
-    layout = widgets.VBox([progressbar_header,gv.progressbar_container,action_area, tab])
+    layout = widgets.VBox([progressbar_header,gv.progressbar_container, tab])
     display(layout)
 
     update_sheet_stats()

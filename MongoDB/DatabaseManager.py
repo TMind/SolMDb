@@ -61,6 +61,14 @@ class DatabaseManager:
     def get_current_db_name(self):
         return self.mdb.get_db_name()
 
+    # New function to close the database and delete the instance from _instances
+    def close_database(self):
+        if 'mdb' in self.__dict__:
+            self.mdb.close()
+            del DatabaseManager._instances[self.mdb.get_db_name()]
+            print(f"Database '{self.mdb.get_db_name()}' connection closed and instance removed.")
+
+
     def __getattr__(self, attr):
         if 'mdb' in self.__dict__:
             mdb = self.__dict__['mdb']                                    

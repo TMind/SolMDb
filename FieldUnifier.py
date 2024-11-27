@@ -26,7 +26,7 @@ TAGS = [
     'Replace Setup', 'Armor', 'Activate', 'Ready', 'Free', 'Upgrade', 'FB Creature', 'Removal', 'Breakthrough',
     'Aggressive', 'Defender', 'Stealth', 'Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Increased A',
     'Attack Debuff', 'Health Debuff', 'Destruction Others', 'Destruction Self', 'Self Damage Activator', 'Silence', 'Exalt', 'Slay',
-    'Deploy', 'Spicy', 'Cool', 'Fun', 'Annoying',
+    'Reanimate', 'Deploy', 'Deploy Synergy', 'Spicy', 'Cool', 'Fun', 'Annoying',    
     'Beast Synergy', 'Dinosaur Synergy', 'Mage Synergy', 'Robot Synergy', 'Scientist Synergy',
     'BanishSpirit Synergy', 'Spirit Synergy', 'Warrior Synergy', 'Zombie Synergy', 'Dragon Synergy', 'Elemental Synergy',
     'Plant Synergy', 'Minion Synergy', 'Spell Synergy', 'Exalt Synergy', 'Healing Synergy', 'Movement Benefit', 'Replace Profit',

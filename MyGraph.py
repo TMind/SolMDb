@@ -193,15 +193,15 @@ class MyGraph:
         if not cls or not child_type:
             return
 
-        #print(f"Child Name = {child_name}[{child_type}]")
-
-        # Increase the number of child_name in the node_data dictionary
-        self.node_data['tags'].setdefault(child_name, 0)
-        self.node_data['tags'][child_name] += 1
-        
         child_object = self.get_cached_child_object(full_class_path, child_name)        
+        
         if child_object:
-            #print(f"Interface Child Object = {child_object}")
+            #print(f"Interface Child Object = {child_object}")            
+            # Increase the number of child_name in the node_data dictionary
+            weight = self._get_edge_weight(parent_object, child_object)    
+            self.node_data['tags'].setdefault(child_name, 0)
+            self.node_data['tags'][child_name] += weight
+            
             node_attributes = {
                 'color': self._get_color_based_on_child_type(child_type, child_object),
                 'node_type': 'Interface',  # Mark this node as an interface
@@ -287,7 +287,11 @@ class MyGraph:
         if target_type != 'Entity' or source_type == 'Forgeborn':
             # Add the node with provided attributes (color, node_type, etc.)
             root.add_node(target_object, **node_attributes)
-        else:
+        elif target_type == 'Entity':
+            # Save interfaces in node of parent object
+            parent_node = root.G.nodes[self.get_node_id(source_object)]
+            parent_node.setdefault('interfaces', {}).update(target_object.data.interfaces)
+        else:    
             return
 
         # Initialize the edge type as None
@@ -297,9 +301,12 @@ class MyGraph:
         if source_type == 'Interface' and target_type == 'Synergy':
             edge_types = source_object.types
 
+        # Get the weight of the edge based on the parent object's interfaces
+        weight = self._get_edge_weight(parent_object, child_object)
+        
         # Prepare edge attributes with determined edge type
         edge_arguments = {
-            'weight': 1,
+            'weight': weight,
             'types': edge_types,
             'smooth': {'type': 'diagonalCross'} if source_type in ['Fusion', 'Deck', 'Forgeborn'] else {'smooth': False}
         }
@@ -317,9 +324,28 @@ class MyGraph:
 
         return source_object, target_object, source_object.__class__.__name__, target_object.__class__.__name__
 
-    # def _add_parent_to_child(self, root, source_object, target_object):
-    #     child_node = root.G.nodes[self.get_node_id(target_object)]
-    #     child_node.setdefault('parents', []).append(self.get_node_id(source_object))
+    def _get_edge_weight(self, parent_object, child_object):
+        """
+        Returns the weight of the edge between the parent and child objects.
+        
+        Parameters:
+        - parent_object: The parent object.
+        - child_object: The child object.
+        
+        Returns:
+        - weight: The weight of the edge between the parent and child objects.
+        """
+        
+        node_id = self.get_node_id(parent_object)
+        node = self.G.nodes[node_id]  
+        #if 'weight' in node:      
+        weight = node.get('weight', 1.0)
+        #if isinstance(weight, float):
+        #    print(f"Weight: {weight} for {node_id}")
+        interfaces = node.get('interfaces', {})
+        #interfaces = self.get_node_attributes(parent_object, 'interfaces')
+        weight = interfaces.get(self.get_node_id(child_object), 1)
+        return weight
 
     def get_length_interface_ids(self):
         return {interface_id: self.node_data['tags'][interface_id]

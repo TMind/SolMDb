@@ -8,7 +8,7 @@ class EntityData:
     attributes: dict = field(default_factory=dict)
     abilities: dict = field(default_factory=dict)
     range : str = "" 
-    interfaceNames: list = field(default_factory=list)
+    interfaces: dict = field(default_factory=dict)
     children_data: dict = field(default_factory=dict)
     
 class Entity(DatabaseObject):
@@ -18,8 +18,8 @@ class Entity(DatabaseObject):
         if self.attributes:
             id = self.attributes.get('id', None)
         self._id = id or self.name
-        if self.interfaceNames:
-            self.data.children_data = {interfaceName: 'Interface.Interface' for interfaceName in self.interfaceNames}
+        if self.interfaces:
+            self.data.children_data = {interfaceName: 'Interface.Interface' for interfaceName in self.interfaces.keys()}
     
 @dataclass
 class ForgebornData:    

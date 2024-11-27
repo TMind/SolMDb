@@ -89,16 +89,22 @@ def fetch_network_decks(args, myApi):
     #print(f'Fetching Network Decks with args: {args}')
     
     if args.username == 'magiceden': 
+        gv.myDB.set_database_name('magiceden')
+        # Collect existing decknames from DB 
+        deckCursor = gv.myDB.find('Deck', {}, {'name': 1})                
+        deckNamesDatabase = [deck['name'] for deck in deckCursor]
+        
         print(f'Fetching decks from Magic Eden') 
-        args.type = 'deck'       
+        args.type = 'deck'
+        args.decklist = deckNamesDatabase
         # Fetch the listings from Magic Eden
         collection_symbol = 'sfgc'  # This could be dynamic based on args
         
         deck_data = fetch_all_magiceden_listings(collection_symbol, myApi, args)
-        print(f"Total Magic Eden decks processed: {len(deck_data)}")
-        gv.myDB.set_database_name('magiceden')
-        gv.myDB.drop_database()
-        return deck_data        
+        print(f"{len(args.decklist)} remaining Listings : {args.decklist}")
+        print(f"Total Magic Eden decks processed: {len(deck_data)}")                
+        #gv.myDB.drop_database()
+        return deck_data     
     
     if args.id:
         urls = args.id.split('\n')

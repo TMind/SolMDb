@@ -52,6 +52,7 @@ class GlobalVariables:
 
     def _initialize_env(self):
         logging.info("Initializing Environment.")
+        self.current_date = pd.Timestamp.now().strftime('%Y-%m-%d')
         self._username = os.getenv('SFF_USERNAME', 'sff')
         self._host = os.getenv('HOST', 'localhost')
         self._port = os.getenv('MONGODB_PORT', 27017)
@@ -395,6 +396,9 @@ non_rotated_column_defs = {
     'cardTitles':       {'width': 200},
     'Betrayers':        {'width': 200},
     'SolBinds':         {'width': 200},
+    'nft':              {'width': 50},
+    'price':            {'width': 50},
+    'owner':            {'width': 200},
     'name':             {'width': 200}, 
     'cardType' :        {'width': 75},
     'cardSubType' :     {'width': 75},
@@ -653,7 +657,7 @@ data_selection_sets = {
 
 GLOBAL_COLUMN_ORDER = [
     'index', 'type', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B','id',
-    'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'tags', 'price', 'owner',
+    'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'tags', 'nft', 'price', 'owner',
     'xp', 'elo', 'level', 'deckScore', 'deckRank', 'rarity',
     'cardSetNo', 'faction', 'crossFaction', 'cardTitles', 
     'cardType', 'cardSubType', 'forgebornId', 'FB2', 'FB3', 'FB4', 'Betrayers', 'SolBinds',

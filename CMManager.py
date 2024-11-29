@@ -1,6 +1,5 @@
 import os
 import datetime
-from tkinter.ttk import Separator
 import pandas as pd
 from datetime import datetime
 

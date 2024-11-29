@@ -7,6 +7,8 @@ from MultiProcess import MultiProcess
 from GlobalVariables import global_vars as gv
 import networkx as nx
 
+from utils import compare_times
+
 def create_graph_for_object(object):
     # Graph creation
     objectGraph = MyGraph()
@@ -138,8 +140,8 @@ class DeckLibrary:
                     self.dbmgr.upsert_many('Card', cardDataList)
 
                 # Prepare all deck data for upsert in a single operation
-                gv.update_progress('DeckLibrary Graphs', 0, len(deck_objects), 'Creating Graphs for Decks')
-                for deckObject in deck_objects:
+                gv.update_progress('DeckLibrary Graphs', 0, len(deck_objects), message='Creating Graphs for Decks')
+                for deckObject in deck_objects:                    
                     gv.update_progress('DeckLibrary Graphs', message=f"Creating Graph for Deck {deckObject.name}")
                     # Now create the graph since the cards are in the database
                     create_graph_for_object(deckObject)
@@ -165,14 +167,15 @@ class DeckLibrary:
                     if isinstance(deck, dict):
                         # If deck is a dictionary, extract the forgeborn ID and faction
                         if 'forgeborn' in deck and isinstance(deck['forgeborn'], dict):
-                            forgeborn_ids.append(deck['forgeborn']['id'])
+                            if 'id' in deck['forgeborn']:
+                                forgeborn_ids.append(deck['forgeborn']['id'])
                         faction = deck.get('faction')
                         if faction:
                             factions.append(faction)
 
                 return forgeborn_ids, factions
 
-            gv.update_progress('DeckLibrary Fusions', 0, len(fusions_data), 'Saving Online Fusions')            
+            gv.update_progress('DeckLibrary Fusions', 0, len(fusions_data), message='Saving Online Fusions')            
             for fusion_data in fusions_data:
                 decks = fusion_data['myDecks']                      
                 forgebornIds, factions = extract_fb_ids_and_factions(decks, fusion_data)
@@ -202,6 +205,9 @@ class DeckLibrary:
         deckCursor = self.dbmgr.find('Deck', {})
         allDeckData = {deck['name']: deck for deck in deckCursor}
         allDeckNames = list(allDeckData.keys())
+
+        # Remove all decks that have expiration dates in the past         
+        self.new_decks = [deck for deck in self.new_decks if 'pExpiry' not in deck or compare_times(deck['pExpiry'], gv.current_date)]
 
         # Combine allDeckNames in pairs with new_decks only, not with themselves
         newDeckNames = [deck['name'] for deck in self.new_decks]

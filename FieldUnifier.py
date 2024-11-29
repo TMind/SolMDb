@@ -8,17 +8,19 @@ BASIC_FIELDS = [
 
 # Define type-specific fields
 TYPE_SPECIFIC_FIELDS = {
-    'Deck': ['level', 'xp', 'elo', 'deckScore', 'deckRank', 'registeredDate', 'pExpiry'],
-    'Fusion': ['crossFaction', 'Deck A', 'Deck B', 'CreatedAt']
+    'Deck': ['level', 'xp', 'elo', 'deckScore', 'deckRank', 'registeredDate'],
+    'Fusion': ['crossFaction', 'Deck A', 'Deck B', 'CreatedAt']    
 }
 
 # Define fields related to dates for all types
 DATE_FIELDS = ['registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt']
 
 # Define other specific field groupings that we can use as building blocks
-STATS_FIELDS = ['type', 'id', 'level', 'xp', 'elo', 'deckScore', 'deckRank', 'Deck A', 'Deck B', 'crossFaction']
+STATS_FIELDS = ['type', 'id', 'nft', 'level', 'xp', 'elo', 'deckScore', 'deckRank', 'Deck A', 'Deck B', 'crossFaction']
 
 AVERAGE_FIELDS = ['A1', 'H1', 'A2', 'H2', 'A3', 'H3']
+
+NFT_FIELDS = ['price', 'owner']
 
 TAGS = [
     'Beast', 'Dinosaur', 'Mage', 'Robot', 'Scientist', 'Spirit', 'Warrior', 'Zombie',
@@ -45,15 +47,17 @@ COMBOS = [
      
 # Define the information levels
 DETAILED_FIELDS = BASIC_FIELDS + DATE_FIELDS + STATS_FIELDS + ['cardTitles']
+LISTING_FIELDS = BASIC_FIELDS + NFT_FIELDS
 
 # Defining components with nested fields
 COMPONENTS = {
     'Basic': BASIC_FIELDS,
-    'Detail': DETAILED_FIELDS,
+    'Detail': DETAILED_FIELDS,    
+    'Listing' : LISTING_FIELDS,
     'Stats': AVERAGE_FIELDS,
     'Tags': TAGS,
     'Combos': COMBOS,
-    'All Fields': ['Basic Info', 'Detailed Info', 'Stats', 'Tags', 'Combos']
+    'All Fields': ['Basic', 'Detailed', 'Stats', 'Tags', 'Combos']
 }
 
 
@@ -72,6 +76,7 @@ def resolve_component_fields(component_name):
                 final_fields.update(resolve_component_fields(item))
             else:
                 # If item is a field, add it directly
+                #print(f"Adding field    : {item}")
                 final_fields.add(item)
 
     return final_fields
@@ -90,7 +95,7 @@ def generate_final_fields(info_level, tag_level, item_type):
     if item_type == 'Deck':
         final_fields = {field for field in final_fields if field not in TYPE_SPECIFIC_FIELDS['Fusion']}
     elif item_type == 'Fusion':
-        final_fields = {field for field in final_fields if field not in TYPE_SPECIFIC_FIELDS['Deck']}
+        final_fields = {field for field in final_fields if field not in TYPE_SPECIFIC_FIELDS['Deck']}    
 
     final_fields = sorted(final_fields, key=lambda field: GLOBAL_COLUMN_ORDER.index(field))
 

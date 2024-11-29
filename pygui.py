@@ -9,13 +9,13 @@ from tzlocal import get_localzone
 
 from GlobalVariables import global_vars as gv
 from GlobalVariables import GLOBAL_COLUMN_ORDER
+from utils import get_min_time
 
 # Ensure global_vars is initialized before using it
 if gv is None:
     raise RuntimeError("global_vars was not initialized properly.")
 
 from CardLibrary import Deck, FusionData, Fusion
-from UniversalLibrary import UniversalLibrary
 from DeckLibrary import DeckLibrary
 from MongoDB.DatabaseManager import DatabaseManager
 from MyGraph import MyGraph
@@ -27,7 +27,7 @@ from IPython.display import display, HTML
 from Synergy import SynergyTemplate
 import pandas as pd
 from GridManager import GridManager, DynamicGridManager
-from CustomGrids import TemplateGrid, ActionToolbar
+from CustomGrids import TemplateGrid
 
 from icecream import ic
 ic.disable()
@@ -178,12 +178,13 @@ def print_dataframe(df, name):
 def clean_columns(df, exclude_columns=None):
     """
     Cleans both numeric and non-numeric columns of a DataFrame by:
-    1. Replacing NaN values with 0 in numeric columns and converting them to integers.
+    1. Replacing NaN values with 0 in numeric columns and keeping them as floats.
     2. Replacing NaN values with empty strings in non-numeric columns.
-    3. Converting the numeric DataFrame to strings, replacing '0' with ''.
+    3. Converting the numeric DataFrame to strings, replacing zeros with empty strings.
 
     Args:
         df (pd.DataFrame): The DataFrame containing columns to clean.
+        exclude_columns (list, optional): List of columns to exclude from cleaning.
 
     Returns:
         pd.DataFrame: The cleaned DataFrame with both numeric and non-numeric columns processed.
@@ -191,23 +192,39 @@ def clean_columns(df, exclude_columns=None):
     if exclude_columns is None:
         exclude_columns = []
     
+    # Create a copy of the DataFrame to avoid modifying the original
+    df = df.copy()
+    
     # Select numeric columns, excluding the ones you want to preserve
-    numeric_df = df.select_dtypes(include='number').drop(columns=exclude_columns, errors='ignore')
+    numeric_cols = df.select_dtypes(include='number').columns.difference(exclude_columns)
+    numeric_df = df[numeric_cols]
 
-    # Replace NaN values with 0 and convert to integer for only numeric columns
-    numeric_df = numeric_df.fillna(0).astype(int)
+    # Replace NaN values with 0 and keep as float
+    numeric_df = numeric_df.fillna(0.0)
     
-    # Convert numeric DataFrame to strings and replace '0' with ''
-    numeric_df = numeric_df.astype(str).replace('0', '')
-
-    # Select non-numeric columns
-    non_numeric_df = df.select_dtypes(exclude='number')
-    non_numeric_df = non_numeric_df.fillna('').replace('0', '')
+    # Create a mask for zeros
+    zero_mask = (numeric_df == 0.0)
     
-    # Update the original DataFrame with the cleaned numeric and non-numeric DataFrames
-    df[numeric_df.columns] = numeric_df
-    df[non_numeric_df.columns] = non_numeric_df
-
+    # Convert numeric DataFrame to strings
+    numeric_df = numeric_df.astype(str)
+    
+    # Replace zeros with empty strings
+    numeric_df = numeric_df.mask(zero_mask, '')
+    
+    # Assign cleaned numeric data back to the DataFrame
+    df[numeric_cols] = numeric_df
+    
+    # Select non-numeric columns and replace NaN with empty strings
+    non_numeric_cols = df.select_dtypes(exclude='number').columns
+    non_numeric_df = df[non_numeric_cols].fillna('')
+    
+    # Replace strings that are exactly '0' with empty strings using Series.map
+    for col in non_numeric_df.columns:
+        non_numeric_df[col] = non_numeric_df[col].map(lambda x: '' if x == '0' else x)
+    
+    # Assign cleaned non-numeric data back to the DataFrame
+    df[non_numeric_cols] = non_numeric_df
+    
     return df
 
 try:
@@ -626,7 +643,7 @@ def generate_fusion_statistics_dataframe(central_df=None):
         return deck_titles
 
     def get_card_titles_by_Ids(fusion_children_data):
-        gv.update_progress('Fusion Card Titles', message='Fetching Card Titles')
+        #gv.update_progress('Fusion Card Titles', message='Fetching Card Titles')
         deck_names = [name for name, dtype in fusion_children_data.items() if dtype == 'CardLibrary.Deck']
         all_card_titles = {name: fetch_deck_titles([name]).get(name, []) for name in deck_names}        
         return ', '.join(sorted(sum(all_card_titles.values(), [])))
@@ -706,9 +723,15 @@ def generate_fusion_statistics_dataframe(central_df=None):
                         if 'SolBinds' not in fusion_row:
                             fusion_row['SolBinds'] = []
                         fusion_row['SolBinds'].append(SolBind)
+                        
+                    pExpiry = deck_row.get('pExpiry', '')
+                    if pExpiry:
+                        if 'pExpiry' not in fusion_row:
+                            fusion_row['pExpiry'] = []
+                        fusion_row['pExpiry'].append(pExpiry)
                 
                 else:
-                    print(f"Deck '{deck_name}' not found in the central DataFrame.")
+                    print(f"Deck '{deck_name}' not found in the central DataFrame.")            
             
             # Convert the set 'digital' to a comma-separated string for display in the DataFrame
             if 'digital' in fusion_row and isinstance(fusion_row['digital'], set):
@@ -723,6 +746,10 @@ def generate_fusion_statistics_dataframe(central_df=None):
             
             if 'SolBinds' in fusion_row and isinstance(fusion_row['SolBinds'], list):
                 fusion_row['SolBinds'] = ", ".join(str(item) for item in sorted(fusion_row['SolBinds']))
+            
+            if 'pExpiry' in fusion_row and isinstance(fusion_row['pExpiry'], list):                
+                min_time = get_min_time(fusion_row['pExpiry'])
+                fusion_row['pExpiry'] = min_time
              
 
         # Generate graph data for the current fusion
@@ -778,7 +805,7 @@ def generate_fusion_statistics_dataframe(central_df=None):
             
     # If fusions are found, process them
     if not df_fusions_filtered.empty:
-        gv.update_progress('Fusion Card Titles', 0, len(df_fusions_filtered), message = 'Fetching Card Titles')
+        #gv.update_progress('Fusion Card Titles', 0, len(df_fusions_filtered), message = 'Fetching Card Titles')
 
         # Extract necessary columns and add additional calculated columns
         df_fusions_filtered['cardTitles'] = df_fusions_filtered['children_data'].apply(get_card_titles_by_Ids)
@@ -892,14 +919,12 @@ def get_combos_for_graph(myGraph: MyGraph, name: str) -> dict:
     # Prepare the combo data as a dictionary with the item's name  
     combo_data = {'name': name}  
     for combo_name, (input_count, output_count) in myGraph.combo_data.items():  
-        product = input_count * output_count  
-        text = f'{product:>2}'  
-        if product == 0:  
-            text = ''  
-            if input_count > 0:  
-                text = f'{-input_count:>2}'  
+        value = input_count * output_count  
+        #text = f'{product:>2}'          
+        if output_count == 0:  value = -input_count
+            #text = f'{-input_count:>2}'  
                 
-        combo_data[combo_name] = text  
+        combo_data[combo_name] = value
     
     return combo_data
    
@@ -918,7 +943,7 @@ def generate_deck_statistics_dataframe():
 
     df_decks = pd.DataFrame(decks)
     df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
-    df_decks_filtered = df_decks[['name', 'id', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'digital', 'faction', 'forgebornId', 'cardTitles', 'graph']].copy()
+    df_decks_filtered = df_decks[['name', 'id', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'digital', 'nft', 'price', 'owner', 'faction', 'forgebornId', 'cardTitles', 'graph']].copy()
     df_decks_filtered['type'] = 'Deck'
     # Replace non-numeric values with NaN, then convert to int
     df_decks_filtered['cardSetNo'] = pd.to_numeric(df_decks_filtered['cardSetNo'], errors='coerce').fillna(0).astype(int)
@@ -982,7 +1007,7 @@ def generate_deck_statistics_dataframe():
             df_decks_filtered.loc[deck['name'], 'Betrayers'] = ', '.join(betrayers)
             df_decks_filtered.loc[deck['name'], 'SolBinds'] = ''
             if 'Solbind' in solbinds and solbinds['Solbind']:
-                df_decks_filtered.loc[deck['name'], 'SolBinds'] = ', '.join([solbinds[key] for key in solbind_order])
+                df_decks_filtered.loc[deck['name'], 'SolBinds'] = ', '.join([solbinds[key] for key in solbind_order if key in solbinds])
         
         if 'stats' in deck:
             stats = deck.get('stats', {})
@@ -1152,7 +1177,7 @@ def reload_data_on_click(button, value):
             args = parse_arguments(arguments)
         elif value == 'Generate Dataframe':
             generate_central_dataframe(force_new=True)
-            grid_manager.refresh_gridbox({'type': 'generation', 'new': 'central_dataframe'})
+            grid_manager.refresh_gridbox({'type': 'generation'})
             return
         elif value == 'Update CM Sheet':
             # Update the local CSV using CMManager
@@ -1167,6 +1192,9 @@ def reload_data_on_click(button, value):
         elif value == 'Find Combos':
             combo_df = generate_combo_dataframe()
             return combo_df
+        elif value == 'Refresh Grid':
+            grid_manager.refresh_gridbox({'type': 'generation'})
+            return
 
         # Execute main task if other tasks are not returning early
         load_deck_data(args)
@@ -1828,7 +1856,7 @@ def setup_interface():
 
     # Toggle buttons to select load items
     loadToggle = widgets.ToggleButtons(
-        options=['Load Decks/Fusions', 'Update Decks/Fusions', 'Create all Fusions', 'Generate Dataframe', 'Find Combos', 'Update CM Sheet'],
+        options=['Load Decks/Fusions', 'Update Decks/Fusions', 'Create all Fusions', 'Generate Dataframe', 'Find Combos', 'Update CM Sheet', 'Refresh Grid'],
         description='Action:',
         disabled=False,
         button_style='warning', # 'success', 'info', 'warning', 'danger' or ''
@@ -2026,111 +2054,6 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     selected_db_label = widgets.Label(value="Selected Database: None")
     selected_items_label = widgets.Label(value="Selected Items: None")        
 
-    def authenticate(button):
-        username = gv.myDB.get_current_db_name()  
-        password = text_box.value  # Get the password from the text box
-        net_api = NetApi(username, password)
-        
-    def save_grid_dataframe(change):
-        """
-        Function to save the DataFrame from the grid to a CSV file.
-        This function is triggered when the 'Save' button is clicked.
-        """
-        # Get the DataFrame from the grid manager
-        if grid_manager:
-            grid_manager.save_dataframes_to_csv()
-        else:
-            print("No GridManager available")
-
-
-    # Function to open the selected deck in the browser
-    def open_deck(button):
-        global grid_manager        
-        #selected_names = grid_manager.get_selected_grid_items()
-        selected_items_info = selected_items_label.value.split(': ')[1] 
-        username = selected_db_label.value.split(': ')[1]
-
-        # Get the rows from the central dataframe based on the selected names
-        central_df = user_dataframes[username]
-
-        for item in selected_items_info.split(','):
-            item = item.strip()
-            
-            # Get the row corresponding to the selected item
-            item_row = central_df[central_df['Name'] == item]
-            
-            if not item_row.empty:
-                # Convert the single-row DataFrame to a dictionary
-                item_dict = item_row.to_dict(orient='records')[0]
-
-                # Access 'id' and 'type' directly from the dictionary
-                item_id = item_dict['id']
-                item_type = item_dict['type']
-
-                # Determine the correct URL path based on the item type
-                if item_type == 'Fusion':
-                    item_type = 'fused'
-                elif item_type == 'Deck':
-                    item_type = 'decks'
-
-                # Create the link and open it in the web browser
-                item_link = f'https://solforgefusion.com/{item_type}/{item_id}'
-                webbrowser.open(item_link)
-            else:
-                print(f"Item '{item}' not found in the central dataframe.")
-
-
-    # Function for making a solbind request
-    def solbind_request(button):
-        username = selected_db_label.value.split(': ')[1]  # Extract the username from the label
-        selected_items_info = selected_items_label.value.split(': ')[1]  # Extract selected items from the label
-        password = text_box.value  # Get the password from the text box
-        
-        # Here, handle multiple selected items if needed
-        if ',' in selected_items_info:
-            print("Multiple items selected, please select only one deck.")
-            return
-        deck_name = selected_items_info  # Assuming single selection
-        deck_data = gv.myDB.find_one('Deck', {'name': deck_name})
-        if deck_data:
-            deck_id = deck_data.get('id')
-        
-        # Proceed with the solbind request using NetApi
-        net_api = NetApi(username, password)
-        net_api.post_solbind_request(deck_id)
-
-    # Function for renaming a fusion
-    def rename_fusion(button):
-        #username = gv.myDB.get_current_db_name()  
-        selected_items_info = selected_items_label.value.split(': ')[1]  # Extract selected items from the label
-        #password = text_box.value  # Get the password from the text box
-        
-        # Here, handle multiple selected items if needed
-        if ',' in selected_items_info:
-            print("Multiple items selected, please select only one fusion.")
-            return
-        fusion_name = selected_items_info.strip(" ")  # Assuming single selection
-        fusion = gv.myDB.find_one('Fusion', {'name': fusion_name})
-                
-        # Prompt for new name
-        new_name = text_box.value
-        
-        # Proceed with the rename request using NetApi
-        #net_api = NetApi(username, password)
-        net_api.update_fused_deck(fusion, new_name)
-    
-    # Initialize the ActionToolbar and pass the update function
-    #action_toolbar = ActionToolbar()
-    #action_toolbar.assign_callback('Authenticate', authenticate)
-    #action_toolbar.assign_callback('Solbind', solbind_request)
-    #action_toolbar.assign_callback('Rename', rename_fusion)
-    #action_toolbar.assign_callback('Open (Web)', open_deck)
-    #action_toolbar.assign_callback('Export', save_grid_dataframe)
-    #action_toolbar.add_button('Open', 'Open (web)', callback_function=open_deck)
-
-    # Action area where the toolbar and the labels are displayed
-    #action_area = widgets.VBox([selected_db_label, selected_items_label, text_box, action_toolbar.get_ui()])
-    
     # Layout: Progress bars at the top, then the tab widget below
     layout = widgets.VBox([progressbar_header,gv.progressbar_container, tab])
     display(layout)

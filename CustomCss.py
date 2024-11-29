@@ -1,12 +1,26 @@
 from IPython.display import display, HTML
 
+from IPython.display import HTML, display
+import os
+
 # Function to inject CSS from a file
 def inject_css(css_file_path):
-    with open(css_file_path, 'r') as f:
-        css = f.read()
-    display(HTML(f"<style>{css}</style>"))
+    if os.path.exists(css_file_path):
+        with open(css_file_path, 'r') as f:
+            css = f.read()
+        # Suppress the output from display
+        try:
+            display(HTML(f"<style>{css}</style>"))
+        except Exception as e:
+            print(f"Failed to inject CSS: {e}")
 
-# Inject initial CSS file
+# # Function to inject CSS from a file
+# def inject_css(css_file_path):
+#     with open(css_file_path, 'r') as f:
+#         css = f.read()
+#     display(HTML(f"<style>{css}</style>"))
+
+# Inject initial CSS files
 inject_css('custom/custom.css')
 
 class CSSManager:

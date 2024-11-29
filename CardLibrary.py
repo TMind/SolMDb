@@ -230,6 +230,7 @@ class DeckData:
     level: int = 0
     _id: str = ''
     id: str = ''  
+    nft: int = 0
     price: float = 0.0
     owner: str = ''  
     children_data: dict = field(default_factory=dict)
@@ -240,10 +241,18 @@ class DeckData:
     graph: dict = field(default_factory=dict)
     #node_data: dict = field(default_factory=dict)
 
+
 class Deck(DatabaseObject):
     
     def __init__(self, data: DeckData):        
         super().__init__(data)         
+        
+        # Turn time strings into normalized time strings for easier comparison
+        # if self.data:
+        #     for date in ['registeredDate', 'pExpiry', 'UpdatedAt']:            
+        #         if self.data[date]:
+        #             self.data[date] = self.normalize_time(self.data[date])      
+            
         self._id = self.id
         if self.data and self.cardIds: 
             self.data._id = self.name
@@ -291,8 +300,7 @@ class Deck(DatabaseObject):
             self.data.stats = {}
         
         self.data.stats['card_types'] = card_types
-
-            
+                
     def calculate_averages(self):
         if self.data.cards is None:
             return

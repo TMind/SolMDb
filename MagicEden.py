@@ -83,7 +83,7 @@ def fetch_all_magiceden_listings(collection_symbol, myApi, args, limit=100):
 def process_magiceden_listings(listings, myApi, args):
     """
     Processes listings from Magic Eden and fetches deck data using deck links.
-    Only extracts the deck_link and fetches the actual deck data from that link via `myApi.request_decks`.
+    Only extracts the deck_id and rarity_score and fetches the actual deck data from that id via `myApi.request_decks`.
     """
     net_data = []
 
@@ -95,41 +95,52 @@ def process_magiceden_listings(listings, myApi, args):
             token = listing.get('token', {})
             price = listing.get('price', 0.0)
             owner = token.get('owner', '')
+            name = token.get('name',  '')            
             attributes = token.get('attributes', [])
-            deck_link = None
+            deck_id = None
+            rarity_score = None
+
+            # Check if name already exists
+            if name in args.decklist :
+                # The deck is already in the database, no need to fetch it
+                # Remove the deck from the list 
+                gv.update_progress("Processing listing", message=f"Skipping deck data for ID: {deck_id}")
+                args.decklist.remove(name)  
+                continue            
             
             # Extract the deck_link from the attributes
-            for attribute in attributes:
-                if attribute.get('trait_type') == 'Deck Link':
-                    deck_link = attribute.get('value')
-                    break
+            for attribute in attributes:            
+                trait_type = attribute.get('trait_type', '')                                
+                if trait_type == 'Deck Id':
+                    deck_id = attribute.get('value')                
+                elif trait_type == 'Rarity Score':
+                    rarity_score = attribute.get('value')
+
+                # Break the loop if both deck_link and rarity_score are found  
+                if deck_id and rarity_score: break 
+        
+            if deck_id:            
+                gv.update_progress("Processing listing", message=f"Fetching deck data for ID: {deck_id}")
+                #print(f"Fetching deck data for ID: {deck_id}")
                 
-            if deck_link:
-                # Extract the deck ID from the deck link using regex
-                match = re.search(r'\/([^\/]+)$', deck_link)
-                if match:
-                    deck_id = match.group(1)
-                    gv.update_progress("Processing listing", message=f"Fetching deck data for ID: {deck_id}")
-                    #print(f"Fetching deck data for ID: {deck_id}")
-                    
-                    # Fetch the deck data using myApi.request_decks
-                    deck_data = myApi.request_decks(
-                        id=deck_id,
-                        type=args.type,
-                        username='tmind',
-                        filename=None,
-                        params={'inclCards': 'true', 
-                                'inclUsers': 'false', 
-                                'inclPvE': 'false'}  
-                    )
-                    
-                    if deck_data:
-                        deck_data[0]['price'] = price  # Add the price to the deck data
-                        deck_data[0]['owner'] = owner  # Add the owner to the deck data
-                        net_data.extend(deck_data)  # Append the fetched deck data to the list
-                    else:
-                        print(f"No data returned for deck with ID: {deck_id}")
-    
+                # Fetch the deck data using myApi.request_decks
+                deck_data = myApi.request_decks(
+                    id=deck_id,
+                    type=args.type,
+                    username='tmind',
+                    filename=None,
+                    params={'inclCards': 'true', 
+                            'inclUsers': 'false', 
+                            'inclPvE': 'false'}  
+                )                
+                if deck_data:
+                    deck_data[0]['price'] = price  # Add the price to the deck data
+                    deck_data[0]['owner'] = owner  # Add the owner to the deck data
+                    deck_data[0]['rarity_score'] = rarity_score                         
+                    net_data.extend(deck_data)  # Append the fetched deck data to the list
+                else:
+                    print(f"No data returned for deck with ID: {deck_id}")
+
     return net_data
 
 def main():

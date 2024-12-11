@@ -1096,6 +1096,7 @@ class DynamicGridManager:
             change (dict or None): The widget interaction event data.
         """
         try:
+            # Retrieve or generate the collection DataFrame
             collection_df = self._get_collection_dataframe(change)
 
             # Get active and inactive filter rows
@@ -1103,52 +1104,40 @@ class DynamicGridManager:
             active_filters_df = filter_df[filter_df['Active']]
             inactive_filters_df = filter_df[~filter_df['Active']]
 
-            # Handle case where no active filters remain
+            # Handle case when no active or inactive filters are present
             if active_filters_df.empty and inactive_filters_df.empty:
                 self.VBoxGrids.reset()
-                logger.info("No active filters; resetting grids.")
+                logger.info("All grids reset; no active or inactive filters present.")
                 return
 
-            # Handle specific grid updates for filter changes
+            # Handle specific grid updates if change is provided
             if change:
                 owner = change.get('owner')
-                specific_indices = change.get('new')
-                removed_indices = change.get('old') or []
-
-                # Normalize `specific_indices` to a list
-                if isinstance(specific_indices, (int, np.integer)):
-                    specific_indices = [int(specific_indices)]  # Ensure standard integer type
-                elif specific_indices is None:
-                    specific_indices = []
+                specific_index = change.get('new')
 
                 if owner == 'filter':
-                    logger.info(f"Handling filter grid change. New: {specific_indices}, Old: {removed_indices}")
+                    logger.info(f"Handling row-specific update from filter: {specific_index}")
+                    
+                    # Handle case where specific_index is a DataFrame
+                    if isinstance(specific_index, pd.DataFrame):
+                        logger.info("Specific index is a DataFrame. Extracting indices.")
+                        specific_index = specific_index.index.tolist()
 
-                    # Remove widgets for the rows that were deactivated or removed
-                    if removed_indices:
-                        self.VBoxGrids.remove_widget(removed_indices)
-                        logger.info(f"Removed widgets for indices: {removed_indices}")
+                    # Check for empty or malformed selections
+                    if isinstance(specific_index, (list, pd.DataFrame)) and not specific_index:
+                        logger.info("Received empty selection; no grids to update.")
+                        return
 
-                    # Update or refresh widgets for active rows
-                    for grid_index in specific_indices:
-                        if grid_index in active_filters_df.index:
-                            filter_row = active_filters_df.loc[grid_index]
-                            grid_identifier = f"filtered_grid_{grid_index}"
-                            try:
-                                logger.info(f"Updating grid '{grid_identifier}' for index {grid_index}.")
-                                self.update_or_refresh_grid(grid_identifier, collection_df, filter_row)
-                            except Exception as e:
-                                logger.error(f"Error updating grid '{grid_identifier}': {e}")
+                    self._handle_specific_update(specific_index, active_filters_df, inactive_filters_df, collection_df)
                     return
+                else:
+                    logger.warning(f"Unhandled owner type in change: {owner}")
 
-            # Default case: Refresh all active grids
-            logger.info("No specific changes provided; refreshing all active grids.")
-            for row_index, filter_row in active_filters_df.iterrows():
-                grid_identifier = f"filtered_grid_{row_index}"
-                try:
-                    self.update_or_refresh_grid(grid_identifier, collection_df, filter_row)
-                except Exception as e:
-                    logger.error(f"Error refreshing grid '{grid_identifier}': {e}")
+            # Default: Refresh all active grids
+            logger.info("No specific change provided; refreshing all active grids.")
+            self._refresh_all_grids(active_filters_df, collection_df)
+
+            logger.info("Gridbox refresh completed.")
 
         except Exception as e:
             logger.error(f"Exception occurred in refresh_gridbox: {e}")

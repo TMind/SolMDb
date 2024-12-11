@@ -2038,7 +2038,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
               
     # Updated Tab content with styled text boxes
     db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
-    deck_tab = widgets.VBox([deck_helper, deck_accordion, deck_filter_bar, grid_manager.get_ui()])
+    deck_tab = widgets.VBox([deck_helper, deck_accordion, deck_filter_bar, *grid_manager.get_ui()])
     template_tab = widgets.VBox([template_helper, templateGrid.get_ui()])
     graph_tab = widgets.VBox([fusions_helper, *toggle_dropdown_pairs, button_graph, graph_output])
     debug_tab = widgets.VBox([debug_helper, debug_toggle, gv.out_debug])

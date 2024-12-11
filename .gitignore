@@ -21,3 +21,5 @@ source/*
 binder/soldb-gc-key.json
 html/
 kai/soldb.parquet
+.aider*
+.env

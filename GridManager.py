@@ -4,7 +4,6 @@ from typing import OrderedDict
 import pandas as pd
 from qgridnext import QgridWidget
 
-from CardLibrary import ForgebornAbility
 try:      import qgridnext as qgrid
 except ImportError:    import qgrid
 import ipywidgets as widgets
@@ -18,7 +17,6 @@ from MongoDB.DatabaseManager import DatabaseManager
 from SortingManager import SortingManager
 
 # module global variables 
-
 
 DEFAULT_FILTER =  pd.DataFrame({
             'Type': ['Deck'],
@@ -45,9 +43,6 @@ class GridManager:
         self.custom_css_class = self.css_manager.create_and_inject_css('filter_grids', rotate_suffix)
         self.grid_initializer = GridInitializer(self.sorting_manager, self.css_manager, gv.rotated_column_definitions, self.custom_css_class, debug_output)
 
-    def __del__(self):
-        # Restore the original qgrid.show_grid function
-        qgrid.show_grid = self.original_show_grid
 
     def add_grid(self, identifier, df, options=None, grid_type='qgrid'):
         """Add or update a grid to the GridManager."""
@@ -506,11 +501,18 @@ class FilterGrid:
                           
         widget.df = widget.get_changed_df()
 
+        # Update the `Active` status or remove rows entirely
+        #for row_index in event['indices']:
+        #    if row_index in widget.df.index:
+        #        widget.df.at[row_index, 'Active'] = False  # Mark as inactive
+
          # Get indices of active rows
         active_indices = widget.df[widget.df['Active']].index.tolist()
+        
 
         # Pass indices, not DataFrame, to refresh_function
-        self.refresh_function({'new': active_indices, 'old': event['indices'], 'owner': 'filter'})
+        #self.refresh_function({'new': active_indices, 'old': event['indices'], 'owner': 'filter'})
+        self.refresh_function(event, widget)
                 
 
     def grid_filter_on_row_added(self, event, widget):
@@ -570,7 +572,9 @@ class FilterGrid:
         widget.df = df
 
         logger.info(f"FilterClass::grid_filter_on_row_added() - Calling refresh function for index {new_row_index}")
-        self.refresh_function({'new': new_row_index, 'old': None, 'owner': 'filter'})
+        
+        self.refresh_function(event, widget)
+        #self.refresh_function({'new': new_row_index, 'old': None, 'owner': 'filter'})
 
     def grid_filter_on_cell_edit(self, event, widget):
         """
@@ -593,7 +597,8 @@ class FilterGrid:
                 #print(f"Edited row: {widget.df.loc[row_index]}")
         rebuild = False
         if column_index == 'Active' and widget.df.loc[row_index, 'Active']: rebuild = True
-        self.refresh_function({'new': row_index, 'old': None, 'owner': 'filter'})
+        #self.refresh_function({'new': row_index, 'old': None, 'owner': 'filter'})
+        self.refresh_function(event, widget)
 
     def update(self, event, widget):
         """
@@ -1088,7 +1093,7 @@ class DynamicGridManager:
             # self.VBoxGrids.add_widget(new_widget, row_index)
 
 
-    def refresh_gridbox(self, change=None):
+    def refresh_gridbox(self, event=None, widget=None):
         """
         Refreshes the grid layout based on active filters and triggers updates for individual grids.
 
@@ -1096,11 +1101,15 @@ class DynamicGridManager:
             change (dict or None): The widget interaction event data.
         """
         try:
+            print(f"Refreshing gridbox in DynamicGridManager: event = {event}")
             # Retrieve or generate the collection DataFrame
-            collection_df = self._get_collection_dataframe(change)
+            collection_df = self._get_collection_dataframe(event)
 
             # Get active and inactive filter rows
-            filter_df = self.filterGridObject.get_changed_df()
+            if widget: # If a widget is provided, use its filter row
+                filter_df = widget.get_changed_df()
+            else:
+                filter_df = self.filterGridObject.get_changed_df()
             active_filters_df = filter_df[filter_df['Active']]
             inactive_filters_df = filter_df[~filter_df['Active']]
 
@@ -1110,37 +1119,77 @@ class DynamicGridManager:
                 logger.info("All grids reset; no active or inactive filters present.")
                 return
 
-            # Handle specific grid updates if change is provided
-            if change:
-                owner = change.get('owner')
-                specific_index = change.get('new')
-
-                if owner == 'filter':
-                    logger.info(f"Handling row-specific update from filter: {specific_index}")
-                    
-                    # Handle case where specific_index is a DataFrame
-                    if isinstance(specific_index, pd.DataFrame):
-                        logger.info("Specific index is a DataFrame. Extracting indices.")
-                        specific_index = specific_index.index.tolist()
-
-                    # Check for empty or malformed selections
-                    if isinstance(specific_index, (list, pd.DataFrame)) and not specific_index:
-                        logger.info("Received empty selection; no grids to update.")
-                        return
-
-                    self._handle_specific_update(specific_index, active_filters_df, inactive_filters_df, collection_df)
-                    return
+            # Handle specific grid updates if event is provided
+            if event:
+                name = event.get('name', '')
+                if name == 'row_added' or name == 'cell_edited': 
+                    parameter_index = 'index'
+                elif name == 'row_removed':
+                    parameter_index = 'indices'
                 else:
-                    logger.warning(f"Unhandled owner type in change: {owner}")
+                    raise ValueError(f"Unexpected event name: {name}")
+                
+                specific_index = event.get(parameter_index)
+                logger.info(f"Handling row-specific update from filter: {specific_index}")
+                    
+                if name == 'cell_edited' :
+                    column = event['column']
+                    if column == 'Active':
+                        # Handle activation/deactivation of a filter row
+                        if event['new'] is False:  # Row was deactivated
+                            print(f"Deactivating grid with index '{specific_index}'.")
+                            self.VBoxGrids.remove_widget(specific_index)
+                            return
+                        elif event['new'] is True:  # Row was activated
+                            print(f"Reactivating grid with index '{specific_index}'.")
+                            filter_row = filter_df.loc[specific_index]
+                            grid_identifier = f"filtered_grid_{specific_index}"
+                            self.update_or_refresh_grid(grid_identifier, collection_df, filter_row)
+                            return    
+                
+                # Handle case where specific_index is a DataFrame
+                if isinstance(specific_index, pd.DataFrame):
+                    logger.info("Specific index is a DataFrame. Extracting indices.")
+                    specific_index = specific_index.index.tolist()
 
-            # Default: Refresh all active grids
-            logger.info("No specific change provided; refreshing all active grids.")
+                # Check for empty or malformed selections
+                if isinstance(specific_index, (list, pd.DataFrame)) and not specific_index:
+                    logger.info("Received empty selection; no grids to update.")
+                    return
+
+                self._handle_specific_update(specific_index, active_filters_df, inactive_filters_df, collection_df)
+                return
+    
+
+            # Default: Refresh all active grids and remove inactive grids
+            logger.info("No specific change provided; refreshing all active grids and removing inactive grids.")
             self._refresh_all_grids(active_filters_df, collection_df)
+            self._remove_inactive_grids(inactive_filters_df)
 
             logger.info("Gridbox refresh completed.")
 
         except Exception as e:
             logger.error(f"Exception occurred in refresh_gridbox: {e}")
+
+    # Additional helper function to remove inactive grids
+    def _remove_inactive_grids(self, inactive_filters_df):
+        """
+        Removes widgets corresponding to inactive filter rows.
+
+        Args:
+            inactive_filters_df (DataFrame): DataFrame containing inactive filter rows.
+        """
+        try:
+            if inactive_filters_df.empty:
+                logger.info("No inactive grids to remove.")
+                return
+
+            for row_index in inactive_filters_df.index:
+                logger.info(f"Removing widget for inactive grid at index {row_index}.")
+                self.VBoxGrids.remove_widget(row_index)
+
+        except Exception as e:
+            logger.error(f"Error removing inactive grids: {e}")
 
     def _handle_specific_update(self, specific_index, active_filters_df, inactive_filters_df, collection_df):
         """
@@ -1191,7 +1240,9 @@ class DynamicGridManager:
             logger.info(f"Removed inactive grid with index '{grid_index}'.")
 
         else:
-            logger.warning(f"Grid index {grid_index} not found in any filter indices.")
+            self.VBoxGrids.remove_widget(grid_index)
+            logger.info(f"Removed grid with index '{grid_index}'.")
+            #logger.warning(f"Grid index {grid_index} not found in any filter indices.")
 
     def _refresh_all_grids(self, active_filters_df, collection_df):
         """
@@ -1246,7 +1297,8 @@ class DynamicGridManager:
             # Only trigger update if there's a significant change
             if event['new'] != event['old']:
                 print(f"Cell edited in filter_row_widget for grid '{grid_identifier}': {event}")  # Debug statement
-                self.update_or_refresh_grid(grid_identifier)
+                #self.update_or_refresh_grid(grid_identifier)
+                self.refresh_gridbox(event, qgrid_widget)
 
         # Attach only one event listener to avoid redundancy
         if not hasattr(filter_row_widget, '_event_listener_attached'):
@@ -1256,12 +1308,13 @@ class DynamicGridManager:
         return widgets.VBox([toolbar_widget, filter_row_widget, grid.get_grid_box()],
                             layout=widgets.Layout(border='2px solid black'))
 
-    def _get_collection_dataframe(self, change):
+    def _get_collection_dataframe(self, event):
         """
         Retrieves or generates the collection DataFrame based on the change parameter.
         """
         collection_df = self.qm.get_grid_df('collection')
-        if collection_df.empty or (change and 'type' in change and change['type'] in {'username', 'generation'}):
+        if collection_df.empty or (event and 'name' in event and event['name'] in {'username', 'generation'}):
+            print(f"Generating new collection DataFrame for event: {event}")
             collection_df = self.data_generate_functions['central_dataframe']()
             self.qm.add_grid('collection', collection_df, options=self.qg_options)
         return collection_df    
@@ -1323,17 +1376,19 @@ class DynamicGridManager:
             # Register the selection event callback for the grid
             print(f"Registering selection event for grid '{grid_identifier}'")
             self.qm.on(grid_identifier, 'selection_changed', self.update_deck_content)
-
-            # Construct the UI for this grid using the helper function
-            new_widget = self.construct_grid_ui(grid_identifier, filter_row, grid)
-            index = grid_identifier.split('_')[-1]
-            self.VBoxGrids.add_widget(new_widget, index)
             print(f"Grid '{grid_identifier}' rebuilt with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")            
             
         else:
             print(f"Updating grid '{grid_identifier}' with filtered data")
+            grid = self.qm.grids[grid_identifier]
             self.qm.update_dataframe(grid_identifier, filtered_df)
             print(f"Grid '{grid_identifier}' updated with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")
+            
+        # Construct the UI for this grid using the helper function
+        new_widget = self.construct_grid_ui(grid_identifier, filter_row, grid)
+        index = grid_identifier.split('_')[-1]
+        self.VBoxGrids.add_widget(new_widget, index)
+        print(f"WidgetBox constructed for index '{index}' with grid '{grid_identifier}'")            
                   
     def create_action_toolbar(self, grid_id):
         """

@@ -1110,19 +1110,18 @@ def handle_debug_toggle(change):
         ic.disable()
         gv.debug = False
 
-def handle_db_list_change(change):
+def handle_db_list_change(event):
     global username_widget, grid_manager
 
     if gv.out_debug:
         with gv.out_debug:
-            print(f'DB List Change: {change}')
+            print(f'DB List Change: {event}')
 
-    if change['name'] == 'value' and change['old'] != change['new']:
-        new_username = change['new'] #or ''  # Ensure new_username is a string
+    if event['name'] == 'value' and event['old'] != event['new']:
+        new_username = event['new'] #or ''  # Ensure new_username is a string
 
         if new_username:
 
-            #change['type'] = 'username'
             # Update the Global Username Variable
             gv.username = new_username
 
@@ -1130,8 +1129,6 @@ def handle_db_list_change(change):
             username_widget.value = new_username  # Reflect change in username widget
             
             grid_manager.handle_database_change()
-            #grid_manager.refresh_gridbox(change)
-            #TODO: grid_manager.
             
         else:
             pass 
@@ -1793,7 +1790,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
               
     # Updated Tab content with styled text boxes
     db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
-    deck_tab = widgets.VBox([deck_helper, deck_accordion, deck_filter_bar, grid_manager.get_ui()])    
+    deck_tab = widgets.VBox([deck_helper, deck_accordion, *grid_manager.get_ui()])    
     central_frame_tab = widgets.VBox([central_frame_helper, central_frame_output])
 
     # Create the Tab widget with children
@@ -2038,7 +2035,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
               
     # Updated Tab content with styled text boxes
     db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
-    deck_tab = widgets.VBox([deck_helper, deck_accordion, deck_filter_bar, *grid_manager.get_ui()])
+    deck_tab = widgets.VBox([deck_helper, deck_accordion, *grid_manager.get_ui()])
     template_tab = widgets.VBox([template_helper, templateGrid.get_ui()])
     graph_tab = widgets.VBox([fusions_helper, *toggle_dropdown_pairs, button_graph, graph_output])
     debug_tab = widgets.VBox([debug_helper, debug_toggle, gv.out_debug])

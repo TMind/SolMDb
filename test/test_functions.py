@@ -172,7 +172,8 @@ def test_add_filter_row(filterGridObject, new_row_data=None):
     filter_widget.df = updated_filter_df
 
     # Trigger the row_added event manually
-    event = {'index': len(updated_filter_df) - 1}  # Index of the newly added row
+    #event = {'index': len(updated_filter_df) - 1}  # Index of the newly added row
+    event = {'index': len(updated_filter_df) - 1, 'name' : 'row_added', 'source': 'gui'}  # List of added row indices
     filterGridObject.grid_filter_on_row_added(event, filter_widget)
 
     print(f"Test: Added new row to filter grid. Current row count: {len(updated_filter_df)}")
@@ -203,13 +204,14 @@ def test_remove_filter_row(filterGridObject, row_index=0):
         return
 
     # Remove the row from the DataFrame
-    updated_filter_df = filter_df.drop(index=row_index).reset_index(drop=True)
+    #updated_filter_df = filter_df.drop(index=row_index).reset_index(drop=True)
 
     # Update the filter grid widget
-    filter_widget.df = updated_filter_df
+    #filter_widget.df = updated_filter_df
 
     # Trigger the row_removed event manually
-    event = {'indices': [row_index]}  # List of removed row indices
+    event = {'indices': [row_index], 'name' : 'row_removed'}  # List of removed row indices
+    filter_widget._remove_rows([row_index])
     filterGridObject.grid_filter_on_row_removed(event, filter_widget)
 
-    print(f"Test: Removed row {row_index} from filter grid. Current row count: {len(updated_filter_df)}")
+    print(f"Test: Removed row {row_index} from filter grid. Current row count: {len(filter_widget.get_changed_df())}")

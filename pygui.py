@@ -1180,7 +1180,7 @@ def reload_data_on_click(button, value):
             args = parse_arguments(arguments)
         elif value == 'Generate Dataframe':
             generate_central_dataframe(force_new=True)
-            grid_manager.refresh_gridbox({'type': 'generation'})
+            grid_manager.refresh_gridbox()
             return
         elif value == 'Update CM Sheet':
             # Update the local CSV using CMManager
@@ -1196,7 +1196,7 @@ def reload_data_on_click(button, value):
             combo_df = generate_combo_dataframe()
             return combo_df
         elif value == 'Refresh Grid':
-            grid_manager.refresh_gridbox({'type': 'generation'})
+            grid_manager.refresh_gridbox()
             return
 
         # Execute main task if other tasks are not returning early
@@ -1995,11 +1995,6 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
         text_color='white', bg_color='#3D2B56', border_color='#4A3E6D'  # Slightly lighter purple to match the background
     )
 
-    deck_filter_bar = create_styled_html(
-        "Filter Selection: Set custom filters to your deck base.",
-        text_color='white', bg_color='#2E86AB', border_color='#205E86'  # Darker blue for contrast
-    )
-
     # Convert Markdown to HTML using the markdown module
     guide_html_content = md.markdown(deck_guide_text)
     # Create an HTML widget to display the converted Markdown
@@ -2032,7 +2027,12 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
         "Progress Bars Section",
         text_color='white', bg_color='#2E86AB', border_color='#205E86'  # Darker blue for contrast
     )
-              
+    
+    selection_ui  = grid_manager.get_ui('Selection')
+    filter_ui  = grid_manager.get_ui('Filter')
+    grid_ui  = grid_manager.get_ui('Grid')
+    content_ui  = grid_manager.get_ui('Content')
+    
     # Updated Tab content with styled text boxes
     db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
     deck_tab = widgets.VBox([deck_helper, deck_accordion, *grid_manager.get_ui()])

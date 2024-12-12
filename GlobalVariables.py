@@ -9,12 +9,15 @@ from CustomCss import CSSManager
 from GSheetsClient import GoogleSheetsClient
 
 # Configure logging
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     handlers=[
                         logging.FileHandler("app.log"),
-                        #logging.StreamHandler()
+                        logging.StreamHandler()
                     ])
+
+# Suppress pymongo debug logs
+logging.getLogger('pymongo').setLevel(logging.WARNING)
 
 class GlobalVariables:
   

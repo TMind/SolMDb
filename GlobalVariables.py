@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.WARNING,
 
 # Suppress pymongo debug logs
 logging.getLogger('pymongo').setLevel(logging.WARNING)
+logging.getLogger('qgrid').setLevel(logging.WARNING)
 
 class GlobalVariables:
   

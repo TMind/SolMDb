@@ -112,10 +112,10 @@ class GridManager:
     def update_dataframe(self, identifier, new_df):
         
         grid = self.grids.get(identifier)
-        if grid:
-            grid.update_main_widget(new_df)
-            self.update_visible_columns(None, grid.main_widget)
-            grid.update_sum_column()
+        if grid:            
+            #self.update_visible_columns(None, grid.main_widget)
+            summed_df = grid.update_sum_column(new_df)
+            grid.update_main_widget(summed_df)
             
             self.css_manager.apply_conditional_class(grid.main_widget, rotate_suffix, self.custom_css_class)     
             #print(f"GridManager::update_dataframe() - Updated DataFrame for {identifier}")                   
@@ -261,8 +261,8 @@ class BaseGrid:
     def update_main_widget(self, new_df):
         raise NotImplementedError("Subclasses should implement this method.")
 
-    def update_sum_column(self):
-        df = self.main_widget.get_changed_df()
+    def update_sum_column(self, df):
+        #df = self.main_widget.get_changed_df()
         if gv.rotated_column_definitions:
             # Get the list of columns to sum, ensuring they exist in the DataFrame
             columns_to_sum = [col for col in gv.rotated_column_definitions.keys() if col in df.columns]
@@ -281,7 +281,8 @@ class BaseGrid:
                     if df[col].dtype == 'object':  # If the column is non-numeric
                         df[col] = df[col].fillna('')
 
-                self.update_main_widget(df)
+        return df
+        
 
     def set_dataframe_version(self, version, df):
         self.df_versions[version] = df
@@ -1233,7 +1234,7 @@ class DynamicGridManager:
         if grid_index in active_filters_df.index:
             filter_row = active_filters_df.loc[grid_index]
             grid_identifier = f"filtered_grid_{grid_index}"
-            self._update_grid(grid_identifier, collection_df, filter_row)
+            self.update_or_refresh_grid(grid_identifier, collection_df, filter_row)
 
         elif grid_index in inactive_filters_df.index:
             self.VBoxGrids.remove_widget(grid_index)
@@ -1254,23 +1255,7 @@ class DynamicGridManager:
         """
         for row_index, filter_row in active_filters_df.iterrows():
             grid_identifier = f"filtered_grid_{row_index}"
-            self._update_grid(grid_identifier, collection_df, filter_row)
-
-    def _update_grid(self, grid_identifier, collection_df, filter_row):
-        """
-        Updates or refreshes a single grid.
-
-        Args:
-            grid_identifier (str): Identifier for the grid to update.
-            collection_df (DataFrame): The collection DataFrame.
-            filter_row (Series): The filter row data for the grid.
-        """
-        try:
-            logger.info(f"Updating grid '{grid_identifier}' with filter row: {filter_row}")
             self.update_or_refresh_grid(grid_identifier, collection_df, filter_row)
-            logger.info(f"Grid '{grid_identifier}' updated.")
-        except Exception as e:
-            logger.error(f"Error updating grid '{grid_identifier}': {e}")
 
     def construct_grid_ui(self, grid_identifier, filter_row, grid):
         """
@@ -1296,8 +1281,7 @@ class DynamicGridManager:
         def on_filter_row_change(event, qgrid_widget=filter_row_widget):
             # Only trigger update if there's a significant change
             if event['new'] != event['old']:
-                print(f"Cell edited in filter_row_widget for grid '{grid_identifier}': {event}")  # Debug statement
-                #self.update_or_refresh_grid(grid_identifier)
+                print(f"Cell edited in filter_row_widget for grid '{grid_identifier}': {event}")  # Debug statement                
                 self.refresh_gridbox(event, qgrid_widget)
 
         # Attach only one event listener to avoid redundancy
@@ -1336,6 +1320,7 @@ class DynamicGridManager:
             "data_set": grid_state.get("data_set", 'Stats'),
             "filter_row": filter_row.to_dict()
         })
+        print(f"Grid state updated for '{grid_identifier}': {grid_state}")
         self.grid_widget_states[grid_identifier] = grid_state
         return grid_state
     
@@ -1351,10 +1336,15 @@ class DynamicGridManager:
         """
         print(f"Updating or refreshing grid '{grid_identifier}'")
         # Retrieve or update the grid state
-        if filter_row is not None:
-            grid_state = self._get_or_update_grid_state(grid_identifier, filter_row)
-        else:
-            grid_state = self.grid_widget_states.get(grid_identifier)
+        if filter_row is None:
+            
+            # Get index from grid_identifier
+            index = grid_identifier.split('_')[-1]
+            
+            # Retrieve the filter row from the filter grid
+            filter_row = self.filterGridObject.get_changed_df().loc[int(index)]
+                    
+        grid_state = self._get_or_update_grid_state(grid_identifier, filter_row)
         
         if not grid_state:
             print(f"No state found for grid identifier: {grid_identifier}")
@@ -1383,12 +1373,15 @@ class DynamicGridManager:
             grid = self.qm.grids[grid_identifier]
             self.qm.update_dataframe(grid_identifier, filtered_df)
             print(f"Grid '{grid_identifier}' updated with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")
+        
+        # Check if grid widget exists already in VBoxGrids
+        if not self.VBoxGrids.has_widget(grid_identifier):
             
-        # Construct the UI for this grid using the helper function
-        new_widget = self.construct_grid_ui(grid_identifier, filter_row, grid)
-        index = grid_identifier.split('_')[-1]
-        self.VBoxGrids.add_widget(new_widget, index)
-        print(f"WidgetBox constructed for index '{index}' with grid '{grid_identifier}'")            
+            # Construct the UI for this grid using the helper function            
+            new_widget = self.construct_grid_ui(grid_identifier, filter_row, grid)
+            index = grid_identifier.split('_')[-1]
+            self.VBoxGrids.add_widget(new_widget, index)
+            print(f"WidgetBox constructed for index '{index}' with grid '{grid_identifier}'")            
                   
     def create_action_toolbar(self, grid_id):
         """
@@ -1424,18 +1417,16 @@ class DynamicGridManager:
             layout=widgets.Layout(width='25%', align_self='flex-end')
         )
 
-        def on_info_level_change(change):
-            if change['type'] == 'change' and change['name'] == 'value':
+        def on_info_level_change(event):
+            if event['type'] == 'change' and event['name'] == 'value':
                 # Update state and refresh grid
-                self.grid_widget_states[grid_identifier]['info_level'] = change['new']
-                #self.update_grid_using_toolbar_and_filter(grid_identifier)
+                self.grid_widget_states[grid_identifier]['info_level'] = event['new']
                 self.update_or_refresh_grid(grid_identifier)
 
-        def on_data_set_change(change):
-            if change['type'] == 'change' and change['name'] == 'value':
+        def on_data_set_change(event):
+            if event['type'] == 'change' and event['name'] == 'value':
                 # Update state and refresh grid
-                self.grid_widget_states[grid_identifier]['data_set'] = change['new']
-                #self.update_grid_using_toolbar_and_filter(grid_identifier)
+                self.grid_widget_states[grid_identifier]['data_set'] = event['new']
                 self.update_or_refresh_grid(grid_identifier)
 
         info_level_button.observe(on_info_level_change, names='value')

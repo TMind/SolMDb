@@ -9,7 +9,7 @@ from CustomCss import CSSManager
 from GSheetsClient import GoogleSheetsClient
 
 # Configure logging
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.WARNING,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     handlers=[
                         logging.FileHandler("app.log"),

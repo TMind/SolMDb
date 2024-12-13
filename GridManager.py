@@ -997,7 +997,7 @@ import time
 from datetime import datetime
 import numpy as np
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class DynamicGridManager:

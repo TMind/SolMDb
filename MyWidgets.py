@@ -172,7 +172,7 @@ class VBoxManager:
         self.vboxes.clear()
         self.empty_vboxes.clear()
         self.main_vbox.children = ()
-        self.print_state()
+        #self.print_state()
 
     def get_vbox(self, filter_row_index):
         """
@@ -209,16 +209,6 @@ class VBoxManager:
         print(f"Current VBoxManager state: {state}")
         return state
 
-    # def _update_layout(self):
-    #     """
-    #     Update the layout of the main VBox to ensure non-empty VBoxes appear at the top.
-    #     """
-    #     # Gather non-empty VBoxes and append placeholders for empty slots
-    #     non_empty_vboxes = list(self.vboxes.values())
-    #     self.main_vbox.children = tuple(non_empty_vboxes + self.empty_vboxes)
-    #     print("Updated main VBox layout.")
-    #     self.print_state()
-
     def _update_layout(self):
         """
         Update the layout of the main VBox to ensure non-empty VBoxes appear in the order of their indices.
@@ -230,7 +220,7 @@ class VBoxManager:
         # Combine sorted non-empty VBoxes with placeholders for empty slots
         self.main_vbox.children = tuple(sorted_vboxes + self.empty_vboxes)
         print("Updated main VBox layout with widgets sorted by index.")
-        self.print_state()
+        #self.print_state()
 
 
 

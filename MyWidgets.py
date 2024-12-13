@@ -45,7 +45,7 @@ class EnhancedSelectMultiple:
 
     @options.setter
     def options(self, new_options):
-        #print(f"Setting new options: {new_options}")
+        #logging.info(f"Setting new options: {new_options}")
         self._original_options = sorted(new_options, key=lambda x: x.lower())
         # Directly set options to avoid redundant setter call
         self.select_widget.options = self._original_options
@@ -84,6 +84,12 @@ class EnhancedSelectMultiple:
         Returns the main container widget that can be used directly in the UI.
         """
         return self.container
+
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
+
 class VBoxManager:
     def __init__(self):
         self.main_vbox = widgets.VBox()  # Main container holding all VBoxes
@@ -115,28 +121,28 @@ class VBoxManager:
         # If widget is not already a VBox, wrap it in a VBox
         if not isinstance(widget, widgets.VBox):
             widget = widgets.VBox([widget])
-            print(f"Widget at index {index} encapsulated in a new VBox.")
+            #logging.info(f"Widget at index {index} encapsulated in a new VBox.")
             
         if index in self.vboxes:
             # Skip if the widget is already in the VBox
-            print(f"Skipping widget for index: {index}")
+            logging.info(f"Skipping widget for index: {index}")
             return
             vbox = self.vboxes[index]
             vbox.children = (widget,)
-            print(f"Updated existing VBox at index {index}")
+            logging.info(f"Updated existing VBox at index {index}")
         elif self.empty_vboxes:
             # Reuse an empty VBox
-            print(f"Adding widget for index: {index}")
+            #logging.info(f"Adding widget for index: {index}")
             vbox = self.empty_vboxes.pop()
             vbox.children = (widget,)
             self.vboxes[index] = vbox
-            print(f"Reused an empty VBox for index {index}")
+            #logging.info(f"Reused an empty VBox for index {index}")
         else:
             # Create a new VBox and add it to the layout
-            print(f"Adding widget for index: {index}")
+            #logging.info(f"Adding widget for index: {index}")
             vbox = widgets.VBox([widget])
             self.vboxes[index] = vbox
-            print(f"Created a new VBox for index {index}")
+            #logging.info(f"Created a new VBox for index {index}")
 
         self._update_layout()
 
@@ -147,7 +153,7 @@ class VBoxManager:
         Args:
             filter_row_index (list[int]): The indices of the filter rows to remove.
         """
-        print(f"Removing widgets for indices: {filter_row_index}")
+        logging.info(f"Removing widgets for indices: {filter_row_index}")
         if not isinstance(filter_row_index, list):
             filter_row_index = [filter_row_index]
         
@@ -160,7 +166,7 @@ class VBoxManager:
             vbox.children = (widgets.Label("Empty"),)
             self.empty_vboxes.append(vbox)  # Mark it as empty
             del self.vboxes[index]
-            print(f"Removed VBox at index {index} and marked it as empty.")
+            logging.info(f"Removed VBox at index {index} and marked it as empty.")
 
         self._update_layout()
 
@@ -168,11 +174,11 @@ class VBoxManager:
         """
         Clear all VBoxes and reset the layout.
         """
-        print("Resetting VBoxManager...")
+        logging.info("Resetting VBoxManager...")
         self.vboxes.clear()
         self.empty_vboxes.clear()
         self.main_vbox.children = ()
-        #self.print_state()
+        #self.logging.info_state()
 
     def get_vbox(self, filter_row_index):
         """
@@ -186,7 +192,7 @@ class VBoxManager:
         """
         if filter_row_index not in self.vboxes:
             raise ValueError(f"No VBox found for filter_row_index: {filter_row_index}")
-        print(f"Retrieved VBox for filter_row_index: {filter_row_index}")
+        logging.info(f"Retrieved VBox for filter_row_index: {filter_row_index}")
         return self.vboxes[filter_row_index]
 
     def get_main_vbox(self):
@@ -206,7 +212,7 @@ class VBoxManager:
             dict: A dictionary mapping grid identifiers to their VBoxes.
         """
         state = {index: {"vbox": vbox} for index, vbox in self.vboxes.items()}
-        print(f"Current VBoxManager state: {state}")
+        logging.info(f"Current VBoxManager state: {state}")
         return state
 
     def _update_layout(self):
@@ -219,31 +225,31 @@ class VBoxManager:
 
         # Combine sorted non-empty VBoxes with placeholders for empty slots
         self.main_vbox.children = tuple(sorted_vboxes + self.empty_vboxes)
-        print("Updated main VBox layout with widgets sorted by index.")
-        #self.print_state()
+        logging.info("Updated main VBox layout with widgets sorted by index.")
+        #self.logging.info_state()
 
 
 
     def print_state(self):
         """
-        Print the current indices and states of the managed VBoxes,
+        logging.info the current indices and states of the managed VBoxes,
         including the indices of active and empty VBoxes.
         """
-        print("VBoxManager State:")
-        print("------------------")
-        print("Active VBoxes:")
+        logging.info("VBoxManager State:")
+        logging.info("------------------")
+        logging.info("Active VBoxes:")
         for index in sorted(self.vboxes.keys()):
-            print(f"  - Index: {index}, VBox: {self.vboxes[index]}")
+            logging.info(f"  - Index: {index}, VBox: {self.vboxes[index]}")
 
-        print("\nEmpty VBoxes:")
+        logging.info("\nEmpty VBoxes:")
         for empty_vbox in self.empty_vboxes:
-            print(f"  - VBox: {empty_vbox}")
+            logging.info(f"  - VBox: {empty_vbox}")
 
-        print("\nMain VBox Layout:")
+        logging.info("\nMain VBox Layout:")
         for i, vbox in enumerate(self.main_vbox.children):
             if vbox in self.vboxes.values():
-                print(f"  - Position {i}: Active VBox (Index: {list(self.vboxes.keys())[list(self.vboxes.values()).index(vbox)]})")
+                logging.info(f"  - Position {i}: Active VBox (Index: {list(self.vboxes.keys())[list(self.vboxes.values()).index(vbox)]})")
             elif vbox in self.empty_vboxes:
-                print(f"  - Position {i}: Empty VBox")
+                logging.info(f"  - Position {i}: Empty VBox")
             else:
-                print(f"  - Position {i}: Unknown VBox (not managed)")
+                logging.info(f"  - Position {i}: Unknown VBox (not managed)")

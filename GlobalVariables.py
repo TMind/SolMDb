@@ -122,7 +122,7 @@ class GlobalVariables:
             
             #print(f"Updated all_column_definitions: {self.all_column_definitions}")
         except Exception as e:
-            print(f"Error updating column definitions: {e}")    
+            logging.error(f"Error updating column definitions: {e}")    
                    
     def _set_environment_variables(self):
         """Set environment variables based on the current values."""

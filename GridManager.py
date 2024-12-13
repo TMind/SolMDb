@@ -337,8 +337,8 @@ class QGrid(BaseGrid):
         #print(new_df.head())
 
         # Update the widget's DataFrame        
-        print(f"Sleeping for 0.75 seconds before updating the main widget")
-        time.sleep(0.75)
+        #logging.info(f"Sleeping for 0.75 seconds before updating the main widget")
+        #time.sleep(0.75)
         #listeners = getattr(self.main_widget, '_event_listeners', None)
         #print(f"Event listeners attached to widget: {listeners}")
         self.main_widget.df = new_df                
@@ -803,8 +803,8 @@ def apply_filter_to_dataframe(df_to_filter, filter_df):
 
                 # Check if the field is in the DataFrame (if applicable)
                 if filter_step['first_target_type'] == 'field' and first_item not in df.columns:
-                    print(f"Field '{first_item}' not found in DataFrame")
-                    print(f"DF Columns: {df.columns}")
+                    logging.warning(f"Field '{first_item}' not found in DataFrame")
+                    logging.warning(f"DF Columns: {df.columns}")
                     continue
 
                 # Iterate over the second target (either substrings or fields)
@@ -849,7 +849,7 @@ def apply_filter_to_dataframe(df_to_filter, filter_df):
             #print(f"Main mask after combining items: {matched_indices_after_main}")
 
             matched_count = mask.sum()
-            print(f"apply_filter: {matched_count} rows matched for first_target '{first_target}' and second_target '{second_target}' with first_operator '{first_operator}' and second_operator '{second_operator}'")
+            logging.info(f"apply_filter: {matched_count} rows matched for first_target '{first_target}' and second_target '{second_target}' with first_operator '{first_operator}' and second_operator '{second_operator}'")
             return df[mask]
 
         def determine_filter_config(column, filter_row, string):
@@ -1052,7 +1052,7 @@ class DynamicGridManager:
         """
         Handles updates required when the database changes.
         """
-        print("Handling database change in DynamicGridManager.")
+        logging.info("Handling database change in DynamicGridManager.")
 
         # Step 1: Update the collection DataFrame
         collection_df = self.data_generate_functions['central_dataframe']()
@@ -1102,7 +1102,7 @@ class DynamicGridManager:
             change (dict or None): The widget interaction event data.
         """
         try:
-            print(f"Refreshing gridbox in DynamicGridManager: event = {event}")
+            logging.info(f"Refreshing gridbox in DynamicGridManager: event = {event}")
             # Retrieve or generate the collection DataFrame
             collection_df = self._get_collection_dataframe(event)
 
@@ -1320,7 +1320,7 @@ class DynamicGridManager:
             "data_set": grid_state.get("data_set", 'Stats'),
             "filter_row": filter_row.to_dict()
         })
-        print(f"Grid state updated for '{grid_identifier}': {grid_state}")
+        logging.info(f"Grid state updated for '{grid_identifier}': {grid_state}")
         self.grid_widget_states[grid_identifier] = grid_state
         return grid_state
     
@@ -1334,7 +1334,7 @@ class DynamicGridManager:
             filter_row (pd.Series, optional): The filter row to apply for filtering.
             rebuild (bool): If True, recreate the grid; if False, just update it.
         """
-        print(f"Updating or refreshing grid '{grid_identifier}'")
+        logging.info(f"Updating or refreshing grid '{grid_identifier}'")
         # Retrieve or update the grid state
         if filter_row is None:
             
@@ -1347,32 +1347,33 @@ class DynamicGridManager:
         grid_state = self._get_or_update_grid_state(grid_identifier, filter_row)
         
         if not grid_state:
-            print(f"No state found for grid identifier: {grid_identifier}")
+            logging.info(f"No state found for grid identifier: {grid_identifier}")
             return
 
         # Retrieve collection data only if it's not provided
         if collection_df is None:
             collection_df = self.qm.get_grid_df('collection')
-            print(f"Default collection DataFrame retrieved with {len(collection_df)} rows and {len(collection_df.columns)} columns")
+            logging.info(f"Default collection DataFrame retrieved with {len(collection_df)} rows and {len(collection_df.columns)} columns")
 
         # Apply filters
         filtered_df = self.apply_filters(collection_df, grid_state)
 
         # Update or create the grid
         if grid_identifier not in self.qm.grids:
-            print(f"Rebuilding grid '{grid_identifier}'")
+            logging.info(f"Rebuilding grid '{grid_identifier}'")
             grid = self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options)
             
             # Register the selection event callback for the grid
-            print(f"Registering selection event for grid '{grid_identifier}'")
+            logging.info(f"Registering selection event for grid '{grid_identifier}'")
             self.qm.on(grid_identifier, 'selection_changed', self.update_deck_content)
-            print(f"Grid '{grid_identifier}' rebuilt with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")            
+            self.qm.on(grid_identifier, 'selection_changed', self.get_selected_grid_items)
+            logging.info(f"Grid '{grid_identifier}' rebuilt with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")            
             
         else:
-            print(f"Updating grid '{grid_identifier}' with filtered data")
+            logging.info(f"Updating grid '{grid_identifier}' with filtered data")
             grid = self.qm.grids[grid_identifier]
             self.qm.update_dataframe(grid_identifier, filtered_df)
-            print(f"Grid '{grid_identifier}' updated with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")
+            logging.info(f"Grid '{grid_identifier}' updated with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")
         
         # Check if grid widget exists already in VBoxGrids
         if not self.VBoxGrids.has_widget(grid_identifier):
@@ -1381,7 +1382,7 @@ class DynamicGridManager:
             new_widget = self.construct_grid_ui(grid_identifier, filter_row, grid)
             index = grid_identifier.split('_')[-1]
             self.VBoxGrids.add_widget(new_widget, index)
-            print(f"WidgetBox constructed for index '{index}' with grid '{grid_identifier}'")            
+            logging.info(f"WidgetBox constructed for index '{index}' with grid '{grid_identifier}'")            
                   
     def create_action_toolbar(self, grid_id):
         """
@@ -1480,7 +1481,7 @@ class DynamicGridManager:
     def update_deck_content(self, event, widget):
         
             """Update the deck content DataFrame based on the selected item in the grid."""
-            print(f"DynamicGridManager::update_deck_content() - Updating deck content with event: {event}")
+            logging.info(f"DynamicGridManager::update_deck_content() - Updating deck content with event: {event}")
             selected_indices = event['new']
             grid_df = widget.get_changed_df()            
 
@@ -1498,10 +1499,10 @@ class DynamicGridManager:
                     # Find the corresponding row in the collection DataFrame
                     row_name = None
                     if not hasattr(row, 'Name') or 'Name' not in collection_df.columns:
-                        print(f"Name not found in row or collection_df: {row}")
+                        logging.warning(f"Name not found in row or collection_df: {row}")
                         # Try 'name' instead of 'Name'
                         if hasattr(row, 'name') :
-                            print(f"Row with 'name' attribute: {row}")
+                            logging.info(f"Row with 'name' attribute: {row}")
                             row_name = row.name
                     else:
                         row_name = row.Name
@@ -1537,9 +1538,6 @@ class DynamicGridManager:
                 options.update(additional_options)       
                 self.qm.add_grid('deck_content', combined_df, options=options) 
 
-                # Update the UI                
-                #self.update_ui()    # No need to really update the widget, since only the dataframe changes 
-                #self.data_generate_functions['update_selection_area']()
             
     def update_widget(self, group_name, new_widget):
         """Update the second widget in the specified group."""
@@ -1564,11 +1562,8 @@ class DynamicGridManager:
 
         # Return all VBoxes
         return list(self.ui_widget_dict.values())
-
-    # def get_ui(self, group_name=None):
-    #     return self.ui
     
-    def get_selected_grid_items(self):
+    def get_selected_grid_items(self, event, widget):
         """
         Retrieves the currently selected 'Name' items from all main_qgrid_widgets within the GridspecLayout.
         
@@ -1576,10 +1571,39 @@ class DynamicGridManager:
             dict: A dictionary where keys are grid_ids and values are lists of selected 'Name' items.
         """
         selected_items = {}
+        logger.info("Retrieving selected items from all main_qgrid_widgets...")
         
+        if widget and event:
+            indices = event['new']
+            df = widget.get_changed_df()
+            grid_id = next((gid for gid, grid in self.qm.grids.items() if grid.main_widget is widget), None)
+
+            if not grid_id:
+                logger.warning("No grid_id found for the given widget.")
+                return
+
+            if df is not None and not df.empty:
+                if 'Name' not in df.columns:
+                    logger.error(f"'Name' column not found in DataFrame for grid_id '{grid_id}'.")
+                    return
+
+                try:
+                    selected_rows = df.iloc[indices]
+                except IndexError:
+                    logger.error(f"Indices {indices} are out of bounds for DataFrame with shape {df.shape}.")
+                    return
+
+                selected_names = selected_rows['Name'].tolist()
+                self.grid_widget_states[grid_id]['Selection'] = selected_names
+                logger.info(f"Updated selection for grid_id '{grid_id}': {selected_names}")
+                return 
+                   
         # Iterate over all rows and columns in the grid_layout
         MainVBox = self.VBoxGrids.get_main_vbox()
-        for index, cell in enumerate(MainVBox.children):            
+        for index, cell in enumerate(MainVBox.children):          
+            # Glide through all singular VBoxes until at least 3 children are found 
+            while len(cell.children) < 3:
+                cell = cell.children[0]    
             # Check if the cell is a VBox with at least 3 children
             if isinstance(cell, widgets.VBox) and len(cell.children) >= 3:
                 # Extract inner_vbox which contains toggle and main_qgrid_widget
@@ -1602,17 +1626,17 @@ class DynamicGridManager:
                                 selected_names = selected_df['Name'].tolist()
                                 selected_items[grid_id] = selected_names
                                 self.grid_widget_states[grid_id]['Selection'] = selected_names
-                                print(f"Selected names for grid_id '{grid_id}': {selected_names}")
+                                logging.info(f"Selected names for grid_id '{grid_id}': {selected_names}")
                             else:
-                                print(f"No selected items in grid_id '{grid_id}' or 'Name' column missing.")
+                                logging.warning(f"No selected items in grid_id '{grid_id}' or 'Name' column missing.")
                         else:
-                            print(f"No matching grid_id found for main_qgrid_widget ID {id(main_qgrid_widget)}.")
+                            logging.warning(f"No matching grid_id found for main_qgrid_widget ID {id(main_qgrid_widget)}.")
                 else:
-                    print(f"Skipping cell [{index}] as inner_vbox does not contain enough children.")
+                    logging.info(f"Skipping cell [{index}] as inner_vbox does not contain enough children.")
             else:
-                print(f"Skipping cell [{index}] as it does not contain a valid VBox with at least 3 children.")
+                logging.info(f"Skipping cell [{index}] as it does not contain a valid VBox with at least 3 children.")
         
-        print(f"\nFinal selected_items: {selected_items}")
+        logging.info(f"\nFinal selected_items: {selected_items}")
         
         return selected_items
 
@@ -1626,7 +1650,7 @@ class DynamicGridManager:
                 csv_filename = os.path.join(directory, f"{identifier}.csv")
                 df.to_csv(csv_filename, index=False)
                 with self.out_debug:
-                    print(f"Saved DataFrame '{identifier}' to {csv_filename}")
+                    logging.info(f"Saved DataFrame '{identifier}' to {csv_filename}")
             else:
                 with self.out_debug:
                     print(f"No data available for grid '{identifier}', skipping...")
@@ -1670,7 +1694,7 @@ class DynamicGridManager:
     def open_deck(self, grid_id, button):
         
         if not grid_id in self.grid_widget_states or not 'Selection' in self.grid_widget_states[grid_id]: 
-            print(f"No selection found for grid_id '{grid_id}', skipping...")
+            logging.warning(f"No selection found for grid_id '{grid_id}', skipping...")
             return
         
         selected_items_list = self.grid_widget_states[grid_id]['Selection']

@@ -90,6 +90,18 @@ class VBoxManager:
         self.vboxes = {}  # Map grid_identifier -> VBox
         self.empty_vboxes = []  # List of empty VBoxes for reuse
 
+    def has_widget(self, filter_row_index):
+        """
+        Check if a widget exists for a specific filter row index.
+
+        Args:
+            filter_row_index (int): The index of the filter row.
+
+        Returns:
+            bool: True if a widget exists for the index, False otherwise.
+        """
+        return filter_row_index in self.vboxes
+
     def add_widget(self, widget, index):
         """
         Add a widget to a VBox associated with a specific filter row index.
@@ -100,25 +112,28 @@ class VBoxManager:
         """
     
         index = int(index)
-        print(f"Adding widget for index: {index}")
-        
         # If widget is not already a VBox, wrap it in a VBox
         if not isinstance(widget, widgets.VBox):
             widget = widgets.VBox([widget])
             print(f"Widget at index {index} encapsulated in a new VBox.")
             
         if index in self.vboxes:
+            # Skip if the widget is already in the VBox
+            print(f"Skipping widget for index: {index}")
+            return
             vbox = self.vboxes[index]
             vbox.children = (widget,)
             print(f"Updated existing VBox at index {index}")
         elif self.empty_vboxes:
             # Reuse an empty VBox
+            print(f"Adding widget for index: {index}")
             vbox = self.empty_vboxes.pop()
             vbox.children = (widget,)
             self.vboxes[index] = vbox
             print(f"Reused an empty VBox for index {index}")
         else:
             # Create a new VBox and add it to the layout
+            print(f"Adding widget for index: {index}")
             vbox = widgets.VBox([widget])
             self.vboxes[index] = vbox
             print(f"Created a new VBox for index {index}")

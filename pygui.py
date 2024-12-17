@@ -938,7 +938,7 @@ def get_combos_for_graph(myGraph: MyGraph, name: str) -> dict:
 def generate_deck_statistics_dataframe():
     def get_card_titles(card_ids):
         card_titles = [card_id[5:].replace('-', ' ').title() for card_id in card_ids]
-        return ', '.join(sorted(card_titles))
+        return '; '.join(sorted(card_titles))
 
     # Get all Decks from the database once and reuse this list
     decks = []
@@ -1101,14 +1101,33 @@ def validate_dataframe_attributes(df, identifier=None, expected_index_name=None,
 #         print(f"Column '{column}' does not exist in the DataFrame.")
 #         return False
 
-# Function to handle changes to the checkbox
+# Function to handle changes to the debug toggle buttons
+import logging
 def handle_debug_toggle(change):
-    if change.new:
-        ic.enable()
-        gv.debug = True
+    """
+    Handle changes in a ToggleButtons widget to set the logger level.
+
+    Args:
+        change (dict): A dictionary containing information about the change.
+                       Keys typically include 'owner', 'new', 'old', and 'type'.
+    """
+    new_value = change['new']  # Get the new value of the ToggleButtons widget
+
+    # Map button values to logging levels
+    logging_levels = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL
+    }
+
+    # Set the logger level based on the selected value
+    if new_value in logging_levels:
+        logging.getLogger().setLevel(logging_levels[new_value])
+        print(f"Logger level set to {new_value}")
     else:
-        ic.disable()
-        gv.debug = False
+        print(f"Unknown logger level: {new_value}")
 
 def handle_db_list_change(event):
     global username_widget, grid_manager
@@ -1128,7 +1147,8 @@ def handle_db_list_change(event):
             # Update Username Widget
             username_widget.value = new_username  # Reflect change in username widget
             
-            grid_manager.handle_database_change()
+            if grid_manager:
+                grid_manager.handle_database_change()
             
         else:
             pass 
@@ -1180,7 +1200,8 @@ def reload_data_on_click(button, value):
             args = parse_arguments(arguments)
         elif value == 'Generate Dataframe':
             generate_central_dataframe(force_new=True)
-            grid_manager.refresh_gridbox()
+            if grid_manager:
+                grid_manager.handle_database_change()
             return
         elif value == 'Update CM Sheet':
             # Update the local CSV using CMManager
@@ -1196,7 +1217,8 @@ def reload_data_on_click(button, value):
             combo_df = generate_combo_dataframe()
             return combo_df
         elif value == 'Refresh Grid':
-            grid_manager.refresh_gridbox()
+            if grid_manager:
+                grid_manager.refresh_gridbox()
             return
 
         # Execute main task if other tasks are not returning early
@@ -1405,13 +1427,14 @@ def show_deck_graph(deck, out):
 # User Interface Management #
 #############################
 
-def create_debug_toggle():
-    debug_toggle = widgets.ToggleButton(
-        value=False,
+def create_debug_widget():
+    debug_toggle = widgets.ToggleButtons(
+        value='CRITICAL',
+        options=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
         description='Debug',
         disabled=False,
         button_style='info', # 'success', 'info', 'warning', 'danger' or ''
-        tooltip='Enable or disable debugging',
+        tooltip='Set level of logging messages',
         icon='check'
     )
     debug_toggle.observe(handle_debug_toggle, 'value')
@@ -1825,37 +1848,11 @@ def setup_interface():
 
     if username_jhub == 'magiceden' : 
         return setup_restricted_interface()
-            
-    # Function to update the action area with selected info
-    def update_action_area():
-        # Get selected DB info and selected items from the grid manager
-        if gv.myDB:
-            selected_db_info = gv.myDB.get_current_db_name()  # Assuming gv.myDB manages the current database
-        else:
-            selected_db_info = "None"
-        selected_items_info = grid_manager.get_selected_grid_items()  # This now returns a dictionary with lists of names
-
-        # Update the labels with new info
-        selected_db_label.value = f"Selected Database: {selected_db_info}"
-
-        if selected_items_info:
-            # Since selected_items_info is a dictionary of lists, we can flatten the lists and join the names
-            selected_names = [name for names_list in selected_items_info.values() for name in names_list]
-
-            # Update the label with the selected names
-            selected_items_label.value = f"Selected Items: {', '.join(selected_names) if selected_names else 'None'}"
-        else:
-            selected_items_label.value = "Selected Items: None"
-    
-    
+             
     for i in range(2):            
         factionToggle, dropdown = initialize_widgets()
         factionToggles.append(factionToggle)
         dropdowns.append(dropdown)
-
-    # Button to create network graph
-    button_graph = widgets.Button(description='Show Graph')
-    button_graph.on_click(lambda button: display_graph()) #display_graph_on_click(button))
 
     # Toggle buttons to select load items
     loadToggle = widgets.ToggleButtons(
@@ -1877,13 +1874,13 @@ def setup_interface():
     toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
 
     # Create a Checkbox widget to toggle debugging
-    debug_toggle = widgets.Checkbox(value=False, description='Debugging', disabled=False)    
+    debug_toggle = create_debug_widget()
     debug_toggle.observe(handle_debug_toggle, 'value')
     
     data_generation_functions = {
         'central_dataframe' : generate_central_dataframe, 
         'deck_content' : generate_deck_content_dataframe,
-        'update_selection_area' : update_action_area,}
+    }
     
     # Create an instance of the manager
     grid_manager = DynamicGridManager(data_generation_functions, qg_options, gv.out_debug)
@@ -2027,28 +2024,21 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
         "Progress Bars Section",
         text_color='white', bg_color='#2E86AB', border_color='#205E86'  # Darker blue for contrast
     )
-    
-    selection_ui  = grid_manager.get_ui('Selection')
-    filter_ui  = grid_manager.get_ui('Filter')
-    grid_ui  = grid_manager.get_ui('Grid')
-    content_ui  = grid_manager.get_ui('Content')
-    
+        
     # Updated Tab content with styled text boxes
     db_tab = widgets.VBox([db_helper, db_accordion, loadToggle, button_load, count_display, username_widget, db_list])
     deck_tab = widgets.VBox([deck_helper, deck_accordion, *grid_manager.get_ui()])
     template_tab = widgets.VBox([template_helper, templateGrid.get_ui()])
-    graph_tab = widgets.VBox([fusions_helper, *toggle_dropdown_pairs, button_graph, graph_output])
     debug_tab = widgets.VBox([debug_helper, debug_toggle, gv.out_debug])
     central_frame_tab = widgets.VBox([central_frame_helper, central_frame_output])
 
     # Create the Tab widget with children
-    tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, graph_tab, debug_tab, central_frame_tab])
+    tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, debug_tab, central_frame_tab])
     tab.set_title(0, 'Database')
     tab.set_title(1, 'Decks')
     tab.set_title(2, 'Templates')
-    tab.set_title(3, 'Graphs')
-    tab.set_title(4, 'Debug')
-    tab.set_title(5, 'CentralDataframe')
+    tab.set_title(3, 'Debug')
+    tab.set_title(4, 'CentralDataframe')
 
     # Set the default selected tab
     tab.selected_index = 0

@@ -18,7 +18,7 @@ from SortingManager import SortingManager
 
 # module global variables 
 
-DEFAULT_FILTER =  pd.DataFrame({
+DEFAULT =  pd.DataFrame({
             'Type': ['Deck'],
             'Name': [''],
             'Modifier': [''],
@@ -28,6 +28,21 @@ DEFAULT_FILTER =  pd.DataFrame({
             'Active': [True],
             'Mandatory Fields': ['Name, Forgeborn Ability']
         })
+
+TESTING =  pd.DataFrame({
+            'Type': ['Deck'],
+            'Name': [''],
+            'Modifier': [''],
+            'Creature': ['Hantu, The Restless'],
+            'Spell': ['Dark Pryings'],
+            'Forgeborn Ability': [''],
+            'Active': [True],
+            'Mandatory Fields': ['Name, Creature, Spell, Forgeborn Ability']
+        })
+
+DEFAULT_FILTER = DEFAULT
+
+
 class GridManager:
     EVENT_DF_STATUS_CHANGED = 'df_status_changed'
 
@@ -818,8 +833,9 @@ def apply_filter_to_dataframe(df_to_filter, filter_df):
                         string_item = first_item
                         field_item = second_item
 
-                    regex = fr'\b{re.escape(string_item)}(?=[^\w\s]|\s|$)'  # Match word boundaries but allow space as part of the match
-
+                    string_item = re.sub(r',\s*', ' ', string_item)
+                    regex = fr"(^|\W){re.escape(string_item)}($|\W)"
+                    
                     # Apply the regex to the entire column using .apply() and combine based on the second operator
                     substring_mask = df[field_item].apply(lambda title: bool(re.search(regex, str(title), re.IGNORECASE)))
 

@@ -9,7 +9,7 @@ from CustomCss import CSSManager
 from GSheetsClient import GoogleSheetsClient
 
 # Configure logging
-logging.basicConfig(level=logging.WARNING,
+logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     handlers=[
                         logging.FileHandler("app.log"),
@@ -472,6 +472,7 @@ tag_selection_set = {
         "Destruction Synergy": True,
         "Destruction Self": True,
         "Destruction Others": True,
+        "Good Destroyed": True, 
         "Self Damage Payoff": True,
         "Self Damage Activator": True,
         "Silence": True,

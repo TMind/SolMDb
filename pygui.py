@@ -39,11 +39,6 @@ except KeyError:
     # Handle the case where the option does not exist  
     print("Option 'future.no_silent_downcasting' is not neccessary in this version of pandas.")  
 
-# Enable qgrid to automatically display all DataFrame and Series instances
-#qgrid.enable(dataframe=True, series=True)
-#qgrid.set_grid_option('forceFitColumns', False)
-
-
 # Define Variables
 os.environ['PYDEVD_DISABLE_FILE_VALIDATION'] = '1'
 
@@ -104,9 +99,14 @@ def fetch_network_decks(args, myApi):
         collection_symbol = 'sfgc'  # This could be dynamic based on args
         
         deck_data = fetch_all_magiceden_listings(collection_symbol, myApi, args)
-        print(f"{len(args.decklist)} remaining Listings : {args.decklist}")
+        logging.info(f"{len(args.decklist)} remaining Listings : {args.decklist}")
         print(f"Total Magic Eden decks processed: {len(deck_data)}")                
         #gv.myDB.drop_database()
+        # Remove old decks in args.decklist from the database 
+        for deck in args.decklist:
+            if gv.myDB:
+                logging.debug(f"Removing deck from DB: {deck}")
+                gv.myDB.delete_one('Deck', {'name': deck})
         return deck_data     
     
     if args.id:
@@ -143,6 +143,7 @@ def load_deck_data(args):
     types = args.type.split(',')
     for type in types:
         if args.username == 'magiceden' and type == 'fuseddeck':
+            args.mode = 'update'
             print(f"Skipping 'fuseddeck' for Magic Eden.")
             continue
         args.type = type

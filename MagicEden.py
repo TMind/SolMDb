@@ -1,4 +1,5 @@
 import requests, re, json
+from datetime import datetime
 from NetApi import NetApi  
 from soldb import parse_arguments
 from GlobalVariables import global_vars as gv
@@ -86,6 +87,7 @@ def process_magiceden_listings(listings, myApi, args):
     Only extracts the deck_id and rarity_score and fetches the actual deck data from that id via `myApi.request_decks`.
     """
     net_data = []
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if listings:
         identifier = "Processing listing"
@@ -104,9 +106,9 @@ def process_magiceden_listings(listings, myApi, args):
             if name in args.decklist :
                 # The deck is already in the database, no need to fetch it
                 # Remove the deck from the list 
-                gv.update_progress("Processing listing", message=f"Skipping deck data for ID: {deck_id}")
+                gv.update_progress("Processing listing", message=f"Skipping deck data for: {name}")
                 args.decklist.remove(name)  
-                continue            
+                continue
             
             # Extract the deck_link from the attributes
             for attribute in attributes:            
@@ -136,7 +138,8 @@ def process_magiceden_listings(listings, myApi, args):
                 if deck_data:
                     deck_data[0]['price'] = price  # Add the price to the deck data
                     deck_data[0]['owner'] = owner  # Add the owner to the deck data
-                    deck_data[0]['rarity_score'] = rarity_score                         
+                    deck_data[0]['rarity_score'] = rarity_score           
+                    deck_data[0]['UpdatedAt'] = current_time
                     net_data.extend(deck_data)  # Append the fetched deck data to the list
                 else:
                     print(f"No data returned for deck with ID: {deck_id}")

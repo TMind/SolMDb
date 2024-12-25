@@ -9,7 +9,7 @@ from CustomCss import CSSManager
 from GSheetsClient import GoogleSheetsClient
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     handlers=[
                         logging.FileHandler("app.log"),
@@ -632,13 +632,13 @@ data_selection_sets = {
     'UPGRADE Combo':    True,    
     'INCREASED A Combo': True,
   },
-  'Deck Content': {
-    'name': True,
-    'faction': True,
-    'rarity': True,
-    'cardType': True,
-    'cardSubType': True,
-  },
+#   'Deck Content': {
+#     'name': True,
+#     'faction': True,
+#     'rarity': True,
+#     'cardType': True,
+#     'cardSubType': True,
+#   },
   'CM Tags': {
     'Name': True,
     'faction': True,
@@ -646,17 +646,6 @@ data_selection_sets = {
     'FB3': True,
     'FB4': True,
   },
-  'Listing': {
-    "Name": True, "name": True, "type": 'Deck', "id" : True,
-    "price": True, "owner": True, "registeredDate": True, "pExpiry": True, 
-    "deckScore": True, "deckRank": True,
-    "cardSetNo": True,  "faction": True,
-    "forgebornId": True, "cardTitles": True, "Betrayers": True, "SolBinds": True,
-    "FB2": True,    "FB3": True,    "FB4": True,
-    "Creatures": True,  "Spells": True, "Exalt": True,    
-    "A1": True,     "A2": True,     "A3": True,
-    "H1": True,     "H2": True,     "H3": True    
-  }
 }
 
 

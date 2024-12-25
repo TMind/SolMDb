@@ -30,14 +30,14 @@ DEFAULT =  pd.DataFrame({
         })
 
 TESTING =  pd.DataFrame({
-            'Type': ['Deck'],
+            'Type': ['Fusion'],
             'Name': [''],
             'Modifier': [''],
-            'Creature': ['Hantu, The Restless'],
-            'Spell': ['Dark Pryings'],
+            'Creature': [''],
+            'Spell': [''],
             'Forgeborn Ability': [''],
             'Active': [True],
-            'Mandatory Fields': ['Name, Creature, Spell, Forgeborn Ability']
+            'Mandatory Fields': ['Name, Forgeborn Ability']
         })
 
 DEFAULT_FILTER = DEFAULT
@@ -974,6 +974,179 @@ def apply_filter_to_dataframe(df_to_filter, filter_df):
 
     return df_filtered
 
+import json
+def apply_filter_to_database(filter_df):    
+    def query_to_mongo_compass_format(query: dict) -> str:
+        """
+        Converts a MongoDB query dictionary into a JavaScript-compatible string
+        for use in MongoDB Compass.
+
+        Args:
+            query (dict): The MongoDB query dictionary.
+
+        Returns:
+            str: The formatted query string for MongoDB Compass.
+        """
+        try:
+            # Convert Python dictionary to a JSON string
+            compass_query = json.dumps(query, indent=4)
+            # Replace JSON-specific syntax with JavaScript-compatible syntax
+            compass_query = compass_query.replace('"$and"', '$and')
+            compass_query = compass_query.replace('"$in"', '$in')
+            compass_query = compass_query.replace('"$regex"', '$regex')
+            compass_query = compass_query.replace('"$options"', '$options')
+            return compass_query
+        except Exception as e:
+            raise ValueError(f"Failed to convert query for MongoDB Compass: {e}")
+
+    def filter_by_substring(filter_row):
+        def build_query(filter_step):
+            # Extract information from filter step
+            first_target = filter_step.get('first_target', [''])
+            second_target = filter_step.get('second_target', [''])
+            first_operator = filter_step.get('first_operator', 'OR')
+            second_operator = filter_step.get('second_operator', 'OR')
+
+            if first_target == [''] or second_target == ['']:
+                return {}
+
+            # Initialize the query parts
+            query_parts = []
+
+            # Iterate over the first target (fields or substrings)
+            for first_item in first_target:
+                field_queries = []
+
+                # Iterate over the second target (substrings or fields)
+                for second_item in second_target:
+                    if filter_step['first_target_type'] == 'field':
+                        # First target is field, second is substring
+                        string_item = second_item
+                        field_item = first_item
+                    else:
+                        # First target is substring, second is field
+                        string_item = first_item
+                        field_item = second_item
+
+                    # Prepare the regex for MongoDB
+                    string_item = re.sub(r',\s*', ' ', string_item)
+                    #regex = fr"(^|\W){re.escape(string_item)}($|\W)"
+                    regex = re.escape(string_item)
+                    
+                    # Build the field query
+                    field_query = {field_item: {"$regex": regex, "$options": "i"}}
+                    field_queries.append(field_query)
+
+                # Combine field queries with the second operator
+                if second_operator == 'AND':
+                    query_parts.append({"$and": field_queries})
+                else:  # OR logic
+                    query_parts.append({"$or": field_queries})
+
+            # Combine all field queries with the first operator
+            if first_operator == 'AND':
+                return {"$and": query_parts}
+            else:  # OR logic
+                return {"$or": query_parts}
+
+        def determine_filter_config(column, filter_row, string):
+            # Determine operator and split substrings
+            and_symbols = {':': r'\s*:\s*', '&': r'\s*&\s*', '+': r'\s*\+\s*'}
+            or_symbols = {'|': r'\s*\|\s*', '-': r'\s*-\s*'}
+
+            substring_operator = 'OR'
+            substrings = re.split(r'\s*;\s*', string)
+            for symbol, pattern in and_symbols.items():
+                if symbol in string:
+                    substring_operator = 'AND'
+                    substrings = re.split(pattern, string)
+                    break
+            else:
+                for symbol, pattern in or_symbols.items():
+                    if symbol in string:
+                        substring_operator = 'OR'
+                        substrings = re.split(pattern, string)
+                        break
+
+            # Determine fields to filter on and field operator
+            first_operator = 'OR'
+            second_operator = substring_operator
+            first_target = ['cardTitles']
+            second_target = substrings
+            first_target_type = 'field'
+
+            if column == 'Name':
+                second_target = substrings
+                if filter_row['Type'] == 'Fusion':
+                    first_target = ['Deck A', 'Deck B']
+                    first_operator = substring_operator
+                    second_operator = 'OR'
+                else:
+                    first_target = ['Name']
+            elif column == 'Forgeborn Ability':
+                second_target = ['FB2', 'FB3', 'FB4']
+                second_operator = 'OR'
+                first_operator = substring_operator
+                first_target = substrings
+                first_target_type = 'substring'
+
+            return {
+                'first_target': first_target,
+                'second_target': second_target,
+                'first_operator': first_operator,
+                'second_operator': second_operator,
+                'first_target_type': first_target_type 
+            }
+
+        # Begin building the query for the filter row
+        mongo_query = {}
+
+        # Apply Type filter first (always mandatory)
+        if 'Type' in filter_row and isinstance(filter_row['Type'], str) and filter_row['Type']:
+            type_substrings = filter_row['Type'].split(',')
+            type_query = {"type": {"$in": type_substrings}}
+            mongo_query.update(type_query)
+
+        # Apply mandatory fields
+        mandatory_fields = filter_row.get('Mandatory Fields', '')
+        if isinstance(mandatory_fields, str):
+            mandatory_fields = mandatory_fields.split(', ')
+        mandatory_fields = [column.strip() for column in mandatory_fields]
+
+        for column in mandatory_fields:
+            filter_step = determine_filter_config(column, filter_row, filter_row[column])            
+            query_part = build_query(filter_step)
+            mongo_query.update(query_part)
+
+        # Apply optional fields (at least one must match)
+        or_conditions = []
+        for column in filter_row.index:
+            if column not in mandatory_fields and column not in ['Type', 'Mandatory Fields', 'Active'] and isinstance(filter_row[column], str) and filter_row[column]:
+                filter_step = determine_filter_config(column, filter_row, filter_row[column]) 
+                query_part = build_query(filter_step)
+                or_conditions.append(query_part)
+
+        if or_conditions:
+            mongo_query["$or"] = or_conditions
+
+        return mongo_query
+
+    # Beginning of the apply_filter_to_database function
+    active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
+    final_query = {"$and": []}  # Combine all filter queries with AND logic
+
+    for _, filter_row in active_filters.iterrows():
+        row_query = filter_by_substring(filter_row)
+        final_query["$and"].append(row_query)
+
+    # Execute the query
+    results = []
+    if gv.myDB:
+        myQuery = query_to_mongo_compass_format(final_query)
+        print(f"Final query: {myQuery}")
+        results = list(gv.myDB.find('Fusion', final_query))
+    return results
+
 
 # Function to create a styled HTML widget with a background color
 def create_styled_html(text, text_color, bg_color, border_color):
@@ -1052,6 +1225,9 @@ class DynamicGridManager:
         info_level = widget_states['info_level']
         data_set = widget_states['data_set']
         filter_row = widget_states['filter_row']
+        #if filter_row['Type'] == 'Fusion':
+        #    results = apply_filter_to_database(pd.DataFrame([filter_row]))
+        #else:
         filtered_df = apply_filter_to_dataframe(df, pd.DataFrame([filter_row]))        
         return self.determine_columns(filtered_df, info_level, data_set, filter_row['Type'])
         
@@ -1381,8 +1557,10 @@ class DynamicGridManager:
             
             # Register the selection event callback for the grid
             logging.info(f"Registering selection event for grid '{grid_identifier}'")
-            self.qm.on(grid_identifier, 'selection_changed', self.update_deck_content)
+            self.qm.on(grid_identifier, 'selection_changed', self.update_deck_content)            
             self.qm.on(grid_identifier, 'selection_changed', self.get_selected_grid_items)
+            self.qm.on(grid_identifier, 'filter_changed', self.update_deck_content)
+            self.qm.on(grid_identifier, 'filter_changed', self.get_selected_grid_items)
             logging.info(f"Grid '{grid_identifier}' rebuilt with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")            
             
         else:
@@ -1417,12 +1595,11 @@ class DynamicGridManager:
 
     def create_toolbar(self, grid_identifier):
         # Create and setup toolbar widgets with observer functions
-        info_level_button = widgets.ToggleButtons(
-            options=['Basic', 'Detail'],
+        info_level_button = widgets.Dropdown(
+            options=['Basic', 'Detail', 'Listing'],
             value='Basic',
             description='Info Level:',
-            button_style='info',
-            layout=widgets.Layout(width='30%', height='25px', display='flex', flex_flow='row', align_items='center')
+            layout=widgets.Layout(width='15%', align_self='flex-start')
         )
 
         spacer = widgets.Box(layout=widgets.Layout(flex='1'))
@@ -1431,7 +1608,7 @@ class DynamicGridManager:
             options=gv.data_selection_sets.keys(),
             value=list(gv.data_selection_sets.keys())[0] if gv.data_selection_sets else None,
             description='Data Set:',
-            layout=widgets.Layout(width='25%', align_self='flex-end')
+            layout=widgets.Layout(width='15%', align_self='flex-end')
         )
 
         def on_info_level_change(event):
@@ -1496,63 +1673,71 @@ class DynamicGridManager:
     
     def update_deck_content(self, event, widget):
         
-            """Update the deck content DataFrame based on the selected item in the grid."""
-            logging.info(f"DynamicGridManager::update_deck_content() - Updating deck content with event: {event}")
-            selected_indices = event['new']
-            grid_df = widget.get_changed_df()            
+        if gv.out_debug: 
+            with gv.out_debug:
+                """Update the deck content DataFrame based on the selected item in the grid."""
+                logging.info(f"DynamicGridManager::update_deck_content() - Updating deck content with event: {event}")
+                if event['name'] == 'selection_changed':
+                    selected_indices = event['new']
+                    
+                elif event['name'] == 'filter_changed':
+                    
+                
+                grid_df = widget.get_changed_df()            
 
-            if grid_df is not None and selected_indices:
-                # Get the selected rows based on indices
-                selected_rows = grid_df.iloc[selected_indices]
+                if grid_df is not None and selected_indices:
+                    # Get the selected rows based on indices
+                    selected_rows = grid_df.iloc[selected_indices]
 
-                # Fetch the 'collection' DataFrame
-                collection_df = self.qm.get_grid_df('collection')
+                    # Fetch the 'collection' DataFrame
+                    collection_df = self.qm.get_grid_df('collection')
 
-                # Initialize a list to collect all selected deck names
-                selected_deck_names = []
+                    # Initialize a list to collect all selected deck names
+                    selected_deck_names = []
 
-                for row in selected_rows.itertuples(index=False):
-                    # Find the corresponding row in the collection DataFrame
-                    row_name = None
-                    if not hasattr(row, 'Name') or 'Name' not in collection_df.columns:
-                        logging.warning(f"Name not found in row or collection_df: {row}")
-                        # Try 'name' instead of 'Name'
-                        if hasattr(row, 'name') :
-                            logging.info(f"Row with 'name' attribute: {row}")
-                            row_name = row.name
-                    else:
-                        row_name = row.Name
+                    for row in selected_rows.itertuples(index=False):
+                        # Find the corresponding row in the collection DataFrame
+                        row_name = None
+                        if not hasattr(row, 'Name') or 'Name' not in collection_df.columns:
+                            logging.warning(f"Name not found in row or collection_df: {row}")
+                            # Try 'name' instead of 'Name'
+                            if hasattr(row, 'name') :
+                                logging.info(f"Row with 'name' attribute: {row}")
+                                row_name = row.name
+                        else:
+                            row_name = row.Name
 
-                    # Locate the matching row in collection_df
-                    collection_row = collection_df.loc[collection_df['Name'] == row_name]
+                        logging.info(f"Row name: {row_name}")
+                        # Locate the matching row in collection_df
+                        collection_row = collection_df.loc[collection_df['Name'] == row_name]
 
-                    if not collection_row.empty:
-                        item_type = collection_row['type'].values[0]
+                        if not collection_row.empty:
+                            item_type = collection_row['type'].values[0]
 
-                        if item_type.lower() == 'fusion':
-                            # If it's a fusion, add both Deck A and Deck B names
-                            if 'Deck A' in collection_row.columns and 'Deck B' in collection_row.columns:
-                                selected_deck_names.extend([collection_row['Deck A'].values[0], collection_row['Deck B'].values[0]])
-                        elif item_type.lower() == 'deck':
-                            # If it's a deck, add the Name
-                            selected_deck_names.append(collection_row['Name'].values[0])
+                            if item_type.lower() == 'fusion':
+                                # If it's a fusion, add both Deck A and Deck B names
+                                if 'Deck A' in collection_row.columns and 'Deck B' in collection_row.columns:
+                                    selected_deck_names.extend([collection_row['Deck A'].values[0], collection_row['Deck B'].values[0]])
+                            elif item_type.lower() == 'deck':
+                                # If it's a deck, add the Name
+                                selected_deck_names.append(collection_row['Name'].values[0])
 
-                # Remove any duplicates in the selected deck names
-                selected_deck_names = list(set(selected_deck_names))
-                                
-                # Generate the deck content DataFrame using the provided function
-                deck_content_df = self.data_generate_functions['deck_content'](selected_deck_names)
-                #print(deck_content_df)
+                    # Remove any duplicates in the selected deck names
+                    selected_deck_names = list(set(selected_deck_names))
+                                    
+                    # Generate the deck content DataFrame using the provided function
+                    deck_content_df = self.data_generate_functions['deck_content'](selected_deck_names)
+                    #print(deck_content_df)
 
-                # Copy original DataFrame to preserve column order
-                combined_df = deck_content_df.copy()                
-                options = self.qg_options.copy()
-                additional_options = {
-                    'minVisibleRows': 10,
-                    'maxVisibleRows': 20
-                }
-                options.update(additional_options)       
-                self.qm.add_grid('deck_content', combined_df, options=options) 
+                    # Copy original DataFrame to preserve column order
+                    combined_df = deck_content_df.copy()                
+                    options = self.qg_options.copy()
+                    additional_options = {
+                        'minVisibleRows': 10,
+                        'maxVisibleRows': 20
+                    }
+                    options.update(additional_options)       
+                    self.qm.add_grid('deck_content', combined_df, options=options) 
 
             
     def update_widget(self, group_name, new_widget):

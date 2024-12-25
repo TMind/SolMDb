@@ -450,9 +450,15 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
 def generate_deck_content_dataframe(deckNames):
     from CardLibrary import Card , CardData
     
-        
     # Get the data set from the global variables
-    desired_fields = gv.data_selection_sets['Deck Content']
+    #desired_fields = gv.data_selection_sets['Deck Content']
+    desired_fields = {
+        'name': True,
+        'faction': True,
+        'rarity': True,
+        'cardType': True,
+        'cardSubType': True,
+    }
 
     card_dfs_list = []
 

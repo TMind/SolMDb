@@ -1680,7 +1680,7 @@ class DynamicGridManager:
                 if event['name'] == 'selection_changed':
                     selected_indices = event['new']
                     
-                elif event['name'] == 'filter_changed':
+                #elif event['name'] == 'filter_changed':
                     
                 
                 grid_df = widget.get_changed_df()            

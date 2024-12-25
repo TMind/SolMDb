@@ -23,6 +23,7 @@ dependencies:
   - markdown
   - ipympl  
   - pymongo  
+  - pycognito
   - networkx  
   - nodejs
   - numpy  

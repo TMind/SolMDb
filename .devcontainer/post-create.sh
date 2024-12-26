@@ -7,9 +7,13 @@ set -x
 mkdir -p /workspaces/mongodb/data/db  
 chown -R mongodb:mongodb /workspaces/mongodb/data/db  
 chmod -R 755 /workspaces/mongodb/data/db  
+
+mkdir -p /workspaces/mongodb/logs
+chown -R mongodb:mongodb /workspaces/mongodb/logs
+chmod -R 755 /workspaces/mongodb/logs
   
 # Install Conda dependencies from environment.yml  
-conda env update -f binder/environment.yml  
+conda env update -f /workspaces/SolMDb/binder/environment.yml  
   
 # Initialize Conda for bash shell  
 conda init bash  
@@ -24,8 +28,6 @@ conda install -y -n SolDB-Conda ipykernel
 # Register the Conda environment as a Jupyter kernel  
 python -m ipykernel install --user --name SolDB-Conda --display-name "SolDB-Conda"  
   
-# Start MongoDB service  
-sudo service mongod start  
-  
-# Optional: Verify MongoDB is running  
-sudo service mongod status  
+# Start MongoDB with a log file
+nohup mongod --dbpath /workspaces/mongodb/data/db \
+       --logpath /workspaces/mongodb/logs/mongod.log &

@@ -108,7 +108,7 @@ class MultiProcess:
             gv.myDB = None
             logging.info("Closed the existing MongoDB connection before starting multiprocessing.")
 
-        gv.update_progress('MultiProcess Fusions', value=0, total=self.num_items, message='Fusioning Decks')
+        gv.progress_manager.update_progress('MultiProcess Fusions', value=0, total=self.num_items, message='Fusioning Decks')
         logging.info(f"Initialized MultiProcess with {self.num_items} items, using {self.num_processes} processes.")
 
     def run(self):
@@ -125,7 +125,7 @@ class MultiProcess:
                         current_progress = progress.value
                         if current_progress > accumulated:
                             accumulated = current_progress
-                            gv.update_progress('MultiProcess Fusions', value=accumulated, set=True, message=f'Fusioning {accumulated} Decks')
+                            gv.progress_manager.update_progress('MultiProcess Fusions', value=accumulated, set=True, message=f'Fusioning {accumulated} Decks')
                             logging.info(f"Updated progress: {accumulated} decks fused.")
 
                         # Break the loop if all futures are done
@@ -137,7 +137,7 @@ class MultiProcess:
 
                 # Ensure that progress is fully updated once all workers are done
                 final_progress = progress.value
-                gv.update_progress('MultiProcess Fusions', value=final_progress, message=f'Fusioning complete: {final_progress} Decks')
+                gv.progress_manager.update_progress('MultiProcess Fusions', value=final_progress, message=f'Fusioning complete: {final_progress} Decks')
                 logging.info(f"Final progress updated: {final_progress} decks fused.")
 
         except Exception as e:

@@ -1,6 +1,4 @@
 from IPython.display import display, HTML
-
-from IPython.display import HTML, display
 import os
 
 # Function to inject CSS from a file

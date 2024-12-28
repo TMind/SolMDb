@@ -1,12 +1,12 @@
 import requests
 import json
-from GlobalVariables import global_vars as gv
 from pycognito import Cognito
 
 CLIENT_ID = '75mcr7j8relead00pia1dbse9c'
 USER_POOL_ID = 'us-east-1_jVJJZlRKv'
 class NetApi:
-    def __init__(self, username='tmind', password=None):
+    def __init__(self, username='tmind', password=None, progress_manager=None):
+        self.progress_manager = progress_manager
         self.base_url = "https://ul51g2rg42.execute-api.us-east-1.amazonaws.com/main"
         self.cognito = Cognito(USER_POOL_ID, CLIENT_ID, username=username)
         self.auth_token = None
@@ -57,7 +57,7 @@ class NetApi:
             last_evaluated_key = page_data.get('LastEvaluatedKey', {})
 
             # Paginate if LastEvaluatedKey is present
-            gv.update_progress('Fetching decks')
+            if self.progress_manager: self.progress_manager.update_progress('Fetching decks')
             while last_evaluated_key and last_evaluated_key.get('PK') and last_evaluated_key.get('SK'):
                 params.update({
                     "exclusiveStartKeyPK": last_evaluated_key['PK'],
@@ -71,8 +71,8 @@ class NetApi:
 
                 # Check if there is another page to fetch
                 last_evaluated_key = page_data.get('LastEvaluatedKey', {})
-                gv.update_progress('Fetching decks', len(page_data.get('Items', [])), len(all_decks), "Paginate")
-            gv.update_progress('Fetching decks', len(all_decks), len(all_decks), "Pagination finished")
+                if self.progress_manager: self.progress_manager.update_progress('Fetching decks', len(page_data.get('Items', [])), len(all_decks), message="Paginate")
+            if self.progress_manager: self.progress_manager.update_progress('Fetching decks', len(all_decks), len(all_decks), message="Pagination finished")
             return all_decks
 
         except requests.exceptions.RequestException as e:

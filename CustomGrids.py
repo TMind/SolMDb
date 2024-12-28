@@ -487,7 +487,9 @@ class ActionToolbar:
         
         # Initialize buttons based on provided or default configurations
         for name, config in button_configs.items():
-            self.buttons[name] = widgets.Button(description=config.get("description", name), button_style=config.get("button_style", ''))
+            self.buttons[name] = widgets.Button(description=config.get("description", name), button_style=config.get("button_style", ''), disabled=config.get("disabled", False))
+            if config.get("callback", False):
+                self.assign_callback(name, config["callback"])
 
         # Create a horizontal box (HBox) to hold the buttons
         self.toolbar = widgets.HBox(list(self.buttons.values()))

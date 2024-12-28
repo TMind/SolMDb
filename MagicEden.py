@@ -91,8 +91,8 @@ def process_magiceden_listings(listings, myApi, args):
 
     if listings:
         identifier = "Processing listing"
-        gv.reset_progress(identifier)
-        gv.update_progress(identifier, 0, len(listings))
+        gv.progress_manager.reset_progress(identifier)
+        gv.progress_manager.update_progress(identifier, 0, len(listings))
         for idx, listing in enumerate(listings, start=1):            
             token = listing.get('token', {})
             price = listing.get('price', 0.0)
@@ -106,7 +106,7 @@ def process_magiceden_listings(listings, myApi, args):
             if name in args.decklist :
                 # The deck is already in the database, no need to fetch it
                 # Remove the deck from the list 
-                gv.update_progress("Processing listing", message=f"Skipping deck data for: {name}")
+                gv.progress_manager.update_progress("Processing listing", message=f"Skipping deck data for: {name}")
                 args.decklist.remove(name)  
                 continue
             
@@ -122,7 +122,7 @@ def process_magiceden_listings(listings, myApi, args):
                 if deck_id and rarity_score: break 
         
             if deck_id:            
-                gv.update_progress("Processing listing", message=f"Fetching deck data for ID: {deck_id}")
+                gv.progress_manager.update_progress("Processing listing", message=f"Fetching deck data for ID: {deck_id}")
                 #print(f"Fetching deck data for ID: {deck_id}")
                 
                 # Fetch the deck data using myApi.request_decks

@@ -41,7 +41,7 @@ class UniversalLibrary:
             reader = csv.DictReader(csvfile, delimiter=';')
             rows_list = list(reader)  # Store all rows in a list
             for row in rows_list:
-                gv.update_progress('Process Entity Row', total=len(rows_list), message='Processing CM entity: ' + row['Name'])
+                gv.progress_manager.update_progress('Process Entity Row', total=len(rows_list), message='Processing CM entity: ' + row['Name'])
                 self._process_row(row)
         
     def _read_forgeborns_from_csv(self, fb_path):
@@ -52,7 +52,7 @@ class UniversalLibrary:
             
             # Iterate over the rows
             for row in rows_list:
-                gv.update_progress('Process FB Row', total=len(rows_list), message='Processing CM ForgebornID: ' + row['forgebornID'])
+                gv.progress_manager.update_progress('Process FB Row', total=len(rows_list), message='Processing CM ForgebornID: ' + row['forgebornID'])
                 forgeborn_ability_id = row['forgebornID']
                 card_id = row['cardId']
                 if card_id not in fb_map:

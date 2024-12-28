@@ -1203,6 +1203,22 @@ class DynamicGridManager:
         self.css_manager = CSSManager()        
         self.custom_css_class = self.css_manager.create_and_inject_css('deck_content', rotate_suffix)        
         self.grid_widget_states = {}
+        self.refresh_needed = False  # Flag to indicate whether refresh is needed
+    
+    
+        # Toolbar 
+            
+        """
+        Creates an ActionToolbar instance and assigns callbacks specific to the grid_id.
+        """
+        button_configs = {
+            "Authenticate": {"description": "Login", "button_style": 'info', "callback": self.authenticate},
+            "Generate": {"description": "Generate Table", "button_style": "success"},
+        }
+        action_toolbar = ActionToolbar(button_configs=button_configs)
+        # Assign callbacks using partial to bind grid_id
+        action_toolbar.assign_callback('Generate', self.data_generate_functions['central_dataframe'])
+        
     
         # GridBox 
         self.VBoxGrids = VBoxManager()
@@ -1219,6 +1235,14 @@ class DynamicGridManager:
         }) 
             
         self.ui = widgets.VBox([])
+            
+    def set_refresh_needed(self, needed):
+        """
+        Set the flag indicating whether a refresh is needed.
+        """
+        self.refresh_needed = needed
+        logging.info(f"Refresh needed set to {needed}")
+        
         
     def apply_filters(self, df, widget_states):
         # Filter columns based on the filter_row
@@ -1242,48 +1266,48 @@ class DynamicGridManager:
 
     def handle_database_change(self):
         """
-        Handles updates required when the database changes.
+        Handles updates required when the database changes, ensuring updates are only performed if flagged.
         """
+        if not self.refresh_needed:
+            logging.info("No refresh needed. Skipping database change handling.")
+            return
+
         logging.info("Handling database change in DynamicGridManager.")
 
         # Step 1: Update the collection DataFrame
-        collection_df = self.data_generate_functions['central_dataframe']()
-        self.qm.add_grid('collection', collection_df, options=self.qg_options)
+        try:
+            collection_df = self.data_generate_functions['central_dataframe']()
+            self.qm.add_grid('collection', collection_df, options=self.qg_options)
+            logging.info(f"Collection DataFrame updated with {len(collection_df)} rows.")
+        except Exception as e:
+            logging.error(f"Failed to update collection DataFrame: {e}")
+            return
 
-        # Step 2: Reset FilterGrid if needed        
+        # Step 2: Reset FilterGrid to default state        
         self.filterGridObject.qgrid_filter.df = DEFAULT_FILTER
+        logging.info("FilterGrid reset to default state.")
+        
 
         # Step 3: Rebuild active filters and refresh grids
-        filter_df = self.filterGridObject.get_changed_df()
-        active_filters_df = filter_df[filter_df['Active']]
+        try:
+            filter_df = self.filterGridObject.get_changed_df()
+            active_filters_df = filter_df[filter_df['Active']]
 
-        # Reset grid boxes        
-        self.VBoxGrids.reset()
+            # Reset grid boxes
+            self.VBoxGrids.reset()
+            logging.info("Grid boxes reset.")
 
-        # Refresh grids using the new database context
-        for row_index, filter_row in active_filters_df.iterrows():
-            grid_identifier = f"filtered_grid_{row_index}"
-            self.update_or_refresh_grid(grid_identifier, filter_row=filter_row, collection_df=collection_df)
+            # Refresh grids for active filters
+            for row_index, filter_row in active_filters_df.iterrows():
+                grid_identifier = f"filtered_grid_{row_index}"
+                self.update_or_refresh_grid(grid_identifier, filter_row=filter_row, collection_df=collection_df)
+            logging.info("Grids refreshed for active filters.")
+        except Exception as e:
+            logging.error(f"Error while refreshing grids: {e}")
 
-
-            # # Update grid state
-            # grid_state = self.grid_widget_states.get(grid_identifier, {})
-            # grid_state.update({
-            #     "info_level": grid_state.get("info_level", 'Basic'),
-            #     "data_set": grid_state.get("data_set", 'Stats'),
-            #     "filter_row": filter_row.to_dict()
-            # })
-            # self.grid_widget_states[grid_identifier] = grid_state
-
-            # # Apply filters and refresh the grid
-            # filtered_df = self.apply_filters(collection_df, grid_state)            
-            # self.qm.add_grid(grid_identifier, filtered_df, options=self.qg_options)
-
-            # # Update the grid's UI
-            # grid = self.qm.grids[grid_identifier]
-            # #self.grid_layout[index, 0] 
-            # new_widget = self.construct_grid_ui(grid_identifier, filter_row, grid)
-            # self.VBoxGrids.add_widget(new_widget, row_index)
+        # Clear the refresh flag
+        self.refresh_needed = False
+        logging.info("Database change handling complete.")
 
 
     def refresh_gridbox(self, event=None, widget=None):
@@ -1931,7 +1955,13 @@ class DynamicGridManager:
         selected_items_list = self.grid_widget_states[grid_id]['Selection']        
         display_graph(selected_items_list)    
 
-
+    def authenticate(self, widget):
+        if gv.myDB:
+            username = gv.myDB.get_current_db_name()  
+            password = widget.value  # Get the password from the text box
+            net_api = gv.NetApi
+            net_api.authenticate(username, password)
+        
     # # Function for making a solbind request
     # def solbind_request(self, grid_id):
         

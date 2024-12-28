@@ -7,9 +7,12 @@ import pandas as pd
 from CMManager import CMManager
 from CustomCss import CSSManager
 from GSheetsClient import GoogleSheetsClient
+from NetApi import NetApi
+
+default_logging_level = logging.INFO
 
 # Configure logging
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=default_logging_level,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     handlers=[
                         logging.FileHandler("app.log"),
@@ -49,8 +52,9 @@ class GlobalVariables:
 
     def reset_universal_library(self):
         from UniversalLibrary import UniversalLibrary  # Import here to avoid partial import
-        self.commonDB.drop_collection('Entities')
-        self.commonDB.drop_collection('Forgeborns')
+        if self.commonDB:
+            self.commonDB.drop_collection('Entities')
+            self.commonDB.drop_collection('Forgeborns')
         self._universal_library_instance = UniversalLibrary(self._username, *self.ucl_paths)
         
 
@@ -69,7 +73,7 @@ class GlobalVariables:
         self.fs = None 
         self.ucl_paths = [ 'Card Database', os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
         self.commonDB = None
-        self.progress_containers = {}
+        #self.progress_containers = {}
         self.out_debug = None        
         self.data_selection_sets = data_selection_sets               
         self._set_environment_variables()
@@ -83,13 +87,10 @@ class GlobalVariables:
         if not self._initialized:
             logging.info("Initializing objects.")
             
+            self.progress_manager = ProgressManager()
+            self.NetApi = NetApi(progress_manager=self.progress_manager)
             self.commonDB = self._initialize_commonDB()
             self.out_debug = widgets.Output()
-            self.progressbar_container = widgets.VBox([])  # Initially empty
-            # If there are already progress containers, add them to the progressbar_container
-            for identifier, container_dict in self.progress_containers.items():
-                self.progressbar_container.children += (container_dict['container'],)  # Add to VBox        
-            
             self.css_manager = CSSManager()
             
             # Initialize CMManager for handling the CM sheet
@@ -154,6 +155,11 @@ class GlobalVariables:
         from MongoDB.DatabaseManager import DatabaseManager  # Lazy import
         return DatabaseManager('common')
 
+class ProgressManager:
+    def __init__(self):
+        self.progress_containers = {}
+        self.progressbar_container = widgets.VBox([])  # Initially empty
+
     def get_or_create_progress_container(self, identifier, description=None):
         if identifier not in self.progress_containers:
             # Create a new IntProgress widget
@@ -168,8 +174,6 @@ class GlobalVariables:
             # Create an HBox to hold both the label and the progress bar
             hbox = widgets.HBox([progress_bar, label])
             self.progress_containers[identifier] = {'container': hbox, 'progress_bar': progress_bar, 'label': label}
-            # Display the new HBox
-            #display(hbox)
             # Add the new progress bar container to the main progressbar container
             self.progressbar_container.children += (hbox,)  # Add the HBox to the VBox
         return self.progress_containers[identifier]
@@ -182,8 +186,10 @@ class GlobalVariables:
         if total is not None:
             progress_bar.max = total
         if value is not None:
-            if set : progress_bar.value = value
-            else:    progress_bar.value += value
+            if set:
+                progress_bar.value = value
+            else:
+                progress_bar.value += value
             if value == 0:
                 progress_bar.bar_style = 'info'
                 progress_bar.style.bar_color = 'lightblue'

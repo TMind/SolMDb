@@ -28,6 +28,7 @@ from Synergy import SynergyTemplate
 import pandas as pd
 from GridManager import GridManager, DynamicGridManager
 from CustomGrids import TemplateGrid
+from helptext import guide_text
 
 from icecream import ic
 ic.disable()
@@ -103,10 +104,13 @@ def fetch_network_decks(args, myApi):
         print(f"Total Magic Eden decks processed: {len(deck_data)}")                
         #gv.myDB.drop_database()
         # Remove old decks in args.decklist from the database 
-        for deck in args.decklist:
-            if gv.myDB:
-                logging.debug(f"Removing deck from DB: {deck}")
-                gv.myDB.delete_one('Deck', {'name': deck})
+        # for deck in args.decklist:
+        #     if gv.myDB:
+        #         logging.debug(f"Removing deck from DB: {deck}")
+        #         gv.myDB.delete_one('Deck', {'name': deck})
+        if args.decklist and gv.myDB:
+            logging.info(f"Removing decks from DB: {args.decklist}")
+            gv.myDB.delete_many('Deck', {'name': {'$in': args.decklist}})
         return deck_data     
     
     if args.id:
@@ -371,11 +375,13 @@ def generate_central_dataframe(force_new=False):
         return central_df
 
     finally:
-        # Always update the deck and fusion counts and the central frame tab    
-        final_df = central_df if locals().get('central_df') else stored_df
+        # Always update the deck and fusion counts and the central frame tab
+        final_df = stored_df
+        if 'central_df' in locals() and isinstance(central_df, pd.DataFrame):
+            if not central_df.empty:  # Ensure it's not empty
+                final_df = central_df
         update_deck_and_fusion_counts()
         update_central_frame_tab(final_df)
-
 
 from CardLibrary import Forgeborn, ForgebornData
 def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
@@ -816,6 +822,7 @@ def generate_fusion_statistics_dataframe(central_df=None):
         df_fusions_filtered['cardTitles'] = df_fusions_filtered['children_data'].apply(get_card_titles_by_Ids)
         df_fusions_filtered['forgebornId'] = df_fusions_filtered['currentForgebornId']
         df_fusions_filtered['type'] = 'Fusion'
+        df_fusions_filtered['UpdatedAt'] = df_fusions_filtered['UpdatedAt'].apply(lambda x: normalize_time_string(x, cutoff='milliseconds') if x else x)
 
         # Select only relevant fields for analysis
         #additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'ForgebornIds', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'children_data', 'tags']
@@ -933,7 +940,7 @@ def get_combos_for_graph(myGraph: MyGraph, name: str) -> dict:
     
     return combo_data
    
-
+from utils import normalize_time_string
 def generate_deck_statistics_dataframe():
     def get_card_titles(card_ids):
         card_titles = [card_id[5:].replace('-', ' ').title() for card_id in card_ids]
@@ -955,6 +962,9 @@ def generate_deck_statistics_dataframe():
     df_decks_filtered['cardSetNo'] = df_decks_filtered['cardSetNo'].replace(99, 0)
     df_decks_filtered['xp'] = df_decks_filtered['xp'].astype(int)
     df_decks_filtered['elo'] = pd.to_numeric(df_decks_filtered['elo'], errors='coerce').fillna(-1).round(2)
+    df_decks_filtered['registeredDate'] = df_decks_filtered['registeredDate'].apply(lambda x: normalize_time_string(x, cutoff='milliseconds') if x else x)
+    df_decks_filtered['UpdatedAt'] = df_decks_filtered['UpdatedAt'].apply(lambda x: normalize_time_string(x, cutoff='milliseconds') if x else x)
+    df_decks_filtered['pExpiry'] = df_decks_filtered['pExpiry'].apply(lambda x: normalize_time_string(x, cutoff='hours') if x else x)
 
     additional_columns = {'Creatures': 0, 'Spells': 0, 'Exalt': 0, 'FB2': '', 'FB3': '', 'FB4': '', 'A1': 0.0, 'H1': 0.0, 'A2': 0.0, 'H2': 0.0, 'A3': 0.0, 'H3': 0.0}
     for column, default_value in additional_columns.items():
@@ -1566,7 +1576,12 @@ def update_deck_and_fusion_counts():
             }
             
         else:
-            creation_date_str = "No previous update found"
+            # No DataFrame found, set default
+            display_data['DataFrame'] = {
+                'Timestamp': "No previous update found",
+                'Decks': 0,
+                'Fusions': 0
+            }
         
         # Store the deck and fusion count information in the dictionary
         display_data['Collection'] = {
@@ -1605,6 +1620,45 @@ def update_sheet_stats():
 
     else:
         print("CMManager not initialized.")
+
+# Function to update the options in loadSelected
+def update_selectable_options(widget):
+    global display_data
+    """
+    Update the available options in the loadSelected widget based on the rules.
+    """
+    options = []  # Start with no options
+
+    # Extract data for clarity
+    cm_sheet_exists = bool(display_data['DataFrame']['Timestamp'])
+    dataframe_decks = display_data['DataFrame']['Decks']
+    dataframe_fusions = display_data['DataFrame']['Fusions']
+    collection_decks = display_data['Collection']['Decks']
+    collection_fusions = display_data['Collection']['Fusions']
+
+    # Rule 1: CM Sheet must be updated if not existent
+    if not cm_sheet_exists:
+        options = ['Update CM Sheet']
+    else:
+        # Rule 2: Load Decks if no decks in the database
+        if collection_decks == 0:
+            options.append('Load Decks/Fusions')
+
+        # Rule 3: Generate Dataframe if no decks in the dataframe
+        if collection_decks > 0 and dataframe_decks == 0:
+            options.append('Create all Fusions')
+
+        # Rule 4: Generate Dataframe if deck counts differ
+        if collection_decks > 0 and dataframe_decks != collection_decks:
+            options.append('Create all Fusions')
+
+        # Rule 2 continued: Update Decks if decks exist in the database
+        if collection_decks > 0:
+            options.append('Update Decks/Fusions')
+
+    # Update the options in the Select widget
+    widget.options = options
+
             
 # Function to create a styled HTML widget with a background color
 def create_styled_html(text, text_color, bg_color, border_color):
@@ -1681,91 +1735,8 @@ def setup_restricted_interface():
         text_color='white', bg_color='blue', border_color='blue'
     )
 
-    # Create the guidance text
-    db_guide_text = """
-### **Creating a New Database**
-
-1. **Select a Database:**
-    - Use the "Databases" list to select an existing database or leave it empty if you want to create a new one.
-
-2. **Set Your Username:**
-    - Enter your username in the "Username" text box. This username will be associated with your Solforge Fusion account.
-
-3. **Choose an Action:**
-
-    - **Load Decks/Fusions:**  
-      Select this option to fetch and load decks and fusions from the network. This action is necessary to populate your database with existing data.
-    
-    - **Create All Fusions:**  
-      Choose this option to generate all possible fusions based on the decks currently available in the database. This is helpful for exploring new combinations and strategies.
-    
-    - **Generate Dataframe:**  
-      This option generates a comprehensive dataframe summarizing your decks, fusions, and other related statistics. The dataframe contains all relevant information in a non-structured format.
-
-4. **Execute the Action:**
-    - Once you’ve selected the desired action, click the "Execute" button to perform the operation. The system will process your request and update the database accordingly.
-
-5. **Review Data Counts:**
-    - The label below the action buttons will display the current counts of decks and fusions in your database, along with the timestamp of the last update. This helps you monitor the content of your database.
-
-### **Button Descriptions**
-
-- **Load Decks/Fusions:**  
-  Fetches and loads online decks and fusions into the selected database. Creates a new database if none exists.
-
-- **Create All Fusions:**  
-  Creates all possible fusions based on the decks in the database. Useful for exploring new combinations.
-
-- **Generate Dataframe:**  
-  Aggregates data from the database into a central dataframe, providing a summary of all relevant statistics.
-
-- **Execute:**  
-  Executes the selected action (loading data, creating fusions, or generating the dataframe).
-"""
-
-    deck_guide_text = """
-### **FilterGrid Guide**
-
-The **FilterGrid** is a dynamic filtering tool that allows you to apply custom filters to your data and view the results in an interactive grid. Below is a guide on how to use the FilterGrid and its features.
-
----
-
-#### **Using the FilterGrid**
-
-1. **Creating and Managing Filters:**
-   - The FilterGrid allows you to create multiple filters by defining criteria across different columns of your dataset. Each filter is represented by a row in the filter grid.
-   - You can specify conditions for different types of data (e.g., `Creature`, `Spell`, `Forgeborn Ability`) and combine them using logical operators such as `AND`, `OR`, and `+`.
-     - **`AND`**: Filters will match only if both surrounding fields are met (mandatory).
-     - **`OR`**: Filters will match if either of the surrounding fields is met (optional).
-   - Within each field, you can make specific items mandatory or optional:
-     - **`+`**: Use `+` to delimit items that must be included in the filter. For example, `+Dragon+` will make "Dragon" a mandatory match.
-     - **`-`**: Use `-` to delimit items that are optional. For example, `-Elf-` will make "Elf" an optional match.
-   - The **Forgeborn Ability** field is mandatory in every filter row and must be filled in to apply the filter.
-   - For each filter, you can decide whether it is active or not by toggling the **Active** checkbox. Only active filters will be applied to the data.
-
-2. **Adding a New Filter Row:**
-   - To add a new filter row, click the **"Add Row"** button. A new row will appear in the filter grid where you can define your filter criteria.
-   - The available fields include:
-     - **Type**: Choose between `Deck` and `Fusion`.
-     - **Modifier**, **Creature**, **Spell**: Select the entities or card types that you want to filter.
-     - **Forgeborn Ability**: Select specific abilities from the Forgeborn cards.
-     - **Data Set**: Choose the dataset to apply the filter to (e.g., `Fusion Tags`).
-
-3. **Removing a Filter Row:**
-   - To remove a filter row, select the row you want to remove and click the **"Remove Row"** button. The row will be deleted, and the remaining filters will be automatically adjusted.
-
-4. **Editing Filters:**
-   - You can edit any existing filter by clicking on its cells and modifying the content. The filter will be applied in real-time as you make changes.
-
-5. **Visualizing Filtered Data:**
-   - Once the filters are applied, the FilterGrid will dynamically generate and display the filtered datasets in individual grids below the filter row. Each grid corresponds to the specific filter applied to the data, bearing the same number.
-   - The filtered results are shown in a tabular format, allowing you to analyze the data that meets your specified criteria.
-
-"""
-
-
     # Convert Markdown to HTML using the markdown module
-    guide_html_content = md.markdown(db_guide_text)
+    guide_html_content = md.markdown(guide_text['db'])
     # Create an HTML widget to display the converted Markdown
     guide_html = widgets.HTML(value=guide_html_content)
     # Create an Accordion widget with the guidance text
@@ -1783,7 +1754,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     )
 
     # Convert Markdown to HTML using the markdown module
-    guide_html_content = md.markdown(deck_guide_text)
+    guide_html_content = md.markdown(guide_text['deck'])
     # Create an HTML widget to display the converted Markdown
     guide_html = widgets.HTML(value=guide_html_content)
     # Create an Accordion widget with the guidance text
@@ -1816,7 +1787,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
 
 
     # Layout: Progress bars at the top, then the tab widget below
-    layout = widgets.VBox([progressbar_header,gv.progressbar_container,tab])
+    layout = widgets.VBox([progressbar_header,gv.progress_manager.progressbar_container,tab])
     display(layout)
 
     update_sheet_stats()
@@ -1886,91 +1857,8 @@ def setup_interface():
         text_color='white', bg_color='blue', border_color='blue'
     )
 
-    # Create the guidance text
-    db_guide_text = """
-### **Creating a New Database**
-
-1. **Select a Database:**
-    - Use the "Databases" list to select an existing database or leave it empty if you want to create a new one.
-
-2. **Set Your Username:**
-    - Enter your username in the "Username" text box. This username will be associated with your Solforge Fusion account.
-
-3. **Choose an Action:**
-
-    - **Load Decks/Fusions:**  
-      Select this option to fetch and load decks and fusions from the network. This action is necessary to populate your database with existing data.
-    
-    - **Create All Fusions:**  
-      Choose this option to generate all possible fusions based on the decks currently available in the database. This is helpful for exploring new combinations and strategies.
-    
-    - **Generate Dataframe:**  
-      This option generates a comprehensive dataframe summarizing your decks, fusions, and other related statistics. The dataframe contains all relevant information in a non-structured format.
-
-4. **Execute the Action:**
-    - Once you’ve selected the desired action, click the "Execute" button to perform the operation. The system will process your request and update the database accordingly.
-
-5. **Review Data Counts:**
-    - The label below the action buttons will display the current counts of decks and fusions in your database, along with the timestamp of the last update. This helps you monitor the content of your database.
-
-### **Button Descriptions**
-
-- **Load Decks/Fusions:**  
-  Fetches and loads online decks and fusions into the selected database. Creates a new database if none exists.
-
-- **Create All Fusions:**  
-  Creates all possible fusions based on the decks in the database. Useful for exploring new combinations.
-
-- **Generate Dataframe:**  
-  Aggregates data from the database into a central dataframe, providing a summary of all relevant statistics.
-
-- **Execute:**  
-  Executes the selected action (loading data, creating fusions, or generating the dataframe).
-"""
-
-    deck_guide_text = """
-### **FilterGrid Guide**
-
-The **FilterGrid** is a dynamic filtering tool that allows you to apply custom filters to your data and view the results in an interactive grid. Below is a guide on how to use the FilterGrid and its features.
-
----
-
-#### **Using the FilterGrid**
-
-1. **Creating and Managing Filters:**
-   - The FilterGrid allows you to create multiple filters by defining criteria across different columns of your dataset. Each filter is represented by a row in the filter grid.
-   - You can specify conditions for different types of data (e.g., `Creature`, `Spell`, `Forgeborn Ability`) and combine them using logical operators such as `AND`, `OR`, and `+`.
-     - **`AND`**: Filters will match only if both surrounding fields are met (mandatory).
-     - **`OR`**: Filters will match if either of the surrounding fields is met (optional).
-   - Within each field, you can make specific items mandatory or optional:
-     - **`+`**: Use `+` to delimit items that must be included in the filter. For example, `+Dragon+` will make "Dragon" a mandatory match.
-     - **`-`**: Use `-` to delimit items that are optional. For example, `-Elf-` will make "Elf" an optional match.
-   - The **Forgeborn Ability** field is mandatory in every filter row and must be filled in to apply the filter.
-   - For each filter, you can decide whether it is active or not by toggling the **Active** checkbox. Only active filters will be applied to the data.
-
-2. **Adding a New Filter Row:**
-   - To add a new filter row, click the **"Add Row"** button. A new row will appear in the filter grid where you can define your filter criteria.
-   - The available fields include:
-     - **Type**: Choose between `Deck` and `Fusion`.
-     - **Modifier**, **Creature**, **Spell**: Select the entities or card types that you want to filter.
-     - **Forgeborn Ability**: Select specific abilities from the Forgeborn cards.
-     - **Data Set**: Choose the dataset to apply the filter to (e.g., `Fusion Tags`).
-
-3. **Removing a Filter Row:**
-   - To remove a filter row, select the row you want to remove and click the **"Remove Row"** button. The row will be deleted, and the remaining filters will be automatically adjusted.
-
-4. **Editing Filters:**
-   - You can edit any existing filter by clicking on its cells and modifying the content. The filter will be applied in real-time as you make changes.
-
-5. **Visualizing Filtered Data:**
-   - Once the filters are applied, the FilterGrid will dynamically generate and display the filtered datasets in individual grids below the filter row. Each grid corresponds to the specific filter applied to the data, bearing the same number.
-   - The filtered results are shown in a tabular format, allowing you to analyze the data that meets your specified criteria.
-
-"""
-
-
     # Convert Markdown to HTML using the markdown module
-    guide_html_content = md.markdown(db_guide_text)
+    guide_html_content = md.markdown(guide_text['db'])
     # Create an HTML widget to display the converted Markdown
     guide_html = widgets.HTML(value=guide_html_content)
     # Create an Accordion widget with the guidance text
@@ -1983,7 +1871,7 @@ The **FilterGrid** is a dynamic filtering tool that allows you to apply custom f
     )
 
     # Convert Markdown to HTML using the markdown module
-    guide_html_content = md.markdown(deck_guide_text)
+    guide_html_content = md.markdown(guide_text['deck'])
     # Create an HTML widget to display the converted Markdown
     guide_html = widgets.HTML(value=guide_html_content)
     # Create an Accordion widget with the guidance text

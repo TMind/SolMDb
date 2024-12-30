@@ -543,6 +543,8 @@ data_selection_sets = {
     "Scientist Synergy": True,
     "Spirit": True,
     "Spirit Synergy": True,
+    "BanishSpirit": True,
+    "BanishSpirit Synergy": True,
     "Warrior": True,
     "Warrior Synergy": True,
     "Zombie": True,

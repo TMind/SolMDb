@@ -1,4 +1,5 @@
 import pandas as pd 
+from datetime import datetime
 
 def get_totals_row(df, rotated_column_definitions):
     """
@@ -115,3 +116,46 @@ def get_min_time(time_strings, default_timezone=pytz.UTC, output_format='%Y-%m-%
     else:
         # All time strings were invalid
         return None
+    
+    
+def normalize_time_string(time_string, target_format="%Y-%m-%d %H:%M:%S", cutoff="none"):
+    """
+    Normalize a time string to a consistent format with options to truncate components.
+
+    Parameters:
+        time_string (str): The input time string to be normalized.
+        target_format (str): The target format for the normalized time string (default: "%Y-%m-%d %H:%M:%S").
+        cutoff (str): The granularity to truncate. Options:
+                      - "milliseconds": Remove milliseconds.
+                      - "seconds": Remove seconds and milliseconds.
+                      - "minutes": Remove minutes, seconds, and milliseconds.
+                      - "hours": Remove hours, minutes, seconds, and milliseconds.
+                      - "none": No truncation (default).
+
+    Returns:
+        str: The normalized and truncated time string.
+    """
+    # Skip if time_string is empty
+    if not time_string:
+        return time_string
+    try:
+        # Parse ISO 8601 format with or without timezone information
+        dt = datetime.fromisoformat(time_string.replace("Z", "+00:00"))
+
+        # Truncate the format string based on the cutoff level
+        if cutoff == "milliseconds":
+            target_format = "%Y-%m-%d %H:%M:%S"
+        elif cutoff == "seconds":
+            target_format = "%Y-%m-%d %H:%M"
+        elif cutoff == "minutes":
+            target_format = "%Y-%m-%d %H"
+        elif cutoff == "hours":
+            target_format = "%Y-%m-%d"
+
+        # Format the datetime object to the desired format
+        finalized_time_string = dt.strftime(target_format)
+        print(f"Normalized original time string: {time_string} -> {finalized_time_string}")
+        return finalized_time_string
+    
+    except ValueError as e:
+        raise ValueError(f"Invalid time string format: {time_string}") from e

@@ -1217,8 +1217,7 @@ class DynamicGridManager:
         }
         action_toolbar = ActionToolbar(button_configs=button_configs)
         # Assign callbacks using partial to bind grid_id
-        action_toolbar.assign_callback('Generate', self.data_generate_functions['central_dataframe'])
-        
+        action_toolbar.assign_callback('Generate', self.handle_database_change, refresh_needed=True)
     
         # GridBox 
         self.VBoxGrids = VBoxManager()
@@ -1228,14 +1227,15 @@ class DynamicGridManager:
         
         # Initialize the widget dictionary and wrap each group in a VBox
         self.ui_widget_dict = OrderedDict({      
+            'Toolbar'   : widgets.VBox([action_toolbar.toolbar]),
             'Selection' : widgets.VBox([deck_filter_bar, self.selectionGrid]),
             'Filter' : widgets.VBox([filter_grid_bar, self.filterGrid]),
             'Grid' : widgets.VBox([filter_results_bar, self.VBoxGrids.get_main_vbox()]),
             'Content' : widgets.VBox([deck_content_bar, self.deck_content_Grid.main_widget])
         }) 
             
-        self.ui = widgets.VBox([])
-            
+        self.ui = widgets.VBox([])      
+
     def set_refresh_needed(self, needed):
         """
         Set the flag indicating whether a refresh is needed.
@@ -1264,10 +1264,12 @@ class DynamicGridManager:
         return filtered_df
 
 
-    def handle_database_change(self):
+    def handle_database_change(self, refresh_needed=False):
         """
         Handles updates required when the database changes, ensuring updates are only performed if flagged.
         """
+        if refresh_needed:   self.set_refresh_needed(True)
+        
         if not self.refresh_needed:
             logging.info("No refresh needed. Skipping database change handling.")
             return

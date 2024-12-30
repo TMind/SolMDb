@@ -33,6 +33,7 @@ def fetch_all_magiceden_listings(collection_symbol, myApi, args, limit=100):
         'ME-Pub-API-Metadata': '{"paging": true}'  # Request pagination metadata
     }
     all_decks = []
+    args.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     while True:
         try:
@@ -87,7 +88,7 @@ def process_magiceden_listings(listings, myApi, args):
     Only extracts the deck_id and rarity_score and fetches the actual deck data from that id via `myApi.request_decks`.
     """
     net_data = []
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    current_time = args.timestamp
 
     if listings:
         identifier = "Processing listing"
@@ -140,6 +141,7 @@ def process_magiceden_listings(listings, myApi, args):
                     deck_data[0]['owner'] = owner  # Add the owner to the deck data
                     deck_data[0]['rarity_score'] = rarity_score           
                     deck_data[0]['UpdatedAt'] = current_time
+                    print(f"Deck data time updated for deckname: {name} -> {deck_data[0]['UpdatedAt']}")
                     net_data.extend(deck_data)  # Append the fetched deck data to the list
                 else:
                     print(f"No data returned for deck with ID: {deck_id}")

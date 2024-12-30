@@ -519,16 +519,20 @@ class ActionToolbar:
             self.toolbar.children = list(self.buttons.values())
         else:
             raise ValueError(f"Button '{button_name}' already exists in the toolbar.")
-
-    def assign_callback(self, button_name, callback_function):
+    
+    def assign_callback(self, button_name, callback_function, **additional_args):
         """
-        Assigns a callback function to a button in the toolbar.
+        Assigns a callback function to a button in the toolbar with optional additional arguments.
         
         :param button_name: The name of the button (string) to assign the callback to.
         :param callback_function: The function to call when the button is clicked.
+        :param additional_args: Additional keyword arguments to pass to the callback function.
         """
         if button_name in self.buttons:
-            self.buttons[button_name].on_click(callback_function)
+            def wrapped_callback(_):
+                callback_function(**additional_args)
+            
+            self.buttons[button_name].on_click(wrapped_callback)
         else:
             raise ValueError(f"Button {button_name} not found in the toolbar.")
         

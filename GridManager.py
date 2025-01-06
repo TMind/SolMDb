@@ -471,20 +471,7 @@ class FilterGrid:
             pandas.DataFrame: The initial dataframe.
         """
         
-        #initial_type = 'Deck'
-        
         return DEFAULT_FILTER
-    
-    # pd.DataFrame({
-    #         'Type': [initial_type],
-    #         'Name': [''],
-    #         'Modifier': [''],
-    #         'Creature': [''],
-    #         'Spell': [''],            
-    #         'Forgeborn Ability': [''],
-    #         'Active': [True],
-    #         'Mandatory Fields': ['Name, Forgeborn Ability']
-    #     })
 
     def grid_filter_on_row_removed(self, event, widget):
         """
@@ -500,7 +487,6 @@ class FilterGrid:
         
         num_rows = len(widget.get_changed_df())
         #print(f"Number of rows in filter grid: {num_rows}")
-        active_rows = []
         
         if num_rows == 0:                                
             df = pd.DataFrame({
@@ -517,17 +503,6 @@ class FilterGrid:
                           
         widget.df = widget.get_changed_df()
 
-        # Update the `Active` status or remove rows entirely
-        #for row_index in event['indices']:
-        #    if row_index in widget.df.index:
-        #        widget.df.at[row_index, 'Active'] = False  # Mark as inactive
-
-         # Get indices of active rows
-        active_indices = widget.df[widget.df['Active']].index.tolist()
-        
-
-        # Pass indices, not DataFrame, to refresh_function
-        #self.refresh_function({'new': active_indices, 'old': event['indices'], 'owner': 'filter'})
         self.refresh_function(event, widget)
                 
 
@@ -634,7 +609,7 @@ class FilterGrid:
         Args:
             change (dict): The change notification data.
         """
-        if change['name'] == 'value' and change['new'] != change['old']:
+        if (change['name'] == 'value' or change['name'] == 'selected_index') and change['new'] != change['old']:
             for cardType in ['Modifier', 'Creature', 'Spell']:
                 widget = self.selection_widgets[cardType]
                 widget.options = [''] + get_cardType_entity_names(cardType)
@@ -1264,7 +1239,7 @@ class DynamicGridManager:
         return filtered_df
 
 
-    def handle_database_change(self, refresh_needed=False):
+    def handle_database_change(self, event, refresh_needed=False):
         """
         Handles updates required when the database changes, ensuring updates are only performed if flagged.
         """
@@ -1284,6 +1259,8 @@ class DynamicGridManager:
         except Exception as e:
             logging.error(f"Failed to update collection DataFrame: {e}")
             return
+
+        self.filterGridObject.update_selection_content(event)
 
         # Step 2: Reset FilterGrid to default state        
         self.filterGridObject.qgrid_filter.df = DEFAULT_FILTER

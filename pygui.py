@@ -1,3 +1,4 @@
+from csv import Error
 import os, re
 import ipywidgets as widgets
 from pyvis.network import Network
@@ -305,83 +306,187 @@ def sum_card_types(df):
 
 
 user_dataframes = {}
+
 ### Dataframe Generation Functions ###
-def generate_central_dataframe(force_new=False):
+def manage_central_dataframe(force_new=False):
+    """
+    Manages the central DataFrame lifecycle, ensuring updates, saving, caching, and metadata syncing.
+    Logs the reasons for generating or reloading the DataFrame.
+    """
+    global display_data
+
     username = os.getenv('SFF_USERNAME')
     identifier = f"Main DataFrame: {username}"
     file_record = None
-    stored_df = None
+    return_df = None  # Keeps track of the actual DataFrame to return
+
+    # Retrieve file record from GridFS
+    if gv.myDB:
+        file_record = gv.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
+
+    def need_to_generate_dataframe():
+        """
+        Determines if the DataFrame needs to be regenerated based on metadata consistency.
+        Logs reasons why regeneration is required.
+        """
+        collection_timestamp = display_data.get('Collection', {}).get('Timestamp', None)
+
+        # Force regeneration
+        if force_new:
+            logging.info("Regenerating DataFrame: 'force_new' flag is set.")
+            return True
+
+        # Check if DataFrame metadata exists
+        if 'DataFrame' not in display_data:
+            logging.info("Regenerating DataFrame: No DataFrame metadata found in 'display_data'.")
+            return True
+
+        # Check cached DataFrame metadata first
+        if username in user_dataframes:
+            cached_meta = user_dataframes.get(username, {}).get('metadata', {})
+            cached_dataframe_timestamp = cached_meta.get('DataFrame_Timestamp', None)
+
+            if cached_dataframe_timestamp == collection_timestamp:
+                logging.info("Cached DataFrame metadata matches collection timestamp. No regeneration needed.")
+                return False
+            else:
+                logging.info(f"Regenerating DataFrame: Timestamp mismatch. "
+                            f"Collection timestamp: {collection_timestamp}, Cached DataFrame timestamp: {cached_dataframe_timestamp}.")
+                return True
+
+        # Fallback to stored DataFrame metadata
+        logging.info("No cached DataFrame metadata found. Checking stored metadata.")
+        stored_metadata = gv.myDB.find_one('fs.files', {'filename': f'central_df_{username}'}, {'metadata': 1})
+        if stored_metadata:
+            stored_dataframe_timestamp = stored_metadata['metadata'].get('DataFrame_Timestamp', None)
+            if stored_dataframe_timestamp == collection_timestamp:
+                logging.info("Stored DataFrame metadata matches collection timestamp. No regeneration needed.")
+                return False
+            else:
+                logging.info(f"Regenerating DataFrame: Timestamp mismatch between collection and stored DataFrame. "
+                            f"Collection timestamp: {collection_timestamp}, Stored DataFrame timestamp: {stored_dataframe_timestamp}.")
+                return True
+
+        # If no cached or stored metadata is found, regenerate the DataFrame
+        logging.info("Regenerating DataFrame: No cached or stored metadata found.")
+        return True
+
+    def sync_dataframe_metadata(dataframe, decks, fusions):
+        """
+        Updates the DataFrame metadata (timestamps, counts) in display_data and the cache.
+        """
+        collection_timestamp = display_data.get('Collection', {}).get('Timestamp', None)
+        if not collection_timestamp:
+            raise RuntimeError("The Collection metadata (timestamp) is missing.")
+
+        # Update display_data and cache metadata
+        display_data['DataFrame'] = {
+            'Timestamp': collection_timestamp,
+            'Decks': decks,
+            'Fusions': fusions
+        }
+        user_dataframes[username] = {
+            'data': dataframe,
+            'metadata': {
+                'Timestamp': collection_timestamp,
+                'Decks': decks,
+                'Fusions': fusions
+            }
+        }
+        logging.info("Synchronized DataFrame metadata with Collection metadata.")
 
     try:
-        if gv.myDB:
-            file_record = gv.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
+        # Check if we have a valid cached DataFrame
+        cached_data = user_dataframes.get(username, {}).get('data', None)
+        if cached_data is not None and not need_to_generate_dataframe():
+            logging.info("Using cached DataFrame. No regeneration required.")
+            return_df = cached_data
+            return return_df
 
-        # Manage the cached DataFrame
-        if not force_new and username in user_dataframes:
-            stored_df = user_dataframes[username]
-            if stored_df is not None:
-                return stored_df
+        # Attempt to load from GridFS if available
+        if file_record and gv.fs and not force_new:
+            with gv.fs.get(file_record['_id']) as file:
+                loaded_df = pickle.load(file)
+                user_dataframes[username] = {
+                    'data': loaded_df,
+                    'metadata': {
+                        'Timestamp': file_record['metadata'].get('Timestamp', None),
+                        'Decks': file_record['metadata'].get('decks', 0),
+                        'Fusions': file_record['metadata'].get('fusions', 0)
+                    }
+                }
+                if not need_to_generate_dataframe():
+                    logging.info("Loaded DataFrame from GridFS. No regeneration required.")
+                    return_df = loaded_df
+                    return return_df
+                else:
+                    logging.info("Loaded DataFrame from GridFS but regeneration is required.")
 
-        # Load or regenerate the DataFrame
-        if file_record and not force_new:
-            if gv.fs:
-                with gv.fs.get(file_record['_id']) as file:
-                    stored_df = pickle.load(file)
-                    user_dataframes[username] = stored_df
-                    return stored_df
-
-        gv.progress_manager.update_progress(identifier, total=5, message='Generating Central Dataframe...')
-        deck_stats_df = generate_deck_statistics_dataframe()
-
-        gv.progress_manager.update_progress(identifier, message='Generating Card Type Count Dataframe...')
-        card_type_counts_df = generate_cardType_count_dataframe()
-
-        central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
-
-        gv.progress_manager.update_progress(identifier, message='Generating Fusion statistics Dataframe...')
-        fusion_stats_df = generate_fusion_statistics_dataframe(central_df)
-
-        central_df = merge_and_concat(central_df, fusion_stats_df)
-
-        # Clean the columns of the central DataFrame
-        gv.progress_manager.update_progress(identifier, message='Clean Central Dataframe...')
-        central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo', 'price', 'Free'])
-        central_df = central_df.copy()
-
-        # Reset the index and create a new column named 'name' from the original index
-        central_df.reset_index(inplace=True)
-        central_df.rename(columns={'name': 'Name'}, inplace=True)
-
-        # Check if renaming was successful
-        if 'Name' not in central_df.columns:
-            raise RuntimeError("The renaming of the index column to 'Name' failed.")
-
-        # After all DataFrame processing is done, enforce the global column order
-        central_df = enforce_column_order(central_df, GLOBAL_COLUMN_ORDER)
-
-        gv.progress_manager.update_progress(identifier, message='Central Dataframe Generated.')
-        user_dataframes[username] = central_df
-
-        NuOfDecks = len(deck_stats_df)
-        NuOfFusions = len(fusion_stats_df)
-
+        # Generate a new DataFrame
+        logging.info("Generating a new DataFrame.")
+        return_df = generate_central_dataframe()
+        NuOfDecks = len(return_df[return_df['type'] == 'Deck'])
+        NuOfFusions = len(return_df[return_df['type'] == 'Fusion'])
+                
+        # Save the new DataFrame to GridFS
         if gv.fs:
             if file_record:
                 gv.fs.delete(file_record['_id'])
-            with gv.fs.new_file(filename=f'central_df_{username}', metadata={'decks': NuOfDecks, 'fusions': NuOfFusions}) as file:
-                pickle.dump(central_df, file)
+                logging.info("Deleted old DataFrame record from GridFS.")
+            
+            with gv.fs.new_file(
+                filename=f'central_df_{username}', 
+                metadata={
+                    'DataFrame_Timestamp':  display_data['Collection']['Timestamp'],  # Timestamp for the DataFrame
+                    'Collection_Timestamp': display_data['Collection']['Timestamp'],         # Timestamp for the collection
+                    'Decks': NuOfDecks,
+                    'Fusions': NuOfFusions
+                }
+            ) as file:
+                pickle.dump(return_df, file)
+                logging.info("Saved new DataFrame to GridFS.")
 
-        gv.progress_manager.update_progress(identifier, message='Central Dataframe Stored.')
-        return central_df
+        # Sync metadata after saving
+        sync_dataframe_metadata(return_df, NuOfDecks, NuOfFusions)
+
+        return return_df
 
     finally:
-        # Always update the deck and fusion counts and the central frame tab
-        final_df = stored_df
-        if 'central_df' in locals() and isinstance(central_df, pd.DataFrame):
-            if not central_df.empty:  # Ensure it's not empty
-                final_df = central_df
-        update_deck_and_fusion_counts()
-        update_central_frame_tab(final_df)
+        # Always ensure the deck and fusion counts and UI updates are in sync
+        logging.info("Finalizing updates for deck and fusion counts.")
+        if return_df is not None:
+            update_display_data(update_collection=False, update_dataframe=True, central_df=return_df)
+            update_central_frame_tab(return_df)
+
+def generate_central_dataframe():
+    """
+    Generates a new central DataFrame or retrieves a cached version if available.
+    This function does not handle saving or metadata synchronization.
+    """
+    username = os.getenv('SFF_USERNAME')
+    identifier = f"Main DataFrame: {username}"
+    
+    gv.progress_manager.update_progress(identifier, total=5, message='Generating Central Dataframe...')
+    
+    # Generate the component DataFrames
+    deck_stats_df = generate_deck_statistics_dataframe()
+    gv.progress_manager.update_progress(identifier, message='Generating Card Type Count Dataframe...')
+    card_type_counts_df = generate_cardType_count_dataframe()
+    
+    central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
+    gv.progress_manager.update_progress(identifier, message='Generating Fusion Statistics Dataframe...')
+    fusion_stats_df = generate_fusion_statistics_dataframe(central_df)
+    central_df = merge_and_concat(central_df, fusion_stats_df)
+    
+    # Clean and reorder columns
+    gv.progress_manager.update_progress(identifier, message='Cleaning Central Dataframe...')
+    central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo', 'price', 'Free'])
+    central_df.reset_index(inplace=True)
+    central_df.rename(columns={'name': 'Name'}, inplace=True)
+    central_df = enforce_column_order(central_df, GLOBAL_COLUMN_ORDER)
+    
+    gv.progress_manager.update_progress(identifier, message='Central Dataframe Generated.')
+    return central_df
 
 from CardLibrary import Forgeborn, ForgebornData
 def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
@@ -1162,7 +1267,7 @@ def handle_db_list_change(event):
             if grid_manager:
                 # Set a flag indicating grids need to be refreshed
                 grid_manager.set_refresh_needed(True)
-                update_deck_and_fusion_counts()
+                update_display_data(update_collection=True, update_dataframe=True)
                 print("Grid Manager marked for refresh.")
 
         else:
@@ -1170,8 +1275,8 @@ def handle_db_list_change(event):
 
 operation_in_progress = False  # Add this global variable to track the in-progress state
 
-def reload_data_on_click(button, value):
-    global db_list, username_widget, operation_in_progress
+def reload_data_on_click(button, event):
+    global db_list, username_widget, operation_in_progress, grid_manager
 
     # Prevent multiple concurrent operations
     if operation_in_progress:
@@ -1180,7 +1285,8 @@ def reload_data_on_click(button, value):
 
     # Set the flag to indicate that the operation is ongoing
     operation_in_progress = True
-
+    value = event.get('new', 'unknown')
+ 
     try:
         username_value = username_widget.value if username_widget else gv.username
         if not username_value:
@@ -1213,9 +1319,10 @@ def reload_data_on_click(button, value):
                          '--mode', 'fuse']
             args = parse_arguments(arguments)
         elif value == 'Generate Dataframe':
-            generate_central_dataframe(force_new=True)
+            #generate_central_dataframe(force_new=True)
+            #manage_central_dataframe(force_new=True)
             if grid_manager:
-                grid_manager.handle_database_change()
+                grid_manager.handle_database_change(event)
             return
         elif value == 'Update CM Sheet':
             # Update the local CSV using CMManager
@@ -1237,6 +1344,9 @@ def reload_data_on_click(button, value):
 
         # Execute main task if other tasks are not returning early
         load_deck_data(args)
+        # Update the Timestamp in the metadata of the database
+        update_db_timestamp(username_value)
+        
         # Refresh db_list widget
         db_names = []
         if not gv.myDB:
@@ -1247,7 +1357,7 @@ def reload_data_on_click(button, value):
         if valid_db_names:
             db_list.options = [''] + valid_db_names
             if username_value in valid_db_names:
-                update_deck_and_fusion_counts()
+                update_display_data(update_collection=True, update_dataframe=False)
                 db_list.value = username_value
             else:
                 db_list.value = valid_db_names[0]
@@ -1520,81 +1630,164 @@ count_display = widgets.VBox()  # Initialize a VBox to hold the display widget
 
 def update_count_display():
     global count_display, display_data
-    
-    rows = [
-        (key, sub_key, sub_value)
-        for key, value in sorted(display_data.items()) if value
-        for sub_key, sub_value in sorted(value.items())
-    ]
 
-    # Create a new VBox to replace the old display widget
+    # Prepare rows for the DataFrame
+    rows = []
+    for info_type, value in sorted(display_data.items()):
+        if value:
+            if info_type == "DataFrame":
+                # For "DataFrame", each source (Generated, Cached, Stored) becomes a separate record
+                for sub_key, sub_value in sorted(value.items()):
+                    row = {"Source": sub_key, "Info Type": info_type}
+                    for nested_key, nested_value in sorted(sub_value.items()):
+                        row[nested_key] = nested_value
+                    rows.append(row)
+            else:
+                # For other types like "Collection", treat them as a single record
+                row = {"Source": "Database", "Info Type": info_type}
+                for sub_key, sub_value in sorted(value.items()):
+                    row[sub_key] = sub_value
+                rows.append(row)
+
+    # Create a new Output widget to replace the old display widget
     new_output = widgets.Output()
     if rows:
-        df_display = pd.DataFrame(rows, columns=['Info Type', 'Key', 'Value'])
-        df_display.set_index(['Info Type', 'Key'], inplace=True)
+        # Convert rows into a DataFrame
+        df_display = pd.DataFrame(rows)
+
+        # Replace NaN values with empty strings
+        df_display = df_display.fillna("")
+
+        # Treat number values as integers, then replace 0 with empty strings
+        for col in df_display.select_dtypes(include='number').columns:
+            df_display[col] = df_display[col].astype('Int64')  # Convert to integer type
+            df_display[col] = df_display[col].replace({0: ""})  # Replace 0 with empty strings
+
+        # Set a multi-index for better structure
+        df_display.set_index(['Info Type', 'Source'], inplace=True)
+
         logging.debug(f"Displaying DataFrame with {len(df_display)} rows.")
         new_output.append_display_data(df_display)  # Display DataFrame inside the new Output widget
-            
     else:
         with new_output:
             print("No data to display.")
 
     # Replace the VBox's children with the new Output widget
     count_display.children = [new_output]
-
-def update_deck_and_fusion_counts():
-    global display_data
     
-    # Ensure we are querying the right database based on the selected username
-    db_manager = gv.myDB
-    if db_manager:
-        
-        # Count the number of decks and fusions in the database
-        deck_count = db_manager.count_documents('Deck', {})
-        fusion_count = db_manager.count_documents('Fusion', {})
-        username = db_manager.get_current_db_name()        
+def extract_dataframe_metadata(dataframe, timestamp=None):
+    """
+    Extracts metadata from a given DataFrame, including counts of decks and fusions.
+    If no DataFrame is provided, returns default values.
 
-        # Query the GridFS for the 'central_df' file
-        file_record = db_manager.find_one('fs.files', {'filename': f"central_df_{username}"})
-        
-        if file_record and 'uploadDate' in file_record:
-            # Get the local timezone from your system
-            utc_upload_date = file_record['uploadDate']
-            local_timezone = get_localzone()
-            NuOfDecks = file_record['metadata']['decks'] if 'metadata' in file_record else 0
-            NuOfFusions = file_record['metadata']['fusions'] if 'metadata' in file_record else 0
-            
-            # Convert UTC to your local timezone
-            creation_date = utc_upload_date.replace(tzinfo=pytz.utc).astimezone(local_timezone)
-            creation_date_str = creation_date.strftime('%Y-%m-%d %H:%M:%S')
-            
-            # Store the DataFrame information in the dictionary
-            display_data['DataFrame'] = {
-                'Timestamp':    creation_date_str,
-                'Decks':        NuOfDecks,
-                'Fusions' :     NuOfFusions                
-            }
-            
-        else:
-            # No DataFrame found, set default
-            display_data['DataFrame'] = {
-                'Timestamp': "No previous update found",
-                'Decks': 0,
-                'Fusions': 0
-            }
-        
-        # Store the deck and fusion count information in the dictionary
-        display_data['Collection'] = {
-            'Timestamp': creation_date_str,
-            'Decks': deck_count,
-            'Fusions': fusion_count
-        }
-        
-        # Call the helper function to update the display
-        update_count_display()
+    Args:
+        dataframe (pd.DataFrame): The DataFrame to extract metadata from.
+        timestamp (str): The associated timestamp for the DataFrame.
+
+    Returns:
+        dict: A dictionary with metadata including timestamp, deck count, and fusion count.
+    """
+    if dataframe is not None:
+        decks_count = len(dataframe[dataframe['type'] == 'Deck'])
+        fusions_count = len(dataframe[dataframe['type'] == 'Fusion'])
     else:
-        print('No database manager found.')
+        decks_count = 0
+        fusions_count = 0
 
+    return {
+        'Timestamp': timestamp or "Not available",
+        'Decks': decks_count,
+        'Fusions': fusions_count
+    }
+
+def update_display_data(update_collection=True, update_dataframe=True, central_df=None):
+    """
+    Updates the `display_data` dictionary with the latest metadata for Collection and DataFrame.
+    Includes timestamps for DataFrame generation, collection, cached, and stored data.
+    """
+    global display_data, user_dataframes
+
+    username = os.getenv('SFF_USERNAME')
+
+    # Initialize variables for metadata
+    generated_df_timestamp = None
+    cached_df_timestamp = None
+    stored_df_timestamp = None
+    stored_collection_timestamp = None
+
+    if gv.myDB:
+        db_manager = gv.myDB
+        username = db_manager.get_current_db_name()
+
+        # Retrieve file record from GridFS
+        file_record = db_manager.find_one('fs.files', {'filename': f"central_df_{username}"})
+        if file_record and 'metadata' in file_record:
+            metadata = file_record['metadata']
+            stored_df_timestamp = metadata.get('DataFrame_Timestamp', None)
+            stored_collection_timestamp = metadata.get('Collection_Timestamp', None)
+
+    # Update Collection metadata
+    if update_collection:
+        if gv.myDB:
+            deck_count = gv.myDB.count_documents('Deck', {})
+            fusion_count = gv.myDB.count_documents('Fusion', {})
+            
+            display_data['Collection'] = {
+                'Timestamp': stored_collection_timestamp,
+                'Decks': deck_count,
+                'Fusions': fusion_count
+            }
+        else:
+            logging.warning("No database manager found. Collection data cannot be updated.")
+
+    # Update DataFrame metadata
+    if update_dataframe:
+        # Retrieve cached data
+        cached_data = user_dataframes.get(username, {})
+        cached_df = cached_data.get('data', None)
+        cached_df_metadata = cached_data.get('metadata', {})
+
+        if cached_df is not None:
+            cached_df_timestamp = cached_df_metadata.get('DataFrame_Timestamp', None)
+
+        # If no central_df provided, use cached/stored
+        if central_df is None:
+            if cached_df is not None:
+                central_df = cached_df
+            elif file_record and gv.fs:
+                with gv.fs.get(file_record['_id']) as file:
+                    central_df = pickle.load(file)
+                    # Cache the DataFrame for future use
+                    user_dataframes[username] = {
+                        'data': central_df,
+                        'metadata': {
+                            'DataFrame_Timestamp': stored_df_timestamp,
+                            'Collection_Timestamp': stored_collection_timestamp
+                        }
+                    }
+                    logging.info("Loaded DataFrame from GridFS for metadata update.")
+        else:
+            # Update DataFrame metadata with the provided DataFrame
+            generated_df_timestamp = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        # Extract metadata from central_df (generated)
+        if central_df is not None:                        
+            display_data['DataFrame'] = {
+                "Generated": extract_dataframe_metadata(central_df, generated_df_timestamp),
+                "Cached": {
+                    'Timestamp': cached_df_timestamp,
+                    'Decks': cached_data.get('metadata', {}).get('Decks', ''),
+                    'Fusions': cached_data.get('metadata', {}).get('Fusions', '')
+                },
+                "Stored": {
+                    'Timestamp': stored_df_timestamp,
+                    'Decks': file_record['metadata'].get('Decks', 0) if file_record else '',
+                    'Fusions': file_record['metadata'].get('Fusions', 0) if file_record else ''
+                }
+            }
+
+    # Update the display UI
+    update_count_display()
 
 def update_sheet_stats():
     """
@@ -1621,43 +1814,65 @@ def update_sheet_stats():
     else:
         print("CMManager not initialized.")
 
+def update_db_timestamp(username):
+    """
+    Updates the timestamp of the DataFrame in the MongoDB metadata.
+    """
+    if gv.myDB:
+        # Retrieve the file record from GridFS
+        file_record = gv.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
+        
+        if file_record:
+            # Prepare the update data
+            update_data = {'metadata.Collection_Timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}
+            
+            # Perform the update
+            result = gv.myDB.update_one(
+                'fs.files',  # Collection name
+                {'_id': file_record['_id']},  # Query by unique file ID
+                update_data  # Update data
+            )
+            
+            if result.modified_count > 0:
+                logging.info(f"Successfully updated DataFrame timestamp for username: {username}")
+            else:
+                logging.warning(f"Timestamp update failed or was unnecessary for username: {username}")
+        else:
+            logging.warning(f"No file record found in GridFS for username: {username}")
+    else:
+        logging.error("MongoDB connection is not initialized.")
+
 # Function to update the options in loadSelected
 def update_selectable_options(widget):
     global display_data
     """
     Update the available options in the loadSelected widget based on the rules.
     """
-    options = []  # Start with no options
+    options = ['Update CM Sheet']  # Start with no options
 
-    # Extract data for clarity
-    cm_sheet_exists = bool(display_data['DataFrame']['Timestamp'])
-    dataframe_decks = display_data['DataFrame']['Decks']
-    dataframe_fusions = display_data['DataFrame']['Fusions']
-    collection_decks = display_data['Collection']['Decks']
-    collection_fusions = display_data['Collection']['Fusions']
+    try:
 
-    # Rule 1: CM Sheet must be updated if not existent
-    if not cm_sheet_exists:
-        options = ['Update CM Sheet']
-    else:
-        # Rule 2: Load Decks if no decks in the database
-        if collection_decks == 0:
-            options.append('Load Decks/Fusions')
+        # Extract data for clarity
+        cm_sheet_exists = bool(display_data['CM Sheet']['Timestamp'])
+        collection_decks = display_data['Collection']['Decks']
 
-        # Rule 3: Generate Dataframe if no decks in the dataframe
-        if collection_decks > 0 and dataframe_decks == 0:
-            options.append('Create all Fusions')
+        # Rule 1: CM Sheet must be updated if not existent
+        if cm_sheet_exists:
 
-        # Rule 4: Generate Dataframe if deck counts differ
-        if collection_decks > 0 and dataframe_decks != collection_decks:
-            options.append('Create all Fusions')
+            # Rule 2: Load Decks if no decks in the database
+            if collection_decks == 0:
+                options.append('Load Decks/Fusions')
+                
+            # Rule 2 continued: Update Decks if decks exist in the database
+            if collection_decks > 0:
+                options.append('Update Decks/Fusions')
+                
+    except KeyError as e:
+        logging.error(f"Key doesn't exist: {e}")
 
-        # Rule 2 continued: Update Decks if decks exist in the database
-        if collection_decks > 0:
-            options.append('Update Decks/Fusions')
-
-    # Update the options in the Select widget
-    widget.options = options
+    finally:
+        # Update the options in the Select widget
+        widget.options = options
 
             
 # Function to create a styled HTML widget with a background color
@@ -1708,7 +1923,13 @@ def setup_restricted_interface():
 
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description='Execute', button_style='info', tooltip='Execute the selected action')
-    button_load.on_click(lambda button: reload_data_on_click(button, loadToggle.value))
+    button_load.on_click(lambda button: reload_data_on_click(button, {
+        'name': 'value',
+        'new': loadToggle.value,
+        'source': loadToggle
+    }))
+    
+    
 
     # Database selection widget
     db_list = create_database_selection_widget()
@@ -1719,7 +1940,8 @@ def setup_restricted_interface():
     debug_toggle.observe(handle_debug_toggle, 'value')
     
     data_generation_functions = {
-        'central_dataframe' : generate_central_dataframe, 
+        #'central_dataframe' : generate_central_dataframe, 
+        'central_dataframe' : manage_central_dataframe, 
         'deck_content' : generate_deck_content_dataframe,
         'update_selection_area' : None,}
     
@@ -1728,6 +1950,7 @@ def setup_restricted_interface():
 
     # Update the filter grid on db change
     db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')
+    db_list.observe(lambda: update_selectable_options(loadToggle))
 
     # Create styled HTML widgets with background colors
     db_helper = create_styled_html(
@@ -1801,7 +2024,7 @@ def setup_restricted_interface():
     username_widget.disabled = True 
     db_list.disabled = True 
     
-
+saved_event = {}
 def setup_interface():
     global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab, net_api
     global action_toolbar, selected_db_label, selected_items_label, text_box, graph_output, username_jhub
@@ -1825,11 +2048,11 @@ def setup_interface():
     #'Generate Dataframe','Refresh Grid'
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description='Execute', button_style='info', tooltip='Execute the selected action')
-    button_load.on_click(lambda button: reload_data_on_click(button, loadSelected.value))
+    button_load.on_click(lambda button: reload_data_on_click(button, saved_event))
 
     # Database selection widget
     db_list = create_database_selection_widget()
-    db_list.observe(handle_db_list_change, names='value')
+    #db_list.observe(handle_db_list_change, names='value')
     
     # Create a list of HBoxes of factionToggles, Labels, and dropdowns
     toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
@@ -1839,15 +2062,26 @@ def setup_interface():
     debug_toggle.observe(handle_debug_toggle, 'value')
     
     data_generation_functions = {
-        'central_dataframe' : generate_central_dataframe, 
+        'central_dataframe' : manage_central_dataframe, 
         'deck_content' : generate_deck_content_dataframe,
     }
     
     # Create an instance of the manager
     grid_manager = DynamicGridManager(data_generation_functions, qg_options, gv.out_debug)
 
-    # Update the filter grid on db change
-    db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')
+    def on_db_selection_change(event):
+        global saved_event
+        saved_event = event
+        handle_db_list_change(event)
+        # selected_db = event['new']  # The newly selected database name
+        # if selected_db:
+        #     logging.info(f"Database selection changed to: {selected_db}")
+        #     update_selectable_options(loadSelected)
+            
+
+    # Attach observer to db_list
+    db_list.observe(on_db_selection_change, names='value')
+    #db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')
 
     templateGrid = TemplateGrid()
 
@@ -1914,7 +2148,7 @@ def setup_interface():
     def on_tab_change(event):
         logging.info(f"Tab changed to index: {event['new']}")
         if event['new'] == 1 and grid_manager and grid_manager.refresh_needed:
-            grid_manager.handle_database_change()
+            grid_manager.handle_database_change(event)
     
     tab = widgets.Tab(children=[db_tab, deck_tab, template_tab, debug_tab, central_frame_tab])
     tab.set_title(0, 'Database')

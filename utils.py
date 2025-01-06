@@ -154,7 +154,7 @@ def normalize_time_string(time_string, target_format="%Y-%m-%d %H:%M:%S", cutoff
 
         # Format the datetime object to the desired format
         finalized_time_string = dt.strftime(target_format)
-        print(f"Normalized original time string: {time_string} -> {finalized_time_string}")
+        #print(f"Normalized original time string: {time_string} -> {finalized_time_string}")
         return finalized_time_string
     
     except ValueError as e:

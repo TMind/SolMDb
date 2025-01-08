@@ -5,19 +5,26 @@ from pycognito import Cognito
 CLIENT_ID = '75mcr7j8relead00pia1dbse9c'
 USER_POOL_ID = 'us-east-1_jVJJZlRKv'
 class NetApi:
-    def __init__(self, username='tmind', password=None, progress_manager=None):
+    def __init__(self, username=None, password=None, progress_manager=None):
         self.progress_manager = progress_manager
         self.base_url = "https://ul51g2rg42.execute-api.us-east-1.amazonaws.com/main"
-        self.cognito = Cognito(USER_POOL_ID, CLIENT_ID, username=username)
+        self.cognito =  None #Cognito(USER_POOL_ID, CLIENT_ID, username=username)
         self.auth_token = None
         self.username = username
         self.password = password
 
-    def authenticate(self):
+    def authenticate(self, username=None, password=None):
         """
         Authenticate using PyCognito and obtain the ID token.
         """
         try:
+            if not password:
+                print("Username and password are required.")
+                return False
+            self.username = username or self.username
+            self.password = password or self.password
+
+            self.cognito = Cognito(USER_POOL_ID, CLIENT_ID, username=self.username)
             self.cognito.authenticate(password=self.password)
             self.auth_token = self.cognito.id_token
             print(f"Authentication successful! ID Token: {self.auth_token}")

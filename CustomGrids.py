@@ -464,78 +464,135 @@ class TemplateGrid:
             with gv.out_debug:
                 print(f"Data selection sets updated: {gv.data_selection_sets}")
             
-            
+import ipywidgets as widgets
+from IPython.display import display
+
 class ActionToolbar:
-    def __init__(self, button_configs=None):
+    def __init__(self, widget_configs=None):
         """
-        Initialize the floating toolbar with a list of buttons.
+        Initialize the floating toolbar with a list of widgets (buttons, sliders, etc.).
         
-        :param buttons: List of ipywidgets buttons to include in the toolbar.
+        :param widget_configs: Dictionary of widget configurations.
         """
-        if button_configs is None:
-            # Default buttons if none are provided
-            button_configs = {
-                #"Authenticate": {"description": "Login", "button_style": 'info'},
-                "Solbind": {"description": "Solbind", "button_style": '', "disabled": True}, #danger
-                "Rename": {"description": "Rename", "button_style": '', "disabled": True},  #warning
-                "Export": {"description": "Export", "button_style": 'info'},
-                "Open" : {"description": "Open (web)", "button_style": 'success'},
-                "Graph" : {"description": "Show Graph", "button_style": 'primary'},
+        if widget_configs is None:
+            # Default button configurations if none are provided
+            widget_configs = {
+                "Solbind": {"type": "button", "description": "Solbind", "button_style": ''},
+                "Rename": {"type": "button", "description": "Rename", "button_style": '', "disabled": True},
+                "Export": {"type": "button", "description": "Export", "button_style": 'info'},
+                "Open": {"type": "button", "description": "Open (web)", "button_style": 'success'},
+                "Graph": {"type": "button", "description": "Show Graph", "button_style": 'primary'},
             }
         
-        self.buttons = {}
-        
-        # Initialize buttons based on provided or default configurations
-        for name, config in button_configs.items():
-            self.buttons[name] = widgets.Button(description=config.get("description", name), button_style=config.get("button_style", ''), disabled=config.get("disabled", False))
-            if config.get("callback", False):
-                self.assign_callback(name, config["callback"])
+        self.widgets = {}
 
-        # Create a horizontal box (HBox) to hold the buttons
-        self.toolbar = widgets.HBox(list(self.buttons.values()))
+        # Initialize widgets based on the provided configurations
+        for name, config in widget_configs.items():
+            widget_type = config.get("type", "button")
+            self.widgets[name] = self.create_widget(widget_type, **config)
+
+        # Create a horizontal box (HBox) to hold the widgets
+        self.toolbar = widgets.HBox(list(self.widgets.values()))
         
         # Create a custom widget container with floating style
         self.action_toolbar = widgets.Box([self.toolbar], layout=widgets.Layout(width='auto'))
-        
-    def add_button(self, button_name, description, button_style='', callback_function=None):
+
+    def create_widget(self, widget_type, **config):
         """
-        Adds a button to the toolbar.
+        Factory method to create widgets dynamically based on type.
         
-        :param button_name: The name of the button (used as the key in the dictionary).
-        :param description: The text displayed on the button.
-        :param button_style: Optional style for the button (e.g., 'info', 'danger', etc.).
-        :param callback_function: Optional callback function to attach to the button.
+        :param widget_type: The type of widget to create (e.g., "button", "slider").
+        :param config: Configuration options for the widget.
+        :return: An ipywidget instance.
         """
-        if button_name not in self.buttons:
-            # Create the new button
-            new_button = widgets.Button(description=description, button_style=button_style)
-            self.buttons[button_name] = new_button
-            
-            # Assign the callback function if provided
-            if callback_function:
-                new_button.on_click(callback_function)
+        if widget_type == "button":
+            widget = widgets.Button(
+                description=config.get("description", ""),
+                button_style=config.get("button_style", ''),
+                disabled=config.get("disabled", False)
+            )
+            if "callback" in config:
+                widget.on_click(config["callback"])
+        elif widget_type == "slider":
+            widget = widgets.FloatSlider(
+                value=config.get("value", 0),
+                min=config.get("min", 0),
+                max=config.get("max", 1),
+                step=config.get("step", 0.1),
+                description=config.get("description", ""),
+            )
+            if "callback" in config:
+                widget.observe(config["callback"], names='value')
+        elif widget_type == "dropdown":
+            widget = widgets.Dropdown(
+                options=config.get("options", []),
+                value=config.get("value", None),
+                description=config.get("description", ""),
+                disabled=config.get("disabled", False)
+            )
+            if "callback" in config:
+                widget.observe(config["callback"], names='value')
+        elif widget_type == "text":
+            widget = widgets.Text(
+                value=config.get("value", ""),
+                placeholder=config.get("placeholder", ""),
+                description=config.get("description", ""),
+                disabled=config.get("disabled", False)
+            )
+            if "callback" in config:
+                widget.on_submit(config["callback"])
+        else:
+            raise ValueError(f"Unsupported widget type: {widget_type}")
+        return widget
+
+    def add_widget(self, name, widget_type, **config):
+        """
+        Adds a widget to the toolbar.
+        
+        :param name: The name of the widget (used as the key in the dictionary).
+        :param widget_type: The type of widget to add (e.g., "button", "slider").
+        :param config: Configuration options for the widget.
+        """
+        if name not in self.widgets:
+            new_widget = self.create_widget(widget_type, **config)
+            self.widgets[name] = new_widget
             
             # Update the toolbar layout
-            self.toolbar.children = list(self.buttons.values())
+            self.toolbar.children = list(self.widgets.values())
         else:
-            raise ValueError(f"Button '{button_name}' already exists in the toolbar.")
+            raise ValueError(f"Widget '{name}' already exists in the toolbar.")
     
-    def assign_callback(self, button_name, callback_function, **additional_args):
+    def assign_callback(self, widget_name, callback_function, event_type="click", **additional_args):
         """
-        Assigns a callback function to a button in the toolbar with optional additional arguments.
-        
-        :param button_name: The name of the button (string) to assign the callback to.
-        :param callback_function: The function to call when the button is clicked.
+        Assigns a callback function to a widget in the toolbar.
+
+        :param widget_name: The name of the widget (string) to assign the callback to.
+        :param callback_function: The function to call when the widget's event occurs.
+        :param event_type: Type of event to listen for (e.g., "click", "value").
         :param additional_args: Additional keyword arguments to pass to the callback function.
         """
-        if button_name in self.buttons:
-            def wrapped_callback(_):
-                callback_function(**additional_args)
-            
-            self.buttons[button_name].on_click(wrapped_callback)
+        if widget_name in self.widgets:
+            widget = self.widgets[widget_name]
+            if event_type == "click" and isinstance(widget, widgets.Button):
+                widget.on_click(lambda button: callback_function(button, **additional_args))
+            elif event_type == "value" and hasattr(widget, "observe"):
+                widget.observe(lambda change: callback_function(change, **additional_args), names='value')
+            elif event_type == "submit" and isinstance(widget, widgets.Text):
+                widget.on_submit(lambda _: callback_function(**additional_args))
+            else:
+                raise ValueError(f"Unsupported event type '{event_type}' for widget '{widget_name}'.")
         else:
-            raise ValueError(f"Button {button_name} not found in the toolbar.")
+            raise ValueError(f"Widget '{widget_name}' not found in the toolbar.")
+
+    def get_widget(self, name):
+        """
+        Get a widget by name.
         
+        :param name: The name of the widget to retrieve.
+        :return: The widget instance if found, else None.
+        """
+        return self.widgets.get(name)
+    
     def get_ui(self):
         """Return the action toolbar UI."""
-        return self.action_toolbar
+        return self.action_toolbar    

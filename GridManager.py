@@ -1181,18 +1181,26 @@ class DynamicGridManager:
         self.refresh_needed = False  # Flag to indicate whether refresh is needed
     
     
-        # Toolbar 
-            
+        # Toolbar         
         """
         Creates an ActionToolbar instance and assigns callbacks specific to the grid_id.
         """
         button_configs = {
-            "Authenticate": {"description": "Login", "button_style": 'info', "callback": self.authenticate},
-            "Generate": {"description": "Generate Table", "button_style": "success"},
+            "Password": {"type": "text", "description": "Password", "value": ""},
+            "Authenticate": {"type": "button", "description": "Login", "button_style": 'info'},
+            "Generate": {"type": "button", "description": "Generate Table", "button_style": "success"},
         }
-        action_toolbar = ActionToolbar(button_configs=button_configs)
+        action_toolbar = ActionToolbar(widget_configs=button_configs)
+    
+        password_widget = action_toolbar.get_widget('Password')
+        # Define the authentication callback
+        def authenticate_callback(button):
+            password = password_widget.value  # Get the value of the Password widget
+            self.authenticate(password)  # Pass the password to the authenticate method
+    
         # Assign callbacks using partial to bind grid_id
         action_toolbar.assign_callback('Generate', self.handle_database_change, refresh_needed=True)
+        action_toolbar.assign_callback('Authenticate', authenticate_callback)
     
         # GridBox 
         self.VBoxGrids = VBoxManager()
@@ -1587,7 +1595,7 @@ class DynamicGridManager:
         """
         action_toolbar = ActionToolbar()
         # Assign callbacks using partial to bind grid_id
-        #action_toolbar.assign_callback('Solbind', partial(self.solbind_request, grid_id))
+        action_toolbar.assign_callback('Solbind', self.solbind_request, grid_id=grid_id)
         #action_toolbar.assign_callback('Rename', partial(self.rename_fusion, grid_id))
         action_toolbar.assign_callback('Export', partial(self.save_dataframes_to_csv, grid_id))
         action_toolbar.assign_callback('Open', partial(self.open_deck, grid_id))
@@ -1934,31 +1942,38 @@ class DynamicGridManager:
         selected_items_list = self.grid_widget_states[grid_id]['Selection']        
         display_graph(selected_items_list)    
 
-    def authenticate(self, widget):
+    def authenticate(self, password):
         if gv.myDB:
-            username = gv.myDB.get_current_db_name()  
-            password = widget.value  # Get the password from the text box
-            net_api = gv.NetApi
-            net_api.authenticate(username, password)
-        
+            username = gv.myDB.get_current_db_name()
+
+        net_api = gv.NetApi
+        net_api.authenticate(username=username, password=password)
+    
     # # Function for making a solbind request
-    # def solbind_request(self, grid_id):
+    def solbind_request(self, button=None, grid_id=None):
         
-    #     selected_items_info = self.grid_widget_states[grid_id]['Selection']
-    #     password = text_box.value  # Get the password from the text box
+        if not grid_id in self.grid_widget_states or not 'Selection' in self.grid_widget_states[grid_id]: 
+            logging.warning(f"No selection found for grid_id '{grid_id}', skipping...")
+            return
+        selected_items_info = self.grid_widget_states[grid_id]['Selection']
         
-    #     # Here, handle multiple selected items if needed
-    #     if ',' in selected_items_info:
-    #         print("Multiple items selected, please select only one deck.")
-    #         return
-    #     deck_name = selected_items_info  # Assuming single selection
-    #     deck_data = gv.myDB.find_one('Deck', {'name': deck_name})
-    #     if deck_data:
-    #         deck_id = deck_data.get('id')
+        # Here, handle multiple selected items if needed
+        if ',' in selected_items_info:
+            print("Multiple items selected, please select only one deck.")
+            return
         
-    #     # Proceed with the solbind request using NetApi
-    #     net_api = NetApi(username, password)
-    #     net_api.post_solbind_request(deck_id)
+        deck_name = selected_items_info[0]  # Assuming single selection
+        deck_data = gv.myDB.find_one('Deck', {'name': deck_name})
+        if deck_data:
+            print(f"Deck data for '{deck_name}' = {deck_data}")
+            deck_id = deck_data.get('id')
+        else:
+            print(f"Deck '{deck_name}' not found in the database.")
+            return
+        
+        # Proceed with the solbind request using NetApi
+        net_api = gv.NetApi
+        net_api.post_solbind_request(deck_id)
 
     # # Function for renaming a fusion
     # def rename_fusion(self, button):

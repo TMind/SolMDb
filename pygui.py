@@ -1,12 +1,9 @@
-from csv import Error
 import os, re
 import ipywidgets as widgets
 from pyvis.network import Network
 import networkx as nx
 import pickle
-
-import pytz  
-from tzlocal import get_localzone  
+import argparse
 
 from GlobalVariables import global_vars as gv
 from GlobalVariables import GLOBAL_COLUMN_ORDER
@@ -22,7 +19,6 @@ from MongoDB.DatabaseManager import DatabaseManager
 from MyGraph import MyGraph
 from NetApi import NetApi
 
-from soldb import parse_arguments
 from IPython.display import display, HTML
 
 from Synergy import SynergyTemplate
@@ -1278,6 +1274,8 @@ operation_in_progress = False  # Add this global variable to track the in-progre
 def reload_data_on_click(button, event):
     global db_list, username_widget, operation_in_progress, grid_manager
 
+    print(f'Reload Event: {event}')
+
     # Prevent multiple concurrent operations
     if operation_in_progress:
         print('Operation is already in progress. Please wait.')
@@ -1303,46 +1301,49 @@ def reload_data_on_click(button, event):
         if button:
             button.disabled = True
 
-        # Handle the different values
-        if value == 'Load Decks/Fusions':
-            arguments = ['--username', username_value,
-                         '--mode', 'create',
-                         '--type', 'deck,fuseddeck']
-            args = parse_arguments(arguments)
-        elif value == 'Update Decks/Fusions':
-            arguments = ['--username', username_value,
-                         '--mode', 'update',
-                         '--type', 'deck,fuseddeck']
-            args = parse_arguments(arguments)
-        elif value == 'Create all Fusions':
-            arguments = ['--username', username_value,
-                         '--mode', 'fuse']
-            args = parse_arguments(arguments)
-        elif value == 'Generate Dataframe':
-            #generate_central_dataframe(force_new=True)
-            #manage_central_dataframe(force_new=True)
-            if grid_manager:
-                grid_manager.handle_database_change(event)
-            return
-        elif value == 'Update CM Sheet':
-            # Update the local CSV using CMManager
-            if gv.commonDB:
-                gv.commonDB.drop_database()
-            if gv.cm_manager:
-                gv.cm_manager.update_local_csv('Card Database')
-            gv.reset_universal_library()
-            # Update and display sheet statistics
-            update_sheet_stats()
-            return
-        elif value == 'Find Combos':
-            combo_df = generate_combo_dataframe()
-            return combo_df
-        elif value == 'Refresh Grid':
-            if grid_manager:
-                grid_manager.refresh_gridbox()
-            return
+        if event.get('name') == 'value': 
+
+            # Handle the different values
+            if value == 'Load Decks/Fusions':
+                arguments = ['--username', username_value,
+                            '--mode', 'create',
+                            '--type', 'deck,fuseddeck']
+                args = parse_arguments(arguments)
+            elif value == 'Update Decks/Fusions':
+                arguments = ['--username', username_value,
+                            '--mode', 'update',
+                            '--type', 'deck,fuseddeck']
+                args = parse_arguments(arguments)
+            elif value == 'Create all Fusions':
+                arguments = ['--username', username_value,
+                            '--mode', 'fuse']
+                args = parse_arguments(arguments)
+            elif value == 'Generate Dataframe':
+                #generate_central_dataframe(force_new=True)
+                #manage_central_dataframe(force_new=True)
+                if grid_manager:
+                    grid_manager.handle_database_change(event)
+                return
+            elif value == 'Update CM Sheet':
+                # Update the local CSV using CMManager
+                if gv.commonDB:
+                    gv.commonDB.drop_database()
+                if gv.cm_manager:
+                    gv.cm_manager.update_local_csv('Card Database')
+                gv.reset_universal_library()
+                # Update and display sheet statistics
+                update_sheet_stats()
+                return
+            elif value == 'Find Combos':
+                combo_df = generate_combo_dataframe()
+                return combo_df
+            elif value == 'Refresh Grid':
+                if grid_manager:
+                    grid_manager.refresh_gridbox()
+                return
 
         # Execute main task if other tasks are not returning early
+        print(f'Executing task: {value} -> {args}')
         load_deck_data(args)
         # Update the Timestamp in the metadata of the database
         update_db_timestamp(username_value)
@@ -1370,6 +1371,36 @@ def reload_data_on_click(button, event):
         operation_in_progress = False
         if button:
             button.disabled = False
+
+def parse_arguments(arguments = None):
+    # Create an argument parser
+    parser = argparse.ArgumentParser(description="Script description")
+
+    # Add command-line arguments
+    # Arguments for online use 
+    parser.add_argument("--username", default="", help="Online account name or omit for offline use")
+    parser.add_argument("--type", default="deck", choices=["deck", "fuseddeck", "deck,fuseddeck"], help="Decktype for user collection , default=deck")
+    parser.add_argument("--id", default="", help="Specific Deck ID from solforgefusion website")
+    
+    # Arguments for general use 
+    # If both username and file is given, export deckbase to file.json 
+    # If only file is given import deckbase from file.json 
+    parser.add_argument("--filename",  default=None,  help="Offline Deck Database Name")
+    parser.add_argument("--synergies", default=None, help="CSV Filename for synergy lookup")    
+    parser.add_argument("--offline", default=None, help="Offline use only")    
+    parser.add_argument("--mode", default='insert', help="Mode: insert, update, refresh, create")    
+
+    # Arguments for Evaluation
+    
+    parser.add_argument("--eval", nargs='?', const=True, action="store",  help="Evaluate possible fusions. Optional filename for .csv export")    
+    parser.add_argument("--graph", action="store_true",  help="Create Graph '.gefx'")
+    parser.add_argument("--filter", default=None, help="Filter by card names. Syntax: \"<cardname>+'<card name>'-<cardname>\" + = AND, - = OR ")
+    parser.add_argument("--select_pairs", action="store_true", help="Select top pairs")
+    
+    # Parse the command-line arguments
+    args = parser.parse_args(arguments)
+
+    return args
 
 def display_graph_on_click(button):
     myDecks = []
@@ -1915,11 +1946,11 @@ def setup_restricted_interface():
 
     # Toggle buttons to select load items
     loadToggle = widgets.ToggleButtons(
-        options=['Load Decks/Fusions', 'Update Decks/Fusions', 'Generate Dataframe', 'Update CM Sheet'],
+        options=['Load Decks/Fusions', 'Update CM Sheet'],
         description='Action:',
         disabled=False,
         button_style='warning', # 'success', 'info', 'warning', 'danger' or ''
-        tooltips=['Load Decks and Fusions from the website', 'Update Decks and Fusions in the database', 'Generate table from database', 'Get the latest version from Collection Manager'])
+        tooltips=['Load Decks and Fusions from the website', 'Get the latest version from Collection Manager'])
 
     # Button to load decks / fusions / forgborns 
     button_load = widgets.Button(description='Execute', button_style='info', tooltip='Execute the selected action')
@@ -2024,7 +2055,7 @@ def setup_restricted_interface():
     username_widget.disabled = True 
     db_list.disabled = True 
     
-saved_event = {}
+saved_event = {'name': 'value', 'new': 'Load Decks/Fusions', 'source': None}
 def setup_interface():
     global db_list, button_load, card_title_widget, grid_manager, central_frame_output, tab, net_api
     global action_toolbar, selected_db_label, selected_items_label, text_box, graph_output, username_jhub
@@ -2038,12 +2069,14 @@ def setup_interface():
         dropdowns.append(dropdown)
 
     # Toggle buttons to select load items
-    loadSelected = widgets.Select(
-        options=['Load Decks/Fusions', 'Update Decks/Fusions', 'Create all Fusions', 'Update CM Sheet'],
+    loadSelected = widgets.Select(        
+        options=['Load Decks/Fusions', 'Update CM Sheet'],
         description='DB Action:',
         disabled=False,
         #button_style='warning', # 'success', 'info', 'warning', 'danger' or ''
-        tooltips=['Load Decks and Fusions from the website', 'Update Decks and Fusions in the database', 'Create Fusions from loaded decks', 'Get the latest version from Collection Manager'])
+        tooltips=['Load Decks and Fusions from the website', 'Get the latest version from Collection Manager'])
+    
+    loadSelected.observe(lambda event: on_menu_selection_change(event), names='value')
     
     #'Generate Dataframe','Refresh Grid'
     # Button to load decks / fusions / forgborns 
@@ -2052,7 +2085,7 @@ def setup_interface():
 
     # Database selection widget
     db_list = create_database_selection_widget()
-    #db_list.observe(handle_db_list_change, names='value')
+    db_list.observe(handle_db_list_change, names='value')
     
     # Create a list of HBoxes of factionToggles, Labels, and dropdowns
     toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
@@ -2069,18 +2102,12 @@ def setup_interface():
     # Create an instance of the manager
     grid_manager = DynamicGridManager(data_generation_functions, qg_options, gv.out_debug)
 
-    def on_db_selection_change(event):
+    def on_menu_selection_change(event):
         global saved_event
         saved_event = event
-        handle_db_list_change(event)
-        # selected_db = event['new']  # The newly selected database name
-        # if selected_db:
-        #     logging.info(f"Database selection changed to: {selected_db}")
-        #     update_selectable_options(loadSelected)
-            
 
     # Attach observer to db_list
-    db_list.observe(on_db_selection_change, names='value')
+    #db_list.observe(on_db_selection_change, names='value')
     #db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')
 
     templateGrid = TemplateGrid()

@@ -18,10 +18,11 @@ from DeckLibrary import DeckLibrary
 from MongoDB.DatabaseManager import DatabaseManager
 from MyGraph import MyGraph
 from NetApi import NetApi
+from DataFrameGenerator import DataFrameGenerator
+from Synergy import SynergyTemplate
 
 from IPython.display import display, HTML
 
-from Synergy import SynergyTemplate
 import pandas as pd
 from GridManager import GridManager, DynamicGridManager
 from CustomGrids import TemplateGrid
@@ -372,8 +373,8 @@ def manage_central_dataframe(force_new=False):
         Updates the DataFrame metadata (timestamps, counts) in display_data and the cache.
         """
         collection_timestamp = display_data.get('Collection', {}).get('Timestamp', None)
-        if not collection_timestamp:
-            raise RuntimeError("The Collection metadata (timestamp) is missing.")
+        #if not collection_timestamp:
+        #    raise RuntimeError("The Collection metadata (timestamp) is missing.")
 
         # Update display_data and cache metadata
         display_data['DataFrame'] = {
@@ -420,7 +421,7 @@ def manage_central_dataframe(force_new=False):
 
         # Generate a new DataFrame
         logging.info("Generating a new DataFrame.")
-        return_df = generate_central_dataframe()
+        return_df = generate_central_dataframe(tasks=['deck_stats', 'card_type_counts'])
         NuOfDecks = len(return_df[return_df['type'] == 'Deck'])
         NuOfFusions = len(return_df[return_df['type'] == 'Fusion'])
                 
@@ -454,35 +455,159 @@ def manage_central_dataframe(force_new=False):
             update_display_data(update_collection=False, update_dataframe=True, central_df=return_df)
             update_central_frame_tab(return_df)
 
-def generate_central_dataframe():
+def fetch_records_from_database(collection_name, fields=None, batch_size=1000, ids=None):
     """
-    Generates a new central DataFrame or retrieves a cached version if available.
-    This function does not handle saving or metadata synchronization.
+    Fetch records from the database with optional projection and filtering by names, without any additional processing.
+
+    Args:
+        collection_name (str): The name of the collection to query (e.g., 'Deck', 'Fusion').
+        fields (list, optional): List of fields to include in the result. Defaults to None (fetch all fields).
+        batch_size (int, optional): Number of records to fetch per batch. Defaults to 1000.
+        names (list, optional): List of names to filter the records. Defaults to None (fetch all records).
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the fetched records.
     """
+    # Build the projection if fields are provided
+    projection = {field: 1 for field in fields} if fields else None
+
+    # Build the query to filter by names if provided
+    query = {"_id": {"$in": ids}} if ids else {}
+
+    results_df = pd.DataFrame()
+    
+    if gv.myDB:
+        # Get the total count of documents for progress tracking
+        total_records = gv.myDB.count_documents(collection_name, query)
+        cursor = gv.myDB.find(collection_name, query, projection).batch_size(batch_size)
+        
+        batch = []
+        count = 0
+        for record in cursor:
+            batch.append(record)
+            count += 1
+            
+            # Process the batch when it reaches the batch size
+            if len(batch) >= batch_size:
+                batch_df = pd.DataFrame(batch)
+                results_df = pd.concat([results_df, batch_df], ignore_index=True)
+                gv.progress_manager.update_progress(
+                    'Fetching Records',
+                    value=count,
+                    total=total_records,
+                    message=f'{count} records fetched so far'
+                )
+                batch = []
+        
+        # Process the remaining records in the batch
+        if batch:
+            batch_df = pd.DataFrame(batch)
+            results_df = pd.concat([results_df, batch_df], ignore_index=True)
+            gv.progress_manager.update_progress(
+                'Fetching Records',
+                value=count,
+                total=total_records,
+                message=f'Total {count} records fetched'
+            )
+    
+    # Return the fetched DataFrame
+    return results_df if not results_df.empty else pd.DataFrame()
+
+
+def generate_central_dataframe(tasks=None, filter_df=None):
+    """
+    Generates a new central DataFrame or builds upon an existing one.
+
+    Args:
+        tasks (list, optional): A list of tasks to execute. 
+            Supported tasks are:
+            - 'deck_stats': Generate deck statistics DataFrame.
+            - 'card_type_counts': Generate card type counts DataFrame.
+            - 'fusion_stats': Generate fusion statistics DataFrame.
+            Defaults to all tasks.
+        filter_df (pd.DataFrame, optional): A DataFrame used to filter the data.
+
+    Returns:
+        pd.DataFrame: The central DataFrame.
+    """
+    if tasks is None:
+        tasks = ['deck_stats', 'card_type_counts', 'fusion_stats']
+
     username = os.getenv('SFF_USERNAME')
     identifier = f"Main DataFrame: {username}"
     
-    gv.progress_manager.update_progress(identifier, total=5, message='Generating Central Dataframe...')
+    gv.progress_manager.update_progress(identifier, total=len(tasks) + 1, message='Generating Central Dataframe...')
     
-    # Generate the component DataFrames
-    deck_stats_df = generate_deck_statistics_dataframe()
-    gv.progress_manager.update_progress(identifier, message='Generating Card Type Count Dataframe...')
-    card_type_counts_df = generate_cardType_count_dataframe()
-    
-    central_df = merge_by_adding_columns(deck_stats_df, card_type_counts_df)
-    gv.progress_manager.update_progress(identifier, message='Generating Fusion Statistics Dataframe...')
-    fusion_stats_df = generate_fusion_statistics_dataframe(central_df)
-    central_df = merge_and_concat(central_df, fusion_stats_df)
-    
-    # Clean and reorder columns
-    gv.progress_manager.update_progress(identifier, message='Cleaning Central Dataframe...')
-    central_df = clean_columns(central_df, exclude_columns=['deckScore', 'elo', 'price', 'Free'])
-    central_df.reset_index(inplace=True)
-    central_df.rename(columns={'name': 'Name'}, inplace=True)
-    central_df = enforce_column_order(central_df, GLOBAL_COLUMN_ORDER)
+    # Instantiate the DataFrameGenerator
+    generator = DataFrameGenerator()
+
+    # Generate the central DataFrame using the generator
+    central_df = generator.generate_central_dataframe(tasks=tasks, filter_df=filter_df)
     
     gv.progress_manager.update_progress(identifier, message='Central Dataframe Generated.')
     return central_df
+
+# def generate_central_dataframe(tasks=None, filter_df=None):
+#     """
+#     Generates a new central DataFrame or builds upon an existing one.
+
+#     Args:
+#         tasks (list, optional): A list of tasks to execute. 
+#             Supported tasks are:
+#             - 'deck_stats': Generate deck statistics DataFrame.
+#             - 'card_type_counts': Generate card type counts DataFrame.
+#             - 'fusion_stats': Generate fusion statistics DataFrame.
+#             Defaults to all tasks.
+#         existing_df (pd.DataFrame, optional): An existing central DataFrame to build upon. Defaults to None.
+
+#     Returns:
+#         pd.DataFrame: The central DataFrame.
+#     """
+#     if tasks is None:
+#         tasks = ['deck_stats', 'card_type_counts', 'fusion_stats']
+
+#     username = os.getenv('SFF_USERNAME')
+#     identifier = f"Main DataFrame: {username}"
+    
+#     gv.progress_manager.update_progress(identifier, total=len(tasks) + 1, message='Generating Central Dataframe...')
+    
+#     # Start with the existing DataFrame if provided
+#     base_dataframe = None
+#     return_df = None
+
+#     # Generate deck statistics
+#     if 'deck_stats' in tasks:
+#         gv.progress_manager.update_progress(identifier, message='Generating Deck Statistics Dataframe...')
+#         base_dataframe = generate_deck_statistics_dataframe(filter_df)
+#         return_df = base_dataframe
+
+#     # Generate card type counts and merge with the base DataFrame
+#     if 'card_type_counts' in tasks:
+#         gv.progress_manager.update_progress(identifier, message='Generating Card Type Count Dataframe...')
+#         card_type_counts_df = generate_cardType_count_dataframe(filter_df)
+#         base_dataframe = card_type_counts_df if base_dataframe is None else merge_by_adding_columns(base_dataframe, card_type_counts_df)
+#         return_df = base_dataframe
+
+#     # Generate fusion statistics and merge with the base DataFrame
+#     if 'fusion_stats' in tasks:
+#         if base_dataframe is None:
+#             # Generate new central DataFrame if none exists
+#             base_dataframe = generate_deck_statistics_dataframe()
+#             logging.info("No existing base DataFrame found. Generating a new one.")
+#         gv.progress_manager.update_progress(identifier, message='Generating Fusion Statistics Dataframe...')
+#         fusion_stats_df = generate_fusion_statistics_dataframe(base_dataframe, filter_df)
+#         return_df = merge_and_concat(filter_df, fusion_stats_df)
+    
+#     # Clean and reorder columns if the central DataFrame has been generated
+#     if return_df is not None:
+#         gv.progress_manager.update_progress(identifier, message='Cleaning Central Dataframe...')
+#         return_df = clean_columns(return_df, exclude_columns=['deckScore', 'elo', 'price', 'Free'])
+#         return_df.reset_index(inplace=True)
+#         return_df.rename(columns={'name': 'Name'}, inplace=True)
+#         return_df = enforce_column_order(return_df, GLOBAL_COLUMN_ORDER)
+    
+#     gv.progress_manager.update_progress(identifier, message='Central Dataframe Generated.')
+#     return return_df
 
 from CardLibrary import Forgeborn, ForgebornData
 def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
@@ -491,6 +616,7 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
         forgebornCounter = 0
         inspired_ability_cycle = 0
         forgeborn_ability_texts = {}
+        replace_forgebornId = ''
 
         for forgeborn_id in forgebornIds:
             forgebornCounter += 1
@@ -517,19 +643,11 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
 
                     # Apply the inspired label if necessary
                     if forgebornCounter == 2 and cycle == inspired_ability_cycle:
-                        #if "Inspire" in aName:
-                        #    print(f'Inspired Ability: {aName} {inspired_ability_cycle} for {item_name}')
                         aName += " (Inspire)"
-                        
-                        #print(f'Inspired Ability: {aName} {inspired_ability_cycle} for {item_name}')
                     
                     # Update the DataFrame with the ability name
                     if forgebornCounter == 1 or cycle == inspired_ability_cycle:
                         forgeborn_ability_texts[cycle] =  aName
-                        #df.loc[item_name, f'FB{cycle}'] = aName
-
-            #df.loc[item_name, 'forgebornId'] = currentForgebornId[5:-3].title()
-            
             
             replace_forgebornId = currentForgebornId[5:-3].title()
             
@@ -542,7 +660,8 @@ def process_deck_forgeborn(item_name, currentForgebornId , forgebornIds):
         print(f"Unexpected error: {e}")
         print(f"Index: {item_name}, ForgebornId key: {forgebornIds}")
     
-    
+    if replace_forgebornId == '': 
+        logging.error(f'No ForgebornId found for {item_name}')
     return replace_forgebornId, forgeborn_ability_texts
     
 
@@ -656,13 +775,15 @@ def generate_deck_content_dataframe(deckNames):
         return pd.DataFrame()
 
 
-def generate_cardType_count_dataframe():
+def generate_cardType_count_dataframe(filter_df = None):
     identifier = 'CardType Count Data'
-    deck_iterator = []
-    total_decks = 0 
-    if gv.myDB:
-        deck_iterator = gv.myDB.find('Deck', {})
-        deck_list = list(deck_iterator)
+    deck_list = fetch_data_from_db('Deck', filter_df=filter_df)
+    if not deck_list:
+        return pd.DataFrame()
+    
+    # if gv.myDB:
+    #     deck_iterator = gv.myDB.find('Deck', {})
+    #     deck_list = list(deck_iterator)
     gv.progress_manager.update_progress(identifier, 0, len(deck_list), message = 'Generating CardType Count Data...')
     
     all_decks_list = []
@@ -734,8 +855,20 @@ def generate_cardType_count_dataframe():
         return pd.DataFrame()
 
 deck_card_titles = {}    
-def generate_fusion_statistics_dataframe(central_df=None):
+def generate_fusion_statistics_dataframe(central_df=None, filter_df=None):
+    '''
+    This function takes the following parameters:
+    - central_df: A DataFrame containing the central deck data
+    - filter_df: A DataFrame containing the filter data
+    - Returns a DataFrame with the fusion statistics
+    '''
+    
     deck_card_ids_dict = {}
+
+    fusions = fetch_data_from_db('Fusion', filter_df=filter_df)
+    if not fusions:
+        return pd.DataFrame()
+
     if gv.myDB:
        # Get all deck documents from the database
         deck_data_cursor = gv.myDB.find('Deck', {}, {'name': 1, 'cardIds': 1})
@@ -747,6 +880,7 @@ def generate_fusion_statistics_dataframe(central_df=None):
         titles = [cid[5:].replace('-', ' ').title() for cid in card_ids if cid[5:].replace('-', ' ').title()]
         return sorted(titles)
     
+    #TODO: Replace this function and get the cardTitles directly from the database ( CardNames ) 
     def fetch_deck_titles(deck_names):
         deck_titles = {
             name: get_card_titles(deck_card_ids_dict[name])
@@ -884,7 +1018,7 @@ def generate_fusion_statistics_dataframe(central_df=None):
 
 
     # Define the fields you need  
-    additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'currentForgebornId', 'ForgebornIds', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'children_data', 'tags']  
+    additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'currentForgebornId', 'ForgebornIds', 'CreatedAt', 'UpdatedAt', 'deckRank', 'CardTitles', 'graph', 'children_data', 'tags']  
     projection = {field: 1 for field in additional_fields}  
     
     # Fetch fusions from the database using a batch approach  
@@ -920,13 +1054,13 @@ def generate_fusion_statistics_dataframe(central_df=None):
         #gv.progress_manager.update_progress('Fusion Card Titles', 0, len(df_fusions_filtered), message = 'Fetching Card Titles')
 
         # Extract necessary columns and add additional calculated columns
-        df_fusions_filtered['cardTitles'] = df_fusions_filtered['children_data'].apply(get_card_titles_by_Ids)
+        #df_fusions_filtered['CardTitles'] = df_fusions_filtered['children_data'].apply(get_card_titles_by_Ids)
         df_fusions_filtered['forgebornId'] = df_fusions_filtered['currentForgebornId']
         df_fusions_filtered['type'] = 'Fusion'
         df_fusions_filtered['UpdatedAt'] = df_fusions_filtered['UpdatedAt'].apply(lambda x: normalize_time_string(x, cutoff='milliseconds') if x else x)
 
         # Select only relevant fields for analysis
-        #additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'ForgebornIds', 'CreatedAt', 'UpdatedAt', 'deckRank', 'cardTitles', 'graph', 'children_data', 'tags']
+        #additional_fields = ['name', 'id', 'type', 'faction', 'crossFaction', 'forgebornId', 'ForgebornIds', 'CreatedAt', 'UpdatedAt', 'deckRank', 'CardTitles', 'graph', 'children_data', 'tags']
         #df_fusions_filtered = df_fusions[additional_fields].copy()
 
         # Set 'name' as the index and drop the original 'name' column
@@ -1040,23 +1174,50 @@ def get_combos_for_graph(myGraph: MyGraph, name: str) -> dict:
         combo_data[combo_name] = value
     
     return combo_data
+
+def fetch_data_from_db(collection_name, filter_df=None):
+    """
+    Fetches data from the specified collection in the database.
+
+    Args:
+        collection_name (str): Name of the collection to query ('Deck' or 'Fusion').
+        filter_df (pd.DataFrame, optional): DataFrame containing names to filter.
+                                            If None, fetches all documents from the collection.
+
+    Returns:
+        list: A list of documents fetched from the database.
+    """
+    # Determine the filter query
+    query = {}
+    if filter_df is not None:
+        item_names = filter_df.index.tolist()
+        query = {'name': {'$in': item_names}}
+    
+    # Fetch documents from the database
+    if gv.myDB:
+        items = list(gv.myDB.find(collection_name, query))
+        if not items:
+            print(f"No {collection_name.lower()}s found.")
+        return items
+    else:
+        print(f"Database connection is not initialized.")
+        return []
+
    
 from utils import normalize_time_string
-def generate_deck_statistics_dataframe():
+def generate_deck_statistics_dataframe(filter_df = None):
     def get_card_titles(card_ids):
         card_titles = [card_id[5:].replace('-', ' ').title() for card_id in card_ids]
         return '; '.join(sorted(card_titles))
 
-    # Get all Decks from the database once and reuse this list
-    decks = []
-    if gv.myDB:
-        decks = list(gv.myDB.find('Deck', {}))
-    
+    # Fetch decks based on filter_df or all decks from the database
+    decks = fetch_data_from_db('Deck', filter_df=filter_df)
     number_of_decks = len(decks)
 
     df_decks = pd.DataFrame(decks)
-    df_decks['cardTitles'] = df_decks['cardIds'].apply(get_card_titles)
-    df_decks_filtered = df_decks[['name', 'id', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'digital', 'nft', 'price', 'owner', 'faction', 'forgebornId', 'cardTitles', 'graph']].copy()
+    # CardNames should exist in the database already 
+    #df_decks['CardTitles'] = df_decks['cardIds'].apply(get_card_titles)
+    df_decks_filtered = df_decks[['name', 'id', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'digital', 'nft', 'price', 'owner', 'faction', 'forgebornId', 'CardTitles', 'graph']].copy()
     df_decks_filtered['type'] = 'Deck'
     # Replace non-numeric values with NaN, then convert to int
     df_decks_filtered['cardSetNo'] = pd.to_numeric(df_decks_filtered['cardSetNo'], errors='coerce').fillna(0).astype(int)
@@ -1974,10 +2135,12 @@ def setup_restricted_interface():
         #'central_dataframe' : generate_central_dataframe, 
         'central_dataframe' : manage_central_dataframe, 
         'deck_content' : generate_deck_content_dataframe,
+        'fetch_from_db' : fetch_records_from_database,
+        'generate_dataframe': generate_central_dataframe,
         'update_selection_area' : None,}
     
     # Create an instance of the manager
-    grid_manager = DynamicGridManager(data_generation_functions, qg_options, gv.out_debug)
+    grid_manager = DynamicGridManager(qg_options, gv.out_debug)
 
     # Update the filter grid on db change
     db_list.observe(grid_manager.filterGridObject.update_selection_content, names='value')
@@ -2096,11 +2259,13 @@ def setup_interface():
     
     data_generation_functions = {
         'central_dataframe' : manage_central_dataframe, 
+        'generate_dataframe': generate_central_dataframe,
         'deck_content' : generate_deck_content_dataframe,
+        'fetch_from_db' : fetch_records_from_database,
     }
     
     # Create an instance of the manager
-    grid_manager = DynamicGridManager(data_generation_functions, qg_options, gv.out_debug)
+    grid_manager = DynamicGridManager(qg_options, gv.out_debug)
 
     def on_menu_selection_change(event):
         global saved_event

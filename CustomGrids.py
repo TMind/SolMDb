@@ -72,7 +72,7 @@ class TemplateGrid:
         cm_tags = gv.cm_manager.cm_tags or []
         
         self.column_groups = {
-            'Base Data': ['Name', 'type', 'faction', 'forgebornId', 'cardTitles', 'FB2', 'FB3', 'FB4', 'Creatures', 'Spells', 'Exalt', 'Sum'],
+            'Base Data': ['Name', 'type', 'faction', 'forgebornId', 'CardTitles', 'FB2', 'FB3', 'FB4', 'Creatures', 'Spells', 'Exalt', 'Sum'],
             'Deck Data': ['registeredDate', 'UpdatedAt', 'pExpiry', 'digital', 'cardSetNo', 'tags', 'Betrayers', 'SolBinds'],
             'Fusion Data': ['Deck A', 'Deck B', 'CreatedAt', 'faction', 'crossFaction'],
             'Deck Stats': ['elo', 'level', 'xp', 'deckRank', 'deckScore'],

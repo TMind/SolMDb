@@ -210,6 +210,7 @@ class Card(DatabaseObject):
 class DeckData:    
     name        : str
     forgebornId : str
+    forgebornName : str
     faction     : str    
     cardIds     : list  # Card ids from Net API
     cards       : dict           
@@ -233,13 +234,13 @@ class DeckData:
     nft: int = 0
     price: float = 0.0
     owner: str = ''  
+    CardTitles: list = field(default_factory=list)
     children_data: dict = field(default_factory=dict)
     myCategories: dict = field(default_factory=dict)
     deckStats: dict = field(default_factory=dict)
     tags: dict = field(default_factory=dict)
     stats: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)
-    #node_data: dict = field(default_factory=dict)
 
 
 class Deck(DatabaseObject):
@@ -322,15 +323,16 @@ class Deck(DatabaseObject):
                         
         self.data.stats['creature_averages'] = creature_average_stats        
 
-
 @dataclass
 class FusionData:
     name: str = ''    
     myDecks: list = field(default_factory=list)    
     faction: str = ''
     crossFaction: str = ''
-    currentForgebornId: str = ''    
+    currentForgebornId: str = ''   
+    forgebornName : str = '' 
     ForgebornIds: list = field(default_factory=list)  
+    CardTitles: list = field(default_factory=list)
     id: str = ''
     deckRank: str = ''
     CreatedAt: str = ''   

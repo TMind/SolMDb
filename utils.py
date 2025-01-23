@@ -1,5 +1,9 @@
+import logging
 import pandas as pd 
+import qgridnext as qgrid
 from datetime import datetime
+from IPython.display import display
+from GlobalVariables import GLOBAL_COLUMN_ORDER, global_vars as gv 
 
 def get_totals_row(df, rotated_column_definitions):
     """
@@ -159,3 +163,186 @@ def normalize_time_string(time_string, target_format="%Y-%m-%d %H:%M:%S", cutoff
     
     except ValueError as e:
         raise ValueError(f"Invalid time string format: {time_string}") from e
+    
+# Functions to work with dataframes and MongoDB
+    
+def fetch_data_from_db(collection_name, filter_df=None, projection=None):
+    """
+    Fetches data from the specified collection in the database.
+
+    Args:
+        collection_name (str): Name of the collection to query ('Deck' or 'Fusion').
+        filter_df (pd.DataFrame, optional): DataFrame containing names to filter.
+                                            If None, fetches all documents from the collection.
+        projection (dict, optional): A dictionary specifying the fields to include or exclude
+                                     in the result. Defaults to None (all fields).
+
+    Returns:
+        list: A list of documents fetched from the database.
+    """
+    query = {}
+    if filter_df is not None:
+        item_names = filter_df.index.tolist()        
+        query = {'name': {'$in': item_names}}
+
+    if gv.myDB:
+        # Pass the projection parameter to the find method
+        items = list(gv.myDB.find(collection_name, query, projection))
+        if not items:
+            logging.warning(f"No {collection_name.lower()}s found.")
+        return items
+    else:
+        logging.error("Database connection is not initialized.")
+        return []
+
+def enforce_column_order(df, column_order):
+    """
+    Ensure the DataFrame has the columns in the specified order, 
+    but only includes columns that are present in the DataFrame.
+    """
+    existing_columns = [col for col in column_order if col in df.columns]
+    extra_columns = [col for col in df.columns if col not in column_order]
+    if extra_columns:
+        logging.info(f"Columns not in order: {extra_columns}")
+    return df.reindex(columns=existing_columns)
+
+def merge_by_adding_columns(df1, df2):
+    """
+    Merges two DataFrames by adding new columns from df2 to df1. 
+    Assumes the indices are the same and there are no new rows to add.
+    
+    Parameters:
+    - df1: First DataFrame.
+    - df2: Second DataFrame.
+    
+    Returns:
+    - A DataFrame that contains all columns from both df1 and df2, aligned by index.
+    """
+    # Ensure both DataFrames have the same index
+    if not df1.index.equals(df2.index):
+        raise ValueError("The indices of both DataFrames must be the same to merge by adding columns.")
+
+    # Merge DataFrames by concatenating columns
+    merged_df = pd.concat([df1, df2], axis=1)
+    
+    return merged_df
+
+def merge_and_concat(df1, df2):
+    """
+    Efficiently merges two DataFrames by handling overlapping columns and concatenating them row-wise,
+    ensuring all columns, including 'deckScore', are preserved.
+    """
+    # Concatenate both DataFrames row-wise without dropping any columns
+    combined_df = pd.concat([df1, df2], axis=0, sort=False)
+    
+    # If needed, you can fill missing values with NaN (or other strategies)
+    #combined_df = combined_df.fillna(value=np.nan)
+    
+    return combined_df
+
+def clean_columns(df, exclude_columns=None):
+    """
+    Cleans both numeric and non-numeric columns of a DataFrame.
+
+    Args:
+        df (pd.DataFrame): DataFrame to clean.
+        exclude_columns (list, optional): List of columns to exclude from cleaning.
+
+    Returns:
+        pd.DataFrame: Cleaned DataFrame.
+    """
+    if exclude_columns is None:
+        exclude_columns = []
+
+    df = df.copy()
+    numeric_cols = df.select_dtypes(include='number').columns.difference(exclude_columns)
+    numeric_df = df[numeric_cols].fillna(0.0).astype(str).replace('0.0', '')
+    df[numeric_cols] = numeric_df
+
+     # Clean non-numeric columns
+    non_numeric_cols = df.select_dtypes(exclude='number').columns
+    df[non_numeric_cols] = (
+        df[non_numeric_cols]
+        .fillna('')
+        .apply(lambda col: col.map(lambda x: '' if x == '0' else x))
+    )
+
+    return df
+
+def validate_dataframe_attributes(df, identifier=None, expected_index_name=None, disallow_columns=None):
+    """
+    Validate the attributes of a DataFrame.
+
+    Parameters:
+    - df (pd.DataFrame): The DataFrame to validate.
+    - identifier (str, optional): An identifier for the DataFrame being checked.
+    - expected_index_name (str, optional): The expected name of the index.
+    - disallow_columns (list, optional): A list of column names that should not be present in the DataFrame.
+
+    Returns:
+    - dict: A dictionary containing validation results.
+    """
+    validation_results = {
+        'index_name_correct': True,
+        'unwanted_columns_present': False,
+        'unwanted_columns': [],
+        'messages': []
+    }
+    
+    # Check if the index name matches the expected index name
+    if expected_index_name is not None:
+        if df.index.name != expected_index_name:
+            validation_results['index_name_correct'] = False
+            validation_results['messages'].append(f"[{identifier}] Index name '{df.index.name}' does not match the expected name '{expected_index_name}'.")
+
+    # Check for unwanted columns
+    if disallow_columns is not None:
+        for col in disallow_columns:
+            if col in df.columns:
+                validation_results['unwanted_columns_present'] = True
+                validation_results['unwanted_columns'].append(col)
+                validation_results['messages'].append(f"[{identifier}] Column '{col}' should not be present in the DataFrame.")
+
+    # Print summary of validation results
+    if validation_results['messages']:
+        for message in validation_results['messages']:
+            print(message)
+    else:
+        print(f"[{identifier}] DataFrame validation passed.")
+
+    print_dataframe(df, identifier)
+    return validation_results
+
+def sum_card_types(df):
+    """
+    Adds a 'Sum' column to the DataFrame, summing specific card type columns.
+    """
+    columns_to_sum = [col for col in df.columns if col in GLOBAL_COLUMN_ORDER]
+    df[columns_to_sum] = df[columns_to_sum].apply(pd.to_numeric, errors='coerce')
+    sum_column = df[columns_to_sum].sum(axis=1)
+    return pd.concat([df, sum_column.rename('Sum')], axis=1)
+
+def get_combos_for_graph(graph, name):
+    """
+    Generates combo data for a graph.
+
+    Args:
+        graph (MyGraph): The graph object.
+        name (str): The name of the item.
+
+    Returns:
+        dict: Combo data dictionary.
+    """
+    combo_data = {'name': name}
+    for combo_name, (input_count, output_count) in graph.combo_data.items():
+        value = input_count * output_count
+        if output_count == 0:
+            value = -input_count
+        combo_data[combo_name] = value
+    return combo_data
+
+def print_dataframe(df, name):
+    print(f'DataFrame: {name}')
+    print(f'Shape: {df.shape}')
+    print(df.index)    
+    display(qgrid.show_grid(df, grid_options={'forceFitColumns': False}, column_definitions=gv.all_column_definitions))    

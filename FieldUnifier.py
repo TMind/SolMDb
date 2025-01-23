@@ -46,7 +46,7 @@ COMBOS = [
 ] 
      
 # Define the information levels
-DETAILED_FIELDS = BASIC_FIELDS + DATE_FIELDS + STATS_FIELDS + ['cardTitles']
+DETAILED_FIELDS = BASIC_FIELDS + DATE_FIELDS + STATS_FIELDS + ['CardTitles']
 LISTING_FIELDS = BASIC_FIELDS + ['UpdatedAt'] + NFT_FIELDS
 
 # Defining components with nested fields

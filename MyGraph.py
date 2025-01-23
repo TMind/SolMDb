@@ -378,6 +378,15 @@ class MyGraph:
         
         return self.combo_data
         
+    def get_card_list(self):
+        """
+        Returns a list of card names in the graph.
+        
+        :return: A list of card names.
+        """
+        return [node for node in self.G.nodes if self.G.nodes[node].get('node_type') == 'Card']    
+        
+        
     def to_dict(self):
         """
         Converts the entire graph, including node and edge attributes, into a dictionary.

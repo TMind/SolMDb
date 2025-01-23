@@ -166,17 +166,16 @@ def test_add_filter_row(filterGridObject, new_row_data=None):
 
     # Add the new row to the DataFrame
     new_row = pd.DataFrame([new_row_data])
-    updated_filter_df = pd.concat([filter_df, new_row], ignore_index=True)
+    #updated_filter_df = pd.concat([filter_df, new_row], ignore_index=True)
 
     # Update the filter grid widget
-    filter_widget.df = updated_filter_df
+    #filter_widget.df = updated_filter_df
 
     # Trigger the row_added event manually
-    #event = {'index': len(updated_filter_df) - 1}  # Index of the newly added row
-    event = {'index': len(updated_filter_df) - 1, 'name' : 'row_added', 'source': 'gui'}  # List of added row indices
-    filterGridObject.grid_filter_on_row_added(event, filter_widget)
+    event = {'index': len(filter_df), 'name' : 'row_added', 'source': 'gui'}  # List of added row indices
+    filterGridObject.grid_filter_on_row_added(event, filter_widget, row_data=new_row)
 
-    print(f"Test: Added new row to filter grid. Current row count: {len(updated_filter_df)}")
+    print(f"Test: Added new row to filter grid. Current row count: {len(filter_df)}")
     
 def test_remove_filter_row(filterGridObject, row_index=0):
     """

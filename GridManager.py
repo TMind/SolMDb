@@ -9,12 +9,11 @@ except ImportError:    import qgrid
 import ipywidgets as widgets
 from GlobalVariables import global_vars as gv
 from GlobalVariables import rotate_suffix
-from CustomCss import CSSManager
-from CustomGrids import ActionToolbar
 
 from DataSelectionManager import DataSelectionManager
 from MongoDB.DatabaseManager import DatabaseManager
 from SortingManager import SortingManager
+from CustomGrids import ActionToolbar
 
 # module global variables 
 
@@ -30,17 +29,28 @@ DEFAULT =  pd.DataFrame({
         })
 
 TESTING =  pd.DataFrame({
-            'Type': ['Fusion'],
+            'Type': ['Deck','Deck'],
+            'Name': ['',''],
+            'Modifier': ['',''],
+            'Creature': ['Apocymancer',''],
+            'Spell': ['','Drone Hive'],
+            'Forgeborn Ability': ['',''],
+            'Active': [True, True],
+            'Mandatory Fields': ['Name, Forgeborn Ability', 'Name, Forgeborn Ability']
+        })
+
+TESTING2 =  pd.DataFrame({
+            'Type': ['Deck'],
             'Name': [''],
             'Modifier': [''],
             'Creature': [''],
-            'Spell': [''],
+            'Spell': ['Drone Hive'],
             'Forgeborn Ability': [''],
             'Active': [True],
-            'Mandatory Fields': ['Name, Forgeborn Ability']
+            'Mandatory Fields': ['Spell']
         })
 
-DEFAULT_FILTER = DEFAULT
+DEFAULT_FILTER = TESTING2
 
 
 class GridManager:
@@ -53,7 +63,7 @@ class GridManager:
         self.qgrid_callbacks = {}
         self.relationships = {}
         self.debug_output = debug_output
-        self.css_manager = CSSManager()
+        self.css_manager = gv.css_manager
         self.sorting_manager = SortingManager(gv.rotated_column_definitions)
         self.custom_css_class = self.css_manager.create_and_inject_css('filter_grids', rotate_suffix)
         self.grid_initializer = GridInitializer(self.sorting_manager, self.css_manager, gv.rotated_column_definitions, self.custom_css_class, debug_output)
@@ -254,7 +264,7 @@ class BaseGrid:
         self.qgrid_options = options if options else {}
         self.main_widget = None
         #self.toolbar_widget = self.create_toolbar()
-        self.toggle_widget = self.create_toggle_widget(df)        
+        self.toggle_widget = widgets.VBox([])  #self.create_toggle_widget(df)        
         self.create_main_widget(df)
         
          # Create a VBox to hold the toolbar, toggle widget, and main grid widget
@@ -506,7 +516,7 @@ class FilterGrid:
         self.refresh_function(event, widget)
                 
 
-    def grid_filter_on_row_added(self, event, widget):
+    def grid_filter_on_row_added(self, event, widget, row_data=None):
         """
         Handles the 'row_added' event for the filter grid.
 
@@ -525,8 +535,14 @@ class FilterGrid:
 
         # Set the values for each column in the new row
         for column in df.columns:
-            if column in self.selection_widgets:
+            
+            if row_data is not None and not row_data.empty:
+                if column in row_data.columns:
+                    widget_value = row_data.iloc[0][column]
+            elif column in self.selection_widgets:
                 widget_value = self.selection_widgets[column].value
+            
+            if widget_value is not None:
                 logger.info(f"FilterClass::grid_filter_on_row_added() - Column: {column}, Value: {widget_value}")
                 # Special handling for the 'Forgeborn Ability' column
                 if column == 'Forgeborn Ability':
@@ -866,7 +882,7 @@ def apply_filter_to_dataframe(df_to_filter, filter_df):
             # Standard case (default) 
             first_operator = 'OR'
             second_operator = substring_operator
-            first_target = ['cardTitles']
+            first_target = ['CardTitles']
             second_target = substrings
             first_target_type = 'field'
             
@@ -950,178 +966,193 @@ def apply_filter_to_dataframe(df_to_filter, filter_df):
     return df_filtered
 
 import json
-def apply_filter_to_database(filter_df):    
-    def query_to_mongo_compass_format(query: dict) -> str:
-        """
-        Converts a MongoDB query dictionary into a JavaScript-compatible string
-        for use in MongoDB Compass.
 
+def apply_filter_to_database(filter_df, collection_name):
+    """
+    Apply filters from a DataFrame to query the database and return matching results.
+    
+    Args:
+        filter_df (DataFrame): DataFrame containing filter configurations.
+        collection_name (str): The name of the collection to query (e.g., 'Deck', 'Fusion').
+    
+    Returns:
+        list: List of documents matching the query.
+    """
+    def query_to_mongo_format(query):
+        """
+        Converts a MongoDB query dictionary or JSON string to a MongoDB-compatible string.
+        
         Args:
-            query (dict): The MongoDB query dictionary.
-
+            query (dict or str): The MongoDB query dictionary or JSON string.
+            
         Returns:
-            str: The formatted query string for MongoDB Compass.
+            str: The properly formatted MongoDB query string.
         """
-        try:
-            # Convert Python dictionary to a JSON string
-            compass_query = json.dumps(query, indent=4)
-            # Replace JSON-specific syntax with JavaScript-compatible syntax
-            compass_query = compass_query.replace('"$and"', '$and')
-            compass_query = compass_query.replace('"$in"', '$in')
-            compass_query = compass_query.replace('"$regex"', '$regex')
-            compass_query = compass_query.replace('"$options"', '$options')
-            return compass_query
-        except Exception as e:
-            raise ValueError(f"Failed to convert query for MongoDB Compass: {e}")
+        # If the query is a dictionary, first convert it to a JSON string
+        if isinstance(query, dict):
+            json_query = json.dumps(query, indent=4)
+        else:
+            json_query = query
 
-    def filter_by_substring(filter_row):
-        def build_query(filter_step):
-            # Extract information from filter step
-            first_target = filter_step.get('first_target', [''])
-            second_target = filter_step.get('second_target', [''])
-            first_operator = filter_step.get('first_operator', 'OR')
-            second_operator = filter_step.get('second_operator', 'OR')
-
-            if first_target == [''] or second_target == ['']:
-                return {}
-
-            # Initialize the query parts
-            query_parts = []
-
-            # Iterate over the first target (fields or substrings)
-            for first_item in first_target:
-                field_queries = []
-
-                # Iterate over the second target (substrings or fields)
-                for second_item in second_target:
-                    if filter_step['first_target_type'] == 'field':
-                        # First target is field, second is substring
-                        string_item = second_item
-                        field_item = first_item
-                    else:
-                        # First target is substring, second is field
-                        string_item = first_item
-                        field_item = second_item
-
-                    # Prepare the regex for MongoDB
-                    string_item = re.sub(r',\s*', ' ', string_item)
-                    #regex = fr"(^|\W){re.escape(string_item)}($|\W)"
-                    regex = re.escape(string_item)
-                    
-                    # Build the field query
-                    field_query = {field_item: {"$regex": regex, "$options": "i"}}
-                    field_queries.append(field_query)
-
-                # Combine field queries with the second operator
-                if second_operator == 'AND':
-                    query_parts.append({"$and": field_queries})
-                else:  # OR logic
-                    query_parts.append({"$or": field_queries})
-
-            # Combine all field queries with the first operator
-            if first_operator == 'AND':
-                return {"$and": query_parts}
-            else:  # OR logic
-                return {"$or": query_parts}
-
-        def determine_filter_config(column, filter_row, string):
-            # Determine operator and split substrings
-            and_symbols = {':': r'\s*:\s*', '&': r'\s*&\s*', '+': r'\s*\+\s*'}
-            or_symbols = {'|': r'\s*\|\s*', '-': r'\s*-\s*'}
-
-            substring_operator = 'OR'
-            substrings = re.split(r'\s*;\s*', string)
-            for symbol, pattern in and_symbols.items():
-                if symbol in string:
-                    substring_operator = 'AND'
-                    substrings = re.split(pattern, string)
-                    break
-            else:
-                for symbol, pattern in or_symbols.items():
-                    if symbol in string:
-                        substring_operator = 'OR'
-                        substrings = re.split(pattern, string)
-                        break
-
-            # Determine fields to filter on and field operator
-            first_operator = 'OR'
-            second_operator = substring_operator
-            first_target = ['cardTitles']
-            second_target = substrings
-            first_target_type = 'field'
-
-            if column == 'Name':
-                second_target = substrings
-                if filter_row['Type'] == 'Fusion':
-                    first_target = ['Deck A', 'Deck B']
-                    first_operator = substring_operator
-                    second_operator = 'OR'
-                else:
-                    first_target = ['Name']
-            elif column == 'Forgeborn Ability':
-                second_target = ['FB2', 'FB3', 'FB4']
-                second_operator = 'OR'
-                first_operator = substring_operator
-                first_target = substrings
-                first_target_type = 'substring'
-
-            return {
-                'first_target': first_target,
-                'second_target': second_target,
-                'first_operator': first_operator,
-                'second_operator': second_operator,
-                'first_target_type': first_target_type 
-            }
-
-        # Begin building the query for the filter row
-        mongo_query = {}
-
-        # Apply Type filter first (always mandatory)
-        if 'Type' in filter_row and isinstance(filter_row['Type'], str) and filter_row['Type']:
-            type_substrings = filter_row['Type'].split(',')
-            type_query = {"type": {"$in": type_substrings}}
-            mongo_query.update(type_query)
-
-        # Apply mandatory fields
-        mandatory_fields = filter_row.get('Mandatory Fields', '')
-        if isinstance(mandatory_fields, str):
-            mandatory_fields = mandatory_fields.split(', ')
-        mandatory_fields = [column.strip() for column in mandatory_fields]
-
-        for column in mandatory_fields:
-            filter_step = determine_filter_config(column, filter_row, filter_row[column])            
-            query_part = build_query(filter_step)
-            mongo_query.update(query_part)
-
-        # Apply optional fields (at least one must match)
-        or_conditions = []
-        for column in filter_row.index:
-            if column not in mandatory_fields and column not in ['Type', 'Mandatory Fields', 'Active'] and isinstance(filter_row[column], str) and filter_row[column]:
-                filter_step = determine_filter_config(column, filter_row, filter_row[column]) 
-                query_part = build_query(filter_step)
-                or_conditions.append(query_part)
-
-        if or_conditions:
-            mongo_query["$or"] = or_conditions
+        # Replace JSON-style operator keys ("$key") with MongoDB format ($key)
+        mongo_query = re.sub(r'"\$(\w+)"\s*:', r'$\1:', json_query)
 
         return mongo_query
 
-    # Beginning of the apply_filter_to_database function
-    active_filters = filter_df[filter_df['Active'] == True]  # Get only the active filters
-    final_query = {"$and": []}  # Combine all filter queries with AND logic
+    def determine_filter_config(column, value):
+        """
+        Determine the configuration for a single filter field.
+        """
+        operators = {
+            'AND': {':', '&', '+'},
+            'OR': {'|', '-', ';'}
+        }
+        operator = 'OR' if any(op in value for op in operators['OR']) else 'AND'
+        substrings = re.split(rf"\s*[{re.escape(''.join(operators[operator]))}]\s*", value)
 
-    for _, filter_row in active_filters.iterrows():
-        row_query = filter_by_substring(filter_row)
-        final_query["$and"].append(row_query)
+        if column == 'Name':
+            fields = ['Deck A', 'Deck B'] if collection_name == 'Fusion' else ['Name']
+        elif column == 'Forgeborn Ability':
+            fields, operator = ['FB2', 'FB3', 'FB4'], 'OR'
+        else:
+            fields = ['CardTitles']
+
+        return {
+            'fields': fields,
+            'substrings': substrings,
+            'operator': operator
+        }
+
+    def build_query(config):
+        """
+        Build a MongoDB query based on the filter configuration.
+        """
+        field_queries = [
+            {field: {"$regex": re.escape(substr), "$options": "i"}}
+            for field in config['fields']
+            for substr in config['substrings']
+        ]
+        return {"$and" if config['operator'] == 'AND' else "$or": field_queries}
+
+    def process_filter_row(filter_row):
+        """
+        Generate a MongoDB query for a single filter row.
+        """
+        query = {}
+        mandatory_fields = filter_row.get('Mandatory Fields', '').split(', ')
+        and_conditions = []
+        or_conditions = []
+
+        for column, value in filter_row.items():
+            if column in ['Type', 'Mandatory Fields', 'Active'] or not isinstance(value, str) or not value.strip():
+                continue
+
+            config = determine_filter_config(column, value)
+            query_part = build_query(config)
+
+            if column in mandatory_fields:
+                and_conditions.append(query_part)
+            else:
+                or_conditions.append(query_part)
+
+        query = {}
+        if and_conditions:
+            query["$and"] = and_conditions
+        if or_conditions:
+            query["$or"] = or_conditions
+
+        return query
+
+    # Main function logic
+    active_filters = filter_df[filter_df['Active'] == True]
+    filter_queries = [process_filter_row(row) for _, row in active_filters.iterrows()]
+    final_query = {"$and": filter_queries} if filter_queries else {}
+
+
+    # Define the fields for projection
+    fields = [
+        'CreatedAt', 'UpdatedAt', 'CardTitles', 'crossFaction',
+        'forgebornName', 'deckRank', 'faction', 'name', 'tags'
+    ]
+
+    # Define a mapping for renaming fields
+    rename_mapping = {
+        "name": "Name"  # Rename 'name' to 'Name'
+    }
+
+    # Define the aggregation pipeline
+    pipeline = [
+        {"$match": final_query},  # Apply the original query
+        {"$addFields": {
+            # Replace 'CardTitles' with the concatenated string
+            "CardTitles": {
+                "$reduce": {
+                    "input": "$CardTitles",
+                    "initialValue": "",
+                    "in": {
+                        "$concat": [
+                            "$$value",
+                            {"$cond": [{"$eq": ["$$value", ""]}, "", "; "]},
+                            "$$this"
+                        ]
+                    }
+                }
+            },
+            # Add renamed fields dynamically
+            **{new_field: f"${old_field}" for old_field, new_field in rename_mapping.items()}
+        }},
+        {"$unset": list(rename_mapping.keys())},  # Remove old fields
+        {
+            "$project": {  # Adjust projection to include renamed fields
+                **{field: 1 for field in fields if field not in rename_mapping},  # Include unmodified fields
+                **{new_field: 1 for _, new_field in rename_mapping.items()}       # Include renamed fields
+            }
+        }
+    ]
 
     # Execute the query
     results = []
     if gv.myDB:
-        myQuery = query_to_mongo_compass_format(final_query)
-        print(f"Final query: {myQuery}")
-        results = list(gv.myDB.find('Fusion', final_query))
+        myQuery = query_to_mongo_format(final_query)
+        #print(f"Final query: {myQuery}")
+        collection = gv.myDB.get_collection(collection_name)
+        results = list(collection.aggregate(pipeline))
     return results
 
+
+def convert_to_dataframe(records, index_field='Name', columns=None):
+    """
+    Converts a list of database records into a pandas DataFrame.
+
+    Args:
+        records (list): List of dictionaries representing the database records.
+        index_field (str): The field to set as the index of the DataFrame. Defaults to 'name'.
+        columns (list): List of columns to include in the DataFrame. Defaults to None (include all columns).
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the records.
+    """
+    if not records:
+        print("No records found to convert into a DataFrame.")
+        return pd.DataFrame()  # Return an empty DataFrame if no records
+
+    # Create a DataFrame from the list of dictionaries
+    df = pd.DataFrame(records)
+    
+    # Filter the DataFrame to include only the specified columns
+    if columns:
+        df = df[columns]
+        print(f"Filtered DataFrame to include columns: {columns}")
+
+    # Set the specified field as the index if it exists
+    if index_field in df.columns:
+        df.set_index(index_field, inplace=True)
+        print(f"Set '{index_field}' as the index of the DataFrame.")
+    else:
+        print(f"Index field '{index_field}' not found in the records. Using default numeric index.")
+
+    # Return the resulting DataFrame
+    return df
 
 # Function to create a styled HTML widget with a background color
 def create_styled_html(text, text_color, bg_color, border_color):
@@ -1152,30 +1183,33 @@ deck_content_bar = create_styled_html(
     text_color='white', bg_color='#AA4465', border_color='#4A4A4A'  
 )
 
-from functools import partial
+
 import webbrowser
-import FieldUnifier
-from GraphVis import display_graph
 import logging
-import time
-from datetime import datetime
 import numpy as np
+from functools import partial
+from GraphVis import display_graph
+from datetime import datetime
+
+import FieldUnifier
+from DataFrameGenerator import DataFrameGenerator
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class DynamicGridManager:
 
-    def __init__(self, data_generate_functions, qg_options, out_debug):
+    def __init__(self, qg_options, out_debug):
         self.out_debug = out_debug       
-        self.data_generate_functions = data_generate_functions
+        #self.data_generate_functions = data_generate_functions
         self.qg_options = qg_options
         self.qm = GridManager(out_debug)
+        self.DataFrameGenerator = DataFrameGenerator()
         
         self.filterGridObject = FilterGrid(self.refresh_gridbox)
         self.deck_content_Grid = self.create_deck_content_Grid()
         self.sorting_info = {}
-        self.css_manager = CSSManager()        
+        self.css_manager = gv.css_manager
         self.custom_css_class = self.css_manager.create_and_inject_css('deck_content', rotate_suffix)        
         self.grid_widget_states = {}
         self.refresh_needed = False  # Flag to indicate whether refresh is needed
@@ -1189,6 +1223,7 @@ class DynamicGridManager:
             "Password": {"type": "text", "description": "Password", "value": ""},
             "Authenticate": {"type": "button", "description": "Login", "button_style": 'info'},
             "Generate": {"type": "button", "description": "Generate Table", "button_style": "success"},
+            "Fuse": {"type": "button", "description": "Fuse Filtered", "button_style": "warning"},
         }
         action_toolbar = ActionToolbar(widget_configs=button_configs)
     
@@ -1201,6 +1236,7 @@ class DynamicGridManager:
         # Assign callbacks using partial to bind grid_id
         action_toolbar.assign_callback('Generate', self.handle_database_change, refresh_needed=True)
         action_toolbar.assign_callback('Authenticate', authenticate_callback)
+        action_toolbar.assign_callback('Fuse', self.fuse_filtered)
     
         # GridBox 
         self.VBoxGrids = VBoxManager()
@@ -1232,13 +1268,19 @@ class DynamicGridManager:
         info_level = widget_states['info_level']
         data_set = widget_states['data_set']
         filter_row = widget_states['filter_row']
-        #if filter_row['Type'] == 'Fusion':
-        #    results = apply_filter_to_database(pd.DataFrame([filter_row]))
-        #else:
-        filtered_df = apply_filter_to_dataframe(df, pd.DataFrame([filter_row]))        
-        return self.determine_columns(filtered_df, info_level, data_set, filter_row['Type'])
+        if filter_row['Type'] == 'Fusion':
+            filtered_list = apply_filter_to_database(pd.DataFrame([filter_row]), filter_row['Type'])
+            filtered_df = pd.DataFrame(filtered_list)
+            #print(filtered_df)
+            #list_ids = [ item['_id'] for item in filtered_list]
+            #filtered_df = self.data_generate_functions['fetch_from_db']('Fusion', ids=list_ids, fields=fields)
+            #print(filtered_df)
+            return filtered_df
+        else:
+            filtered_df = apply_filter_to_dataframe(df, pd.DataFrame([filter_row]))        
+        return self.filter_by_columns(filtered_df, info_level, data_set, filter_row['Type'])
         
-    def determine_columns(self, df, info_level, data_set, item_type):
+    def filter_by_columns(self, df, info_level, data_set, item_type):
         
         data_set_columns = FieldUnifier.generate_final_fields(info_level, data_set, item_type)        
         existing_columns = [col for col in data_set_columns if col in df.columns]
@@ -1261,7 +1303,8 @@ class DynamicGridManager:
 
         # Step 1: Update the collection DataFrame
         try:
-            collection_df = self.data_generate_functions['central_dataframe']()
+            collection_df = self.DataFrameGenerator.generate_central_dataframe()
+            #self.data_generate_functions['central_dataframe']()
             self.qm.add_grid('collection', collection_df, options=self.qg_options)
             logging.info(f"Collection DataFrame updated with {len(collection_df)} rows.")
         except Exception as e:
@@ -1314,8 +1357,23 @@ class DynamicGridManager:
                 filter_df = widget.get_changed_df()
             else:
                 filter_df = self.filterGridObject.get_changed_df()
-            active_filters_df = filter_df[filter_df['Active']]
-            inactive_filters_df = filter_df[~filter_df['Active']]
+            
+            logging.info(f"DataFrame columns: {filter_df.columns}")
+            logging.info(f"DataFrame index: {filter_df.index}")
+            #active_filters_df = filter_df[filter_df['Active']]
+            #inactive_filters_df = filter_df[~filter_df['Active']]
+            
+            if 'Active' in filter_df.columns:
+                # Ensure the 'Active' column contains valid booleans
+                filter_df['Active'] = filter_df['Active'].fillna(False).astype(bool)
+
+                # Filter active and inactive rows
+                active_filters_df = filter_df[filter_df['Active']]
+                inactive_filters_df = filter_df[~filter_df['Active']]
+            else:
+                logging.error("'Active' column missing in filter_df")
+                active_filters_df = pd.DataFrame()
+                inactive_filters_df = pd.DataFrame()
 
             # Handle case when no active or inactive filters are present
             if active_filters_df.empty and inactive_filters_df.empty:
@@ -1334,7 +1392,7 @@ class DynamicGridManager:
                     raise ValueError(f"Unexpected event name: {name}")
                 
                 specific_index = event.get(parameter_index)
-                logger.info(f"Handling row-specific update from filter: {specific_index}")
+                logger.info(f"Handling row-specific update from filter: {specific_index} with event: {name}")
                     
                 if name == 'cell_edited' :
                     column = event['column']
@@ -1502,7 +1560,7 @@ class DynamicGridManager:
         collection_df = self.qm.get_grid_df('collection')
         if collection_df.empty or (event and 'name' in event and event['name'] in {'username', 'generation'}):
             print(f"Generating new collection DataFrame for event: {event}")
-            collection_df = self.data_generate_functions['central_dataframe']()
+            collection_df = self.DataFrameGenerator.generate_central_dataframe()
             self.qm.add_grid('collection', collection_df, options=self.qg_options)
         return collection_df    
     
@@ -1600,8 +1658,11 @@ class DynamicGridManager:
         action_toolbar.assign_callback('Export', partial(self.save_dataframes_to_csv, grid_id))
         action_toolbar.assign_callback('Open', partial(self.open_deck, grid_id))
         action_toolbar.assign_callback('Graph', partial(self.show_graph, grid_id))
-        #action_toolbar.add_button('Open', 'Open (web)', callback_function=partial(self.open_deck, grid_id))
-        #action_toolbar.add_button('Graph', 'Show Graph', callback_function=partial(self.show_graph, grid_id))
+        action_toolbar.add_widget('Generate Fusions', 'button', description = 'Generate Fusion Data', button_style = 'info')
+        # TODO - Add callback for 'Generate Fusions' button
+        action_toolbar.assign_callback('Generate Fusions', partial(self.generate_dataframe, grid_id, 'fusion_stats'))
+                                       
+        
         return action_toolbar.get_ui()
 
     def create_toolbar(self, grid_identifier):
@@ -1690,9 +1751,8 @@ class DynamicGridManager:
                 logging.info(f"DynamicGridManager::update_deck_content() - Updating deck content with event: {event}")
                 if event['name'] == 'selection_changed':
                     selected_indices = event['new']
-                    
-                #elif event['name'] == 'filter_changed':
-                    
+                elif event['name'] == 'filter_changed':
+                    raise NotImplementedError("Filter change event not yet implemented.")
                 
                 grid_df = widget.get_changed_df()            
 
@@ -1737,7 +1797,8 @@ class DynamicGridManager:
                     selected_deck_names = list(set(selected_deck_names))
                                     
                     # Generate the deck content DataFrame using the provided function
-                    deck_content_df = self.data_generate_functions['deck_content'](selected_deck_names)
+                    deck_content_df = self.DataFrameGenerator.generate_deck_content_dataframe(selected_deck_names)
+                    #self.data_generate_functions['deck_content'](selected_deck_names)
                     #print(deck_content_df)
 
                     # Copy original DataFrame to preserve column order
@@ -1974,6 +2035,40 @@ class DynamicGridManager:
         # Proceed with the solbind request using NetApi
         net_api = gv.NetApi
         net_api.post_solbind_request(deck_id)
+
+
+    def generate_dataframe(self, button, grid_id, tasks=None) :
+        
+        # Get the dataframe belonging to the grid_id 
+        grid_name = f'filtered_grid_{grid_id}'
+        df = self.qm.get_grid_df(grid_name)
+        grid_df = self.DataFrameGenerator.generate_central_dataframe(tasks=tasks, filter_df=df)
+        if grid_df is None:
+            print(f"Failed to generate DataFrame for tasks: {tasks}")
+            return
+        self.qm.add_grid(f'{grid_name}_generated', grid_df, options=self.qg_options)
+        
+
+    def fuse_filtered(self, button=None):
+        from DeckLibrary import DeckLibrary
+        # Get the filtered items from the grid
+        # Get grid_ids from active filters
+        active_filters_df = self.filterGridObject.get_changed_df()
+        active_filters_df = active_filters_df[active_filters_df['Active']]
+        
+        # Grid_id is the index of the active filter
+        grid_ids = active_filters_df.index
+        print(f"Grid IDs: {grid_ids}")
+        # Get the items from the grid_ids 
+        grid_items = {}
+        for grid_id in grid_ids:
+            grid_df = self.qm.get_grid_df(f'filtered_grid_{grid_id}')
+            grid_items[grid_id] = grid_df['Name'].tolist()
+            
+        print(f"Grid items: {grid_items}")
+        dl = DeckLibrary(None, None, '' )
+        dl.make_fusions(list(grid_items.values()))
+        
 
     # # Function for renaming a fusion
     # def rename_fusion(self, button):

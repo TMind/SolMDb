@@ -27,7 +27,7 @@ def create_graph_for_fusions(fusion_object):
         fusion_object.data.graph = objectGraphDict
 
         logging.debug(f"Graph created for object: {fusion_object}.")
-        return fusion_object
+        return objectGraph
     except Exception as e:
         logging.error(f"Error creating graph for object: {e}")
         raise
@@ -35,7 +35,6 @@ def create_graph_for_fusions(fusion_object):
 def create_fusions(username, data_chunk, progress):
     try:
         logging.info(f"Creating fusions for data chunk with {len(data_chunk)} items.")
-
         # Initialize MongoDB connection only once per worker process
         if not hasattr(create_fusions, "_db_client"):
             create_fusions._db_client = MongoClient(os.getenv('MONGODB_URI'))
@@ -62,9 +61,15 @@ def create_fusions(username, data_chunk, progress):
                     fusionObject = Fusion(FusionData(fusionName, fusionDeckNames, fusionFaction, fusionCrossFaction, deck1['forgebornId'], fusionBornIds, fusionId))
 
                     # Create a graph representation
-                    fusionObject = create_graph_for_fusions(fusionObject)
+                    fusionGraph = create_graph_for_fusions(fusionObject)
+                    if fusionObject.data:
+                        # Process fusion data to store in the database 
+                        fusionObject.data.CardTitles = fusionGraph.get_card_list() 
+                        currentForgebornId = fusionObject.data.currentForgebornId
+                        fusionObject.data.forgebornName = currentForgebornId[5:-3].capitalize() if currentForgebornId else None
+                        
                     fusionData = fusionObject.to_data()
-
+                    
                     # Store the operation to be performed in MongoDB
                     operations.append(UpdateOne({'_id': fusionName}, {'$set': fusionData}, upsert=True))
                     successful_fusions += 1

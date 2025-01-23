@@ -21,7 +21,7 @@ def create_graph_for_object(object):
     objectGraphDict = objectGraph.to_dict()
     object.data.graph = objectGraphDict
     
-    return object
+    return objectGraph
 
 class DeckLibrary:
     def __init__(self, decks_data, fusions_data, mode):                
@@ -104,6 +104,8 @@ class DeckLibrary:
                     # Save only new decks
                     if deckName not in deckNamesDatabase:                         
                         self.new_decks.append(deckData)    
+                        forgebornId = deckData.get('forgebornId', None)
+                        deckData['forgebornName'] = forgebornId[5:-3].capitalize() if forgebornId else None
                         new_deck = Deck.from_data(deckData)
                         
                         if new_deck.children_data:
@@ -145,13 +147,13 @@ class DeckLibrary:
                 for deckObject in deck_objects:                    
                     gv.progress_manager.update_progress('DeckLibrary Graphs', message=f"Creating Graph for Deck {deckObject.name}")
                     # Now create the graph since the cards are in the database
-                    create_graph_for_object(deckObject)
+                    deck_graph = create_graph_for_object(deckObject)
+                    card_list = deck_graph.get_card_list()
+                    deckObject.data.CardTitles = ';'.join(card_list)
                     
                     # Update the deck data with the graph and node data
                     deck_data = deckObject.to_data()
-                    #deck_data['graph'] = deckObject.data.graph
-                    #deck_data['node_data'] = deckObject.data.node_data
-
+                    
                     # Collect the deck data for upserting
                     deckDataList.append(deck_data)
 
@@ -183,10 +185,17 @@ class DeckLibrary:
                 fusion_data['ForgebornIds'] = forgebornIds
                 fusion_data['faction'] = factions[0]
                 fusion_data['crossFaction'] = factions[1]
-
+                
                 # Graph creation 
                 fusionObject = Fusion.from_data(fusion_data)
-                create_graph_for_object(fusionObject)
+                graph = create_graph_for_object(fusionObject)
+                
+                if fusionObject.data:
+                    # Process fusion data to store in the database 
+                    fusionObject.data.CardTitles = graph.get_card_list() 
+                    currentForgebornId = fusionObject.data.currentForgebornId
+                    fusionObject.data.forgebornName= currentForgebornId[5:-3].capitalize() if currentForgebornId else None
+
                 
                 # Save the fusion to the database
                 fusionObject.save()           
@@ -201,39 +210,12 @@ class DeckLibrary:
             self.new_decks = [deck for deck in deckCursor]             
             self.make_fusions()
                          
-    # def make_fusions(self):
-    #     # Get all deckNames from the database
-    #     deckCursor = self.dbmgr.find('Deck', {})
-    #     allDeckData = {deck['name']: deck for deck in deckCursor}
-    #     allDeckNames = list(allDeckData.keys())
-
-    #     # Remove all decks that have expiration dates in the past         
-    #     self.new_decks = [deck for deck in self.new_decks if 'pExpiry' not in deck or compare_times(deck['pExpiry'], gv.current_date)]
-
-    #     # Combine allDeckNames in pairs with new_decks only, not with themselves
-    #     newDeckNames = [deck['name'] for deck in self.new_decks]
-    
-    #     # Pair newDeckNames with allDeckNames but not with itself
-    #     newCombinations = [(newDeck, allDeck) for newDeck in newDeckNames for allDeck in allDeckNames if newDeck != allDeck]
-    #     newCombinationsSets = [set(combination) for combination in newCombinations]
-
-    #     # Replace newCombinationNames with the actual decks
-    #     deckCombinationData = []
-    #     for combination in newCombinationsSets:
-    #         deckCombinationData.append([allDeckData[deckName] for deckName in combination])
-
-    #     # Create new fusions with the newCombinations
-    #     if deckCombinationData:            
-    #         multi_process = MultiProcess(gv.username, deckCombinationData)
-    #         multi_process.run()
-            
-
-    def make_fusions(self, *deck_lists):
+    def make_fusions(self, deck_lists=None):
         """
         Creates fusions from the given deck lists or from all decks in the database if no lists are provided.
 
         Args:
-            *deck_lists: Variable number of lists containing deck names. If no lists are provided, all valid deck names are used.
+            deck_lists: List of lists containing deck names. If no lists are provided, all valid deck names are used.
         """
         # Fetch all deck data from the database
         deckCursor = self.dbmgr.find('Deck', {})
@@ -253,26 +235,31 @@ class DeckLibrary:
         # Handle case where only a single list is provided
         if len(deck_lists) == 1:
             single_list = deck_lists[0]
-            fusion_combinations = [
-                [deck_a, deck_b]
+            newCombinations = [
+                (deck_a, deck_b)
                 for i, deck_a in enumerate(single_list)
                 for j, deck_b in enumerate(single_list)
                 if i != j and deck_a in validDeckNames and deck_b in validDeckNames
             ]
         else:
             # Generate combinations of decks from multiple lists
-            fusion_combinations = [
-                [deck_a, deck_b]
+            newCombinations = [
+                (deck_a, deck_b)
                 for deck_list_a, deck_list_b in product(deck_lists, repeat=2)
                 for deck_a in deck_list_a
                 for deck_b in deck_list_b
                 if deck_a in validDeckNames and deck_b in validDeckNames
             ]
 
+        # Replace newCombinationNames with the actual deck dictionaries
+        deckCombinationData = []
+        for combination in newCombinations:
+            deckCombinationData.append([allDeckData[deckName] for deckName in combination])
+
         # Process all valid combinations using the MultiProcess module
-        if fusion_combinations:
-            multi_process = MultiProcess(gv.username, fusion_combinations)
+        if deckCombinationData:
+            multi_process = MultiProcess(gv.username, deckCombinationData)
             multi_process.run()
-            print(f"Processed {len(fusion_combinations)} fusions.")
+            print(f"Processed {len(deckCombinationData)} fusions.")
         else:
             print("No valid fusions could be created.")

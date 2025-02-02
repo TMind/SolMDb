@@ -2,9 +2,10 @@ from GlobalVariables import GLOBAL_COLUMN_ORDER
 
 # Define fields that apply to all items (both Deck and Fusion)
 BASIC_FIELDS = [
-    'Name', 'faction', 'digital', 'cardSetNo', 'forgebornId', 'FB2', 'FB3', 'FB4',
+    'name', 'faction', 'digital', 'cardSetNo', 'Forgeborn', 'FB2', 'FB3', 'FB4',
     'Betrayers', 'SolBinds', 'Spells', 'Exalt'
 ]
+
 
 # Define type-specific fields
 TYPE_SPECIFIC_FIELDS = {
@@ -61,6 +62,18 @@ COMPONENTS = {
 }
 
 
+DB_TO_DF_FIELDS = {
+    'name': 'Name',
+    'faction': 'Faction',
+    'digital': 'Digital',
+    'cardSetNo': 'Set',
+}
+
+# Reverse mapping for DataFrame to Database fields
+DF_TO_DB_FIELDS = {v: k for k, v in DB_TO_DF_FIELDS.items()}
+
+
+
 def resolve_component_fields(component_name):
     """Recursively resolve a component to its fields."""
     final_fields = set()
@@ -82,7 +95,7 @@ def resolve_component_fields(component_name):
     return final_fields
 
 
-def generate_final_fields(info_level, tag_level, item_type):
+def generate_final_fields(info_level, tag_level, item_type, rename_fields_to=None):
     """Generate a final list of fields based on the info level, tag level, and item type (Deck or Fusion)."""
     final_fields = set()        
     final_fields.update(resolve_component_fields(info_level))
@@ -98,9 +111,13 @@ def generate_final_fields(info_level, tag_level, item_type):
         final_fields = {field for field in final_fields if field not in TYPE_SPECIFIC_FIELDS['Deck']}    
 
     final_fields = sorted(final_fields, key=lambda field: GLOBAL_COLUMN_ORDER.index(field))
-
+    
+    if rename_fields_to == 'db':
+        final_fields = {DF_TO_DB_FIELDS.get(field, field) for field in final_fields}
+    elif rename_fields_to == 'df':
+        final_fields = {DB_TO_DF_FIELDS.get(field, field) for field in final_fields}
+                        
     return list(final_fields)
-
 
 # Example usage
 if __name__ == "__main__":

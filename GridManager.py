@@ -40,7 +40,7 @@ TESTING =  pd.DataFrame({
         })
 
 TESTING2 =  pd.DataFrame({
-            'Type': ['Deck'],
+            'Type': ['Fusion'],
             'Name': [''],
             'Modifier': [''],
             'Creature': [''],
@@ -50,7 +50,7 @@ TESTING2 =  pd.DataFrame({
             'Mandatory Fields': ['Spell']
         })
 
-DEFAULT_FILTER = TESTING2
+DEFAULT_FILTER = DEFAULT
 
 
 class GridManager:
@@ -435,7 +435,7 @@ class GridInitializer:
 
             return widget
 
-from MyWidgets import EnhancedSelectMultiple, VBoxManager
+from MyWidgets import EnhancedSelect, VBoxManager
 class FilterGrid:
     """
     Manages the grid for filtering data based on user-defined criteria.
@@ -651,7 +651,7 @@ class FilterGrid:
         # Update default options with any overrides from 'options'
         layout_options.update(options)
         cardType_entity_names = [''] + get_cardType_entity_names(cardType)
-        cardType_name_widget = EnhancedSelectMultiple(
+        cardType_name_widget = EnhancedSelect(
             options=cardType_entity_names,
             toggle_description = cardType,
             description='',
@@ -660,7 +660,7 @@ class FilterGrid:
         return cardType_name_widget
 
     
-    # Create a function to use the EnhancedSelectMultiple widget
+    # Create a function to use the EnhancedSelect widget
     def create_deckName_selector(self):
         deckNames = []
         if gv.myDB:
@@ -675,10 +675,10 @@ class FilterGrid:
         deckNames.insert(0, '')
 
         # Debug statement to verify deckNames before creating the widget
-        #print(f"Deck names before initializing EnhancedSelectMultiple: {deckNames}")
+        #print(f"Deck names before initializing EnhancedSelect: {deckNames}")
 
         # Create the enhanced SelectMultiple widget with search functionality
-        deckName_widget = EnhancedSelectMultiple(
+        deckName_widget = EnhancedSelect(
             options=deckNames,
             description='',
             toggle_description='Name',
@@ -691,20 +691,21 @@ class FilterGrid:
     def create_selection_box(self):
         # Define widgets with their layout settings
         widgets_dict = {
-            'Type': EnhancedSelectMultiple(
+            'Type': EnhancedSelect( allow_multiple=False,
                 options=['Deck', 'Fusion'],
-                value=['Deck'],
+                value='Deck',
                 description='',
                 toggle_description='Type',
                 toggle_default=True,
                 toggle_disable=True,
-                layout=widgets.Layout(width='10%', border='1px solid cyan', align_items='center', justify_content='center')
+                #layout=widgets.Layout(width='10%', border='1px solid cyan', align_items='center', justify_content='center')
+                layout=widgets.Layout(width='30%', height='auto', border='1px solid cyan', align_items='center', justify_content='center', overflow='hidden')
             ),
             'Name': self.create_deckName_selector(),
             'Modifier': self.create_cardType_names_selector('Modifier', options={'border': '1px solid blue'}),
             'Creature': self.create_cardType_names_selector('Creature', options={'border': '1px solid green'}),
             'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),
-            'Forgeborn Ability': EnhancedSelectMultiple(options=[''] + get_forgeborn_abilities(), description='', toggle_description='Forgeborn Ability', toggle_default=True, 
+            'Forgeborn Ability': EnhancedSelect(options=[''] + get_forgeborn_abilities(), description='', toggle_description='Forgeborn Ability', toggle_default=True, 
                                                         layout=widgets.Layout(width='30%', height='auto', border='1px solid orange', align_items='center', justify_content='center', overflow='hidden')),
         }
 
@@ -712,7 +713,7 @@ class FilterGrid:
         widget_row_items = [widgets_dict[key] for key in widgets_dict]
         #widget_row = widgets.HBox(widget_row_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%', align_items='center', justify_content='flex-start', gap='5px'))
 
-        widget_row_items = [widget.get_widget() if isinstance(widget, EnhancedSelectMultiple) else widget for widget in widget_row_items]
+        widget_row_items = [widget.get_widget() if isinstance(widget, EnhancedSelect) else widget for widget in widget_row_items]
         widget_row = widgets.HBox(widget_row_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%', align_items='center', justify_content='flex-start', gap='5px'))
 
 
@@ -965,161 +966,6 @@ def apply_filter_to_dataframe(df_to_filter, filter_df):
 
     return df_filtered
 
-import json
-
-def apply_filter_to_database(filter_df, collection_name):
-    """
-    Apply filters from a DataFrame to query the database and return matching results.
-    
-    Args:
-        filter_df (DataFrame): DataFrame containing filter configurations.
-        collection_name (str): The name of the collection to query (e.g., 'Deck', 'Fusion').
-    
-    Returns:
-        list: List of documents matching the query.
-    """
-    def query_to_mongo_format(query):
-        """
-        Converts a MongoDB query dictionary or JSON string to a MongoDB-compatible string.
-        
-        Args:
-            query (dict or str): The MongoDB query dictionary or JSON string.
-            
-        Returns:
-            str: The properly formatted MongoDB query string.
-        """
-        # If the query is a dictionary, first convert it to a JSON string
-        if isinstance(query, dict):
-            json_query = json.dumps(query, indent=4)
-        else:
-            json_query = query
-
-        # Replace JSON-style operator keys ("$key") with MongoDB format ($key)
-        mongo_query = re.sub(r'"\$(\w+)"\s*:', r'$\1:', json_query)
-
-        return mongo_query
-
-    def determine_filter_config(column, value):
-        """
-        Determine the configuration for a single filter field.
-        """
-        operators = {
-            'AND': {':', '&', '+'},
-            'OR': {'|', '-', ';'}
-        }
-        operator = 'OR' if any(op in value for op in operators['OR']) else 'AND'
-        substrings = re.split(rf"\s*[{re.escape(''.join(operators[operator]))}]\s*", value)
-
-        if column == 'Name':
-            fields = ['Deck A', 'Deck B'] if collection_name == 'Fusion' else ['Name']
-        elif column == 'Forgeborn Ability':
-            fields, operator = ['FB2', 'FB3', 'FB4'], 'OR'
-        else:
-            fields = ['CardTitles']
-
-        return {
-            'fields': fields,
-            'substrings': substrings,
-            'operator': operator
-        }
-
-    def build_query(config):
-        """
-        Build a MongoDB query based on the filter configuration.
-        """
-        field_queries = [
-            {field: {"$regex": re.escape(substr), "$options": "i"}}
-            for field in config['fields']
-            for substr in config['substrings']
-        ]
-        return {"$and" if config['operator'] == 'AND' else "$or": field_queries}
-
-    def process_filter_row(filter_row):
-        """
-        Generate a MongoDB query for a single filter row.
-        """
-        query = {}
-        mandatory_fields = filter_row.get('Mandatory Fields', '').split(', ')
-        and_conditions = []
-        or_conditions = []
-
-        for column, value in filter_row.items():
-            if column in ['Type', 'Mandatory Fields', 'Active'] or not isinstance(value, str) or not value.strip():
-                continue
-
-            config = determine_filter_config(column, value)
-            query_part = build_query(config)
-
-            if column in mandatory_fields:
-                and_conditions.append(query_part)
-            else:
-                or_conditions.append(query_part)
-
-        query = {}
-        if and_conditions:
-            query["$and"] = and_conditions
-        if or_conditions:
-            query["$or"] = or_conditions
-
-        return query
-
-    # Main function logic
-    active_filters = filter_df[filter_df['Active'] == True]
-    filter_queries = [process_filter_row(row) for _, row in active_filters.iterrows()]
-    final_query = {"$and": filter_queries} if filter_queries else {}
-
-
-    # Define the fields for projection
-    fields = [
-        'CreatedAt', 'UpdatedAt', 'CardTitles', 'crossFaction',
-        'forgebornName', 'deckRank', 'faction', 'name', 'tags'
-    ]
-
-    # Define a mapping for renaming fields
-    rename_mapping = {
-        "name": "Name"  # Rename 'name' to 'Name'
-    }
-
-    # Define the aggregation pipeline
-    pipeline = [
-        {"$match": final_query},  # Apply the original query
-        {"$addFields": {
-            # Replace 'CardTitles' with the concatenated string
-            "CardTitles": {
-                "$reduce": {
-                    "input": "$CardTitles",
-                    "initialValue": "",
-                    "in": {
-                        "$concat": [
-                            "$$value",
-                            {"$cond": [{"$eq": ["$$value", ""]}, "", "; "]},
-                            "$$this"
-                        ]
-                    }
-                }
-            },
-            # Add renamed fields dynamically
-            **{new_field: f"${old_field}" for old_field, new_field in rename_mapping.items()}
-        }},
-        {"$unset": list(rename_mapping.keys())},  # Remove old fields
-        {
-            "$project": {  # Adjust projection to include renamed fields
-                **{field: 1 for field in fields if field not in rename_mapping},  # Include unmodified fields
-                **{new_field: 1 for _, new_field in rename_mapping.items()}       # Include renamed fields
-            }
-        }
-    ]
-
-    # Execute the query
-    results = []
-    if gv.myDB:
-        myQuery = query_to_mongo_format(final_query)
-        #print(f"Final query: {myQuery}")
-        collection = gv.myDB.get_collection(collection_name)
-        results = list(collection.aggregate(pipeline))
-    return results
-
-
 def convert_to_dataframe(records, index_field='Name', columns=None):
     """
     Converts a list of database records into a pandas DataFrame.
@@ -1201,7 +1047,6 @@ class DynamicGridManager:
 
     def __init__(self, qg_options, out_debug):
         self.out_debug = out_debug       
-        #self.data_generate_functions = data_generate_functions
         self.qg_options = qg_options
         self.qm = GridManager(out_debug)
         self.DataFrameGenerator = DataFrameGenerator()
@@ -1264,28 +1109,38 @@ class DynamicGridManager:
         
         
     def apply_filters(self, df, widget_states):
+        from DBQueryHelper import fetch_filtered_documents
         # Filter columns based on the filter_row
         info_level = widget_states['info_level']
         data_set = widget_states['data_set']
         filter_row = widget_states['filter_row']
-        if filter_row['Type'] == 'Fusion':
-            filtered_list = apply_filter_to_database(pd.DataFrame([filter_row]), filter_row['Type'])
-            filtered_df = pd.DataFrame(filtered_list)
-            #print(filtered_df)
-            #list_ids = [ item['_id'] for item in filtered_list]
-            #filtered_df = self.data_generate_functions['fetch_from_db']('Fusion', ids=list_ids, fields=fields)
-            #print(filtered_df)
-            return filtered_df
-        else:
-            filtered_df = apply_filter_to_dataframe(df, pd.DataFrame([filter_row]))        
+        filtered_list = fetch_filtered_documents(filter_row['Type'],  filter_df=pd.DataFrame([filter_row]))
+        filtered_df = pd.DataFrame(filtered_list)
+        
+        # if filter_row['Type'] == 'Fusion':
+        #     #filtered_list = apply_filter_to_database(pd.DataFrame([filter_row]), filter_row['Type'])
+        #     filtered_list = fetch_filtered_documents('Fusion', filter_df=pd.DataFrame([filter_row]))
+        #     filtered_df = pd.DataFrame(filtered_list)
+        #     #print(filtered_df)
+        #     #list_ids = [ item['_id'] for item in filtered_list]
+        #     #filtered_df = self.data_generate_functions['fetch_from_db']('Fusion', ids=list_ids, fields=fields)
+        #     #print(filtered_df)
+        #     return filtered_df
+        #else:
+        #    filtered_df = apply_filter_to_dataframe(df, pd.DataFrame([filter_row]))        
         return self.filter_by_columns(filtered_df, info_level, data_set, filter_row['Type'])
         
     def filter_by_columns(self, df, info_level, data_set, item_type):
         
-        data_set_columns = FieldUnifier.generate_final_fields(info_level, data_set, item_type)        
+        data_set_columns = FieldUnifier.generate_final_fields(info_level, data_set, item_type, rename_fields_to='df')        
         existing_columns = [col for col in data_set_columns if col in df.columns]
         filtered_df = df.loc[:, existing_columns]    
         
+        #filtered_df.sort_index(axis=1, inplace=True)
+        #filtered_df = utils.sum_card_types(filtered_df)
+        filtered_df = utils.clean_columns(filtered_df)
+        filtered_df = utils.enforce_column_order(filtered_df, utils.GLOBAL_COLUMN_ORDER)
+    
         return filtered_df
 
 
@@ -1303,7 +1158,7 @@ class DynamicGridManager:
 
         # Step 1: Update the collection DataFrame
         try:
-            collection_df = self.DataFrameGenerator.generate_central_dataframe()
+            collection_df = self.DataFrameGenerator.manage_central_dataframe()
             #self.data_generate_functions['central_dataframe']()
             self.qm.add_grid('collection', collection_df, options=self.qg_options)
             logging.info(f"Collection DataFrame updated with {len(collection_df)} rows.")
@@ -1560,7 +1415,7 @@ class DynamicGridManager:
         collection_df = self.qm.get_grid_df('collection')
         if collection_df.empty or (event and 'name' in event and event['name'] in {'username', 'generation'}):
             print(f"Generating new collection DataFrame for event: {event}")
-            collection_df = self.DataFrameGenerator.generate_central_dataframe()
+            collection_df = self.DataFrameGenerator.manage_central_dataframe()
             self.qm.add_grid('collection', collection_df, options=self.qg_options)
         return collection_df    
     
@@ -1626,10 +1481,13 @@ class DynamicGridManager:
             
             # Register the selection event callback for the grid
             logging.info(f"Registering selection event for grid '{grid_identifier}'")
-            self.qm.on(grid_identifier, 'selection_changed', self.update_deck_content)            
             self.qm.on(grid_identifier, 'selection_changed', self.get_selected_grid_items)
-            self.qm.on(grid_identifier, 'filter_changed', self.update_deck_content)
+            self.qm.on(grid_identifier, 'selection_changed', self.update_deck_content)   
+                     
+            logging.info(f"Registering filter change event for grid '{grid_identifier}'")
             self.qm.on(grid_identifier, 'filter_changed', self.get_selected_grid_items)
+            self.qm.on(grid_identifier, 'filter_changed', self.update_deck_content)
+            
             logging.info(f"Grid '{grid_identifier}' rebuilt with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")            
             
         else:
@@ -1745,71 +1603,72 @@ class DynamicGridManager:
     
     def update_deck_content(self, event, widget):
         
-        if gv.out_debug: 
-            with gv.out_debug:
-                """Update the deck content DataFrame based on the selected item in the grid."""
-                logging.info(f"DynamicGridManager::update_deck_content() - Updating deck content with event: {event}")
-                if event['name'] == 'selection_changed':
-                    selected_indices = event['new']
-                elif event['name'] == 'filter_changed':
-                    raise NotImplementedError("Filter change event not yet implemented.")
-                
-                grid_df = widget.get_changed_df()            
+        """Update the deck content DataFrame based on the selected item in the grid."""
+        logging.info(f"DynamicGridManager::update_deck_content() - Updating deck content with event: {event}")
+        if 'name' in event:
+            if event['name'] == 'selection_changed':
+                selected_indices = event['new']
+            elif event['name'] == 'filter_changed':
+                raise NotImplementedError("Filter change event not yet implemented.")
+        elif 'new' in event:
+            selected_indices = event['new']
+        
+        grid_df = widget.get_changed_df()            
 
-                if grid_df is not None and selected_indices:
-                    # Get the selected rows based on indices
-                    selected_rows = grid_df.iloc[selected_indices]
+        if grid_df is not None and selected_indices:
+            # Get the selected rows based on indices
+            selected_rows = grid_df.iloc[selected_indices]
 
-                    # Fetch the 'collection' DataFrame
-                    collection_df = self.qm.get_grid_df('collection')
+            # Fetch the 'collection' DataFrame
+            collection_df = self.qm.get_grid_df('collection')
 
-                    # Initialize a list to collect all selected deck names
-                    selected_deck_names = []
+            # Initialize a list to collect all selected deck names
+            selected_deck_names = []
 
-                    for row in selected_rows.itertuples(index=False):
-                        # Find the corresponding row in the collection DataFrame
-                        row_name = None
-                        if not hasattr(row, 'Name') or 'Name' not in collection_df.columns:
-                            logging.warning(f"Name not found in row or collection_df: {row}")
-                            # Try 'name' instead of 'Name'
-                            if hasattr(row, 'name') :
-                                logging.info(f"Row with 'name' attribute: {row}")
-                                row_name = row.name
-                        else:
-                            row_name = row.Name
+            for row in selected_rows.itertuples(index=False):
+                # Find the corresponding row in the collection DataFrame
+                row_name = None
+                if not hasattr(row, 'Name') or 'Name' not in collection_df.columns:
+                    logging.warning(f"Name not found in row or collection_df: {row}")
+                    # Try 'name' instead of 'Name'
+                    if hasattr(row, 'name') :
+                        logging.info(f"Row with 'name' attribute: {row}")
+                        row_name = row.name
+                else:
+                    row_name = row.Name
 
-                        logging.info(f"Row name: {row_name}")
-                        # Locate the matching row in collection_df
-                        collection_row = collection_df.loc[collection_df['Name'] == row_name]
+                logging.info(f"Row name: {row_name}")
+                # Locate the matching row in collection_df
+                collection_row = collection_df.loc[collection_df['Name'] == row_name]
 
-                        if not collection_row.empty:
-                            item_type = collection_row['type'].values[0]
+                if not collection_row.empty:
+                    item_type = collection_row['type'].values[0]
 
-                            if item_type.lower() == 'fusion':
-                                # If it's a fusion, add both Deck A and Deck B names
-                                if 'Deck A' in collection_row.columns and 'Deck B' in collection_row.columns:
-                                    selected_deck_names.extend([collection_row['Deck A'].values[0], collection_row['Deck B'].values[0]])
-                            elif item_type.lower() == 'deck':
-                                # If it's a deck, add the Name
-                                selected_deck_names.append(collection_row['Name'].values[0])
+                    if item_type.lower() == 'fusion':
+                        # If it's a fusion, add both Deck A and Deck B names
+                        if 'Deck A' in collection_row.columns and 'Deck B' in collection_row.columns:
+                            selected_deck_names.extend([collection_row['Deck A'].values[0], collection_row['Deck B'].values[0]])
+                    elif item_type.lower() == 'deck':
+                        # If it's a deck, add the Name
+                        selected_deck_names.append(collection_row['Name'].values[0])
 
-                    # Remove any duplicates in the selected deck names
-                    selected_deck_names = list(set(selected_deck_names))
-                                    
-                    # Generate the deck content DataFrame using the provided function
-                    deck_content_df = self.DataFrameGenerator.generate_deck_content_dataframe(selected_deck_names)
-                    #self.data_generate_functions['deck_content'](selected_deck_names)
-                    #print(deck_content_df)
+            # Remove any duplicates in the selected deck names
+            selected_deck_names = list(set(selected_deck_names))
+                            
+            # Generate the deck content DataFrame using the provided function
+            deck_content_df = self.DataFrameGenerator.generate_deck_content_dataframe(selected_deck_names)
+            #self.data_generate_functions['deck_content'](selected_deck_names)
+            #print(deck_content_df)
 
-                    # Copy original DataFrame to preserve column order
-                    combined_df = deck_content_df.copy()                
-                    options = self.qg_options.copy()
-                    additional_options = {
-                        'minVisibleRows': 10,
-                        'maxVisibleRows': 20
-                    }
-                    options.update(additional_options)       
-                    self.qm.add_grid('deck_content', combined_df, options=options) 
+            # Copy original DataFrame to preserve column order
+            combined_df = deck_content_df.copy()                
+            options = self.qg_options.copy()
+            additional_options = {
+                'minVisibleRows': 10,
+                'maxVisibleRows': 20
+            }
+            options.update(additional_options)       
+            self.qm.add_grid('deck_content', combined_df, options=options) 
 
             
     def update_widget(self, group_name, new_widget):

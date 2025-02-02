@@ -1,15 +1,170 @@
 import pandas as pd
-import logging, re
+import logging, re, os, pickle
 from utils import normalize_time_string
 from GlobalVariables import GLOBAL_COLUMN_ORDER, global_vars as gv
 from MyGraph import MyGraph
 from MongoDB.DatabaseManager import DatabaseManager
 from CardLibrary import Forgeborn, ForgebornData
+from DisplayManager import update_display_data
 import utils
 
 class DataFrameGenerator:
     def __init__(self):
-        pass
+        self.central_df = None
+
+    def manage_central_dataframe(self, force_new=False):
+        """
+        Manages the central DataFrame lifecycle, ensuring updates, saving, caching, and metadata syncing.
+        Logs the reasons for generating or reloading the DataFrame.
+
+        Args:
+            display_data (dict): A dictionary containing metadata for the current session.
+            force_new (bool): If True, forces regeneration of the DataFrame.
+        """
+        username = os.getenv('SFF_USERNAME')
+        file_record = None
+        return_df = None  # Keeps track of the actual DataFrame to return
+
+        # Retrieve file record from GridFS
+        if gv.myDB:
+            file_record = gv.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
+
+        def need_to_generate_dataframe():
+            """
+            Determines if the DataFrame needs to be regenerated based on metadata consistency.
+            Logs reasons why regeneration is required.
+            """
+            collection_timestamp = gv.display_data.get('Collection', {}).get('Timestamp', None)
+
+            # Force regeneration
+            if force_new:
+                logging.info("Regenerating DataFrame: 'force_new' flag is set.")
+                return True
+
+            # Check if DataFrame metadata exists
+            if 'DataFrame' not in gv.display_data:
+                logging.info("Regenerating DataFrame: No DataFrame metadata found in 'display_data'.")
+                return True
+
+            # Check cached DataFrame metadata first
+            if username in gv.user_dataframes:
+                cached_meta = gv.user_dataframes.get(username, {}).get('metadata', {})
+                cached_dataframe_timestamp = cached_meta.get('DataFrame_Timestamp', None)
+
+                if cached_dataframe_timestamp == collection_timestamp:
+                    logging.info("Cached DataFrame metadata matches collection timestamp. No regeneration needed.")
+                    return False
+                else:
+                    logging.info(f"Regenerating DataFrame: Timestamp mismatch. "
+                                f"Collection timestamp: {collection_timestamp}, Cached DataFrame timestamp: {cached_dataframe_timestamp}.")
+                    return True
+
+            # Fallback to stored DataFrame metadata
+            logging.info("No cached DataFrame metadata found. Checking stored metadata.")
+            stored_metadata = gv.myDB.find_one('fs.files', {'filename': f'central_df_{username}'}, {'metadata': 1})
+            if stored_metadata:
+                stored_dataframe_timestamp = stored_metadata['metadata'].get('DataFrame_Timestamp', None)
+                if stored_dataframe_timestamp == collection_timestamp:
+                    logging.info("Stored DataFrame metadata matches collection timestamp. No regeneration needed.")
+                    return False
+                else:
+                    logging.info(f"Regenerating DataFrame: Timestamp mismatch between collection and stored DataFrame. "
+                                f"Collection timestamp: {collection_timestamp}, Stored DataFrame timestamp: {stored_dataframe_timestamp}.")
+                    return True
+
+            # If no cached or stored metadata is found, regenerate the DataFrame
+            logging.info("Regenerating DataFrame: No cached or stored metadata found.")
+            return True
+
+        def sync_dataframe_metadata(dataframe, decks, fusions):
+            """
+            Updates the DataFrame metadata (timestamps, counts) in display_data and the cache.
+
+            Args:
+                dataframe (pd.DataFrame): The DataFrame to update metadata for.
+                decks (int): Number of decks in the DataFrame.
+                fusions (int): Number of fusions in the DataFrame.
+            """
+            collection_timestamp = gv.display_data.get('Collection', {}).get('Timestamp', None)
+
+            # Update display_data and cache metadata
+            gv.display_data['DataFrame'] = {
+                'Timestamp': collection_timestamp,
+                'Decks': decks,
+                'Fusions': fusions
+            }
+            gv.user_dataframes[username] = {
+                'data': dataframe,
+                'metadata': {
+                    'Timestamp': collection_timestamp,
+                    'Decks': decks,
+                    'Fusions': fusions
+                }
+            }
+            logging.info("Synchronized DataFrame metadata with Collection metadata.")
+
+        try:
+            # Check if we have a valid cached DataFrame
+            cached_data = gv.user_dataframes.get(username, {}).get('data', None)
+            if cached_data is not None and not need_to_generate_dataframe():
+                logging.info("Using cached DataFrame. No regeneration required.")
+                return_df = cached_data
+                return return_df
+
+            # Attempt to load from GridFS if available
+            if file_record and gv.fs and not force_new:
+                with gv.fs.get(file_record['_id']) as file:
+                    loaded_df = pickle.load(file)
+                    gv.user_dataframes[username] = {
+                        'data': loaded_df,
+                        'metadata': {
+                            'Timestamp': file_record['metadata'].get('Timestamp', None),
+                            'Decks': file_record['metadata'].get('decks', 0),
+                            'Fusions': file_record['metadata'].get('fusions', 0)
+                        }
+                    }
+                    if not need_to_generate_dataframe():
+                        logging.info("Loaded DataFrame from GridFS. No regeneration required.")
+                        return_df = loaded_df
+                        return return_df
+                    else:
+                        logging.info("Loaded DataFrame from GridFS but regeneration is required.")
+
+            # Generate a new DataFrame
+            logging.info("Generating a new DataFrame.")
+            return_df = self.generate_central_dataframe(tasks=['deck_stats', 'card_type_counts', 'fusion_stats'])
+            num_of_decks = len(return_df[return_df['type'] == 'Deck'])
+            num_of_fusions = len(return_df[return_df['type'] == 'Fusion'])
+
+            # Save the new DataFrame to GridFS
+            if gv.fs:
+                if file_record:
+                    gv.fs.delete(file_record['_id'])
+                    logging.info("Deleted old DataFrame record from GridFS.")
+
+                with gv.fs.new_file(
+                    filename=f'central_df_{username}',
+                    metadata={
+                        'DataFrame_Timestamp': gv.display_data['Collection']['Timestamp'],  # Timestamp for the DataFrame
+                        'Collection_Timestamp': gv.display_data['Collection']['Timestamp'],  # Timestamp for the collection
+                        'Decks': num_of_decks,
+                        'Fusions': num_of_fusions
+                    }
+                ) as file:
+                    pickle.dump(return_df, file)
+                    logging.info("Saved new DataFrame to GridFS.")
+
+            # Sync metadata after saving
+            sync_dataframe_metadata(return_df, num_of_decks, num_of_fusions)
+
+            return return_df
+
+        finally:
+            # Always ensure the deck and fusion counts and UI updates are in sync
+            logging.info("Finalizing updates for deck and fusion counts.")
+            if return_df is not None:
+                update_display_data(update_collection=False, update_dataframe=True, central_df=return_df)
+                
  
     def generate_central_dataframe(self, tasks=None, filter_df=None):
         if tasks is None:
@@ -18,27 +173,35 @@ class DataFrameGenerator:
         identifier = 'Central DataFrame'
         gv.progress_manager.update_progress(identifier, total=len(tasks) + 1, message='Generating Central Dataframe...')
 
-        central_df = None
+        central_df = self.central_df
+
+
+        # Deck Basics , Fusion Basics , Deck Details , Fusion Details 
+        # Choose between [Deck , Fusion] and [Basic , Detailed]
+        
+        # Function1:  Create Basic Dataframe for Decks and / or Fusions 
+        # Function2:  Create Detail Dataframe for Decks and / or Fusions ( input is Basic DataFrame )
 
         if 'deck_stats' in tasks:
             gv.progress_manager.update_progress(identifier, message='Generating Deck Statistics Dataframe...')
             deck_stats_df = self.generate_deck_statistics_dataframe(filter_df)
             central_df = deck_stats_df
-            utils.validate_dataframe_attributes(central_df, 'deck_stats')
+            #utils.validate_dataframe_attributes(central_df, 'deck_stats')
 
         if 'card_type_counts' in tasks:
             gv.progress_manager.update_progress(identifier, message='Generating Card Type Count Dataframe...')
             card_type_counts_df = self.generate_card_type_count_dataframe(filter_df)
             central_df = (card_type_counts_df if central_df is None 
                           else utils.merge_by_adding_columns(central_df, card_type_counts_df))
-            utils.validate_dataframe_attributes(central_df, 'card_type_counts')
+            #utils.validate_dataframe_attributes(central_df, 'card_type_counts')
 
         if 'fusion_stats' in tasks:
             gv.progress_manager.update_progress(identifier, message='Generating Fusion Statistics Dataframe...')
-            fusion_stats_df = self.generate_fusion_statistics_dataframe(central_df, filter_df)
+            base_df = central_df if central_df is not None else self.generate_central_dataframe(tasks=['deck_stats', 'card_type_counts'])
+            fusion_stats_df = self.generate_fusion_statistics_dataframe(base_df, filter_df)
             central_df = (fusion_stats_df if central_df is None 
                           else utils.merge_and_concat(central_df, fusion_stats_df))
-            utils.validate_dataframe_attributes(central_df, 'fusion_stats')
+            #utils.validate_dataframe_attributes(central_df, 'fusion_stats')
 
         if central_df is not None:
             gv.progress_manager.update_progress(identifier, message='Cleaning Central Dataframe...')
@@ -46,11 +209,15 @@ class DataFrameGenerator:
             central_df.reset_index(inplace=True)
             central_df.rename(columns={'name': 'Name'}, inplace=True)
             central_df = utils.enforce_column_order(central_df, GLOBAL_COLUMN_ORDER)
-            utils.validate_dataframe_attributes(central_df, 'central_df')
+            #utils.validate_dataframe_attributes(central_df, 'central_df')
 
         gv.progress_manager.update_progress(identifier, message='Central Dataframe Generated.')
         return central_df
  
+ 
+ 
+ #   def create_basic_dataframe(self, item_type, filter_df=None):
+
  
     def generate_deck_statistics_dataframe(self, filter_df=None):
         
@@ -66,7 +233,7 @@ class DataFrameGenerator:
         df_decks_filtered = df_decks[
             ['name', 'id', 'registeredDate', 'UpdatedAt', 'pExpiry', 'deckScore', 
             'deckRank', 'level', 'xp', 'elo', 'cardSetNo', 'digital', 'nft', 
-            'price', 'owner', 'faction', 'forgebornId', 'CardTitles', 'graph']
+            'price', 'owner', 'faction', 'forgebornId', 'Forgeborn', 'Betrayers', 'SolBinds', 'CardTitles', 'graph']
         ].copy()
         df_decks_filtered['type'] = 'Deck'
 
@@ -106,30 +273,6 @@ class DataFrameGenerator:
             df_decks_filtered.loc[deck_name, 'forgebornId'] = replace_forgeborn_id
             for cycle, ability in forgeborn_ability_texts.items():
                 df_decks_filtered.loc[deck_name, f'FB{cycle}'] = ability
-
-            # Fetch and process cards
-            cards = gv.myDB.find('Card', {'_id': {'$in': deck['cardIds']}}) if gv.myDB else []
-            betrayers = []
-            solbinds = {}
-
-            for card in cards:
-                if not card:
-                    continue
-                crossfaction = card.get('crossfaction') or card.get('crossFaction')
-                faction = deck.get('faction')
-                if card.get('rarity') == 'Solbind':
-                    solbinds['Solbind'] = card['name']
-                    for solbind_field in ['solbindId1', 'solbindId2']:
-                        solbind_card_id = card.get(solbind_field, None)
-                        if solbind_card_id:
-                            solbind_card_id = solbind_card_id[5:]
-                            solbind_card = gv.myDB.find_one('Card', {'_id': solbind_card_id})
-                            solbinds[solbind_field] = solbind_card['name'] if solbind_card else solbind_card_id
-                if crossfaction and crossfaction != faction or card.get('betrayer') in [True, 'True']:
-                    betrayers.append(card['name'])
-
-            df_decks_filtered.loc[deck_name, 'Betrayers'] = ', '.join(betrayers)
-            df_decks_filtered.loc[deck_name, 'SolBinds'] = ', '.join(solbinds.get(k, '') for k in ['Solbind', 'solbindId1', 'solbindId2'] if k in solbinds)
 
             # Process stats
             if 'stats' in deck:
@@ -218,78 +361,6 @@ class DataFrameGenerator:
             logging.error(f"No Forgeborn ID found for {item_name}")
 
         return replace_forgeborn_id, forgeborn_ability_texts
-
-    # def process_fusion(self, fusion_row, central_df):
-    #     """
-    #     Processes a single fusion row to calculate interface IDs and combo data.
-    #     Updates Forgeborn IDs and ability texts for the fusion.
-    #     """
-    #     fusion_name = fusion_row['name']
-        
-    #     # Process Forgeborn data
-    #     replace_forgebornId, forgeborn_ability_texts = self.process_deck_forgeborn(
-    #         fusion_name, fusion_row['forgebornId'], getattr(fusion_row, 'ForgebornIds', [])
-    #     )
-    #     fusion_row['forgebornId'] = replace_forgebornId
-
-    #     for cycle, ability in forgeborn_ability_texts.items():
-    #         fusion_row[f'FB{cycle}'] = ability
-
-    #     # Extract decks from children data
-    #     decks = self.get_items_from_child_data(fusion_row['children_data'], 'CardLibrary.Deck')
-    #     if len(decks) > 1:
-    #         fusion_row['Deck A'] = decks[0]
-    #         fusion_row['Deck B'] = decks[1]
-
-    #     # Update fusion statistics based on central_df
-    #     if central_df is not None:
-    #         for deck in ['Deck A', 'Deck B']:
-    #             deck_name = fusion_row.get(deck, '')
-    #             if deck_name and deck_name in central_df.index:
-    #                 deck_row = central_df.loc[deck_name]
-
-    #                 # Combine values for 'digital', 'cardSetNo', etc.
-    #                 digital = deck_row.get('digital', '?')
-    #                 digital = 0 if digital == "0" else 1 if digital == "1" else 0
-    #                 fusion_row['digital'] = (
-    #                     f"{fusion_row.get('digital', '')}, {digital}".strip(", ")
-    #                 )
-
-    #                 cardSetNo = deck_row.get('cardSetNo', None)
-    #                 if cardSetNo:
-    #                     fusion_row['cardSetNo'] = (
-    #                         f"{fusion_row.get('cardSetNo', '')}, {cardSetNo}".strip(", ")
-    #                     )
-
-    #                 for item in ['Creatures', 'Spells', 'Exalt']:
-    #                     fusion_row[item] = fusion_row.get(item, 0) + deck_row.get(item, 0)
-
-    #                 betrayers = deck_row.get('Betrayers', '')
-    #                 fusion_row['Betrayers'] = (
-    #                     f"{fusion_row.get('Betrayers', '')}, {betrayers}".strip(", ")
-    #                 )
-
-    #                 solbinds = deck_row.get('SolBinds', '')
-    #                 fusion_row['SolBinds'] = (
-    #                     f"{fusion_row.get('SolBinds', '')}, {solbinds}".strip(", ")
-    #                 )
-
-    #                 pExpiry = deck_row.get('pExpiry', '')
-    #                 fusion_row['pExpiry'] = (
-    #                     f"{fusion_row.get('pExpiry', '')}, {pExpiry}".strip(", ")
-    #                 )
-
-    #     # Generate graph and combo data
-    #     myGraph = MyGraph()
-    #     myGraph.from_dict(fusion_row['graph'])
-    #     interface_ids = myGraph.get_length_interface_ids()
-    #     combo_data = utils.get_combos_for_graph(myGraph, fusion_name)
-    #     interface_ids = {**interface_ids, **combo_data}
-
-    #     # Convert interface IDs to DataFrame and return
-    #     interface_ids_df = pd.DataFrame([interface_ids], index=[fusion_name])
-    #     return fusion_row, interface_ids_df
-
 
     def update_fusion_with_deck_data(self, fusion_row, deck_row, deck_key):
         """
@@ -636,4 +707,7 @@ class DataFrameGenerator:
 
         return result_df
 
-   
+
+
+
+    

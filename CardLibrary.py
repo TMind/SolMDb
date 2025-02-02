@@ -1,3 +1,4 @@
+from regex import E
 from MongoDB.DatabaseManager import DatabaseManager, DatabaseObject
 from dataclasses import dataclass, field
 
@@ -210,9 +211,9 @@ class Card(DatabaseObject):
 class DeckData:    
     name        : str
     forgebornId : str
-    forgebornName : str
+    Forgeborn : str
     faction     : str    
-    cardIds     : list  # Card ids from Net API
+    cardIds     : list  
     cards       : dict           
     forgeborn   : dict = field(default_factory=dict)
     cardSetName: str   = ''
@@ -227,6 +228,8 @@ class DeckData:
     elo: int = 0
     deckRank: str = ''
     deckScore: float = 0.0
+    Betrayers: str = ''
+    SolBinds: str = ''
     rares: int = 0
     level: int = 0
     _id: str = ''
@@ -234,7 +237,21 @@ class DeckData:
     nft: int = 0
     price: float = 0.0
     owner: str = ''  
+    # Calculated fields
+    Creatures: int = 0
+    Spells: int = 0
+    Exalt: int = 0
+    A1: float = 0
+    H1: float = 0
+    A2: float = 0
+    H2: float = 0
+    A3: float = 0
+    H3: float = 0
+    FB2: str = ''
+    FB3: str = ''
+    FB4: str = ''
     CardTitles: list = field(default_factory=list)
+    # Dictionaries
     children_data: dict = field(default_factory=dict)
     myCategories: dict = field(default_factory=dict)
     deckStats: dict = field(default_factory=dict)
@@ -291,7 +308,7 @@ class Deck(DatabaseObject):
             if 'cardSubType' in card:
                 card_sub_types = card['cardSubType'].split(' ')
                 for card_sub_type in card_sub_types:
-                    card_sub_type = f"{card_sub_type} Type"
+                    #card_sub_type = f"{card_sub_type} Type"
                     if card_sub_type not in card_types[card_type]:
                         card_types[card_type][card_sub_type] = 1
                     else:
@@ -330,14 +347,32 @@ class FusionData:
     faction: str = ''
     crossFaction: str = ''
     currentForgebornId: str = ''   
-    forgebornName : str = '' 
+    Forgeborn : str = '' 
     ForgebornIds: list = field(default_factory=list)  
+    # Calculated fields
+    Creatures: int = 0
+    Spells: int = 0
+    Exalt: int = 0
+    A1: float = 0
+    H1: float = 0
+    A2: float = 0
+    H2: float = 0
+    A3: float = 0
+    H3: float = 0
+    FB2: str = ''
+    FB3: str = ''
+    FB4: str = ''    
+    Betrayers: str = ''
+    SolBinds: str = ''
+    pExpiry: str = ''
     CardTitles: list = field(default_factory=list)
     id: str = ''
     deckRank: str = ''
     CreatedAt: str = ''   
     UpdatedAt: str = ''       
+    # From Net API
     tags: list = field(default_factory=list)
+    # Dictionaries
     children_data: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)
 

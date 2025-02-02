@@ -68,6 +68,8 @@ class GlobalVariables:
         self.debug = os.getenv('DEBUG_MODE', 'False').lower() in ('true', '1', 't')        
         self.sheet_url = os.getenv('SHEET_URL', 'https://docs.google.com/spreadsheets/d/17aYAWS5R1hg-8mxFEjQEcNlMZ9kocJhnDTjLU9anzw8')
         self.rotate_suffix = rotate_suffix
+        self.display_data = {}
+        self.user_dataframes = {}
         
         self.myDB = None
         self.fs = None 
@@ -75,6 +77,7 @@ class GlobalVariables:
         self.commonDB = None
         #self.progress_containers = {}
         self.out_debug = None        
+        self.central_frame_output = widgets.Output()
         self.data_selection_sets = data_selection_sets               
         self._set_environment_variables()
         self.GoogleSheetsClient = None
@@ -384,13 +387,14 @@ rotated_column_defs = {
 non_rotated_column_defs = {
     'index':            {'width': 50},
     'Name':             {'width': 250},
+    'name':             {'width': 250},
     'DeckName':         {'width': 250},
     'type':             {'width': 60},
     'Deck A':           {'width': 250},
     'Deck B':           {'width': 250},
     'id':               {'width': 200},
     'registeredDate':   {'width': 200},
-    'CreatedAt' :    {'width': 200},
+    'CreatedAt' :       {'width': 200},
     'UpdatedAt':        {'width': 200},
     'xp':               {'width': 50},
     'elo':              {'width': 50},
@@ -399,17 +403,20 @@ non_rotated_column_defs = {
     'deckRank':         {'width': 90},
     'pExpiry':          {'width': 200},
     'digital':          {'width': 50},
+    'Digital':          {'width': 50},
     'cardSetNo':        {'width': 50},
+    'Set':              {'width': 50},
     'faction':          {'width': 80},
+    'Faction':          {'width': 80},
     'crossFaction':     {'width': 100},
     'forgebornId':      {'width': 100},
+    'Forgeborn':        {'width': 100},
     'CardTitles':       {'width': 200},
     'Betrayers':        {'width': 200},
     'SolBinds':         {'width': 200},
     'nft':              {'width': 50},
     'price':            {'width': 50},
     'owner':            {'width': 200},
-    'name':             {'width': 200}, 
     'cardType' :        {'width': 75},
     'cardSubType' :     {'width': 75},
     'FB4':              {'width': default_width},
@@ -661,8 +668,8 @@ GLOBAL_COLUMN_ORDER = [
     'index', 'type', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B','id',
     'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'tags', 'nft', 'price', 'owner',
     'xp', 'elo', 'level', 'deckScore', 'deckRank', 'rarity',
-    'cardSetNo', 'faction', 'crossFaction', 'CardTitles', 
-    'cardType', 'cardSubType', 'forgebornId', 'FB2', 'FB3', 'FB4', 'Betrayers', 'SolBinds',
+    'cardSetNo', 'Set', 'faction', 'Faction', 'crossFaction', 'CardTitles', 
+    'cardType', 'cardSubType', 'forgebornId', 'Forgeborn', 'FB2', 'FB3', 'FB4', 'Betrayers', 'SolBinds',
     'Spells', 'Exalt', 
     'A1', 'H1', 'A2', 'H2', 'A3', 'H3', 
     'Sum', 'Free',

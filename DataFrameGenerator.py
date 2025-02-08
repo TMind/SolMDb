@@ -13,6 +13,7 @@ class DataFrameGenerator:
         self.central_df = None
 
     def manage_central_dataframe(self, force_new=False):
+        return pd.DataFrame()
         """
         Manages the central DataFrame lifecycle, ensuring updates, saving, caching, and metadata syncing.
         Logs the reasons for generating or reloading the DataFrame.
@@ -214,11 +215,7 @@ class DataFrameGenerator:
         gv.progress_manager.update_progress(identifier, message='Central Dataframe Generated.')
         return central_df
  
- 
- 
- #   def create_basic_dataframe(self, item_type, filter_df=None):
-
- 
+  
     def generate_deck_statistics_dataframe(self, filter_df=None):
         
         # Fetch decks based on filter_df or all decks from the database
@@ -274,17 +271,17 @@ class DataFrameGenerator:
             for cycle, ability in forgeborn_ability_texts.items():
                 df_decks_filtered.loc[deck_name, f'FB{cycle}'] = ability
 
-            # Process stats
-            if 'stats' in deck:
-                stats = deck['stats']
-                card_type_counts = {'Creatures': stats['card_types']['Creature']['count'], 'Spells': stats['card_types']['Spell']['count']}
-                if 'Exalt Type' in stats['card_types']['Spell']:
-                    card_type_counts['Exalt'] = stats['card_types']['Spell']['Exalt Type']
-                attack_df = pd.DataFrame([stats['creature_averages']['attack']], index=[deck_name])
-                defense_df = pd.DataFrame([stats['creature_averages']['health']], index=[deck_name])
-                attack_df.columns = ['A1', 'A2', 'A3']
-                defense_df.columns = ['H1', 'H2', 'H3']
-                df_list.append(pd.concat([pd.DataFrame([card_type_counts], index=[deck_name]), attack_df, defense_df], axis=1))
+            # # Process stats
+            # if 'stats' in deck:
+            #     stats = deck['stats']
+            #     card_type_counts = {'Creatures': stats['card_types']['Creature']['count'], 'Spells': stats['card_types']['Spell']['count']}
+            #     if 'Exalt Type' in stats['card_types']['Spell']:
+            #         card_type_counts['Exalt'] = stats['card_types']['Spell']['Exalt Type']
+            #     attack_df = pd.DataFrame([stats['creature_averages']['attack']], index=[deck_name])
+            #     defense_df = pd.DataFrame([stats['creature_averages']['health']], index=[deck_name])
+            #     attack_df.columns = ['A1', 'A2', 'A3']
+            #     defense_df.columns = ['H1', 'H2', 'H3']
+            #     df_list.append(pd.concat([pd.DataFrame([card_type_counts], index=[deck_name]), attack_df, defense_df], axis=1))
 
         # Merge all processed data
         if df_list:

@@ -44,13 +44,13 @@ TESTING2 =  pd.DataFrame({
             'Name': [''],
             'Modifier': [''],
             'Creature': [''],
-            'Spell': ['Drone Hive'],
+            'Spell': [''],
             'Forgeborn Ability': [''],
             'Active': [True],
             'Mandatory Fields': ['Spell']
         })
 
-DEFAULT_FILTER = DEFAULT
+DEFAULT_FILTER = TESTING2
 
 
 class GridManager:
@@ -1039,6 +1039,7 @@ from datetime import datetime
 
 import FieldUnifier
 from DataFrameGenerator import DataFrameGenerator
+from DBQueryHelper import fetch_filtered_documents
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -1108,25 +1109,14 @@ class DynamicGridManager:
         logging.info(f"Refresh needed set to {needed}")
         
         
-    def apply_filters(self, df, widget_states):
-        from DBQueryHelper import fetch_filtered_documents
+    def apply_filters(self, widget_states):
+        
         # Filter columns based on the filter_row
         info_level = widget_states['info_level']
         data_set = widget_states['data_set']
         filter_row = widget_states['filter_row']
-        filtered_list = fetch_filtered_documents(filter_row['Type'],  filter_df=pd.DataFrame([filter_row]))
+        filtered_list = fetch_filtered_documents(filter_row['Type'],  filter_df=pd.DataFrame([filter_row]), final_format='DF')
         filtered_df = pd.DataFrame(filtered_list)
-        
-        # if filter_row['Type'] == 'Fusion':
-        #     #filtered_list = apply_filter_to_database(pd.DataFrame([filter_row]), filter_row['Type'])
-        #     filtered_list = fetch_filtered_documents('Fusion', filter_df=pd.DataFrame([filter_row]))
-        #     filtered_df = pd.DataFrame(filtered_list)
-        #     #print(filtered_df)
-        #     #list_ids = [ item['_id'] for item in filtered_list]
-        #     #filtered_df = self.data_generate_functions['fetch_from_db']('Fusion', ids=list_ids, fields=fields)
-        #     #print(filtered_df)
-        #     return filtered_df
-        #else:
         #    filtered_df = apply_filter_to_dataframe(df, pd.DataFrame([filter_row]))        
         return self.filter_by_columns(filtered_df, info_level, data_set, filter_row['Type'])
         
@@ -1434,7 +1424,8 @@ class DynamicGridManager:
         grid_state.update({
             "info_level": grid_state.get("info_level", 'Basic'),
             "data_set": grid_state.get("data_set", 'Stats'),
-            "filter_row": filter_row.to_dict()
+            "filter_row": filter_row.to_dict(),
+            "Selection": []
         })
         logging.info(f"Grid state updated for '{grid_identifier}': {grid_state}")
         self.grid_widget_states[grid_identifier] = grid_state
@@ -1472,7 +1463,7 @@ class DynamicGridManager:
             logging.info(f"Default collection DataFrame retrieved with {len(collection_df)} rows and {len(collection_df.columns)} columns")
 
         # Apply filters
-        filtered_df = self.apply_filters(collection_df, grid_state)
+        filtered_df = self.apply_filters(grid_state)
 
         # Update or create the grid
         if grid_identifier not in self.qm.grids:
@@ -1616,44 +1607,26 @@ class DynamicGridManager:
         grid_df = widget.get_changed_df()            
 
         if grid_df is not None and selected_indices:
-            # Get the selected rows based on indices
             selected_rows = grid_df.iloc[selected_indices]
 
-            # Fetch the 'collection' DataFrame
-            collection_df = self.qm.get_grid_df('collection')
+            # Extract row names (handle both 'Name' and 'name')
+            row_names = selected_rows.get('Name', selected_rows.get('name'))
 
-            # Initialize a list to collect all selected deck names
-            selected_deck_names = []
+            # Extract row types
+            row_types = selected_rows['Type'].str.lower()
 
-            for row in selected_rows.itertuples(index=False):
-                # Find the corresponding row in the collection DataFrame
-                row_name = None
-                if not hasattr(row, 'Name') or 'Name' not in collection_df.columns:
-                    logging.warning(f"Name not found in row or collection_df: {row}")
-                    # Try 'name' instead of 'Name'
-                    if hasattr(row, 'name') :
-                        logging.info(f"Row with 'name' attribute: {row}")
-                        row_name = row.name
-                else:
-                    row_name = row.Name
+            # Process decks directly
+            selected_deck_names = row_names[row_types == 'deck'].tolist()
 
-                logging.info(f"Row name: {row_name}")
-                # Locate the matching row in collection_df
-                collection_row = collection_df.loc[collection_df['Name'] == row_name]
+            # Process fusions and extract 'Deck A' and 'Deck B'
+            if 'Deck A' in selected_rows and 'Deck B' in selected_rows:
+                fusion_deck_names = selected_rows.loc[row_types == 'fusion', ['Deck A', 'Deck B']].values.flatten()
+                selected_deck_names.extend(fusion_deck_names[~pd.isna(fusion_deck_names)])
 
-                if not collection_row.empty:
-                    item_type = collection_row['type'].values[0]
-
-                    if item_type.lower() == 'fusion':
-                        # If it's a fusion, add both Deck A and Deck B names
-                        if 'Deck A' in collection_row.columns and 'Deck B' in collection_row.columns:
-                            selected_deck_names.extend([collection_row['Deck A'].values[0], collection_row['Deck B'].values[0]])
-                    elif item_type.lower() == 'deck':
-                        # If it's a deck, add the Name
-                        selected_deck_names.append(collection_row['Name'].values[0])
+            logging.info(f"Selected deck names: {selected_deck_names}")
 
             # Remove any duplicates in the selected deck names
-            selected_deck_names = list(set(selected_deck_names))
+            #selected_deck_names = list(set(selected_deck_names))
                             
             # Generate the deck content DataFrame using the provided function
             deck_content_df = self.DataFrameGenerator.generate_deck_content_dataframe(selected_deck_names)
@@ -1818,8 +1791,6 @@ class DynamicGridManager:
         with self.out_debug:
             print(f"All applicable DataFrames saved to {directory}:")
       
-      
-      
     # TODO: Seperate these functions from the class 
         
     # Function to open the selected deck in the browser
@@ -1829,34 +1800,35 @@ class DynamicGridManager:
             logging.warning(f"No selection found for grid_id '{grid_id}', skipping...")
             return
         
+       # Get selected items and filter row
         selected_items_list = self.grid_widget_states[grid_id]['Selection']
+        filter_row = self.grid_widget_states[grid_id]['filter_row']
 
-        # Get the rows from the central dataframe based on the selected names
-        central_df = self.qm.get_grid_df('collection').copy()
+        # Determine collection type
+        collection_name = filter_row['Type']
 
-        for item in selected_items_list:
-            # Get the row corresponding to the selected item
-            item_row = central_df[central_df['Name'] == item]
-            
-            if not item_row.empty:
-                # Convert the single-row DataFrame to a dictionary
-                item_dict = item_row.to_dict(orient='records')[0]
+        # Ensure correct URL path based on collection type
+        collection_map = {'fusion': 'fused', 'deck': 'decks'}
+        url_collection_name = collection_map.get(collection_name.lower(), collection_name)
 
-                # Access 'id' and 'type' directly from the dictionary
-                item_id = item_dict['id']
-                item_type = item_dict['type']
+        query = {'name': {'$in': selected_items_list}}
 
-                # Determine the correct URL path based on the item type
-                if item_type == 'Fusion':
-                    item_type = 'fused'
-                elif item_type == 'Deck':
-                    item_type = 'decks'
+        # Fetch item IDs from the database
+        item_documents = fetch_filtered_documents(collection_name, None, query, projection_fields=['id'])
 
-                # Create the link and open it in the web browser
-                item_link = f'https://solforgefusion.com/{item_type}/{item_id}'
-                webbrowser.open(item_link)
+        # Iterate over documents and open links
+        for item_doc in item_documents:
+            item_id = item_doc.get('id')  # Extract the 'id' field
+
+            if item_id:  # Ensure item_id is valid
+                item_link = f'https://solforgefusion.com/{url_collection_name}/{item_id}'
+
+                if utils.running_in_browser():
+                    webbrowser.open_new_tab(item_link)
+                else:
+                    webbrowser.open(item_link)
             else:
-                print(f"Item '{item}' not found in the central dataframe.")
+                logging.warning(f"Missing 'id' field for item: {item_doc}")
 
     def show_graph(self, grid_id, button):
         selected_items_list = self.grid_widget_states[grid_id]['Selection']        

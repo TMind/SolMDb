@@ -47,7 +47,7 @@ class TemplateGrid:
 
         column_definitions['index'] = { 'width': 25 }
         column_definitions['Template Name'] = { 'width': 125 }
-        column_definitions['type']['width'] = 50
+        column_definitions['Type']['width'] = 50
         column_definitions['Name']['width'] = 200 
         
         

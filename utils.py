@@ -346,3 +346,18 @@ def print_dataframe(df, name):
     print(f'Shape: {df.shape}')
     print(df.index)    
     display(qgrid.show_grid(df, grid_options={'forceFitColumns': False}, column_definitions=gv.all_column_definitions))    
+
+
+import os
+def running_in_browser():
+    in_vscode = "VSCODE_PID" in os.environ  # VS Code Detection
+    in_jupyter = False
+
+    try:
+        from IPython import get_ipython
+        if get_ipython():
+            in_jupyter = True
+    except ImportError:
+        pass
+
+    return in_jupyter and not in_vscode

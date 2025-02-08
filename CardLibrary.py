@@ -1,4 +1,3 @@
-from regex import E
 from MongoDB.DatabaseManager import DatabaseManager, DatabaseObject
 from dataclasses import dataclass, field
 
@@ -346,10 +345,13 @@ class FusionData:
     myDecks: list = field(default_factory=list)    
     faction: str = ''
     crossFaction: str = ''
-    currentForgebornId: str = ''   
-    Forgeborn : str = '' 
+    currentForgebornId: str = ''       
     ForgebornIds: list = field(default_factory=list)  
+    id: str = ''
     # Calculated fields
+    #DeckA = ''
+    #DeckB = ''
+    Forgeborn : str = '' 
     Creatures: int = 0
     Spells: int = 0
     Exalt: int = 0
@@ -365,8 +367,10 @@ class FusionData:
     Betrayers: str = ''
     SolBinds: str = ''
     pExpiry: str = ''
-    CardTitles: list = field(default_factory=list)
-    id: str = ''
+    digital: list = field(default_factory=list)
+    cardSetNo: list = field(default_factory=list)
+    CardTitles: list = field(default_factory=list)    
+    # Formatted fields
     deckRank: str = ''
     CreatedAt: str = ''   
     UpdatedAt: str = ''       

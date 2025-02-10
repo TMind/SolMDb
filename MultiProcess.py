@@ -8,29 +8,11 @@ from pymongo.operations import UpdateOne
 from GlobalVariables import global_vars as gv
 from CardLibrary import Fusion, FusionData
 from MyGraph import MyGraph
+from ObjectProcessor import ObjectProcessor
 import time
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
-def create_graph_for_fusions(fusion_object):
-    try:
-        logging.debug(f"Creating graph for object: {fusion_object}.")
-        # Graph creation
-        objectGraph = MyGraph()
-        objectGraph.create_graph_children(fusion_object)
-        fusion_object.data.node_data = objectGraph.node_data
-        fusion_object.data.combo_data = objectGraph.combo_data
-
-        # Convert the graph to a dictionary
-        objectGraphDict = objectGraph.to_dict()
-        fusion_object.data.graph = objectGraphDict
-
-        logging.debug(f"Graph created for object: {fusion_object}.")
-        return objectGraph
-    except Exception as e:
-        logging.error(f"Error creating graph for object: {e}")
-        raise
 
 def create_fusions(username, data_chunk, progress):
     try:
@@ -60,14 +42,7 @@ def create_fusions(username, data_chunk, progress):
 
                     fusionObject = Fusion(FusionData(fusionName, fusionDeckNames, fusionFaction, fusionCrossFaction, deck1['forgebornId'], fusionBornIds, fusionId))
 
-                    # Create a graph representation
-                    fusionGraph = create_graph_for_fusions(fusionObject)
-                    if fusionObject.data:
-                        # Process fusion data to store in the database 
-                        fusionObject.data.CardTitles = fusionGraph.get_card_list() 
-                        currentForgebornId = fusionObject.data.currentForgebornId
-                        fusionObject.data.forgebornName = currentForgebornId[5:-3].capitalize() if currentForgebornId else None
-                        
+                    ObjectProcessor.process_object_for_db(fusionObject)                                            
                     fusionData = fusionObject.to_data()
                     
                     # Store the operation to be performed in MongoDB
@@ -81,7 +56,7 @@ def create_fusions(username, data_chunk, progress):
                 if len(operations) >= batch_size:
                     try:
                         create_fusions._db['Fusion'].bulk_write(operations)
-                        progress.value += len(operations)  # Directly update the progress value
+                        progress.increment(len(operations))  # Directly update the progress value
                         logging.info(f"Written {len(operations)} fusions to the database.")
                         operations = []
                     except PyMongoError as e:
@@ -91,7 +66,7 @@ def create_fusions(username, data_chunk, progress):
         if operations:
             try:
                 create_fusions._db['Fusion'].bulk_write(operations)
-                progress.value += len(operations)  # Directly update the progress value
+                progress.increment(len(operations))  # Directly update the progress value
                 logging.info(f"Written {len(operations)} remaining fusions to the database.")
             except PyMongoError as e:
                 logging.error(f"Error writing remaining batch to database: {e}")
@@ -108,42 +83,78 @@ class MultiProcess:
         self.data = [data[i::self.num_processes] for i in range(self.num_processes)]  # Split into equal chunks for each worker
         self.username = os.getenv('SFF_USERNAME', username)
 
-        if hasattr(gv.myDB, 'mdb'):
-            gv.myDB.close_database()
-            gv.myDB = None
+        if hasattr(gv._myDB, 'mdb'):
+            gv._myDB.close_database()
+            gv._myDB = None
             logging.info("Closed the existing MongoDB connection before starting multiprocessing.")
 
         gv.progress_manager.update_progress('MultiProcess Fusions', value=0, total=self.num_items, message='Fusioning Decks')
         logging.info(f"Initialized MultiProcess with {self.num_items} items, using {self.num_processes} processes.")
 
-    def run(self):
+    def run(self, use_multiprocessing=True):
         accumulated = 0
         try:
-            with Manager() as manager:
-                progress = manager.Value('i', 0)
-                with ProcessPoolExecutor(max_workers=self.num_processes, mp_context=get_context('fork')) as executor:
-                    logging.info("Submitting tasks to worker processes.")
-                    futures = [executor.submit(create_fusions, self.username, data_chunk, progress) for data_chunk in self.data]
+            if use_multiprocessing: 
+                with Manager() as manager:
+                    
+                    progress = ProgressWrapper(manager.Value('i', 0))
+                    with ProcessPoolExecutor(max_workers=self.num_processes, mp_context=get_context('fork')) as executor:
+                        logging.info("Submitting tasks to worker processes.")
+                        futures = [executor.submit(create_fusions, self.username, data_chunk, progress) for data_chunk in self.data]
 
-                    while True:
-                        # Update progress periodically
-                        current_progress = progress.value
-                        if current_progress > accumulated:
-                            accumulated = current_progress
-                            gv.progress_manager.update_progress('MultiProcess Fusions', value=accumulated, set=True, message=f'Fusioning {accumulated} Decks')
-                            logging.info(f"Updated progress: {accumulated} decks fused.")
+                        while True:
+                            # Update progress periodically
+                            current_progress = progress.get()
+                            if current_progress > accumulated:
+                                accumulated = current_progress
+                                gv.progress_manager.update_progress('MultiProcess Fusions', value=accumulated, set=True, message=f'Fusioning {accumulated} Decks')
+                                logging.info(f"Updated progress: {accumulated} decks fused.")
 
-                        # Break the loop if all futures are done
-                        if all(f.done() for f in futures):
-                            logging.info("All worker processes have completed.")
-                            break
+                            # Break the loop if all futures are done
+                            if all(f.done() for f in futures):
+                                logging.info("All worker processes have completed.")
+                                break
 
-                        time.sleep(1)  # Sleep for a short time to avoid busy-waiting
+                            time.sleep(1)  # Sleep for a short time to avoid busy-waiting
 
-                # Ensure that progress is fully updated once all workers are done
-                final_progress = progress.value
-                gv.progress_manager.update_progress('MultiProcess Fusions', value=final_progress, message=f'Fusioning complete: {final_progress} Decks')
-                logging.info(f"Final progress updated: {final_progress} decks fused.")
+                    # Ensure that progress is fully updated once all workers are done
+                    final_progress = progress.get()
+                    gv.progress_manager.update_progress('MultiProcess Fusions', value=final_progress, message=f'Fusioning complete: {final_progress} Decks')
+                    logging.info(f"Final progress updated: {final_progress} decks fused.")
+            else:
+                # SINGLE-PROCESS MODE (FOR DEBUGGING)
+                logging.info("Running in single-process mode for debugging.")
+                progress = ProgressWrapper(0)  # Use a simple integer instead of shared memory
+
+                for data_chunk in self.data:
+                    amount = create_fusions(self.username, data_chunk, progress)  # Direct function call (no multiprocessing)
+                    progress.increment(amount) 
+                    num = progress.get()
+
+                    gv.progress_manager.update_progress('MultiProcess Fusions', value=num, set=True, message=f'Fusioning {num} Decks')
+                    logging.info(f"Updated progress: {num} decks fused.")
+
+                gv.progress_manager.update_progress('MultiProcess Fusions', value=num, message=f'Fusioning complete: {num} Decks')
+                logging.info(f"Final progress updated: {num} decks fused.")
 
         except Exception as e:
             logging.error(f"Error running multiprocessing: {e}")
+            
+class ProgressWrapper:
+    """ A wrapper to handle both Manager.Value and regular integers safely. """
+    def __init__(self, progress):
+        self.progress = progress
+
+    def get(self) -> int:
+        """Returns the current progress value as an integer."""
+        if hasattr(self.progress, 'value'):
+            return int(self.progress.value)  # Ensure it's always an integer
+        return int(self.progress)
+
+    def increment(self, amount=1):
+        """Safely increments the progress value."""
+        if hasattr(self.progress, 'value'):  # It's a Manager.Value
+            with self.progress.get_lock():
+                self.progress.value += amount
+        else:  # It's a regular integer
+            self.progress += amount

@@ -7,6 +7,7 @@ import pandas as pd
 from CMManager import CMManager
 from CustomCss import CSSManager
 from GSheetsClient import GoogleSheetsClient
+from MongoDB import DatabaseManager
 from NetApi import NetApi
 
 default_logging_level = logging.INFO
@@ -71,7 +72,7 @@ class GlobalVariables:
         self.display_data = {}
         self.user_dataframes = {}
         
-        self.myDB = None
+        self._myDB = None
         self.fs = None 
         self.ucl_paths = [ 'Card Database', os.path.join('csv', 'forgeborn.csv'), os.path.join('csv', 'synergies.csv')]
         self.commonDB = None
@@ -143,16 +144,30 @@ class GlobalVariables:
 
     @username.setter
     def username(self, value):
+        from MongoDB.DatabaseManager import DatabaseManager
         self._username = value
         os.environ['SFF_USERNAME'] = value
         if value == 'enterUsernameHere': return
-        self.set_myDB()
-
-    def set_myDB(self):
-        from MongoDB.DatabaseManager import DatabaseManager
-        # Logic to set myDB based on the new username
         self.myDB = DatabaseManager(self._username)
-        self.fs = GridFS(self.myDB.mdb.db)  # Set GridFS for the user-specific DB
+        self.fs = GridFS(self._myDB.mdb.db)  # Set GridFS for the user-specific DB
+        #self.set_myDB()
+
+    # def set_myDB(self):
+    #     from MongoDB.DatabaseManager import DatabaseManager
+    #     # Logic to set myDB based on the new username
+    #     self._myDB = DatabaseManager(self._username)
+    #     self.fs = GridFS(self._myDB.mdb.db)  # Set GridFS for the user-specific DB
+        
+    @property
+    def myDB(self):
+        from MongoDB.DatabaseManager import DatabaseManager
+        """Returns the database manager instance or a temporary instance if None."""
+        return self._myDB if self._myDB is not None else DatabaseManager(self.username)  # Create a temporary instance
+
+    @myDB.setter
+    def myDB(self, value):
+        """Allows explicitly setting the database manager (including None)."""
+        self._myDB = value  # Allows setting None explicitly
 
     def _initialize_commonDB(self):
         from MongoDB.DatabaseManager import DatabaseManager  # Lazy import

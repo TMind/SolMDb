@@ -27,8 +27,8 @@ class DataFrameGenerator:
         return_df = None  # Keeps track of the actual DataFrame to return
 
         # Retrieve file record from GridFS
-        if gv.myDB:
-            file_record = gv.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
+        if gv._myDB:
+            file_record = gv._myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
 
         def need_to_generate_dataframe():
             """
@@ -62,7 +62,7 @@ class DataFrameGenerator:
 
             # Fallback to stored DataFrame metadata
             logging.info("No cached DataFrame metadata found. Checking stored metadata.")
-            stored_metadata = gv.myDB.find_one('fs.files', {'filename': f'central_df_{username}'}, {'metadata': 1})
+            stored_metadata = gv._myDB.find_one('fs.files', {'filename': f'central_df_{username}'}, {'metadata': 1})
             if stored_metadata:
                 stored_dataframe_timestamp = stored_metadata['metadata'].get('DataFrame_Timestamp', None)
                 if stored_dataframe_timestamp == collection_timestamp:
@@ -585,8 +585,7 @@ class DataFrameGenerator:
             #print(f'DeckName: {deckName}')
             #Get the Deck from the Database 
             deck = None 
-            if gv.myDB:
-                deck = gv.myDB.find_one('Deck', {'name': deckName})
+            if gv._myDB: deck = gv._myDB.find_one('Deck', {'name': deckName})
             if deck:
                 #print(f'Found deck: {deck}')
                 #Get the cardIds from the Deck
@@ -594,8 +593,7 @@ class DataFrameGenerator:
                 deck_df_list = pd.DataFrame([deck])  # Create a single row DataFrame from deck                    
                 for cardId in cardIds:
                     card = None
-                    if gv.myDB:
-                        card = gv.myDB.find_one('Card', {'_id': cardId})
+                    if gv._myDB: card = gv._myDB.find_one('Card', {'_id': cardId})
                     if card:
                         fullCard = card 
 
@@ -678,12 +676,12 @@ class DataFrameGenerator:
     def generate_combo_dataframe(self, df=None):
         if df is None:
             items = {'Deck': [], 'Fusion': []}
-            if gv.myDB:
-                for item_type in items.keys():
-                    items[item_type] = [
-                        {'name': item['name'], 'graph': item.get('graph', {})}
-                        for item in gv.myDB.find(item_type, {}, {'name': 1, 'graph': 1})
-                    ]
+            #if gv.myDB:
+            for item_type in items.keys():
+                items[item_type] = [
+                    {'name': item['name'], 'graph': item.get('graph', {})}
+                    for item in gv._myDB.find(item_type, {}, {'name': 1, 'graph': 1})
+                ]
 
             data = [{'name': item['name'], 'graph': item['graph'], 'type': item_type}
                     for item_type, item_list in items.items() for item in item_list]

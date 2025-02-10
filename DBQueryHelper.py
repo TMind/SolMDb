@@ -3,6 +3,7 @@ import json
 import re
 from GlobalVariables import global_vars as gv
 from FieldUnifier import generate_final_fields, DF_TO_DB_FIELDS, DB_TO_DF_FIELDS, CONVERSION_TABLE
+from MongoDB.DatabaseManager import DatabaseManager
 
 def determine_filter_config(column, value, collection_name):
     """
@@ -203,7 +204,8 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
     Returns:
         list: List of matching documents.
     """
-    if gv.myDB is None:
+    dbmgr = gv._myDB or DatabaseManager(gv.username)
+    if dbmgr is None:
         logging.error("No active database connection.")
         return []
 
@@ -245,12 +247,14 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
         # Convert list fields to semicolon-separated strings                        
         convert_list_fields = {'Fusion': ['Set']}  # Define collection-specific fields
         
-        collection = gv.myDB.get_collection(collection_name)
+        collection = dbmgr.get_collection(collection_name)
         for document in collection.aggregate(pipeline):
             
             # Set Type to collection_name if needed 
             if 'Type' in projection_fields:
                 document['Type'] = collection_name
+            elif 'type' in projection_fields:
+                document['type'] = collection_name
             
             # Convert list fields to strings only for the correct collection
             if collection_name in convert_list_fields:

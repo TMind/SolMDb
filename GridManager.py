@@ -50,7 +50,7 @@ TESTING2 =  pd.DataFrame({
             'Mandatory Fields': ['Spell']
         })
 
-DEFAULT_FILTER = TESTING2
+DEFAULT_FILTER = TESTING
 
 
 class GridManager:
@@ -630,8 +630,8 @@ class FilterGrid:
                 widget = self.selection_widgets[cardType]
                 widget.options = [''] + get_cardType_entity_names(cardType)
             
-            if gv.myDB: 
-                dbDeckNames = gv.myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
+            if gv._myDB: 
+                dbDeckNames = gv._myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
                 # Extract the 'name' field from each result and sort alphabetically
                 sorted_deckNames = [''] + sorted([deck.get('name', '') for deck in dbDeckNames if 'name' in deck], key=lambda x: x.lower())
                 #self.selection_widgets['Name'].options = sorted_deckNames
@@ -663,9 +663,9 @@ class FilterGrid:
     # Create a function to use the EnhancedSelect widget
     def create_deckName_selector(self):
         deckNames = []
-        if gv.myDB:
+        if gv._myDB:
             # Query the database to find all deck names
-            dbDeckNames = gv.myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
+            dbDeckNames = gv._myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
             # Extract the 'name' field from each result
             deckNames = [deck.get('name', '') for deck in dbDeckNames if 'name' in deck]
             # Sort the deck names alphabetically
@@ -725,8 +725,6 @@ class FilterGrid:
 
         return selection_box, widgets_dict, toggle_buttons_dict
 
-
-
     def get_changed_df(self):
         """
         Returns the current DataFrame with any user changes.
@@ -746,6 +744,44 @@ class FilterGrid:
         return self.selection_box, self.qgrid_filter
 
 
+    def merge_active_filters(self):
+        """
+        Merges multiple deck filters into a single fusion filter.
+        """
+        merged_filter = {
+            "Type": "Fusion",
+            "Active": True,
+            "Mandatory Fields": set()  # Use set to avoid duplicates
+        }
+
+        # Select only active filters from FilterGrid
+        filters = self.qgrid_filter.get_changed_df.loc[self.qgrid_filter.get_changed_df['Active'] == True]
+
+        # Iterate over active filters
+        for _, filter_row in filters.iterrows():
+            for field, value in filter_row.items():
+                if field in ["Type", "Active", "Mandatory Fields"] or not value:
+                    continue  # Skip meta fields and empty values
+
+                # Ensure field exists in merged_filter
+                if field not in merged_filter:
+                    merged_filter[field] = set()  # Use set to collect unique values
+
+                merged_filter[field].add(value)
+                merged_filter["Mandatory Fields"].add(field)  # Track mandatory fields
+
+        # Convert sets back to OR-separated strings
+        for field in list(merged_filter.keys()):
+            if field in ["Type", "Active", "Mandatory Fields"]:
+                continue  # Skip meta fields
+            merged_filter[field] = ":".join(merged_filter[field])
+
+        # Convert Mandatory Fields set to a comma-separated string
+        merged_filter["Mandatory Fields"] = ", ".join(merged_filter["Mandatory Fields"])
+
+        return merged_filter
+
+
 def get_cardType_entity_names(cardType):
     """
     Retrieves the names of entities that match the specified card type.
@@ -759,9 +795,9 @@ def get_cardType_entity_names(cardType):
     commonDB = DatabaseManager('common')
     cardType_entities = commonDB.find('Entity', {"attributes.cardType": cardType})
     cardType_entities_names = [entity['name'] for entity in cardType_entities]
-    if gv.myDB: 
+    if gv._myDB: 
         # If the user has a database, filter the cardType_entities_names to only include cards that are in the user's database
-        cards = gv.myDB.find('Card', {})
+        cards = gv._myDB.find('Card', {})
         cardNames = [card.get('title', card.get('name', '')) for card in cards]
         cardType_entities_names = [name for name in cardType_entities_names if any(name in cardName for cardName in cardNames)]
     cardType_entities_names.sort()
@@ -1668,6 +1704,21 @@ class DynamicGridManager:
         # Return all VBoxes
         return list(self.ui_widget_dict.values())
     
+    def get_active_deck_filters(self):
+        """
+        Retrieves all active filters that were used to select decks.
+        """
+        active_filters = []
+
+        for grid_id, grid_state in self.grid_widget_states.items():
+            filter_row = grid_state.get("filter_row", None)
+
+            # Ensure it's a Deck filter
+            if filter_row and filter_row["Type"] == "Deck":
+                active_filters.append(filter_row)
+
+        return active_filters
+       
     def get_selected_grid_items(self, event, widget):
         """
         Retrieves the currently selected 'Name' items from all main_qgrid_widgets within the GridspecLayout.
@@ -1835,8 +1886,8 @@ class DynamicGridManager:
         display_graph(selected_items_list)    
 
     def authenticate(self, password):
-        if gv.myDB:
-            username = gv.myDB.get_current_db_name()
+        if gv._myDB:
+            username = gv._myDB.get_current_db_name()
 
         net_api = gv.NetApi
         net_api.authenticate(username=username, password=password)
@@ -1855,7 +1906,7 @@ class DynamicGridManager:
             return
         
         deck_name = selected_items_info[0]  # Assuming single selection
-        deck_data = gv.myDB.find_one('Deck', {'name': deck_name})
+        deck_data = gv._myDB.find_one('Deck', {'name': deck_name})
         if deck_data:
             print(f"Deck data for '{deck_name}' = {deck_data}")
             deck_id = deck_data.get('id')

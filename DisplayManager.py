@@ -28,8 +28,8 @@ def update_display_data(update_collection=True, update_dataframe=True, central_d
     stored_collection_timestamp = None
 
     # Retrieve database manager
-    if gv.myDB:
-        db_manager = gv.myDB
+    if gv._myDB:
+        db_manager = gv._myDB
         username = db_manager.get_current_db_name()
 
         # Retrieve file record from GridFS
@@ -51,9 +51,9 @@ def update_display_data(update_collection=True, update_dataframe=True, central_d
 
 def update_collection_metadata(stored_collection_timestamp):
     """Updates metadata related to the collection."""
-    if gv.myDB:
-        deck_count = gv.myDB.count_documents('Deck', {})
-        fusion_count = gv.myDB.count_documents('Fusion', {})
+    if gv._myDB:
+        deck_count = gv._myDB.count_documents('Deck', {})
+        fusion_count = gv._myDB.count_documents('Fusion', {})
         gv.display_data['Collection'] = {
             'Timestamp': stored_collection_timestamp,
             'Decks': deck_count,

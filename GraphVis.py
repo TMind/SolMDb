@@ -30,7 +30,7 @@ def display_graph(selected_items_list):
     for item in selected_items_list:            
         for item_type in ['Deck', 'Fusion']:
             print(f"Searching {item_type} with name: {item.strip()}")
-            item_cursor = gv.myDB.find_one(item_type, {'name': item.strip()})
+            item_cursor = gv._myDB.find_one(item_type, {'name': item.strip()})
             if item_cursor:                    
                 name = item_cursor.get('name', '')
                 graph = item_cursor.get('graph', {})                    

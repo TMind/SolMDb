@@ -171,7 +171,7 @@ class TemplateGrid:
         try:
             # Insert the new data
             #global_vars.myDB.upsert({'name': 'TemplateGrid', 'data': data})
-            myDB = gv.myDB or DatabaseManager(gv.username)
+            myDB = gv._myDB or DatabaseManager(gv.username)
             myDB.upsert(
                 collection_name='User Data',  # Assuming 'TemplateGrid' is the collection name
                 identifier={'name': 'TemplateGrid'},  # Identifier for the document
@@ -185,7 +185,7 @@ class TemplateGrid:
         """Restore the previously saved state of the template grid from MongoDB."""
         try:
             # Retrieve the data from MongoDB
-            data = gv.myDB.find_one('User Data', {'name': 'TemplateGrid'})
+            data = gv._myDB.find_one('User Data', {'name': 'TemplateGrid'})
             if not data:
                 with gv.out_debug:
                     print("No data found in MongoDB.")

@@ -80,9 +80,9 @@ def fetch_network_decks(args, myApi):
     #print(f'Fetching Network Decks with args: {args}')
     
     if args.username == 'magiceden': 
-        gv.myDB.set_database_name('magiceden')
+        gv._myDB.set_database_name('magiceden')
         # Collect existing decknames from DB 
-        deckCursor = gv.myDB.find('Deck', {}, {'name': 1})                
+        deckCursor = gv._myDB.find('Deck', {}, {'name': 1})                
         deckNamesDatabase = [deck['name'] for deck in deckCursor]
         
         print(f'Fetching decks from Magic Eden') 
@@ -100,9 +100,9 @@ def fetch_network_decks(args, myApi):
         #     if gv.myDB:
         #         logging.debug(f"Removing deck from DB: {deck}")
         #         gv.myDB.delete_one('Deck', {'name': deck})
-        if args.decklist and gv.myDB:
+        if args.decklist and gv._myDB:
             logging.info(f"Removing decks from DB: {args.decklist}")
-            gv.myDB.delete_many('Deck', {'name': {'$in': args.decklist}})
+            gv._myDB.delete_many('Deck', {'name': {'$in': args.decklist}})
         return deck_data     
     
     if args.id:
@@ -309,9 +309,9 @@ def reload_data_on_click(button, event):
         
         # Refresh db_list widget
         db_names = []
-        if not gv.myDB:
+        if not gv._myDB:
             gv.set_myDB()
-        db_names = gv.myDB.mdb.client.list_database_names()
+        db_names = gv._myDB.mdb.client.list_database_names()
         valid_db_names = [db for db in db_names if db not in ['local', 'admin', 'common', 'config']]
 
         if valid_db_names:
@@ -372,8 +372,8 @@ def display_graph_on_click(button):
     if myDeckA and myDeckB:
         fusionName = f'{myDeckA.name}_{myDeckB.name}'
         fusionCursor = None
-        if gv.myDB:
-            fusionCursor = gv.myDB.find('Fusion', {'name' : fusionName})
+        if gv._myDB:
+            fusionCursor = gv._myDB.find('Fusion', {'name' : fusionName})
         if fusionCursor: 
             for fusion in fusionCursor:
                 myFusion = Fusion.from_data(fusion)
@@ -412,7 +412,7 @@ def display_graph():
         for item in selected_items:            
             for item_type in ['Deck', 'Fusion']:
                 print(f"Searching {item_type} with name: {item.strip()}")
-                item_cursor = gv.myDB.find_one(item_type, {'name': item.strip()})
+                item_cursor = gv._myDB.find_one(item_type, {'name': item.strip()})
                 if item_cursor:                    
                     name = item_cursor.get('name', '')
                     graph = item_cursor.get('graph', {})                    
@@ -448,8 +448,8 @@ def display_graph():
 def refresh_faction_deck_options(faction_toggle, dropdown):    
     #global_vars.myDB.set_database_name(global_vars.username)   
     deckCursor = []
-    if gv.myDB: 
-        deckCursor = gv.myDB.find('Deck', { 'faction' : faction_toggle.value })
+    if gv._myDB: 
+        deckCursor = gv._myDB.find('Deck', { 'faction' : faction_toggle.value })
     deckNames = []    
     deckNames = [deck['name'] for deck in deckCursor]
     dropdown.options = deckNames        
@@ -568,16 +568,16 @@ def update_db_timestamp(username):
     """
     Updates the timestamp of the DataFrame in the MongoDB metadata.
     """
-    if gv.myDB:
+    if gv._myDB:
         # Retrieve the file record from GridFS
-        file_record = gv.myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
+        file_record = gv._myDB.find_one('fs.files', {'filename': f'central_df_{username}'})
         
         if file_record:
             # Prepare the update data
             update_data = {'metadata.Collection_Timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}
             
             # Perform the update
-            result = gv.myDB.update_one(
+            result = gv._myDB.update_one(
                 'fs.files',  # Collection name
                 {'_id': file_record['_id']},  # Query by unique file ID
                 update_data  # Update data

@@ -22,10 +22,13 @@ class ObjectProcessor:
         """
         decks_data = None        
         if isinstance(object, Fusion) and object.myDecks:
-            deck_names = [deck['name'] for deck in object.myDecks if 'name' in deck]            
+            deck_names_from_dict = [deck['name'] for deck in object.myDecks if 'name' in deck]
+            deck_names_from_list = [name for name in object.myDecks]
+            deck_names = deck_names_from_dict or deck_names_from_list
+                        
             decks_data = list(fetch_filtered_documents(
                 'Deck', 
-                filter_query = {'name': {'$in' : deck_names }},
+                filter_query = {'name': {'$in': deck_names }},
                 projection_fields= DECKPROJECTION,
             ))
             cardIds = [card_id for deck in decks_data if 'cardIds' in deck for card_id in deck['cardIds']]
@@ -37,7 +40,7 @@ class ObjectProcessor:
         object.data.CardTitles = ';'.join(object_graph.get_card_list())
         
         # Get the card data for the deck        
-        cards = gv.myDB.find('Card', {'_id': {'$in': cardIds}}) if gv.myDB else []
+        cards = gv.myDB.find('Card', {'_id': {'$in': cardIds}})
         ObjectProcessor.process_betrayers_and_solbinds(object, list(cards))
         ObjectProcessor.process_object_stats(object, decks_data)
         ObjectProcessor.process_object_fb_abilities(object)
@@ -205,11 +208,14 @@ class ObjectProcessor:
             cardSetNo = object.data.cardSetNo
             p_expiry = object.data.pExpiry 
     
-        if deck_name: 
-            for deck_slot in ['DeckA', 'DeckB']:
-                if hasattr(object.data, deck_slot) and getattr(object.data, deck_slot) == '':
-                    setattr(object.data, deck_slot, deck_name)
-                    break
+        if deck_name:
+            if not isinstance(object.data.myDecks, list):
+                object.data.myDecks = []  # Ensure it's a list
+
+            if deck_name not in object.data.myDecks:
+                object.data.myDecks.append(deck_name)
+        #if deck_name and deck_name not in object.data.myDecks: 
+        #    object.data.myDecks.append(deck_name)
                 
         if digital == '': digital = 0
 

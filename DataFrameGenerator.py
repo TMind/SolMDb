@@ -585,7 +585,7 @@ class DataFrameGenerator:
             #print(f'DeckName: {deckName}')
             #Get the Deck from the Database 
             deck = None 
-            if gv._myDB: deck = gv._myDB.find_one('Deck', {'name': deckName})
+            deck = gv.myDB.find_one('Deck', {'name': deckName})
             if deck:
                 #print(f'Found deck: {deck}')
                 #Get the cardIds from the Deck
@@ -593,7 +593,7 @@ class DataFrameGenerator:
                 deck_df_list = pd.DataFrame([deck])  # Create a single row DataFrame from deck                    
                 for cardId in cardIds:
                     card = None
-                    if gv._myDB: card = gv._myDB.find_one('Card', {'_id': cardId})
+                    card = gv.myDB.find_one('Card', {'_id': cardId})
                     if card:
                         fullCard = card 
 

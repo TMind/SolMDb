@@ -630,13 +630,13 @@ class FilterGrid:
                 widget = self.selection_widgets[cardType]
                 widget.options = [''] + get_cardType_entity_names(cardType)
             
-            if gv._myDB: 
-                dbDeckNames = gv._myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
-                # Extract the 'name' field from each result and sort alphabetically
-                sorted_deckNames = [''] + sorted([deck.get('name', '') for deck in dbDeckNames if 'name' in deck], key=lambda x: x.lower())
-                #self.selection_widgets['Name'].options = sorted_deckNames
-                self.selection_widgets['Name'].update_options_from_db(sorted_deckNames)
-                #print(f"DeckNames = {self.selection_widgets['Name'].options}")
+        
+            dbDeckNames = gv.myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
+            # Extract the 'name' field from each result and sort alphabetically
+            sorted_deckNames = [''] + sorted([deck.get('name', '') for deck in dbDeckNames if 'name' in deck], key=lambda x: x.lower())
+            #self.selection_widgets['Name'].options = sorted_deckNames
+            self.selection_widgets['Name'].update_options_from_db(sorted_deckNames)
+            #print(f"DeckNames = {self.selection_widgets['Name'].options}")
 
     def create_cardType_names_selector(self, cardType, options=None):
         if options is None:
@@ -663,13 +663,13 @@ class FilterGrid:
     # Create a function to use the EnhancedSelect widget
     def create_deckName_selector(self):
         deckNames = []
-        if gv._myDB:
-            # Query the database to find all deck names
-            dbDeckNames = gv._myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
-            # Extract the 'name' field from each result
-            deckNames = [deck.get('name', '') for deck in dbDeckNames if 'name' in deck]
-            # Sort the deck names alphabetically
-            deckNames = sorted(deckNames, key=lambda x: x.lower())  # Sort case-insensitively
+        
+        # Query the database to find all deck names
+        dbDeckNames = gv.myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
+        # Extract the 'name' field from each result
+        deckNames = [deck.get('name', '') for deck in dbDeckNames if 'name' in deck]
+        # Sort the deck names alphabetically
+        deckNames = sorted(deckNames, key=lambda x: x.lower())  # Sort case-insensitively
 
         # Add an empty option to the beginning of the list
         deckNames.insert(0, '')
@@ -790,16 +790,16 @@ def get_cardType_entity_names(cardType):
         cardType (str): The type of card.
 
     Returns:
-        list: A list of entity names that match the card type.
+        list: A list of entiy names that match the card type.
     """
     commonDB = DatabaseManager('common')
     cardType_entities = commonDB.find('Entity', {"attributes.cardType": cardType})
     cardType_entities_names = [entity['name'] for entity in cardType_entities]
-    if gv._myDB: 
-        # If the user has a database, filter the cardType_entities_names to only include cards that are in the user's database
-        cards = gv._myDB.find('Card', {})
-        cardNames = [card.get('title', card.get('name', '')) for card in cards]
-        cardType_entities_names = [name for name in cardType_entities_names if any(name in cardName for cardName in cardNames)]
+    
+    # If the user has a database, filter the cardType_entities_names to only include cards that are in the user's database
+    cards = gv.myDB.find('Card', {})
+    cardNames = [card.get('title', card.get('name', '')) for card in cards]
+    cardType_entities_names = [name for name in cardType_entities_names if any(name in cardName for cardName in cardNames)]
     cardType_entities_names.sort()
     return cardType_entities_names
 
@@ -1886,9 +1886,8 @@ class DynamicGridManager:
         display_graph(selected_items_list)    
 
     def authenticate(self, password):
-        if gv._myDB:
-            username = gv._myDB.get_current_db_name()
-
+        
+        username = gv.myDB.get_current_db_name()
         net_api = gv.NetApi
         net_api.authenticate(username=username, password=password)
     
@@ -1906,7 +1905,7 @@ class DynamicGridManager:
             return
         
         deck_name = selected_items_info[0]  # Assuming single selection
-        deck_data = gv._myDB.find_one('Deck', {'name': deck_name})
+        deck_data = gv.myDB.find_one('Deck', {'name': deck_name})
         if deck_data:
             print(f"Deck data for '{deck_name}' = {deck_data}")
             deck_id = deck_data.get('id')

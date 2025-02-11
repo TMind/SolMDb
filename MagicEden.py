@@ -35,6 +35,8 @@ def fetch_all_magiceden_listings(collection_symbol, myApi, args, limit=100):
     all_decks = []
     args.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    counted = 0 
+
     while True:
         try:
             # Set the request parameters for pagination
@@ -52,8 +54,9 @@ def fetch_all_magiceden_listings(collection_symbol, myApi, args, limit=100):
             print(f"Processing {len(data)} listings from offset {offset}")
 
             # Process the current page of listings
-            net_data = process_magiceden_listings(data, myApi, args)
+            net_data = process_magiceden_listings(data, myApi, args, counted)
             all_decks.extend(net_data)
+            counted = len(all_decks)
 
             # Fetch pagination metadata from the response headers
             metadata = response.headers.get('ME-Pub-API-Metadata')
@@ -82,7 +85,7 @@ def fetch_all_magiceden_listings(collection_symbol, myApi, args, limit=100):
 
     return all_decks
 
-def process_magiceden_listings(listings, myApi, args):
+def process_magiceden_listings(listings, myApi, args, counted):
     """
     Processes listings from Magic Eden and fetches deck data using deck links.
     Only extracts the deck_id and rarity_score and fetches the actual deck data from that id via `myApi.request_decks`.
@@ -93,7 +96,7 @@ def process_magiceden_listings(listings, myApi, args):
     if listings:
         identifier = "Processing listing"
         gv.progress_manager.reset_progress(identifier)
-        gv.progress_manager.update_progress(identifier, 0, len(listings))
+        gv.progress_manager.update_progress(identifier, counted, counted + len(listings))
         for idx, listing in enumerate(listings, start=1):            
             token = listing.get('token', {})
             price = listing.get('price', 0.0)
@@ -105,10 +108,14 @@ def process_magiceden_listings(listings, myApi, args):
 
             # Check if name already exists
             if name in args.decklist :
+                matching_name = name 
+            else:
+                matching_name = next((deck_name for deck_name in args.decklist if name in deck_name), None)
+            if matching_name:
                 # The deck is already in the database, no need to fetch it
                 # Remove the deck from the list 
-                gv.progress_manager.update_progress("Processing listing", message=f"Skipping deck data for: {name}")
-                args.decklist.remove(name)  
+                gv.progress_manager.update_progress("Processing listing", message=f"Skipping deck data for: {matching_name}")
+                args.decklist.remove(matching_name)  
                 continue
             
             # Extract the deck_link from the attributes

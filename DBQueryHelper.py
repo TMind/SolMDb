@@ -204,7 +204,7 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
     Returns:
         list: List of matching documents.
     """
-    dbmgr = gv._myDB or DatabaseManager(gv.username)
+    dbmgr = gv.myDB or DatabaseManager(gv.username)
     if dbmgr is None:
         logging.error("No active database connection.")
         return []

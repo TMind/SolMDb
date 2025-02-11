@@ -185,15 +185,11 @@ def fetch_data_from_db(collection_name, filter_df=None, projection=None):
         item_names = filter_df.index.tolist()        
         query = {'name': {'$in': item_names}}
 
-    if gv.myDB:
-        # Pass the projection parameter to the find method
-        items = list(gv.myDB.find(collection_name, query, projection))
-        if not items:
-            logging.warning(f"No {collection_name.lower()}s found.")
-        return items
-    else:
-        logging.error("Database connection is not initialized.")
-        return []
+    # Pass the projection parameter to the find method
+    items = list(gv.myDB.find(collection_name, query, projection))
+    if not items:
+        logging.warning(f"No {collection_name.lower()}s found.")
+    return items
 
 def enforce_column_order(df, column_order):
     """

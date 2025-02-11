@@ -83,9 +83,9 @@ class MultiProcess:
         self.data = [data[i::self.num_processes] for i in range(self.num_processes)]  # Split into equal chunks for each worker
         self.username = os.getenv('SFF_USERNAME', username)
 
-        if hasattr(gv._myDB, 'mdb'):
-            gv._myDB.close_database()
-            gv._myDB = None
+        if hasattr(gv.myDB, 'mdb'):
+            gv.myDB.close_database()
+            gv.myDB = None
             logging.info("Closed the existing MongoDB connection before starting multiprocessing.")
 
         gv.progress_manager.update_progress('MultiProcess Fusions', value=0, total=self.num_items, message='Fusioning Decks')

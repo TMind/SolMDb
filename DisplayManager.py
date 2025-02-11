@@ -28,16 +28,16 @@ def update_display_data(update_collection=True, update_dataframe=True, central_d
     stored_collection_timestamp = None
 
     # Retrieve database manager
-    if gv._myDB:
-        db_manager = gv._myDB
-        username = db_manager.get_current_db_name()
+    
+    db_manager = gv.myDB
+    username = db_manager.get_current_db_name()
 
-        # Retrieve file record from GridFS
-        file_record = db_manager.find_one('fs.files', {'filename': f"central_df_{username}"})
-        if file_record and 'metadata' in file_record:
-            metadata = file_record['metadata']
-            stored_df_timestamp = metadata.get('DataFrame_Timestamp', None)
-            stored_collection_timestamp = metadata.get('Collection_Timestamp', None)
+    # Retrieve file record from GridFS
+    file_record = db_manager.find_one('fs.files', {'filename': f"central_df_{username}"})
+    if file_record and 'metadata' in file_record:
+        metadata = file_record['metadata']
+        stored_df_timestamp = metadata.get('DataFrame_Timestamp', None)
+        stored_collection_timestamp = metadata.get('Collection_Timestamp', None)
 
     # Update Collection metadata
     if update_collection:
@@ -51,17 +51,15 @@ def update_display_data(update_collection=True, update_dataframe=True, central_d
 
 def update_collection_metadata(stored_collection_timestamp):
     """Updates metadata related to the collection."""
-    if gv._myDB:
-        deck_count = gv._myDB.count_documents('Deck', {})
-        fusion_count = gv._myDB.count_documents('Fusion', {})
-        gv.display_data['Collection'] = {
-            'Timestamp': stored_collection_timestamp,
-            'Decks': deck_count,
-            'Fusions': fusion_count,
-        }
-    else:
-        logging.warning("No database manager found. Collection data cannot be updated.")
-
+    
+    deck_count = gv.myDB.count_documents('Deck', {})
+    fusion_count = gv.myDB.count_documents('Fusion', {})
+    gv.display_data['Collection'] = {
+        'Timestamp': stored_collection_timestamp,
+        'Decks': deck_count,
+        'Fusions': fusion_count,
+    }
+    
 
 def load_or_generate_dataframe(central_df, file_record, username):
     """Loads a DataFrame from cache or GridFS, or uses the provided DataFrame."""

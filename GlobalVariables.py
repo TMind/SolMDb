@@ -7,7 +7,6 @@ import pandas as pd
 from CMManager import CMManager
 from CustomCss import CSSManager
 from GSheetsClient import GoogleSheetsClient
-from MongoDB import DatabaseManager
 from NetApi import NetApi
 
 default_logging_level = logging.INFO
@@ -683,7 +682,7 @@ data_selection_sets = {
 
 GLOBAL_COLUMN_ORDER = [
     'index', 'Type', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B','id',
-    'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'tags', 'nft', 'price', 'owner',
+    'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'Digital', 'tags', 'nft', 'price', 'owner',
     'xp', 'elo', 'level', 'deckScore', 'Score', 'deckRank', 'Rank', 'rarity',
     'cardSetNo', 'Set', 'faction', 'Faction', 'crossFaction', 'CardTitles', 
     'cardType', 'cardSubType', 'forgebornId', 'Forgeborn', 'FB2', 'FB3', 'FB4', 'Betrayers', 'SolBinds',

@@ -30,27 +30,27 @@ DEFAULT =  pd.DataFrame({
 
 TESTING =  pd.DataFrame({
             'Type': ['Deck','Deck'],
-            'Name': ['',''],
+            'Name': ['Princesses of Bee and Growling','The Searching Wine Kings'],
             'Modifier': ['',''],
-            'Creature': ['Apocymancer',''],
-            'Spell': ['','Drone Hive'],
+            'Creature': ['',''],
+            'Spell': ['',''],
             'Forgeborn Ability': ['',''],
             'Active': [True, True],
             'Mandatory Fields': ['Name, Forgeborn Ability', 'Name, Forgeborn Ability']
         })
 
 TESTING2 =  pd.DataFrame({
-            'Type': ['Fusion'],
+            'Type': ['Deck'],
             'Name': [''],
             'Modifier': [''],
-            'Creature': [''],
+            'Creature': ['Hantu; Darkshaper; Blight Witch; Direhound'],
             'Spell': [''],
             'Forgeborn Ability': [''],
             'Active': [True],
-            'Mandatory Fields': ['Spell']
+            'Mandatory Fields': ['Name, Modifier']
         })
 
-DEFAULT_FILTER = TESTING
+DEFAULT_FILTER = TESTING2
 
 
 class GridManager:
@@ -318,56 +318,71 @@ class BaseGrid:
         self.df_versions['default'] = pd.DataFrame()
         self.update_main_widget(self.df_versions['default'])
 
+from FilterManager import FilterManager
 class QGrid(BaseGrid):
+    
+    def __init__(self, identifier, df, options=None):
+        """
+        Initialize the QGrid and attach a FilterManager.
+        """
+        super().__init__(identifier, df, options)
+        self.filter_manager = FilterManager(self.main_widget)  # Attach a FilterManager
+    
     def create_main_widget(self, df):
-        # Define default grid options
+        """
+        Create the main QGrid widget.
+        """
         default_grid_options = {
             'forceFitColumns': False,
             'enableColumnReorder': True,
             'minVisibleRows': 10,
         }
 
-        # Get user-provided grid options from self.qgrid_options and update the defaults
+        # Get user-provided grid options and update the defaults
         user_grid_options = self.qgrid_options.get('grid_options', {})
-        
-        # Log the incoming options and the defaults
-        #print(f"QGrid::create_main_widget() - Default grid options: {default_grid_options}")
-        #print(f"QGrid::create_main_widget() - User-provided grid options: {user_grid_options}")
-        
-        # Update default options with user-provided options
         default_grid_options.update(user_grid_options)
-        
-        # Debugging: Check merged options
-        #print(f"QGrid::create_main_widget() - Merged grid options (default + user): {default_grid_options}")
 
-        # Create the QGrid widget with updated options
+        # Create the QGrid widget
         self.main_widget = qgrid.show_grid(
             df,
             column_options=self.qgrid_options.get('column_options', {}),
             column_definitions=self.qgrid_options.get('column_definitions', {}),
-            grid_options=default_grid_options,  # Use the updated default options
+            grid_options=default_grid_options,
             show_toolbar=False
         )
         
-        # Confirm creation of the main widget and options passed
-        #print(f"QGrid::create_main_widget() - Final grid options passed to qgrid: {default_grid_options}")
-        
-    # def update_main_widget(self, new_df):        
-    #     self.main_widget.df = new_df
-    #     self.set_dataframe_version('filtered', new_df)
-        
     def update_main_widget(self, new_df):
-        # Log new DataFrame details
-        #print(f"Updating main widget with DataFrame: Shape={new_df.shape}, Columns={list(new_df.columns)}")
-        #print(new_df.head())
+        print(f"New DataFrame Shape: {new_df.shape}")
 
-        # Update the widget's DataFrame        
-        #logging.info(f"Sleeping for 0.75 seconds before updating the main widget")
-        #time.sleep(0.75)
-        #listeners = getattr(self.main_widget, '_event_listeners', None)
-        #print(f"Event listeners attached to widget: {listeners}")
-        self.main_widget.df = new_df                
+        if new_df.empty:
+            print("Warning: new_df is empty. No data will be displayed!")
 
+        # sort_columns = getattr(self.main_widget, "_sort_helper_columns", {})
+        # valid_sort_columns = {
+        #     col: sort_col for col, sort_col in sort_columns.items()
+        #     if sort_col in new_df.columns
+        # }
+
+        # if len(valid_sort_columns) < len(sort_columns):
+        #     print(f"Skipping missing sort columns: {set(sort_columns) - set(valid_sort_columns)}")
+        #     self.main_widget._sort_helper_columns = valid_sort_columns  
+
+        # # ✅ Store current filters before clearing
+        # stored_filters = self.filter_manager.get_active_filters().copy()
+
+        # # ✅ Clear UI filters (but keep stored filters)
+        # print("Temporarily disabling filters to check if data is displayed.")
+        # self.filter_manager.clear_filters(clear_memory=False)
+
+        self.main_widget.df = new_df  
+        # print(f"Updated grid with {len(new_df)} rows and {len(new_df.columns)} columns.")
+
+        # # ✅ Ensure stored filters are valid before restoring
+        # if stored_filters:
+        #     print("Reapplying filters now...")
+        #     self.filter_manager.set_active_filters(stored_filters)
+
+        # self.main_widget._update_table(triggered_by="manual_update")
 
 class PandasGrid(BaseGrid):
     def create_main_widget(self, df):
@@ -581,7 +596,6 @@ class FilterGrid:
         logger.info(f"FilterClass::grid_filter_on_row_added() - Calling refresh function for index {new_row_index}")
         
         self.refresh_function(event, widget)
-        #self.refresh_function({'new': new_row_index, 'old': None, 'owner': 'filter'})
 
     def grid_filter_on_cell_edit(self, event, widget):
         """
@@ -755,7 +769,8 @@ class FilterGrid:
         }
 
         # Select only active filters from FilterGrid
-        filters = self.qgrid_filter.get_changed_df.loc[self.qgrid_filter.get_changed_df['Active'] == True]
+        df = self.get_changed_df()
+        filters = df.loc[df['Active'] == True]
 
         # Iterate over active filters
         for _, filter_row in filters.iterrows():
@@ -1151,15 +1166,18 @@ class DynamicGridManager:
         info_level = widget_states['info_level']
         data_set = widget_states['data_set']
         filter_row = widget_states['filter_row']
-        filtered_list = fetch_filtered_documents(filter_row['Type'],  filter_df=pd.DataFrame([filter_row]), final_format='DF')
-        filtered_df = pd.DataFrame(filtered_list)
-        #    filtered_df = apply_filter_to_dataframe(df, pd.DataFrame([filter_row]))        
-        return self.filter_by_columns(filtered_df, info_level, data_set, filter_row['Type'])
+        data_type = filter_row['Type']
+        filtered_list = fetch_filtered_documents(data_type,  filter_df=pd.DataFrame([filter_row]), final_format='DF', expanded_field='FrameData')
+        filtered_df = convert_to_dataframe(filtered_list)
+        data_set_columms = FieldUnifier.generate_final_fields(info_level, data_set, data_type, rename_fields_to='df')
+        #filtered_df = self.DataFrameGenerator.generate_statistics_dataframe(filtered_df, data_set_columms, data_type)
+
+        return self.filter_by_columns(filtered_df, data_set_columms)
         
-    def filter_by_columns(self, df, info_level, data_set, item_type):
-        
-        data_set_columns = FieldUnifier.generate_final_fields(info_level, data_set, item_type, rename_fields_to='df')        
-        existing_columns = [col for col in data_set_columns if col in df.columns]
+    def filter_by_columns(self, df, columns):
+        if df.index.name:  # Check if there's a named index
+            df.reset_index(inplace=True)  # Move index back to columns
+        existing_columns = [col for col in columns if col in df.columns]
         filtered_df = df.loc[:, existing_columns]    
         
         #filtered_df.sort_index(axis=1, inplace=True)
@@ -1183,14 +1201,14 @@ class DynamicGridManager:
         logging.info("Handling database change in DynamicGridManager.")
 
         # Step 1: Update the collection DataFrame
-        try:
-            collection_df = self.DataFrameGenerator.manage_central_dataframe()
-            #self.data_generate_functions['central_dataframe']()
-            self.qm.add_grid('collection', collection_df, options=self.qg_options)
-            logging.info(f"Collection DataFrame updated with {len(collection_df)} rows.")
-        except Exception as e:
-            logging.error(f"Failed to update collection DataFrame: {e}")
-            return
+        # try:
+        #     collection_df = self.DataFrameGenerator.manage_central_dataframe()
+        #     #self.data_generate_functions['central_dataframe']()
+        #     self.qm.add_grid('collection', collection_df, options=self.qg_options)
+        #     logging.info(f"Collection DataFrame updated with {len(collection_df)} rows.")
+        # except Exception as e:
+        #     logging.error(f"Failed to update collection DataFrame: {e}")
+        #     return
 
         self.filterGridObject.update_selection_content(event)
 
@@ -1211,7 +1229,7 @@ class DynamicGridManager:
             # Refresh grids for active filters
             for row_index, filter_row in active_filters_df.iterrows():
                 grid_identifier = f"filtered_grid_{row_index}"
-                self.update_or_refresh_grid(grid_identifier, filter_row=filter_row, collection_df=collection_df)
+                self.update_or_refresh_grid(grid_identifier, filter_row=filter_row)
             logging.info("Grids refreshed for active filters.")
         except Exception as e:
             logging.error(f"Error while refreshing grids: {e}")
@@ -1231,7 +1249,7 @@ class DynamicGridManager:
         try:
             logging.info(f"Refreshing gridbox in DynamicGridManager: event = {event}")
             # Retrieve or generate the collection DataFrame
-            collection_df = self._get_collection_dataframe(event)
+            #collection_df = self._get_collection_dataframe(event)
 
             # Get active and inactive filter rows
             if widget: # If a widget is provided, use its filter row
@@ -1241,20 +1259,41 @@ class DynamicGridManager:
             
             logging.info(f"DataFrame columns: {filter_df.columns}")
             logging.info(f"DataFrame index: {filter_df.index}")
+            
+            print("DataFrame before filtering:")
+            print(filter_df)
+            print("Data types:")
+            print(filter_df.dtypes)
+
+            print("Unique values in 'Active' column:", filter_df["Active"].unique())
+            
             #active_filters_df = filter_df[filter_df['Active']]
             #inactive_filters_df = filter_df[~filter_df['Active']]
             
             if 'Active' in filter_df.columns:
-                # Ensure the 'Active' column contains valid booleans
+                print("🚀 Before conversion:")  
+                print(filter_df[['Active']].to_string(index=False))  # Show 'Active' column before changes
+                
+                # Ensure boolean conversion works properly
+                if filter_df['Active'].dtype == object:
+                    filter_df['Active'] = filter_df['Active'].map(lambda x: str(x).strip().lower() == "true")
+
+                # Fill missing values with False
                 filter_df['Active'] = filter_df['Active'].fillna(False).astype(bool)
 
-                # Filter active and inactive rows
+                print("\n✅ After conversion:")  
+                print(filter_df[['Active']].to_string(index=False))  # Show 'Active' column after changes
+                
+                # Apply filtering
                 active_filters_df = filter_df[filter_df['Active']]
                 inactive_filters_df = filter_df[~filter_df['Active']]
+
+                print("\n🔥 Active filters:")
+                print(active_filters_df.to_string(index=False))  # Print active rows
             else:
-                logging.error("'Active' column missing in filter_df")
-                active_filters_df = pd.DataFrame()
-                inactive_filters_df = pd.DataFrame()
+                print("⚠️ 'Active' column is missing!")
+                active_filters_df = pd.DataFrame(columns=filter_df.columns)
+                inactive_filters_df = pd.DataFrame(columns=filter_df.columns)
 
             # Handle case when no active or inactive filters are present
             if active_filters_df.empty and inactive_filters_df.empty:
@@ -1287,7 +1326,7 @@ class DynamicGridManager:
                             print(f"Reactivating grid with index '{specific_index}'.")
                             filter_row = filter_df.loc[specific_index]
                             grid_identifier = f"filtered_grid_{specific_index}"
-                            self.update_or_refresh_grid(grid_identifier, collection_df, filter_row)
+                            self.update_or_refresh_grid(grid_identifier, filter_row)
                             return    
                 
                 # Handle case where specific_index is a DataFrame
@@ -1300,13 +1339,13 @@ class DynamicGridManager:
                     logger.info("Received empty selection; no grids to update.")
                     return
 
-                self._handle_specific_update(specific_index, active_filters_df, inactive_filters_df, collection_df)
+                self._handle_specific_update(specific_index, active_filters_df, inactive_filters_df)
                 return
     
 
             # Default: Refresh all active grids and remove inactive grids
             logger.info("No specific change provided; refreshing all active grids and removing inactive grids.")
-            self._refresh_all_grids(active_filters_df, collection_df)
+            self._refresh_all_grids(active_filters_df)
             self._remove_inactive_grids(inactive_filters_df)
 
             logger.info("Gridbox refresh completed.")
@@ -1334,7 +1373,7 @@ class DynamicGridManager:
         except Exception as e:
             logger.error(f"Error removing inactive grids: {e}")
 
-    def _handle_specific_update(self, specific_index, active_filters_df, inactive_filters_df, collection_df):
+    def _handle_specific_update(self, specific_index, active_filters_df, inactive_filters_df):
         """
         Handles updates for specific indices based on the change object.
 
@@ -1342,41 +1381,39 @@ class DynamicGridManager:
             specific_index (int, list, or unexpected type): Index or indices to update.
             active_filters_df (DataFrame): Active filter rows.
             inactive_filters_df (DataFrame): Inactive filter rows.
-            collection_df (DataFrame): The collection DataFrame.
         """
         if isinstance(specific_index, (int, np.integer)):  # Single index
-            self._process_single_index(specific_index, active_filters_df, inactive_filters_df, collection_df)
+            self._process_single_index(specific_index, active_filters_df, inactive_filters_df)
 
         elif isinstance(specific_index, list):  # Multiple indices
             for grid_index in specific_index:
-                self._process_single_index(grid_index, active_filters_df, inactive_filters_df, collection_df)
+                self._process_single_index(grid_index, active_filters_df, inactive_filters_df)
 
         elif isinstance(specific_index, pd.DataFrame):  # Unexpected DataFrame case
             logger.warning(f"Received DataFrame instead of index: {specific_index}. Attempting to resolve.")
             # Attempt to resolve, e.g., by using the DataFrame's index or resetting the gridbox
             resolved_index = specific_index.index.tolist() if not specific_index.empty else None
             if resolved_index:
-                self._handle_specific_update(resolved_index, active_filters_df, inactive_filters_df, collection_df)
+                self._handle_specific_update(resolved_index, active_filters_df, inactive_filters_df)
             else:
                 logger.error("Cannot process DataFrame; no valid indices found.")
         
         else:  # Other unexpected types
             logger.warning(f"Invalid type for specific_index: {type(specific_index)}. Contents: {specific_index}")
 
-    def _process_single_index(self, grid_index, active_filters_df, inactive_filters_df, collection_df):
+    def _process_single_index(self, grid_index, active_filters_df, inactive_filters_df):
         """
         Process a single grid index for updating or removal.
 
         Args:
             grid_index (int): Index of the grid to process.
             active_filters_df (DataFrame): Active filter rows.
-            inactive_filters_df (DataFrame): Inactive filter rows.
-            collection_df (DataFrame): The collection DataFrame.
+            inactive_filters_df (DataFrame): Inactive filter rows.            
         """
         if grid_index in active_filters_df.index:
             filter_row = active_filters_df.loc[grid_index]
             grid_identifier = f"filtered_grid_{grid_index}"
-            self.update_or_refresh_grid(grid_identifier, collection_df, filter_row)
+            self.update_or_refresh_grid(grid_identifier, filter_row)
 
         elif grid_index in inactive_filters_df.index:
             self.VBoxGrids.remove_widget(grid_index)
@@ -1387,17 +1424,16 @@ class DynamicGridManager:
             logger.info(f"Removed grid with index '{grid_index}'.")
             #logger.warning(f"Grid index {grid_index} not found in any filter indices.")
 
-    def _refresh_all_grids(self, active_filters_df, collection_df):
+    def _refresh_all_grids(self, active_filters_df):
         """
         Refreshes all active grids.
 
         Args:
-            active_filters_df (DataFrame): Active filter rows.
-            collection_df (DataFrame): The collection DataFrame.
+            active_filters_df (DataFrame): Active filter rows.            
         """
         for row_index, filter_row in active_filters_df.iterrows():
             grid_identifier = f"filtered_grid_{row_index}"
-            self.update_or_refresh_grid(grid_identifier, collection_df, filter_row)
+            self.update_or_refresh_grid(grid_identifier, filter_row)
 
     def construct_grid_ui(self, grid_identifier, filter_row, grid):
         """
@@ -1467,13 +1503,13 @@ class DynamicGridManager:
         self.grid_widget_states[grid_identifier] = grid_state
         return grid_state
     
-    def update_or_refresh_grid(self, grid_identifier, collection_df=None, filter_row=None):
+    def update_or_refresh_grid(self, grid_identifier, filter_row=None):
         """
         Updates or refreshes the grid based on the rebuild parameter.
 
         Args:
             grid_identifier (str): Identifier of the grid to update or refresh.
-            collection_df (pd.DataFrame, optional): Collection DataFrame used for filtering.
+            #collection_df (pd.DataFrame, optional): Collection DataFrame used for filtering.
             filter_row (pd.Series, optional): The filter row to apply for filtering.
             rebuild (bool): If True, recreate the grid; if False, just update it.
         """
@@ -1494,13 +1530,13 @@ class DynamicGridManager:
             return
 
         # Retrieve collection data only if it's not provided
-        if collection_df is None:
-            collection_df = self.qm.get_grid_df('collection')
-            logging.info(f"Default collection DataFrame retrieved with {len(collection_df)} rows and {len(collection_df.columns)} columns")
+        # if collection_df is None:
+        #     collection_df = self.qm.get_grid_df('collection')
+        #     logging.info(f"Default collection DataFrame retrieved with {len(collection_df)} rows and {len(collection_df.columns)} columns")
 
         # Apply filters
         filtered_df = self.apply_filters(grid_state)
-
+    
         # Update or create the grid
         if grid_identifier not in self.qm.grids:
             logging.info(f"Rebuilding grid '{grid_identifier}'")
@@ -1930,12 +1966,19 @@ class DynamicGridManager:
         self.qm.add_grid(f'{grid_name}_generated', grid_df, options=self.qg_options)
         
 
-    def fuse_filtered(self, button=None):
+    def fuse_filtered(self, button=None, **kwargs):
         from DeckLibrary import DeckLibrary
         # Get the filtered items from the grid
         # Get grid_ids from active filters
+        print("Fuse filtered Kwargs:", kwargs) 
         active_filters_df = self.filterGridObject.get_changed_df()
-        active_filters_df = active_filters_df[active_filters_df['Active']]
+
+        if 'Active' in active_filters_df.columns:
+            active_filters_df['Active'] = active_filters_df['Active'].map(lambda x: str(x).strip().lower() == "true" if isinstance(x, str) else bool(x))
+            active_filters_df['Active'] = active_filters_df['Active'].fillna(False).astype(bool)
+            active_filters_df = active_filters_df[active_filters_df['Active']]
+        else:
+            logging.warning("No 'Active' column found in DataFrame. Skipping filtering step.")
         
         # Grid_id is the index of the active filter
         grid_ids = active_filters_df.index
@@ -1948,7 +1991,31 @@ class DynamicGridManager:
             
         print(f"Grid items: {grid_items}")
         dl = DeckLibrary(None, None, '' )
-        dl.make_fusions(list(grid_items.values()))
+        dl.make_fusions(deck_lists = list(grid_items.values()), ump=False)
+        
+        # Generate the merged filter row
+        new_filter = self.filterGridObject.merge_active_filters()
+
+        # Get the current DataFrame from the QGrid widget
+        df = self.filterGridObject.qgrid_filter.get_changed_df()
+
+        # Ensure new_filter has all the same columns as df
+        new_filter_df = pd.DataFrame([new_filter], columns=df.columns)  # Align columns
+
+        # Ensure new_filter has all necessary columns
+        for col in df.columns:
+            new_filter.setdefault(col, "")
+
+        # Convert new_filter to a DataFrame and append it
+        new_filter_df = pd.DataFrame([new_filter], columns=df.columns).fillna("")
+
+        # Concatenate and update the QGrid widget
+        self.filterGridObject.qgrid_filter.df = pd.concat([df, new_filter_df], ignore_index=True).fillna("")
+
+        # Refresh the QGrid display if needed
+        #self.refresh_gridbox(event, button)
+        new_grid_id = len(grid_ids)
+        self.update_or_refresh_grid(f"filtered_grid_{new_grid_id}")
         
 
     # # Function for renaming a fusion

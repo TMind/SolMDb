@@ -1,4 +1,5 @@
 import logging
+import utils
 from MyGraph import MyGraph
 from DBQueryHelper import fetch_filtered_documents
 from GlobalVariables import global_vars as gv
@@ -22,9 +23,13 @@ class ObjectProcessor:
         """
         decks_data = None        
         if isinstance(object, Fusion) and object.myDecks:
-            deck_names_from_dict = [deck['name'] for deck in object.myDecks if 'name' in deck]
-            deck_names_from_list = [name for name in object.myDecks]
-            deck_names = deck_names_from_dict or deck_names_from_list
+            deck_names = [deck['name'] for deck in object.myDecks if 'name' in deck]
+            if not deck_names:
+                print(f"No names from object: {object.name}")
+            #deck_names_from_list = [name for name in object.myDecks]
+            #if deck_names_from_list: 
+            #    
+            #deck_names = deck_names_from_dict or deck_names_from_list
                         
             decks_data = list(fetch_filtered_documents(
                 'Deck', 
@@ -49,6 +54,19 @@ class ObjectProcessor:
         if decks_data:           
            for deck_data in decks_data:                         
                 ObjectProcessor.update_object_data(object, deck_data)
+        
+        ObjectProcessor.process_graph_statistics(object)
+    
+    @staticmethod
+    def process_graph_statistics(object): 
+        
+        myGraph = MyGraph()
+        myGraph.from_dict(object.graph)
+        interface_ids = myGraph.get_length_interface_ids()
+
+        combo_data = utils.get_combos_for_graph(myGraph, object.name)
+        interface_ids = {**interface_ids, **combo_data}
+        object.data.FrameData = interface_ids
     
     @staticmethod
     def process_betrayers_and_solbinds(object, cards):
@@ -112,12 +130,16 @@ class ObjectProcessor:
             object.data.Spells = stats['card_types']['Spell']['count']
             if object.data.Spells and 'Exalt' in stats['card_types']['Spell']:
                 object.data.Exalt = stats['card_types']['Spell']['Exalt']
-            object.data.A1  = stats['creature_averages']['attack']['1']
-            object.data.A2  = stats['creature_averages']['attack']['2']
-            object.data.A3  = stats['creature_averages']['attack']['3']
-            object.data.H1  = stats['creature_averages']['health']['1']
-            object.data.H2  = stats['creature_averages']['health']['2']
-            object.data.H3  = stats['creature_averages']['health']['3']
+            
+            for item, prefix in [('attack', 'A'), ('health', 'H')]:
+                for i in range(1, 4):  # Loop directly over 1, 2, 3
+                    setattr(object.data, f"{prefix}{i}", stats['creature_averages'][item][str(i)])
+            # object.data.A1  = stats['creature_averages']['attack']['1']
+            # object.data.A2  = stats['creature_averages']['attack']['2']
+            # object.data.A3  = stats['creature_averages']['attack']['3']
+            # object.data.H1  = stats['creature_averages']['health']['1']
+            # object.data.H2  = stats['creature_averages']['health']['2']
+            # object.data.H3  = stats['creature_averages']['health']['3']
     
     @staticmethod
     def process_object_fb_abilities(object):
@@ -203,6 +225,8 @@ class ObjectProcessor:
             cardSetNo = deck_data.get('cardSetNo', None)
             p_expiry = deck_data.get('pExpiry', '')
             deck_name = deck_data.get('name', None)
+            if not object.data.faction:
+                object.data.faction = deck_data.get('faction', None)
         else:
             digital = object.data.digital 
             cardSetNo = object.data.cardSetNo
@@ -212,11 +236,10 @@ class ObjectProcessor:
             if not isinstance(object.data.myDecks, list):
                 object.data.myDecks = []  # Ensure it's a list
 
-            if deck_name not in object.data.myDecks:
-                object.data.myDecks.append(deck_name)
-        #if deck_name and deck_name not in object.data.myDecks: 
-        #    object.data.myDecks.append(deck_name)
-                
+            # Check if a dictionary with 'name' equal to deck_name already exists
+            if not any(deck.get("name") == deck_name for deck in object.data.myDecks):
+                object.data.myDecks.append({"name": deck_name})  # Append as a dictionary            
+            
         if digital == '': digital = 0
 
         # Ensure object.digital behaves like a set but stores as a list
@@ -229,10 +252,10 @@ class ObjectProcessor:
             object.cardSetNo = []
         object.data.cardSetNo = list(set(object.data.cardSetNo) | {int(cardSetNo)}) if cardSetNo else object.data.cardSetNo
         
-        if object.pExpiry:
-            # Compare the expiration dates and keep the earliest one
-            if p_expiry :
-                object.data.pExpiry = get_min_time([object.data.pExpiry, p_expiry]) 
+        if not hasattr(object.data, 'pExpiry'):
+            object.data.pExpiry = p_expiry
+            # Compare the expiration dates and keep the earliest one            
+        object.data.pExpiry = get_min_time([object.data.pExpiry, p_expiry]) 
         
         
     @staticmethod        

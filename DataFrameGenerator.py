@@ -1,5 +1,6 @@
 import pandas as pd
 import logging, re, os, pickle
+import FieldUnifier
 from utils import normalize_time_string
 from GlobalVariables import GLOBAL_COLUMN_ORDER, global_vars as gv
 from MyGraph import MyGraph
@@ -565,6 +566,74 @@ class DataFrameGenerator:
             print('No decks found in the database')
             return pd.DataFrame()
 
+
+    def generate_statistics_dataframe(self, df, data_set_columns, data_type): 
+        matched_fields = [field for field in data_set_columns if field in FieldUnifier.COMPONENTS['Graph']]
+        
+        if not matched_fields: 
+            return df  # No additional statistics needed
+        else:
+            print(f"Matched fields in 'Graph' component: {matched_fields}")
+
+        identifier = 'CardType Count Data'
+        object_list = utils.fetch_data_from_db(data_type, filter_df=df)
+        if not object_list:
+            return df  # Return the original DataFrame unchanged
+
+        gv.progress_manager.update_progress(identifier, 0, len(object_list), message='Generating CardType Count Data...')
+        all_decks_list = []
+
+        for obj in object_list:
+            gv.progress_manager.update_progress(identifier, message=f'Processing Deck: {obj["name"]}')
+
+            myGraph = MyGraph()
+            myGraph.from_dict(obj.get('graph', {}))
+            interface_ids = myGraph.get_length_interface_ids()
+
+            combo_data = utils.get_combos_for_graph(myGraph, obj['name'])
+            interface_ids = {**interface_ids, **combo_data}
+
+            interface_ids_df = pd.DataFrame([interface_ids], index=[obj['name']])
+            all_decks_list.append(interface_ids_df)
+
+        if all_decks_list:
+            # Step 1: Ensure all DataFrames have the same columns
+            all_columns = set()
+            for sub_df in all_decks_list:
+                all_columns.update(sub_df.columns)
+
+            all_decks_list = [sub_df.reindex(columns=all_columns, fill_value='') for sub_df in all_decks_list]
+
+            # Step 2: Concatenate all DataFrames into one DataFrame
+            all_decks_df = pd.concat(all_decks_list, axis=0, sort=False)
+
+            # Step 3: Ensure 'Name' is the index
+            if 'name' in all_decks_df.columns:
+                all_decks_df.set_index('name', inplace=True)
+
+            # Step 4: Clean up and sort the DataFrame
+            all_decks_df.sort_index(axis=1, inplace=True)
+            all_decks_df = utils.sum_card_types(all_decks_df)
+            all_decks_df = utils.clean_columns(all_decks_df)
+            all_decks_df = utils.enforce_column_order(all_decks_df, GLOBAL_COLUMN_ORDER)
+
+            # Step 5: Merge with `df` while keeping all new columns
+            if df.index.name == "Name":
+                result_df = df.merge(all_decks_df, left_index=True, right_index=True, how="left")  # Merge on index
+            else:
+                result_df = df.merge(all_decks_df, on="Name", how="left")  # Merge on column
+
+            # Step 6: Fill missing values for new columns
+            new_columns = set(all_decks_df.columns) - set(df.columns)
+            for col in new_columns:
+                if result_df[col].dtype == "object":
+                    result_df[col] = result_df[col].fillna("")  # Safe for object columns
+                else:
+                    result_df[col] = result_df[col].fillna(0)  # Safe for numeric columns
+            return result_df  # Return the enriched DataFrame
+        
+        return df  # Return the original DataFrame if nothing was found
+        
 
     def generate_deck_content_dataframe(self, deckNames):
         from CardLibrary import Card , CardData

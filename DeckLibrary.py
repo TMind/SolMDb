@@ -205,7 +205,7 @@ class DeckLibrary:
             self.new_decks = [deck for deck in deckCursor]             
             self.make_fusions()
           
-    def make_fusions(self, deck_lists=None):
+    def make_fusions(self, deck_lists=None, ump=True):
         """
         Creates fusions from the given deck lists or from all decks in the database if no lists are provided.
 
@@ -237,10 +237,12 @@ class DeckLibrary:
                 if i != j and deck_a in validDeckNames and deck_b in validDeckNames
             ]
         else:
-            # Generate combinations of decks from multiple lists
+            # Generate combinations of decks from multiple lists, ensuring they come from different lists
             newCombinations = [
                 (deck_a, deck_b)
-                for deck_list_a, deck_list_b in product(deck_lists, repeat=2)
+                for i, deck_list_a in enumerate(deck_lists)
+                for j, deck_list_b in enumerate(deck_lists)
+                if i < j  # Ensures deck_list_a and deck_list_b are different
                 for deck_a in deck_list_a
                 for deck_b in deck_list_b
                 if deck_a in validDeckNames and deck_b in validDeckNames
@@ -254,7 +256,8 @@ class DeckLibrary:
         # Process all valid combinations using the MultiProcess module
         if deckCombinationData:
             multi_process = MultiProcess(gv.username, deckCombinationData)
-            multi_process.run()
+            ump = multi_process.determine_required_cpus(len(deckCombinationData), min_items_per_cpu = 1000) > 1
+            multi_process.run(use_multiprocessing=ump)
             print(f"Processed {len(deckCombinationData)} fusions.")
         else:
             print("No valid fusions could be created.")

@@ -236,6 +236,7 @@ class DeckData:
     nft: int = 0
     price: float = 0.0
     owner: str = ''  
+    rarity_score: float = 0.0
     # Calculated fields
     Creatures: int = 0
     Spells: int = 0
@@ -257,6 +258,7 @@ class DeckData:
     tags: dict = field(default_factory=dict)
     stats: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)
+    FrameData: dict = field(default_factory=dict)
 
 
 class Deck(DatabaseObject):
@@ -379,6 +381,7 @@ class FusionData:
     # Dictionaries
     children_data: dict = field(default_factory=dict)
     graph: dict = field(default_factory=dict)
+    FrameData: dict = field(default_factory=dict)
 
 class Fusion(DatabaseObject):
     def __init__(self, data=None):

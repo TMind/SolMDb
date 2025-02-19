@@ -28,7 +28,7 @@ TAGS = [
     'Dragon', 'Elemental', 'Plant', 'Minion', 'Spell', 'Healing Source', 'Movement', 'Disruption',
     'Replace Setup', 'Armor', 'Activate', 'Ready', 'Free', 'Upgrade', 'FB Creature', 'Removal', 'Breakthrough',
     'Aggressive', 'Defender', 'Stealth', 'Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Increased A',
-    'Attack Debuff', 'Health Debuff', 'Destruction Others', 'Destruction Self', 'Self Damage Activator', 'Silence', 'Exalt', 'Slay',
+    'Attack Debuff', 'Health Debuff', 'Destruction Others', 'Destruction Self', 'Self Damage Activator', 'Silence', 'Slay',  # 'Exalt' already in Stats
     'Reanimate', 'Deploy', 'Deploy Synergy', 'Spicy', 'Cool', 'Fun', 'Annoying',    
     'Beast Synergy', 'Dinosaur Synergy', 'Mage Synergy', 'Robot Synergy', 'Scientist Synergy',
     'BanishSpirit Synergy', 'Spirit Synergy', 'Warrior Synergy', 'Zombie Synergy', 'Dragon Synergy', 'Elemental Synergy',
@@ -58,6 +58,7 @@ COMPONENTS = {
     'Stats': AVERAGE_FIELDS,
     'Tags': TAGS,
     'Combos': COMBOS,
+    'Graph': TAGS + COMBOS,
     'All Fields': ['Basic', 'Detailed', 'Stats', 'Tags', 'Combos']
 }
 
@@ -70,8 +71,8 @@ DB_TO_DF_FIELDS = {
     'deckScore': 'Score'
 }
 
-CONVERSION_TABLE = {
-    "myDecks[0].faction": "faction",
+CONVERSION_TABLE_2DF = {
+    #"myDecks[0].faction": "faction",
     "myDecks[0].name": "Deck A",
     "myDecks[1].name": "Deck B",
 }
@@ -125,7 +126,7 @@ def generate_final_fields(info_level, tag_level, item_type, rename_fields_to=Non
         final_fields.update(resolve_component_fields(tag_level))
 
     # Step 2: Incorporate fields from CONVERSION_TABLE before filtering
-    final_fields.update(CONVERSION_TABLE.values())
+    final_fields.update(CONVERSION_TABLE_2DF.values())
 
     # Step 3: Filter out fields that don’t belong to the item type
     if item_type == 'Deck':
@@ -144,7 +145,7 @@ def generate_final_fields(info_level, tag_level, item_type, rename_fields_to=Non
             renamed_fields = {DB_TO_DF_FIELDS.get(field, field) for field in final_fields}
 
             # Ensure mapped conversion fields are also applied
-            final_fields = {CONVERSION_TABLE.get(field, field) for field in renamed_fields}
+            final_fields = {CONVERSION_TABLE_2DF.get(field, field) for field in renamed_fields}
 
     return list(final_fields)
 

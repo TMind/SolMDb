@@ -2,7 +2,7 @@ import logging
 import json
 import re
 from GlobalVariables import global_vars as gv
-from FieldUnifier import generate_final_fields, DF_TO_DB_FIELDS, DB_TO_DF_FIELDS, CONVERSION_TABLE
+from FieldUnifier import generate_final_fields, DF_TO_DB_FIELDS, DB_TO_DF_FIELDS, CONVERSION_TABLE_2DF, COMPONENTS
 from MongoDB.DatabaseManager import DatabaseManager
 
 def determine_filter_config(column, value, collection_name):
@@ -30,9 +30,9 @@ def determine_filter_config(column, value, collection_name):
     substrings = re.split(rf"\s*[{re.escape(''.join(operators[operator]))}]\s*", value)
 
     # Define field mappings based on the collection type
-    if column == 'Name':
+    if column.lower() == 'name':
         # If querying 'Fusion', match 'Deck A' and 'Deck B' instead of 'Name'
-        fields = ['Deck A', 'Deck B'] if collection_name == 'Fusion' else ['Name']
+        fields = ['myDecks.name'] if collection_name == 'Fusion' else ['name']
     elif column == 'Forgeborn Ability':
         # Match across multiple Forgeborn ability columns using OR
         fields, operator = ['FB2', 'FB3', 'FB4'], 'OR'
@@ -83,7 +83,7 @@ def generate_mongo_query(filter_df, collection_name):
     if filter_df is None or filter_df.empty:
         return {}  # Return an empty query if no filters are provided
 
-    filter_conditions = [process_filter_row(row, collection_name) for _, row in filter_df.iterrows()]
+    filter_conditions = [process_filter_row(row, collection_name) for _, row in filter_df.iterrows()]    
     return {"$or": filter_conditions} if filter_conditions else {}
 
 def get_projection_fields(collection_name, rename_fields_to=None):
@@ -97,44 +97,97 @@ def get_projection_fields(collection_name, rename_fields_to=None):
 
     return default_projections.get(collection_name, [])
 
-    
-def build_aggregation_pipeline(filter_query, projection_fields, rename_mapping=None, conversion_table=None):
+def build_aggregation_pipeline(  filter_query, projection_fields, rename_mapping=None, conversion_table=None, expanded_field=None, expanded_field_keys=None ):
     """
-    Constructs the MongoDB aggregation pipeline with field projections and renaming.
+    Constructs the MongoDB aggregation pipeline with field projections, renaming,
+    dictionary expansion, and optional field conversions.
 
     Args:
         filter_query (dict): MongoDB filter query.
         projection_fields (list): List of fields to include in the projection.
         rename_mapping (dict, optional): Mapping of field names to rename.
+        conversion_table (dict, optional): Conversion mapping for computed fields.
+        expanded_field (str, optional): Name of the dictionary field to expand into separate fields.
+        expanded_field_keys (list, optional): List of expected keys inside the expanded field.
 
     Returns:
         list: Aggregation pipeline for MongoDB query.
     """
     pipeline = [{"$match": filter_query}]
 
-    # Apply renaming and projection
-    projection_stage = {}
-    
-    # Step 1: Apply field transformations from conversion_table
+    # Step 1: Expand the dictionary field into separate fields (if it exists)
+    if expanded_field:
+        pipeline.extend([
+            { "$addFields": { "expanded_fields": { "$objectToArray": f"${expanded_field}" } } },
+            { "$addFields": {
+                "merged_fields": {
+                    "$mergeObjects": ["$$ROOT", { "$arrayToObject": "$expanded_fields" }]
+                }
+            }},
+            { "$replaceRoot": { "newRoot": "$merged_fields" } },
+            { "$unset": [expanded_field, "expanded_fields"] }
+        ])
+
+    # Step 2: Apply field transformations from `conversion_table`
+    projection_stage = {"_id": 1}  # Always include document ID
+
     if conversion_table:
         for field_path, new_field in conversion_table.items():
             mongo_expression = convert_field_path(field_path)
             pipeline.append({"$addFields": {new_field: mongo_expression}})
-            projection_stage[new_field] = 1  # Ensure it's included in projection
+            projection_stage[new_field] = 1  # Ensure inclusion in projection
 
-    # Step 1: Apply field renaming
-    if rename_mapping:
-        for old_field, new_field in rename_mapping.items():
-            projection_stage[new_field] = f"${old_field}"
+    # Step 3: Convert and truncate date fields
+    pipeline.append({
+        "$addFields": {
+            "pExpiry": {
+                "$cond": {
+                    "if": { "$eq": [{ "$type": "$pExpiry" }, "string"] },  # Check if it's a string
+                    "then": {
+                        "$dateFromString": {
+                            "dateString": "$pExpiry",
+                            "onError": None  # Avoids errors if conversion fails
+                        }
+                    },
+                    "else": "$pExpiry"  # Keep it unchanged if it's already a date
+                }
+            }
+        }
+    })
 
-    # Step 2: Ensure all requested projection fields are included
+    pipeline.append({
+        "$addFields": {
+            "pExpiry": {
+                "$dateToString": {
+                    "format": "%Y-%m-%d",
+                    "date": "$pExpiry",
+                    "onNull": None  # Avoids errors if the date is missing
+                }
+            }
+        }
+    })
+
+    # Step 4: Ensure all requested projection fields are included
     for field in projection_fields:
-        if not rename_mapping or field not in rename_mapping.values():
-            projection_stage[field] = 1
+        projection_stage[field] = 1
 
-    # Step 3: Construct the projection stage
-    if projection_stage:
-        pipeline.append({"$project": projection_stage})
+    # Step 5: Include all predefined expanded fields explicitly
+    if expanded_field_keys:
+        for key in expanded_field_keys:
+            projection_stage[key] = 1
+
+    # Step 6: **Apply renaming without removing existing fields**
+    if rename_mapping:
+        renamed_projection_stage = {}
+        for old_field, new_field in rename_mapping.items():
+            if old_field in projection_stage:
+                renamed_projection_stage[new_field] = f"${old_field}"  # Rename the field
+            else:
+                renamed_projection_stage[new_field] = {"$ifNull": [f"${old_field}", None]}  # Ensure it still exists
+
+        projection_stage.update(renamed_projection_stage)  # Merge renamed fields while keeping all others
+    # Step 7: Construct the projection stage
+    pipeline.append({"$project": projection_stage})    
 
     return pipeline
 
@@ -191,7 +244,7 @@ def convert_field_path(field_path):
 
     return expression
 
-def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None, projection_fields=None, final_format=None):
+def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None, projection_fields=None, final_format=None, expanded_field=None):
     """
     Fetch documents from a MongoDB collection using either a filter DataFrame or a direct query.
 
@@ -209,7 +262,7 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
         logging.error("No active database connection.")
         return []
 
-    conversion_table = CONVERSION_TABLE if collection_name == 'Fusion' else None
+    conversion_table = CONVERSION_TABLE_2DF if collection_name == 'Fusion' else None
 
     # Step 1: Determine query source
     if filter_query:
@@ -219,9 +272,9 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
     else:
         query = {}  # Default empty query (fetch all)
 
-    if query:
+    if query:        
         myQuery = query_to_mongo_format(query)
-        #print(f"Final query: {myQuery}")
+        #logging.debug(f"Final query: {myQuery}")
 
     # Step 2: Use default projection fields if none provided
     projection_fields = get_projection_fields(collection_name, rename_fields_to=final_format) if projection_fields is None else projection_fields
@@ -236,7 +289,15 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
         else:
             logging.error(f"Unknown format for query : {final_format}")
     
-    pipeline = build_aggregation_pipeline(query, projection_fields, query_format, conversion_table= conversion_table)
+    
+    expanded_field_keys = COMPONENTS['Graph'] if expanded_field else None
+    
+    pipeline = build_aggregation_pipeline(query, projection_fields, query_format, conversion_table= conversion_table, expanded_field=expanded_field, expanded_field_keys=expanded_field_keys)
+    
+
+    # DEBUG: Print the full aggregation pipeline before executing
+    #logging.debug("Executing MongoDB Aggregation Pipeline:")
+    #logging.debug(json.dumps(pipeline, indent=4))
 
     # Step 4: Execute the query and track missing fields
     missing_fields = set(projection_fields)  # Assume all fields are missing initially
@@ -245,7 +306,7 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
     # Step 5: Execute database query
     try:
         # Convert list fields to semicolon-separated strings                        
-        convert_list_fields = {'Fusion': ['Set']}  # Define collection-specific fields
+        convert_list_fields = {'Fusion': ['Set', 'Digital']}  # Define collection-specific fields
         
         collection = dbmgr.get_collection(collection_name)
         for document in collection.aggregate(pipeline):
@@ -265,6 +326,10 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
                         else:
                             logging.warning(f"Expected list for field '{field}', but got {type(document[field])}. Skipping conversion.")
 
+            # if results:
+            #     logging.debug("Sample MongoDB Output:")
+            #     logging.debug(json.dumps(results[:2], indent=4))
+
             results.append(document)
 
             # Determine missing fields for this document individually
@@ -276,6 +341,6 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
 
     except Exception as e:
         logging.error(f"Error fetching documents from {collection_name}: {e}")
-        return []
+        return []        
             
     return results

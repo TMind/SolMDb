@@ -75,9 +75,13 @@ def compare_times(time_str1, time_str2, default_timezone=pytz.UTC):
     else:
         return 0   # times are equal
     
+import pytz
+from dateutil import parser
+
 def get_min_time(time_strings, default_timezone=pytz.UTC, output_format='%Y-%m-%d %H:%M:%S%z'):
     """
-    Returns the earliest time from a list of time strings.
+    Returns the earliest time from a list of time strings, ensuring that if one time is empty,
+    the function returns the non-empty one.
 
     Parameters:
     - time_strings: A list of time strings.
@@ -89,13 +93,14 @@ def get_min_time(time_strings, default_timezone=pytz.UTC, output_format='%Y-%m-%
     - None if there is an error parsing the time strings or if the list is empty.
     """
     if not time_strings:
-        return None
+        return None  # Return None if the list is empty
 
     min_dt = None
 
     for time_str in time_strings:
-        if not time_str:
+        if not time_str or time_str.strip() == "":
             continue  # Skip empty strings
+
         try:
             # Parse the time string
             dt = parser.parse(time_str)
@@ -110,16 +115,13 @@ def get_min_time(time_strings, default_timezone=pytz.UTC, output_format='%Y-%m-%
             dt = dt.astimezone(default_timezone)
 
         # Update min_dt if this datetime is earlier
-        if (min_dt is None) or (dt < min_dt):
+        if min_dt is None or dt < min_dt:
             min_dt = dt
 
     if min_dt is not None:
-        # Return the earliest time as a formatted string
-        #print(f"Returning min time: {min_dt}")
-        return min_dt.strftime(output_format)
-    else:
-        # All time strings were invalid
-        return None
+        return min_dt.strftime(output_format)  # Return the earliest valid time
+
+    return None  # Return None if no valid time was found
     
     
 def normalize_time_string(time_string, target_format="%Y-%m-%d %H:%M:%S", cutoff="none"):
@@ -182,7 +184,7 @@ def fetch_data_from_db(collection_name, filter_df=None, projection=None):
     """
     query = {}
     if filter_df is not None:
-        item_names = filter_df.index.tolist()        
+        item_names = filter_df.index.tolist()
         query = {'name': {'$in': item_names}}
 
     # Pass the projection parameter to the find method

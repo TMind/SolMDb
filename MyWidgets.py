@@ -132,9 +132,7 @@ class VBoxManager:
             # Skip if the widget is already in the VBox
             logging.info(f"Skipping widget for index: {index}")
             return
-            vbox = self.vboxes[index]
-            vbox.children = (widget,)
-            logging.info(f"Updated existing VBox at index {index}")
+            
         elif self.empty_vboxes:
             # Reuse an empty VBox
             #logging.info(f"Adding widget for index: {index}")
@@ -168,7 +166,7 @@ class VBoxManager:
 
             vbox = self.vboxes[index]
             # Add an "Empty" label to the VBox
-            vbox.children = (widgets.Label("Empty"),)
+            vbox.children = (widgets.Label(""),)
             self.empty_vboxes.append(vbox)  # Mark it as empty
             del self.vboxes[index]
             logging.info(f"Removed VBox at index {index} and marked it as empty.")

@@ -50,7 +50,7 @@ TESTING2 =  pd.DataFrame({
             'Mandatory Fields': ['Name, Modifier']
         })
 
-DEFAULT_FILTER = TESTING2
+DEFAULT_FILTER = DEFAULT
 
 
 class GridManager:
@@ -1260,19 +1260,19 @@ class DynamicGridManager:
             logging.info(f"DataFrame columns: {filter_df.columns}")
             logging.info(f"DataFrame index: {filter_df.index}")
             
-            print("DataFrame before filtering:")
-            print(filter_df)
-            print("Data types:")
-            print(filter_df.dtypes)
+            #print("DataFrame before filtering:")
+            #print(filter_df)
+            #print("Data types:")
+            #print(filter_df.dtypes)
 
-            print("Unique values in 'Active' column:", filter_df["Active"].unique())
+            #print("Unique values in 'Active' column:", filter_df["Active"].unique())
             
             #active_filters_df = filter_df[filter_df['Active']]
             #inactive_filters_df = filter_df[~filter_df['Active']]
             
             if 'Active' in filter_df.columns:
-                print("🚀 Before conversion:")  
-                print(filter_df[['Active']].to_string(index=False))  # Show 'Active' column before changes
+                #print("🚀 Before conversion:")  
+                #print(filter_df[['Active']].to_string(index=False))  # Show 'Active' column before changes
                 
                 # Ensure boolean conversion works properly
                 if filter_df['Active'].dtype == object:
@@ -1281,17 +1281,17 @@ class DynamicGridManager:
                 # Fill missing values with False
                 filter_df['Active'] = filter_df['Active'].fillna(False).astype(bool)
 
-                print("\n✅ After conversion:")  
-                print(filter_df[['Active']].to_string(index=False))  # Show 'Active' column after changes
+                #print("\n✅ After conversion:")  
+                #print(filter_df[['Active']].to_string(index=False))  # Show 'Active' column after changes
                 
                 # Apply filtering
                 active_filters_df = filter_df[filter_df['Active']]
                 inactive_filters_df = filter_df[~filter_df['Active']]
 
-                print("\n🔥 Active filters:")
-                print(active_filters_df.to_string(index=False))  # Print active rows
+                #print("\n🔥 Active filters:")
+                #print(active_filters_df.to_string(index=False))  # Print active rows
             else:
-                print("⚠️ 'Active' column is missing!")
+                #print("⚠️ 'Active' column is missing!")
                 active_filters_df = pd.DataFrame(columns=filter_df.columns)
                 inactive_filters_df = pd.DataFrame(columns=filter_df.columns)
 

@@ -72,6 +72,7 @@ class MyGraph:
         else:
             # Add a new edge with weights
             self.G.add_edge(parent_id, child_id, **attributes)
+            #print(f"Added edge: {parent_id} -> {child_id} [{weight_to_add}]")
 
         # Get current child node weights
         weight = self.G.nodes[child_id].get('weight', 0)
@@ -145,8 +146,6 @@ class MyGraph:
         if not cls or not child_type:
             return
 
-        #print(f"Child Name = {child_name}[{child_type}]")        
-
         if child_type == 'Interface':
             self._process_interface_child(root, db_object, parent_object, child_name, full_class_path)
         elif child_type == 'Synergy':
@@ -163,8 +162,22 @@ class MyGraph:
                     'color': self._get_color_based_on_child_type(child_type, child_object),
                     'node_type': child_type,  # Include the node type
                 }
+                db_object_type = db_object.__class__.__name__
+                
+                # ❌ If the parent is a Card and the child is an Entity, DO NOT ADD EDGE
+                if db_object_type == "Card" and child_type == "Entity":
+                    print(f"❌ Skipping direct link between Card {db_object.data.name} and Entity {child_name}.")
+                    
+                    # ✅ Instead of stopping, continue processing the children of the Entity
+                    self.create_graph_children(child_object, parent_object=db_object, root=root)
+                    return  # Skip adding this Entity itself
+                    
+
+                print(f"Adding child: {child_name} of type {child_type} to parent: {parent_object.data.name}")
+                
                 self._add_child_to_graph(root, db_object, parent_object, child_object, node_attributes)
                 self.create_graph_children(child_object, parent_object=db_object, root=root)
+                
             else:
                 #print(f"process_child: Child Object not found: {child_name}")
                 pass

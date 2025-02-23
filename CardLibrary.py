@@ -18,7 +18,7 @@ class Entity(DatabaseObject):
         if self.attributes:
             id = self.attributes.get('id', None)
         self._id = id or self.name
-        if self.interfaces:
+        if self.interfaces and self.data:
             self.data.children_data = {interfaceName: 'Interface.Interface' for interfaceName in self.interfaces.keys()}
     
 @dataclass
@@ -40,8 +40,8 @@ class Forgeborn(DatabaseObject):
     def __init__(self, data: ForgebornData):        
         super().__init__(data)
         #self.data._id = self.id       
-        if self.abilities:
-            self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in self.abilities}  #TODO: Check if this is correct
+        if self.data and self.data.abilities:   
+            self.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in self.data.abilities}  #TODO: Check if this is correct
             
     def add_ability(self, ability):
         #ability_permutation = ability.id[-4:]   # c3a2
@@ -49,19 +49,19 @@ class Forgeborn(DatabaseObject):
         #ability_number = ability_permutation[3]
         #ability_name = f"{ability_cycle}{ability.name}"
 
-        if self.abilities:
-            self.abilities[ability.id] = ability.entity                
+        if self.data and self.data.abilities:
+            self.data.abilities[ability.id] = ability.entity                
 
     def get_permutation(self, forgeborn_id):
         # Extract ability information from forgeborn_id
         ability_ids = self._construct_ability_ids(forgeborn_id)
         
         # Create a new Forgeborn instance with a subset of abilities
-        new_forgeborn = Forgeborn(self.data)
-        new_forgeborn.data.id = forgeborn_id
-        new_forgeborn.abilities = {aid: self.abilities[aid] for aid in ability_ids if aid in self.abilities}
-        
-        new_forgeborn.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in new_forgeborn.abilities.values()}
+        new_forgeborn = Forgeborn(self.data) if self.data else Forgeborn(ForgebornData())
+        if new_forgeborn.data:
+            new_forgeborn.data.id = forgeborn_id
+            new_forgeborn.data.abilities = {aid: self.data.abilities[aid] for aid in ability_ids if self.data and aid in self.data.abilities}    
+            new_forgeborn.data.children_data = {entityName: 'CardLibrary.Entity' for entityName in new_forgeborn.data.abilities.values()}
         
         return new_forgeborn
 

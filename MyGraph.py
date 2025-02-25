@@ -1,10 +1,7 @@
-from hmac import new
-import re
-import attr
 import networkx as nx
 import importlib
+import copy
 
-from numpy import source
 
 def get_class_from_path(full_class_path):
     if '.' not in full_class_path:
@@ -108,8 +105,10 @@ class MyGraph:
         for attr in ['name', 'tag', 'title']:
             node_id = getattr(node, attr, None)
             if node_id:
-                return node_id
-        return node if isinstance(node, str) else ''
+                if callable(node_id):  # If it's a method, call it
+                    node_id = node_id()
+                return str(node_id)  # Ensure it's always a string
+        return str(node) if isinstance(node, str) else ''
 
     def set_node_attributes(self, node, **attributes):
         node_id = self.get_node_id(node)
@@ -440,4 +439,71 @@ class MyGraph:
         # Restore additional node data
         self.node_data = graph_dict.get('node_data', {'tags': {}})
         self.combo_data = graph_dict.get('combo_data', {})
-    
+        
+    def transform_graph(self):
+        """
+        Transforms the graph by:
+        1. Removing Synergy nodes.
+        2. Connecting Cards directly based on their Interfaces.
+        3. Labeling new edges with the Interface names.
+        """
+
+        new_graph = MyGraph()
+        new_graph.G = self.G.copy()  # Work on a copy to avoid modifying the original
+
+        card_links = []  # Store new direct connections
+        synergy_nodes = [node for node, data in self.G.nodes(data=True) if data.get("node_type") == "Synergy"]
+
+        for synergy in synergy_nodes:
+            input_interfaces = {}   # Input Interface → Parent Card
+            output_interfaces = {}  # Output Interface → Parent Card
+
+            for interface, _, edge_data in self.G.in_edges(synergy, data=True):
+                if self.G.nodes[interface].get("node_type") != "Interface":
+                    continue  
+
+                card = next((c for c in self.G.predecessors(interface) if self.G.nodes[c].get("node_type") == "Card"), None)
+                if not card:
+                    continue  
+
+                if "I" in edge_data.get("types", []):  
+                    input_interfaces[interface] = card
+                if "O" in edge_data.get("types", []):  
+                    output_interfaces[interface] = card
+
+            for in_interface, card_a in input_interfaces.items():
+                for out_interface, card_b in output_interfaces.items():
+                    if card_a != card_b:  
+                        label = f"{str(in_interface).title()} → {str(out_interface).title()}"  # Fix `.title()` issue
+                        card_links.append((card_a, card_b, label))
+
+        for card_a, card_b, label in card_links:
+            
+            # Step 4: Apply transformations
+            # Create a direct edge between Cards with Interface label
+            # Set a more prominent color for new direct links
+            new_graph.add_edge(
+                card_a, card_b, 
+                label=label, 
+                weight=1,  # Maybe increase thickness
+                color="orange",  # Use a strong color like red or orange
+                fontcolor="orange",  # Make text more readable
+                penwidth=2  # Increase line width
+            )
+            #new_graph.add_edge(card_a, card_b, label=label, weight=1)
+
+        new_graph.G.remove_nodes_from(synergy_nodes)
+
+        # Identify Interface nodes that were part of Synergies
+        interface_nodes = set()
+        for synergy in synergy_nodes:
+            for interface, _ in self.G.in_edges(synergy):
+                if self.G.nodes[interface].get("node_type") == "Interface":
+                    interface_nodes.add(interface)
+
+        new_graph.G.remove_nodes_from(interface_nodes)
+
+        # Ensure all nodes are strings for PyVis
+        new_graph.G = nx.relabel_nodes(new_graph.G, lambda x: str(x))
+
+        return new_graph

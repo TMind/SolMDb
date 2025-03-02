@@ -4,21 +4,25 @@ import pandas as pd
 from datetime import datetime
 
 class CMManager:
-    def __init__(self, db_manager, sheet_url, local_copy_path='csv/sff.csv', sheets_client=None):
+    def __init__(self, db_manager, doc_id, local_copy_path='csv/sff.csv', sheets_client=None):
         self.db_manager = db_manager
-        self.sheet_url = sheet_url
         self.local_copy_path = local_copy_path
-        self.sheets_client = sheets_client  # Pass GoogleSheetsClient for online‚ interaction
+        self.sheets_client = sheets_client  # Pass GoogleSheetsClient for online interaction
         self.title = None
         self.timestamp = None
         self.cm_tags = None
 
         if not sheets_client:
             raise ValueError("CMManager requires an instance of GoogleSheetsClient for online interaction.")
-        
+
+        # Fetch the correct sheet URL from the Google Document
+        self.sheets_client.sheet_url = self.sheets_client.get_document_link_from_google_doc()
+        if not self.sheets_client.sheet_url:
+            raise ValueError("Failed to fetch the sheet URL from the document.")
+
         # Load metadata from the database
         self.load_metadata()
-        
+
         # Check if the local CSV file exists; if not, download it        
         if not os.path.exists(self.local_copy_path):
             print(f"Local CSV '{self.local_copy_path}' not found. Downloading from Google Sheet...")

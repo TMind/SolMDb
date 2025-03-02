@@ -66,7 +66,10 @@ class GlobalVariables:
         self._port = os.getenv('MONGODB_PORT', 27017)
         self.uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')        
         self.debug = os.getenv('DEBUG_MODE', 'False').lower() in ('true', '1', 't')        
-        self.sheet_url = os.getenv('SHEET_URL', 'https://docs.google.com/spreadsheets/d/17aYAWS5R1hg-8mxFEjQEcNlMZ9kocJhnDTjLU9anzw8')
+        self.cm_sheet_url = os.getenv('SHEET_URL', 'https://docs.google.com/spreadsheets/d/17aYAWS5R1hg-8mxFEjQEcNlMZ9kocJhnDTjLU9anzw8')
+        self.cm_sheet_id = os.getenv('CM_SHEET_ID', "17aYAWS5R1hg-8mxFEjQEcNlMZ9kocJhnDTjLU9anzw8")
+        self.cm_doc_id = os.getenv("CM_DOC_ID", '1cee1_eJKZtxUiebmL1LjrrGQFn_kTj_sMMdr81S7YOI')
+        self.cm_doc_url = os.getenv("CM_DOC_URL", "https://docs.google.com/document/d/1cee1_eJKZtxUiebmL1LjrrGQFn_kTj_sMMdr81S7YOI")
         self.rotate_suffix = rotate_suffix
         self.display_data = {}
         self.user_dataframes = {}
@@ -97,8 +100,8 @@ class GlobalVariables:
             self.css_manager = CSSManager()
             
             # Initialize CMManager for handling the CM sheet
-            self.GoogleSheetsClient = GoogleSheetsClient()
-            self.cm_manager = CMManager(self.commonDB, self.sheet_url, local_copy_path='csv/sff.csv', sheets_client=self.GoogleSheetsClient)
+            self.GoogleSheetsClient = GoogleSheetsClient(doc_url=self.cm_doc_url, doc_id=self.cm_doc_id)
+            self.cm_manager = CMManager(self.commonDB, self.cm_doc_id, local_copy_path='csv/sff.csv', sheets_client=self.GoogleSheetsClient)
             self.update_all_column_definitions()
             if self.cm_manager.cm_tags :
                 self.data_selection_sets['CM Tags'].update( {tag : True for tag in self.cm_manager.cm_tags} )

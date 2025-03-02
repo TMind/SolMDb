@@ -15,7 +15,7 @@ default_logging_level = logging.INFO
 logging.basicConfig(level=default_logging_level,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     handlers=[
-                        logging.FileHandler("app.log"),
+#                        logging.FileHandler("app.log"),
                         logging.StreamHandler()
                     ])
 

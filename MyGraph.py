@@ -165,14 +165,14 @@ class MyGraph:
                 
                 # ❌ If the parent is a Card and the child is an Entity, DO NOT ADD EDGE
                 if db_object_type == "Card" and child_type == "Entity":
-                    print(f"❌ Skipping direct link between Card {db_object.data.name} and Entity {child_name}.")
+                    #print(f"❌ Skipping direct link between Card {db_object.data.name} and Entity {child_name}.")
                     
                     # ✅ Instead of stopping, continue processing the children of the Entity
                     self.create_graph_children(child_object, parent_object=db_object, root=root)
                     return  # Skip adding this Entity itself
                     
 
-                print(f"Adding child: {child_name} of type {child_type} to parent: {parent_object.data.name}")
+                #print(f"Adding child: {child_name} of type {child_type} to parent: {parent_object.data.name}")
                 
                 self._add_child_to_graph(root, db_object, parent_object, child_object, node_attributes)
                 self.create_graph_children(child_object, parent_object=db_object, root=root)

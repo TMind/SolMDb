@@ -512,6 +512,7 @@ tag_selection_set = {
         "Exalt Synergy": True,
         "Slay": True,
         "Deploy": True,
+        "Deploy Synergy": True,
     },    
     "Combos": {
         "Sum": True,

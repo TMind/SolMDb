@@ -106,6 +106,7 @@ class GlobalVariables:
             if self.cm_manager.cm_tags :
                 self.data_selection_sets['CM Tags'].update( {tag : True for tag in self.cm_manager.cm_tags} )
             self._initialized = True
+            
         else:
             logging.info("Objects already initialized.")
         

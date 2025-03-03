@@ -39,11 +39,15 @@ class ObjectProcessor:
             cardIds = [card_id for deck in decks_data if 'cardIds' in deck for card_id in deck['cardIds']]
         else:
             cardIds = object.cardIds
-                                
-        # Create the graph for the object 
-        object_graph = ObjectProcessor.create_graph_for_object(object)
-        object.data.CardTitles = ';'.join(object_graph.get_card_list())
+
+        if object.data:                        
+            # Create the graph for the object if it doesn't exist
+            if not object.data.graph:
+                object_graph = ObjectProcessor.create_graph_for_object(object)
+                object.data.graph = object_graph.to_dict()
         
+            object.data.CardTitles = ';'.join(object_graph.get_card_list())
+            
         # Get the card data for the deck        
         cards = gv.myDB.find('Card', {'_id': {'$in': cardIds}})
         ObjectProcessor.process_betrayers_and_solbinds(object, list(cards))

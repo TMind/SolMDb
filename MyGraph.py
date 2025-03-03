@@ -253,6 +253,10 @@ class MyGraph:
         
         # Fetch and cache the child object using the determined class
         child_object = cls.get_instance(child_name, field=field)
+        if not child_object:
+            #print(f"get_cached_child_object: Child Object not found: {child_name}")
+            return None
+        
         self.object_cache[cache_key] = child_object
         return child_object
 

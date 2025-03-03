@@ -2,7 +2,7 @@ import os
 import CardLibrary
 from MyGraph import MyGraph
 from MongoDB.DatabaseManager import DatabaseManager, BufferManager
-from CardLibrary import  Fusion, Deck, Card, ForgebornData, Forgeborn
+from CardLibrary import  Fusion, Deck, Card#, ForgebornData, Forgeborn
 from MultiProcess import MultiProcess
 from GlobalVariables import global_vars as gv
 from ObjectProcessor import ObjectProcessor
@@ -27,6 +27,9 @@ def create_graph_for_object(object):
 
 class DeckLibrary:
     def __init__(self, decks_data, fusions_data, mode):                
+        
+        # Initialize Universal Library 
+        self.universal_library = gv.get_universal_library()
         
         def extract_card_data_from_entity(entity, id):
             card_data = {'_id': id}

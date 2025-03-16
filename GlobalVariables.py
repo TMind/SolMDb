@@ -100,8 +100,8 @@ class GlobalVariables:
             self.css_manager = CSSManager()
             
             # Initialize CMManager for handling the CM sheet
-            self.GoogleSheetsClient = GoogleSheetsClient(doc_url=self.cm_doc_url, doc_id=self.cm_doc_id)
-            self.cm_manager = CMManager(self.commonDB, self.cm_doc_id, local_copy_path='csv/sff.csv', sheets_client=self.GoogleSheetsClient)
+            self.GoogleSheetsClient = GoogleSheetsClient(doc_id=self.cm_doc_id)
+            self.cm_manager = CMManager(self.commonDB, sheets_client=self.GoogleSheetsClient, local_sff_path='csv/sff.csv')
             self.update_all_column_definitions()
             if self.cm_manager.cm_tags :
                 self.data_selection_sets['CM Tags'].update( {tag : True for tag in self.cm_manager.cm_tags} )
@@ -114,16 +114,28 @@ class GlobalVariables:
         """
         Update all_column_definitions by combining existing columns and new columns from the CM sheet.
         """
-        try:
-                    
+        try:        
             # Read the local CSV file to get the columns            
-            cm_columns = self.cm_manager.cm_tags or [] # Get the CM sheet columns
+            cm_columns = self.cm_manager.cm_tags or []  # Get the CM sheet columns
             
-            # Add the CM sheet columns to the rotated/non-rotated definitions
-            cm_column_definitions = {col: {'width': rotated_width , 'headerCssClass' : rotate_suffix } for col in cm_columns}  # Adjust width as necessary
+            # 🔹 Define width and CSS class
+            rotated_width = 35  # Set appropriate width
+            rotate_suffix = "_rotate_"  # Header rotation class
+            cell_suffix = "_rotate_"  # Cell width class
             
-            # Combine with existing column definitions
-            self.rotated_column_definitions = { **self.rotated_column_definitions, **cm_column_definitions } 
+            # 🔹 Create column definitions for headers and cells
+            cm_column_definitions = {
+                col: {
+                    'width': rotated_width,
+                    'minWidth': rotated_width,
+                    'headerCssClass': rotate_suffix,
+                    'cssClass': cell_suffix  # Apply to column cells
+                }
+                for col in cm_columns
+            }
+            
+            # 🔹 Combine with existing column definitions
+            self.rotated_column_definitions = {**self.rotated_column_definitions, **cm_column_definitions} 
             self.all_column_definitions = {
                 **self.rotated_column_definitions,
                 **self.non_rotated_column_definitions,            
@@ -241,7 +253,7 @@ class ProgressManager:
 # Global variables 
 
 default_width = 150
-rotated_width = 20
+rotated_width = 35
 
 rotate_suffix = '_rotate_'
 
@@ -252,6 +264,9 @@ rotated_column_defs = {
     'Beast':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Beast Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'BEAST Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Darkforge':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Darkforge Synergy':{'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'DARKFORGE Combo':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Dinosaur':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Dinosaur Synergy': {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'DINOSAUR Combo':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -259,15 +274,16 @@ rotated_column_defs = {
     'Dragon Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'DRAGON Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Elemental':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'Elemental Synergy':{'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'Elemental Type':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Elemental Synergy':{'width': rotated_width, 'headerCssClass': rotate_suffix},    
     'ELEMENTAL Combo':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Mage':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Mage Synergy':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'MAGE Combo':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Metamind':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Metamind Synergy': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'METAMIND Combo':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Plant':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'Plant Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'Plant Type':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Plant Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},    
     'PLANT Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},    
     'Robot':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Robot Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -285,9 +301,11 @@ rotated_column_defs = {
     'Warrior':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Warrior Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'WARRIOR Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Yeti':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Yeti Synergy':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'YETI Combo':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Zombie':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Zombie Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'Zombie Type':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'ZOMBIE Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
     # Minion 
     'Minion':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -300,6 +318,7 @@ rotated_column_defs = {
     'Ready':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'READY Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Deploy':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Deploy Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'DEPLOY Combo':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
     
     # Damage 
@@ -314,6 +333,12 @@ rotated_column_defs = {
     'FB Creature':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'FB Creature Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'FACE DMG Combo':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'FB Giver':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'FB Giver Synergy':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'FB GIVER Combo':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Self Burn':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Self Burn Synergy':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'SELF BURN Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Self Damage Payoff':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Self Damage Activator':{'width': rotated_width, 'headerCssClass': rotate_suffix},
     'SELFDAMAGE Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -322,6 +347,7 @@ rotated_column_defs = {
     'Exalts':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Exalt Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'EXALT Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Exalt Counter':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Spell':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Spell Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'SPELL Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -331,11 +357,17 @@ rotated_column_defs = {
     'Armor Giver':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Armor Synergy':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'ARMOR Combo':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Player Armor':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
     
-    'Disruption':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Augment':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Augment Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'AUGMENT Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+        
     'Healing Source':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Healing Synergy':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'HEALING Combo':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'High Live Synery': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'HIGH LIVE Combo':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Movement':         {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Movement Benefit': {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'MOVEMENT Combo':   {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -364,6 +396,7 @@ rotated_column_defs = {
     # Removal 
     'Removal':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Silence':          {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Hand Disruption':  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     
     # Keywords 
     'Aggressive':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -381,7 +414,10 @@ rotated_column_defs = {
     'Health Buff':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Stat Debuff':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Attack Debuff':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Attack Debuff Synergy': {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'DEC ATTACK Combo': {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Health Debuff':    {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Adjacency':        {'width': rotated_width, 'headerCssClass': rotate_suffix},
     
     # Attack 
     'Increased A':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -390,10 +426,12 @@ rotated_column_defs = {
     'Battle':           {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Battle Synergy' :  {'width': rotated_width, 'headerCssClass': rotate_suffix},
     'Slay':             {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'Slay Synergy':     {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    'SLAY Combo':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
     
     # Sets
-    'Last Winter':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
-    'White Fang':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    #'Last Winter':      {'width': rotated_width, 'headerCssClass': rotate_suffix},
+    #'White Fang':       {'width': rotated_width, 'headerCssClass': rotate_suffix},
     
     # Other 
     'Spicy':            {'width': rotated_width, 'headerCssClass': rotate_suffix},
@@ -561,28 +599,34 @@ data_selection_sets = {
     "Sum":  True,
     "Beast": True,
     "Beast Synergy": True,
+    "Darkforge": True,
+    "Darkforge Synergy": True,
     "Dinosaur": True,
     "Dinosaur Synergy": True,
+    "Dragon": True,
+    "Dragon Synergy": True,
+    "Elemental": True,
+    "Elemental Synergy": True,
     "Mage": True,
     "Mage Synergy": True,
+    "Metamind": True,
+    "Metamind Synergy": True,
+    "Plant": True,
+    "Plant Synergy": True,
     "Robot": True,
     "Robot Synergy": True,
     "Scientist": True,
     "Scientist Synergy": True,
     "Spirit": True,
-    "Spirit Synergy": True,
+    "Spirit Synergy": True,    
     "BanishSpirit": True,
     "BanishSpirit Synergy": True,
     "Warrior": True,
     "Warrior Synergy": True,
+    "Yeti": True,
+    "Yeti Synergy": True,
     "Zombie": True,
     "Zombie Synergy": True,
-    "Dragon": True,
-    "Dragon Synergy": True,
-    "Elemental": True,
-    "Elemental Synergy": True,
-    "Plant": True,
-    "Plant Synergy": True,
     "Replace Setup": True,
     "Replace Profit": True,
     "Minion": True,
@@ -591,12 +635,15 @@ data_selection_sets = {
     "Spell Synergy": True,
     "Healing Source": True,
     "Healing Synergy": True,
+    "High Live Synery": True,
     "Movement": True,
     "Disruption": True,
     "Movement Benefit": True,
     "Armor": True,
     "Armor Giver": True,
     "Armor Synergy": True,
+    "Augment": True,
+    "Augment Synergy": True,
     "Activate": True,
     "Ready": True,
     "Free": True,
@@ -609,6 +656,10 @@ data_selection_sets = {
     "Face Burn": True,
     "FB Creature": True,
     "FB Creature Synergy": True,
+    "FB Giver": True,
+    "FB Giver Synergy": True,
+    "Self Burn": True,
+    "Self Burn Synergy": True,
     "Removal": True,
     "Breakthrough": True,
     "Breakthrough Giver": True,
@@ -623,14 +674,20 @@ data_selection_sets = {
     "Health Buff": True,
     "Stat Debuff": True,
     "Attack Debuff": True,
+    "Attack Debuff Synergy": True,
     "Health Debuff": True,
     "Self Damage Payoff": True,
     "Self Damage Activator": True,
     "Silence": True,
     "Exalt": True,
     "Exalt Synergy": True,
+    "Exalt Counter": True,
     "Slay": True,
+    "Slay Synergy": True,
     "Deploy": True,
+    "Deploy Synergy": True,
+    "Adjacency": True,
+    "Hand Disruption": True,
     "Spicy": True,
     "Cool": True,
     "Fun": True,
@@ -640,22 +697,26 @@ data_selection_sets = {
     "Sum": True,
     "Free": True,
     'BEAST Combo':      True,
+    'DARKFORGE Combo':  True,
     'DINOSAUR Combo':   True,
     'DRAGON Combo':     True,
     'ELEMENTAL Combo':  True,    
     'MAGE Combo':       True,
+    'METAMIND Combo':   True,
     'PLANT Combo':      True,
     'ROBOT Combo':      True,
     'SCIENTIST Combo':  True,
     'SPIRIT Combo':     True,
     'BANISH SPIRIT Combo': True,
     'WARRIOR Combo':    True,
+    'YETI Combo':       True,
     'ZOMBIE Combo':     True,
     'MINION Combo':     True,
     'EXALT Combo':      True,    
     'SPELL Combo':      True,
     'DEPLOY Combo' :    True,
     'ARMOR Combo':      True,
+    'AUGMENT Combo':    True,
     'ACTIVATE Combo':   True,
     'DESTRUCTION Combo': True,
     'DESTROY Combo': True,
@@ -664,17 +725,15 @@ data_selection_sets = {
     'REPLACE Combo':    True,            
     'READY Combo' :     True,    
     'REANIMATE Combo' : True,
-    'SELFDAMAGE Combo': True,    
+    'SELFDAMAGE Combo': True,
+    'SELFBURN Combo':  True,    
+    'FACE DMG Combo': True,
+    'FB GIVER Combo': True,
     'UPGRADE Combo':    True,    
     'INCREASED A Combo': True,
+    'DEC ATTACK Combo': True,
+    'SLAY Combo':       True,
   },
-#   'Deck Content': {
-#     'name': True,
-#     'faction': True,
-#     'rarity': True,
-#     'cardType': True,
-#     'cardSubType': True,
-#   },
   'CM Tags': {
     'Name': True,
     'faction': True,
@@ -698,10 +757,12 @@ GLOBAL_COLUMN_ORDER = [
     # Creatures
     'Abomination', 
     'Beast'         ,'Beast Synergy'        ,'BEAST Combo'                                                                  , 
+    'Darkforge'     ,'Darkforge Synergy'    ,'DARKFORGE Combo'                                                              ,                                       
     'Dinosaur'      ,'Dinosaur Synergy'     ,'DINOSAUR Combo'                                                               ,             
     'Dragon'        ,'Dragon Synergy'       ,'DRAGON Combo'                                                                 ,             
     'Elemental'     ,'Elemental Type'       ,'Elemental Synergy', 'ELEMENTAL Combo'                                         , 
-    'Mage'          ,'Mage Synergy'         ,'MAGE Combo'                                                                   ,          
+    'Mage'          ,'Mage Synergy'         ,'MAGE Combo'                                                                   ,
+    'Metamind'      ,'Metamind Synergy'     ,'METAMIND Combo'                                                               ,
     'Ooze'                                                                                                                  ,     
     'Plant'         ,'Plant Synergy'        ,'BanishPlant'      ,'PLANT Combo'                                              ,     
     'Robot'         ,'BanishRobot'          ,'BanishRobot Synergy'                  ,'Robot Synergy'    ,'ROBOT Combo'      ,
@@ -710,6 +771,7 @@ GLOBAL_COLUMN_ORDER = [
     'BanishSpirit'  ,'BanishSpirit Synergy' ,'BANISH SPIRIT Combo'                                                          ,     
     'Vampire'                                                                                                               ,                                                                    
     'Warrior'       ,'Warrior Synergy'      ,'WARRIOR Combo'                                                                ,      
+    'Yeti'          ,'Yeti Synergy'         ,'YETI Combo'                                                                   ,
     'Zombie'        ,'Zombie Synergy'       ,'Zombie Type'      ,'ZOMBIE Combo'                                             ,                
     
     # Minion
@@ -730,8 +792,9 @@ GLOBAL_COLUMN_ORDER = [
     'Spell'                 ,'Spell Synergy'            ,'SPELL Combo'              , 
     
     # Utility
-    'Armor', 'Armor Giver', 'Armor Synergy', 'ARMOR Combo',     
-    'Healing Source', 'Healing Synergy', 'HEALING Combo', 
+    'Armor', 'Armor Giver', 'Player Armor', 'Armor Synergy', 'ARMOR Combo',     
+    'Augment', 'Augment Synergy', 'AUGMENT Combo',
+    'Healing Source', 'Healing Synergy', 'High Life Synergy', 'HEALING Combo', 
     'Movement', 'Movement Benefit', 'MOVEMENT Combo', 
     'Reanimate', 'Reanimate Activator', 'REANIMATE Combo',
     'Replace Setup', 'Replace Profit', 'REPLACE Combo', 
@@ -742,27 +805,28 @@ GLOBAL_COLUMN_ORDER = [
     
     # Removal    
     'Face Burn', 'FB Creature', 'FB Creature Synergy', 'FACE DMG Combo',
-    'Disruption', 'Removal', 'Silence', 
+    'FB Giver', 'FB Giver Synergy', 'FB GIVER Combo', 'FB Synergy', 'FB Combo',
+    'Removal', 'Silence', 
     
     # Keywords
     'Aggressive', 'Aggressive Giver',
     'Breakthrough', 'Breakthrough Giver', 
-    'Defender', 'Defender Giver',
+    'Defender', 'Defender Giver', 'Defender Synergy', 'DEFENDER Combo',
     'Stealth', 'Stealth Giver',
     
     # Stats
     'Increased A', 'Increased A Synergy', 'INC ATTACK Combo',
     
-    
     'Stat Buff', 'Attack Buff', 'Health Buff',
-    'Stat Debuff', 'Attack Debuff', 'Health Debuff',
+    'Stat Debuff', 'Attack Debuff', 'Attack Debuff Synergy', 'DEC ATTACK Combo', 'Health Debuff',
     
     # Battle
     'Battle', 'Battle Synergy', 
-    'Slay', 
+    'Slay', 'Slay Synergy', 'SLAY Combo',
     
-    # Miscellaneous    
-    'Last Winter', 'White Fang',
+    # Miscellaneous        
+    'Adjacency', 'Hand Disruption',
+    'Self Burn', 'Self Burn Synergy', 'Low Life Synergy', 'SELF BURN Combo',
     'Spicy', 'Cool', 'Fun', 'Annoying'
 ]
 

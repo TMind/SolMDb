@@ -24,26 +24,26 @@ AVERAGE_FIELDS = ['A1', 'H1', 'A2', 'H2', 'A3', 'H3']
 NFT_FIELDS = ['price', 'owner']
 
 TAGS = [
-    'Beast', 'Dinosaur', 'Mage', 'Robot', 'Scientist', 'Spirit', 'Warrior', 'Zombie',
-    'Dragon', 'Elemental', 'Plant', 'Minion', 'Spell', 'Healing Source', 'Movement', 'Disruption',
-    'Replace Setup', 'Armor', 'Activate', 'Ready', 'Free', 'Upgrade', 'FB Creature', 'Removal', 'Breakthrough',
-    'Aggressive', 'Defender', 'Stealth', 'Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Increased A',
+    'Beast', 'Darkforge', 'Dinosaur', 'Mage', 'Metamind', 'Robot', 'Scientist', 'Spirit', 'Warrior', 'Yeti', 'Zombie',
+    'Dragon', 'Elemental', 'Plant', 'Minion', 'Spell', 'Healing Source', 'Movement',
+    'Replace Setup', 'Armor', 'Armor Giver', 'Augment', 'Activate', 'Ready', 'Free', 'Upgrade', 'FB Creature', 'Face Burn', 'FB Giver', 'Removal', 'Breakthrough',
+    'Aggressive', 'Defender', 'Defender Giver', 'Stealth', 'Stealth Giver', 'Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Increased A',
     'Attack Debuff', 'Health Debuff', 'Destruction Others', 'Destruction Self', 'Self Damage Activator', 'Silence', 'Slay',  # 'Exalt' already in Stats
-    'Reanimate', 'Deploy', 'Deploy Synergy', 'Spicy', 'Cool', 'Fun', 'Annoying',    
-    'Beast Synergy', 'Dinosaur Synergy', 'Mage Synergy', 'Robot Synergy', 'Scientist Synergy',
-    'BanishSpirit Synergy', 'Spirit Synergy', 'Warrior Synergy', 'Zombie Synergy', 'Dragon Synergy', 'Elemental Synergy',
+    'Reanimate', 'Deploy', 'Adjacency', 'Hand Disruption', 'Spicy', 'Cool', 'Fun', 'Annoying',    
+    'Beast Synergy', 'Darkforge Synergy', 'Dinosaur Synergy', 'Mage Synergy', 'Metamind Synergy', 'Robot Synergy', 'Scientist Synergy',
+    'BanishSpirit Synergy', 'Spirit Synergy', 'Warrior Synergy', 'Yeti Synergy', 'Zombie Synergy', 'Dragon Synergy', 'Elemental Synergy',
     'Plant Synergy', 'Minion Synergy', 'Spell Synergy', 'Exalt Synergy', 'Healing Synergy', 'Movement Benefit', 'Replace Profit',
-    'Armor Synergy', 'Upgrade Synergy', 'Destruction Synergy', 'Self Damage Payoff', 'Increased A Synergy', 'FB Creature Synergy' 
+    'Armor Synergy', 'Augment Synergy', 'Deploy Synergy', 'Upgrade Synergy', 'Destruction Synergy', 'Self Damage Payoff', 'Slay Synergy', 'Increased A Synergy', 'FB Creature Synergy', 'FB Synergy', 'FB Giver Synergy', 
 ]
  
 COMBOS = [
     'Sum','Free',
-    'BEAST Combo', 'DINOSAUR Combo', 'MAGE Combo', 'ROBOT Combo', 'SCIENTIST Combo',
-    'BANISH SPIRIT Combo', 'SPIRIT Combo', 'WARRIOR Combo', 'ZOMBIE Combo', 'DRAGON Combo', 'ELEMENTAL Combo',
+    'BEAST Combo', 'DARKFORGE Combo', 'DINOSAUR Combo', 'MAGE Combo', 'METAMIND Combo', 'ROBOT Combo', 'SCIENTIST Combo',
+    'BANISH SPIRIT Combo', 'SPIRIT Combo', 'WARRIOR Combo', 'YETI Combo', 'ZOMBIE Combo', 'DRAGON Combo', 'ELEMENTAL Combo',
     'PLANT Combo', 'MINION Combo', 'SPELL Combo', 'EXALT Combo', 
     'REPLACE Combo', 'DEPLOY Combo', 'READY Combo', 'REANIMATE Combo',
-    'HEALING Combo', 'MOVEMENT Combo', 'DESTRUCTION Combo', 'DESTROYED Combo', 'SELFDAMAGE Combo', 
-    'ARMOR Combo', 'UPGRADE Combo', 'FACE DMG Combo', 'INC ATTACK Combo'
+    'HEALING Combo', 'MOVEMENT Combo', 'DESTRUCTION Combo', 'DESTROYED Combo', 'SELFDAMAGE Combo', 'SELF BURN Combo',
+    'ARMOR Combo', 'AUGMENT Combo', 'UPGRADE Combo', 'FACE DMG Combo', 'FB GIVER Combo', 'INC ATTACK Combo', 'DEC ATTACK Combo', 'SLAY Combo'
 ] 
      
 # Define the information levels

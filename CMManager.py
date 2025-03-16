@@ -4,9 +4,11 @@ import pandas as pd
 from datetime import datetime
 
 class CMManager:
-    def __init__(self, db_manager, doc_id, local_copy_path='csv/sff.csv', sheets_client=None):
+    def __init__(self, db_manager, sheets_client, local_sff_path='csv/sff.csv', local_fb_path='csv/forgeborn.csv'):
         self.db_manager = db_manager
-        self.local_copy_path = local_copy_path
+        self.path_dict = {'Card Database': local_sff_path, 'FB Abilities Map': local_fb_path}
+        self.local_sff_path = local_sff_path
+        self.local_fb_path  = local_fb_path
         self.sheets_client = sheets_client  # Pass GoogleSheetsClient for online interaction
         self.title = None
         self.timestamp = None
@@ -24,11 +26,14 @@ class CMManager:
         self.load_metadata()
 
         # Check if the local CSV file exists; if not, download it        
-        if not os.path.exists(self.local_copy_path):
-            print(f"Local CSV '{self.local_copy_path}' not found. Downloading from Google Sheet...")
-            self.update_local_csv('Card Database')
-
-    def update_local_csv(self, worksheet_name):
+        for key, path in self.path_dict.items():
+            if not os.path.exists(path):
+                print(f"Local CSV '{path}' not found. Downloading from Google Sheet...")
+                self.update_local_csv(key, path)
+        
+    def update_local_csv(self, worksheet_name):                
+        local_path = self.path_dict.get(worksheet_name)
+        
         try:
             # Read data from the Google Sheet using GoogleSheetsClient
             rows = self.sheets_client.read_data_from_google_sheet(worksheet_name)
@@ -37,21 +42,23 @@ class CMManager:
             df = pd.DataFrame(rows[1:], columns=rows[0])  # Assuming the first row is headers
 
             # Save DataFrame to CSV
-            df.to_csv(self.local_copy_path, index=False, sep=';')
-            print(f"Local CSV updated at {self.local_copy_path}")
+            df.to_csv(local_path, index=False, sep=';')
+            print(f"Local CSV updated at {local_path}")
 
             # After updating the local CSV, fetch the new metadata
             raw_timestamp = self.sheets_client.get_sheet_timestamp()
             self.timestamp = self.format_timestamp(raw_timestamp)  # Format the timestamp            
             self.title = self.sheets_client.get_sheet_title()  # Get updated title
             
-            # Get the index of the starting column
-            start_column_index = df.columns.get_loc('Beast')        
-            # Retrieve column names starting from the specified column
-            self.cm_tags = df.columns[start_column_index:].tolist()
-            
-            # Store the updated metadata in the database
-            self.store_sheet_metadata(self.timestamp, self.title, self.cm_tags)  # Pass tags if needed
+            if worksheet_name == 'Card Database':
+                
+                # Get the index of the starting column
+                start_column_index = df.columns.get_loc('Beast')        
+                # Retrieve column names starting from the specified column
+                self.cm_tags = df.columns[start_column_index:].tolist()
+                
+                # Store the updated metadata in the database
+                self.store_sheet_metadata(self.timestamp, self.title, self.cm_tags)  # Pass tags if needed
 
         except Exception as e:
             print(f"An error occurred while updating the local CSV: {e}")
@@ -101,7 +108,7 @@ class CMManager:
         """
         Retrieves column names from the local CSV file starting from a specific column.
         """
-        df = pd.read_csv(self.local_copy_path, sep=';')
+        df = pd.read_csv(self.local_sff_path, sep=';')
         
         # Ensure the DataFrame contains the desired start_column_name
         if start_column_name not in df.columns:

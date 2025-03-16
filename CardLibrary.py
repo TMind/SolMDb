@@ -118,6 +118,7 @@ class CardData():
     cardSetId: str = ''
     _id: str = ''
     rarity: str = ''
+    last_updated: str = ''
     provides: str = ''
     seeks: str = ''
     levels: dict = field(default_factory=dict)
@@ -221,6 +222,7 @@ class DeckData:
     registeredDate: str = ''
     pExpiry: str = ''
     UpdatedAt: str = ''
+    last_updated: str = ''
     oldDisplayName: str = ''
     xp: int = 0
     digital: str = ''
@@ -375,7 +377,8 @@ class FusionData:
     # Formatted fields
     deckRank: str = ''
     CreatedAt: str = ''   
-    UpdatedAt: str = ''       
+    UpdatedAt: str = ''     
+    last_updated: str = ''  
     # From Net API
     tags: list = field(default_factory=list)
     # Dictionaries

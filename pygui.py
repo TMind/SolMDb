@@ -280,10 +280,12 @@ def reload_data_on_click(button, event):
             #     return
             elif value == 'Update CM Sheet':
                 # Update the local CSV using CMManager
-                if gv.commonDB:
-                    gv.commonDB.drop_database()
+                #if gv.commonDB:
+                #    gv.commonDB.drop_database()
                 if gv.cm_manager:
                     gv.cm_manager.update_local_csv('Card Database')
+                    gv.cm_manager.update_local_csv('FB Abilities Map')
+                    
                 gv.reset_universal_library()
                 # Update and display sheet statistics
                 update_sheet_stats()

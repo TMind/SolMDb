@@ -138,12 +138,6 @@ class ObjectProcessor:
             for item, prefix in [('attack', 'A'), ('health', 'H')]:
                 for i in range(1, 4):  # Loop directly over 1, 2, 3
                     setattr(object.data, f"{prefix}{i}", stats['creature_averages'][item][str(i)])
-            # object.data.A1  = stats['creature_averages']['attack']['1']
-            # object.data.A2  = stats['creature_averages']['attack']['2']
-            # object.data.A3  = stats['creature_averages']['attack']['3']
-            # object.data.H1  = stats['creature_averages']['health']['1']
-            # object.data.H2  = stats['creature_averages']['health']['2']
-            # object.data.H3  = stats['creature_averages']['health']['3']
     
     @staticmethod
     def process_object_fb_abilities(object):

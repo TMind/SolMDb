@@ -1,29 +1,27 @@
 import os
 import CardLibrary
-from MyGraph import MyGraph
 from MongoDB.DatabaseManager import DatabaseManager, BufferManager
 from CardLibrary import  Fusion, Deck, Card#, ForgebornData, Forgeborn
 from MultiProcess import MultiProcess
 from GlobalVariables import global_vars as gv
 from ObjectProcessor import ObjectProcessor
-import networkx as nx
 import logging
 
 from utils import compare_times, get_min_time, normalize_time_string
 from itertools import product
 
-def create_graph_for_object(object):
-    # Graph creation
-    objectGraph = MyGraph()
-    objectGraph.create_graph_children(object)
-    object.data.node_data = objectGraph.node_data
-    object.data.combo_data = objectGraph.combo_data
+# def create_graph_for_object(object):
+#     # Graph creation
+#     objectGraph = MyGraph()
+#     objectGraph.create_graph_children(object)
+#     object.data.node_data = objectGraph.node_data
+#     object.data.combo_data = objectGraph.combo_data
     
-    # Convert the graph to a dictionary
-    objectGraphDict = objectGraph.to_dict()
-    object.data.graph = objectGraphDict
+#     # Convert the graph to a dictionary
+#     objectGraphDict = objectGraph.to_dict()
+#     object.data.graph = objectGraphDict
     
-    return objectGraph
+#     return objectGraph
 
 class DeckLibrary:
     def __init__(self, decks_data, fusions_data, mode):                
@@ -219,6 +217,15 @@ class DeckLibrary:
         deckCursor = self.dbmgr.find('Deck', {})
         allDeckData = {deck['name']: deck for deck in deckCursor}
 
+        # Fetch all existing fusions from the database
+        existing_fusions_cursor = self.dbmgr.find('Fusion', {}, projection=['myDecks'])
+
+        # Extract deck name pairs from 'myDecks' field
+        existing_fusions = {
+            tuple(sorted(deck_obj["name"] for deck_obj in fusion["myDecks"] if "name" in deck_obj))
+            for fusion in existing_fusions_cursor if "myDecks" in fusion and len(fusion["myDecks"]) == 2
+        }
+
         # Filter out expired decks only if no lists are provided
         if not deck_lists:
             validDeckNames = [
@@ -227,7 +234,6 @@ class DeckLibrary:
             ]
             deck_lists = [validDeckNames]
         else:
-            # Use all decks directly without filtering expiration for specific lists
             validDeckNames = list(allDeckData.keys())
 
         # Handle case where only a single list is provided
@@ -241,16 +247,6 @@ class DeckLibrary:
             ]
         else:
             # Generate combinations of decks from multiple lists, ensuring they come from different lists
-            # newCombinations = [
-            #     (deck_a, deck_b)
-            #     for i, deck_list_a in enumerate(deck_lists)
-            #     for j, deck_list_b in enumerate(deck_lists)
-            #     if i < j  # Ensures deck_list_a and deck_list_b are different
-            #     for deck_a in deck_list_a
-            #     for deck_b in deck_list_b
-            #     if deck_a in validDeckNames and deck_b in validDeckNames
-            # ]
-            
             newCombinations = {
                 (deck_a, deck_b)
                 for i, deck_list_a in enumerate(deck_lists)
@@ -267,6 +263,9 @@ class DeckLibrary:
             # Convert back to a list
             newCombinations = list(newCombinations)
 
+        # **Remove already existing fusions**
+        newCombinations = [pair for pair in newCombinations if pair not in existing_fusions]
+
         # Replace newCombinationNames with the actual deck dictionaries
         deckCombinationData = []
         for combination in newCombinations:
@@ -275,7 +274,7 @@ class DeckLibrary:
         # Process all valid combinations using the MultiProcess module
         if deckCombinationData:
             multi_process = MultiProcess(gv.username, deckCombinationData)
-            ump = multi_process.determine_required_cpus(len(deckCombinationData), min_items_per_cpu = 1000) > 1
+            ump = multi_process.determine_required_cpus(len(deckCombinationData), min_items_per_cpu=1000) > 1
             multi_process.run(use_multiprocessing=ump)
             print(f"Processed {len(deckCombinationData)} fusions.")
         else:

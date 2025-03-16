@@ -92,7 +92,7 @@ def get_projection_fields(collection_name, rename_fields_to=None):
     """
     default_projections = {
         'Deck': generate_final_fields('Detail', 'Stats', 'Deck', rename_fields_to=rename_fields_to),
-        'Fusion': generate_final_fields('Detail', 'Stats', 'Fusion', rename_fields_to=rename_fields_to)
+        'Fusion': generate_final_fields('Detail', 'Stats', 'Fusion', rename_fields_to=rename_fields_to),
     }
 
     return default_projections.get(collection_name, [])
@@ -244,7 +244,9 @@ def convert_field_path(field_path):
 
     return expression
 
-def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None, projection_fields=None, final_format=None, expanded_field=None):
+def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None, 
+                             projection_fields=None, final_format=None, 
+                             expanded_field=None):
     """
     Fetch documents from a MongoDB collection using either a filter DataFrame or a direct query.
 
@@ -253,6 +255,8 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
         filter_df (pd.DataFrame, optional): DataFrame containing filter conditions.
         filter_query (dict, optional): Direct MongoDB query.
         projection_fields (list, optional): List of fields to include.
+        info_level (str, optional): Level of detail for information logging. Defaults to 'Basic'.
+        data_set (str, optional): Data set designation for the query. Defaults to 'Stats'.
 
     Returns:
         list: List of matching documents.
@@ -276,7 +280,7 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
         myQuery = query_to_mongo_format(query)
         #logging.debug(f"Final query: {myQuery}")
 
-    # Step 2: Use default projection fields if none provided
+    # Step 2: Use dynamically determined projection fields based on `info_level` and `data_set`
     projection_fields = get_projection_fields(collection_name, rename_fields_to=final_format) if projection_fields is None else projection_fields
 
     # Step 3: Build aggregation pipeline

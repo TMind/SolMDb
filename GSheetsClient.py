@@ -3,9 +3,8 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 class GoogleSheetsClient:
-    def __init__(self, service_account_file_path='~/soldb-gc-key.json', sheet_url=None, doc_id = None, doc_url=None):
-        self.sheet_url = sheet_url
-        self.doc_url = doc_url
+    def __init__(self, service_account_file_path='~/soldb-gc-key.json', sheet_url=None, doc_id = None):
+        self.sheet_url = sheet_url        
         self.doc_id = doc_id
         self.service_account_file_path = os.path.expanduser(service_account_file_path)
         self.drive_service = None
@@ -93,11 +92,11 @@ class GoogleSheetsClient:
         if self.docs_service is None:
             self.authenticate_google_services()
 
-        if not self.doc_url:
-            raise ValueError("Document URL is not set. Cannot extract link from Google Doc.")
+        if not self.doc_id:
+            raise ValueError("Document ID is not set. Cannot extract link from Google Doc.")
 
-        document_id = self.doc_url.split('/d/')[1].split('/')[0]
-        doc_id = '1cee1_eJKZtxUiebmL1LjrrGQFn_kTj_sMMdr81S7YOI'
+        #document_id = self.doc_url.split('/d/')[1].split('/')[0]
+        #doc_id = '1cee1_eJKZtxUiebmL1LjrrGQFn_kTj_sMMdr81S7YOI'
 
         try:
             doc = self.docs_service.documents().get(documentId=self.doc_id).execute()
@@ -132,8 +131,7 @@ def main():
 
     # Initialize CMManager
     cm_manager = CMManager(
-        db_manager=db_manager,
-        doc_id=GOOGLE_DOC_ID,
+        db_manager=db_manager,        
         sheets_client=sheets_client
     )
 

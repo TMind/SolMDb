@@ -81,8 +81,8 @@ class GridManager:
                 self.grids[identifier] = grid        
                 self._setup_grid_events(identifier, grid)            
                 
-        #self.update_dataframe(identifier, df)
-        self.css_manager.apply_conditional_class(grid.main_widget, rotate_suffix, self.custom_css_class)
+        self.update_dataframe(identifier, df)
+        #self.css_manager.apply_conditional_class(grid.main_widget, rotate_suffix, self.custom_css_class)
 
         return grid
         
@@ -287,7 +287,6 @@ class BaseGrid:
         raise NotImplementedError("Subclasses should implement this method.")
 
     def update_sum_column(self, df):
-        #df = self.main_widget.get_changed_df()
         if gv.rotated_column_definitions:
             # Get the list of columns to sum, ensuring they exist in the DataFrame
             columns_to_sum = [col for col in gv.rotated_column_definitions.keys() if col in df.columns]
@@ -305,6 +304,10 @@ class BaseGrid:
                 for col in df.columns:
                     if df[col].dtype == 'object':  # If the column is non-numeric
                         df[col] = df[col].fillna('')
+
+                # Reorder columns based on GLOBAL_COLUMN_ORDER
+                ordered_columns = [col for col in utils.GLOBAL_COLUMN_ORDER if col in df.columns]
+                df = df[ordered_columns + [col for col in df.columns if col not in ordered_columns]]
 
         return df
         
@@ -351,11 +354,30 @@ class QGrid(BaseGrid):
             show_toolbar=False
         )
         
-    def update_main_widget(self, new_df):
-        print(f"New DataFrame Shape: {new_df.shape}")
+    def reset_sorting(self):
+        """Resets sorting in QGrid to avoid missing column errors when columns change."""
+        if hasattr(self.main_widget, "_sort_helper_columns"):
+            self.main_widget._sort_helper_columns = {}  # Clear sorting settings
+        self.main_widget._update_table(triggered_by="reset_sorting")  # Force update
+        
+    def update_main_widget(self, new_df):           
+        print(f"Updating QGrid with new DataFrame: {new_df.shape}")
 
         if new_df.empty:
             print("Warning: new_df is empty. No data will be displayed!")
+
+        # Ensure sorting columns match the new DataFrame
+        if hasattr(self.main_widget, "_sort_helper_columns"):
+            sort_columns = self.main_widget._sort_helper_columns
+            missing_columns = [col for col in sort_columns.values() if col not in new_df.columns]
+
+            if missing_columns:
+                print(f"Resetting sorting because missing columns: {missing_columns}")
+                self.reset_sorting()
+
+        # Now update the DataFrame
+        self.main_widget.df = new_df
+
 
         # sort_columns = getattr(self.main_widget, "_sort_helper_columns", {})
         # valid_sort_columns = {
@@ -374,7 +396,7 @@ class QGrid(BaseGrid):
         # print("Temporarily disabling filters to check if data is displayed.")
         # self.filter_manager.clear_filters(clear_memory=False)
 
-        self.main_widget.df = new_df  
+        # self.main_widget.df = new_df  
         # print(f"Updated grid with {len(new_df)} rows and {len(new_df.columns)} columns.")
 
         # # ✅ Ensure stored filters are valid before restoring
@@ -1495,7 +1517,7 @@ class DynamicGridManager:
         grid_state = self.grid_widget_states.get(grid_identifier, {})
         grid_state.update({
             "info_level": grid_state.get("info_level", 'Basic'),
-            "data_set": grid_state.get("data_set", 'Stats'),
+            "data_set": grid_state.get("data_set", 'Combos'),
             "filter_row": filter_row.to_dict(),
             "Selection": []
         })
@@ -1579,9 +1601,9 @@ class DynamicGridManager:
         action_toolbar.assign_callback('Export', partial(self.save_dataframes_to_csv, grid_id))
         action_toolbar.assign_callback('Open', partial(self.open_deck, grid_id))
         action_toolbar.assign_callback('Graph', partial(self.show_graph, grid_id))
-        action_toolbar.add_widget('Generate Fusions', 'button', description = 'Generate Fusion Data', button_style = 'info')
+        #action_toolbar.add_widget('Generate Fusions', 'button', description = 'Generate Fusion Data', button_style = 'info')
         # TODO - Add callback for 'Generate Fusions' button
-        action_toolbar.assign_callback('Generate Fusions', partial(self.generate_dataframe, grid_id, 'fusion_stats'))
+        #action_toolbar.assign_callback('Generate Fusions', partial(self.generate_dataframe, grid_id, 'fusion_stats'))
                                        
         
         return action_toolbar.get_ui()
@@ -1597,12 +1619,24 @@ class DynamicGridManager:
 
         spacer = widgets.Box(layout=widgets.Layout(flex='1'))
 
+
+        default_dataset = self.grid_widget_states.get(grid_identifier, {}).get("data_set", "Stats")
+
         data_set_dropdown = widgets.Dropdown(
             options=gv.data_selection_sets.keys(),
-            value=list(gv.data_selection_sets.keys())[0] if gv.data_selection_sets else None,
+            value=default_dataset,  # 🔥 Ensure the initial value is correctly set
             description='Data Set:',
             layout=widgets.Layout(width='15%', align_self='flex-end')
         )
+
+
+        # data_set_dropdown = widgets.Dropdown(
+        #     options=gv.data_selection_sets.keys(),
+        #     #value=list(gv.data_selection_sets.keys())[0] if gv.data_selection_sets else None,
+        #     value='Combos',
+        #     description='Data Set:',
+        #     layout=widgets.Layout(width='15%', align_self='flex-end')
+        # )
 
         def on_info_level_change(event):
             if event['type'] == 'change' and event['name'] == 'value':
@@ -1614,6 +1648,7 @@ class DynamicGridManager:
             if event['type'] == 'change' and event['name'] == 'value':
                 # Update state and refresh grid
                 self.grid_widget_states[grid_identifier]['data_set'] = event['new']
+                logging.debug(f"Data set updated for {grid_identifier}: {event['new']}")
                 self.update_or_refresh_grid(grid_identifier)
 
         info_level_button.observe(on_info_level_change, names='value')

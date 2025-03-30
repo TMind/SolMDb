@@ -40,14 +40,9 @@ class ObjectProcessor:
         else:
             cardIds = object.cardIds
 
-        if object.data:                        
-            # Create the graph for the object if it doesn't exist
-            if not object.data.graph:
-                object_graph = ObjectProcessor.create_graph_for_object(object)
-                object.data.graph = object_graph.to_dict()
+        # Create Graph and interface / combo stats
+        ObjectProcessor.process_graph_statistics(object)
         
-            object.data.CardTitles = ';'.join(object_graph.get_card_list())
-            
         # Get the card data for the deck        
         cards = gv.myDB.find('Card', {'_id': {'$in': cardIds}})
         ObjectProcessor.process_betrayers_and_solbinds(object, list(cards))
@@ -59,18 +54,22 @@ class ObjectProcessor:
            for deck_data in decks_data:                         
                 ObjectProcessor.update_object_data(object, deck_data)
         
-        ObjectProcessor.process_graph_statistics(object)
-    
     @staticmethod
     def process_graph_statistics(object): 
+    
+        if object.data:                        
+            # Create the graph for the object if it doesn't exist
+            object_graph = ObjectProcessor.create_graph_for_object(object)
+            
+            # Create interface and combo data
+            interface_ids = object_graph.get_length_interface_ids()
+            combo_data = utils.get_combos_for_graph(object_graph, object.name)
+            
+            object.data.graph = object_graph.to_dict()
+            object.data.FrameData = {**interface_ids, **combo_data}
+            object.data.CardTitles = ';'.join(object_graph.get_card_list())
         
-        myGraph = MyGraph()
-        myGraph.from_dict(object.graph)
-        interface_ids = myGraph.get_length_interface_ids()
-
-        combo_data = utils.get_combos_for_graph(myGraph, object.name)
-        interface_ids = {**interface_ids, **combo_data}
-        object.data.FrameData = interface_ids
+        return object
     
     @staticmethod
     def process_betrayers_and_solbinds(object, cards):
@@ -157,7 +156,16 @@ class ObjectProcessor:
         
         # Determine Forgeborn Name 
         currentForgebornId = forgeborn_ids[0]
-        object.data.Forgeborn= currentForgebornId[5:-3].capitalize() if currentForgebornId else None
+        
+        forgeborn_index = 5
+        if currentForgebornId and 'blighted' in currentForgebornId:
+            # Find position of 'blighted' in the forgebornId
+            blighted_index = currentForgebornId.find('blighted')
+            currentForgebornId = currentForgebornId[:2] + currentForgebornId[blighted_index:]
+            forgeborn_index = 2
+            
+        forgeborn_name = currentForgebornId[forgeborn_index:-3].capitalize() if currentForgebornId else None
+        object.data.Forgeborn = forgeborn_name
 
         forgeborn_ability_texts = {}
         inspired_ability_cycle = None
@@ -170,6 +178,10 @@ class ObjectProcessor:
                 if normalized_id.startswith('a'):
                     normalized_id = 's' + normalized_id[1:]
 
+                if 'blighted' in normalized_id:
+                    # Find position of blighted in the ID
+                    blighted_index = normalized_id.index('blighted')
+                    normalized_id = normalized_id[:2] + normalized_id[blighted_index:]
                 # Fetch Forgeborn data from the database
                 forgeborn_data = common_db.find_one('Forgeborn', {'id': normalized_id})
                 if not forgeborn_data:

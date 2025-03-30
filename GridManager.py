@@ -1209,16 +1209,59 @@ class DynamicGridManager:
     
         return filtered_df
 
+    def check_combo_data_existence(self, collection_name, filter_criteria={}, df=None):
+        """
+        Checks if `graph.combo_data` and `FrameData` exist in the given MongoDB collection and DataFrame.
+
+        Args:
+            collection_name (str): The name of the database collection.
+            filter_criteria (dict, optional): Query to filter the collection. Default is {} (no filter).
+            df (pd.DataFrame, optional): A DataFrame to check for 'FrameData' existence.
+
+        Returns:
+            dict: A dictionary containing:
+                - "combo_data": True if `graph.combo_data` exists and is not empty in the database, False otherwise.
+                - "frame_data_db": True if `FrameData` exists in the database, False otherwise.
+                - "frame_data_df": True if `FrameData` exists in the provided DataFrame, False otherwise.
+                - "status": Overall status (True only if all required fields exist and are non-empty).
+        """
+        status = {
+            "combo_data": False,
+            "frame_data_db": False,
+            "frame_data_df": False,
+            "status": False  # Overall status
+        }
+
+        # Step 1: Check MongoDB for `graph.combo_data` and `FrameData`
+        db_record = gv.myDB.find_one(collection_name, filter_criteria, projection={"graph.combo_data": 1, "FrameData": 1})
+
+        # Check if `combo_data` exists and has elements
+        if db_record and "graph" in db_record and "combo_data" in db_record["graph"] and db_record["graph"]["combo_data"]:
+            status["combo_data"] = True
+
+        # Check if `FrameData` exists in the database
+        if db_record and "FrameData" in db_record:
+            status["frame_data_db"] = True
+
+        # Step 2: Check if `FrameData` exists in the provided DataFrame
+        if df is not None and "FrameData" in df.columns:
+            status["frame_data_df"] = True
+
+        # Set the overall status to True only if both `combo_data` and `FrameData` exist
+        status["status"] = status["combo_data"] and (status["frame_data_db"] or status["frame_data_df"])
+
+        return status
+
 
     def handle_database_change(self, event, refresh_needed=False):
         """
         Handles updates required when the database changes, ensuring updates are only performed if flagged.
         """
-        if refresh_needed:   self.set_refresh_needed(True)
+        #if refresh_needed:   self.set_refresh_needed(True)
         
-        if not self.refresh_needed:
-            logging.info("No refresh needed. Skipping database change handling.")
-            return
+        #if not self.refresh_needed:
+        #    logging.info("No refresh needed. Skipping database change handling.")
+        #    return
 
         logging.info("Handling database change in DynamicGridManager.")
 
@@ -1470,12 +1513,18 @@ class DynamicGridManager:
             widgets.VBox: The constructed VBox containing the toolbar, filter row, and grid.
         """
         toolbar_widget = self.create_toolbar(grid_identifier)
+        
+        # Create a single-row DataFrame and set a custom index label
+        filter_row_df = pd.DataFrame([filter_row])
+        
         filter_row_widget = qgrid.show_grid(
             pd.DataFrame([filter_row]), 
             show_toolbar=False,
             grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': True}
         )
         filter_row_widget.layout = widgets.Layout(height='70px')
+        
+        result_detail_widget = self.create_summary_widget(grid.main_widget.get_changed_df(), filter_row)
 
         # Add event listener for cell edits in filter_row_widget
         def on_filter_row_change(event, qgrid_widget=filter_row_widget):
@@ -1489,7 +1538,7 @@ class DynamicGridManager:
             filter_row_widget.on('cell_edited', on_filter_row_change)
             filter_row_widget._event_listener_attached = True
 
-        return widgets.VBox([toolbar_widget, filter_row_widget, grid.get_grid_box()],
+        return widgets.VBox([toolbar_widget, filter_row_widget, result_detail_widget, grid.get_grid_box()],
                             layout=widgets.Layout(border='2px solid black'))
 
     def _get_collection_dataframe(self, event):
@@ -1558,6 +1607,13 @@ class DynamicGridManager:
 
         # Apply filters
         filtered_df = self.apply_filters(grid_state)
+        
+        filtered_df_status = self.check_combo_data_existence(
+            collection_name=filter_row['Type'],  # Use the Type field as the collection name
+            filter_criteria={},  # Optional filter criteria, e.g., {'name': 'Example'}
+            df=filtered_df
+        )
+        print(filtered_df_status)
     
         # Update or create the grid
         if grid_identifier not in self.qm.grids:
@@ -1628,16 +1684,7 @@ class DynamicGridManager:
             description='Data Set:',
             layout=widgets.Layout(width='15%', align_self='flex-end')
         )
-
-
-        # data_set_dropdown = widgets.Dropdown(
-        #     options=gv.data_selection_sets.keys(),
-        #     #value=list(gv.data_selection_sets.keys())[0] if gv.data_selection_sets else None,
-        #     value='Combos',
-        #     description='Data Set:',
-        #     layout=widgets.Layout(width='15%', align_self='flex-end')
-        # )
-
+        
         def on_info_level_change(event):
             if event['type'] == 'change' and event['name'] == 'value':
                 # Update state and refresh grid
@@ -1667,7 +1714,49 @@ class DynamicGridManager:
         
         return combined_toolbar
         #return widgets.HBox([info_level_button, spacer, data_set_dropdown], layout=widgets.Layout(padding='5px 5px', align_items='center', width='100%'))
+ 
+    def create_summary_widget(self, df, filter_row: pd.Series):
+        summary_data: dict[str, any] = {
+            'num_matches': len(df),
+        }
 
+        # Add one summary column per filter column (excluding metadata fields)
+        for column in filter_row.index:
+            if column in ['Type', 'Active', 'Mandatory Fields']:
+                continue
+
+            value = filter_row[column]
+            if isinstance(value, str) and value.strip():
+                if column in df.columns:
+                    unique_matches = sorted(df[column].dropna().astype(str).unique())
+                    display_text = ', '.join(unique_matches[:5])
+                    if len(unique_matches) > 5:
+                        display_text += ' ...'
+                    summary_data[f'{column}_matched'] = display_text
+
+        summary_df = pd.DataFrame([summary_data])
+
+        summary_widget = qgrid.show_grid(
+            summary_df,
+            show_toolbar=False,
+            grid_options={
+                'editable': False,
+                'filterable': False,
+                'sortable': False,
+                'forceFitColumns': False,
+                'defaultColumnWidth': 120,
+                'minVisibleRows': 1,
+                'maxVisibleRows': 1,
+            },
+            column_definitions={
+                'index': {'width': 30},
+                **{col: {'width': 200} for col in summary_df.columns if col != 'num_matches'}
+            }
+        )
+
+        summary_widget.layout = widgets.Layout(height='65px', width='100%')
+        return summary_widget
+    
     def create_deck_content_Grid(self):
         # Define the default grid options
         default_options = {

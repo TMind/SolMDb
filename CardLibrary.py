@@ -91,9 +91,9 @@ class Forgeborn(DatabaseObject):
 
     def _construct_ability_ids(self, forgeborn_id):
         # Parse the forgeborn_id to get ability IDs
-        ability_prefix = self.id  # Assuming the prefix is the same as Forgeborn ID
+        ability_prefix = self.data.id  # Assuming the prefix is the same as Forgeborn ID
         ability_ids = []
-        ability_data = forgeborn_id[len(self.id):]  # Remove the Forgeborn ID part
+        ability_data = forgeborn_id[len(ability_prefix):]  # Remove the Forgeborn ID part
         
         for i in range(0, len(ability_data)):
             number = ability_data[i]

@@ -52,11 +52,22 @@ class GlobalVariables:
 
     def reset_universal_library(self):
         from UniversalLibrary import UniversalLibrary  # Import here to avoid partial import
+        
         if self.commonDB:
-            self.commonDB.drop_collection('Entities')
-            self.commonDB.drop_collection('Forgeborns')
+            for collection_name in ['Entity', 'Forgeborn']: 
+                self.commonDB.drop_collection(collection_name)  # Drop collection
+
+                # Verify collection no longer exists
+                remaining_collections = self.commonDB.list_collection_names()
+                if collection_name not in remaining_collections:
+                    logging.info(f"{collection_name} collection dropped successfully.")
+                else:
+                    logging.error(f"Failed to drop {collection_name} collection. It still exists.")
+
+        # Reinitialize UniversalLibrary
         self._universal_library_instance = UniversalLibrary(self._username, *self.ucl_paths)
         
+        logging.info("Universal library instance reset.")
 
     def _initialize_env(self):
         logging.info("Initializing Environment.")

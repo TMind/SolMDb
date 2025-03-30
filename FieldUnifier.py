@@ -28,11 +28,11 @@ TAGS = [
     'Dragon', 'Elemental', 'Plant', 'Minion', 'Spell', 'Healing Source', 'Movement',
     'Replace Setup', 'Armor', 'Armor Giver', 'Augment', 'Activate', 'Ready', 'Free', 'Upgrade', 'FB Creature', 'Face Burn', 'FB Giver', 'Removal', 'Breakthrough',
     'Aggressive', 'Defender', 'Defender Giver', 'Stealth', 'Stealth Giver', 'Stat Buff', 'Attack Buff', 'Health Buff', 'Stat Debuff', 'Increased A',
-    'Attack Debuff', 'Health Debuff', 'Destruction Others', 'Destruction Self', 'Self Damage Activator', 'Silence', 'Slay',  # 'Exalt' already in Stats
+    'Attack Debuff', 'Health Debuff', 'Destruction Others', 'Destruction Self', 'Self Burn', 'Self Damage Activator', 'Silence', 'Slay',  # 'Exalt' already in Stats
     'Reanimate', 'Deploy', 'Adjacency', 'Hand Disruption', 'Spicy', 'Cool', 'Fun', 'Annoying',    
     'Beast Synergy', 'Darkforge Synergy', 'Dinosaur Synergy', 'Mage Synergy', 'Metamind Synergy', 'Robot Synergy', 'Scientist Synergy',
     'BanishSpirit Synergy', 'Spirit Synergy', 'Warrior Synergy', 'Yeti Synergy', 'Zombie Synergy', 'Dragon Synergy', 'Elemental Synergy',
-    'Plant Synergy', 'Minion Synergy', 'Spell Synergy', 'Exalt Synergy', 'Healing Synergy', 'Movement Benefit', 'Replace Profit',
+    'Plant Synergy', 'Minion Synergy', 'Spell Synergy', 'Exalt Synergy', 'Healing Synergy', 'Self Burn Synergy', 'Movement Benefit', 'Replace Profit',
     'Armor Synergy', 'Augment Synergy', 'Deploy Synergy', 'Upgrade Synergy', 'Destruction Synergy', 'Self Damage Payoff', 'Slay Synergy', 'Increased A Synergy', 'FB Creature Synergy', 'FB Synergy', 'FB Giver Synergy', 
 ]
  

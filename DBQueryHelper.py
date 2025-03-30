@@ -246,7 +246,7 @@ def convert_field_path(field_path):
 
 def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None, 
                              projection_fields=None, final_format=None, 
-                             expanded_field=None):
+                             expanded_field=None, match_titles=False):
     """
     Fetch documents from a MongoDB collection using either a filter DataFrame or a direct query.
 
@@ -307,6 +307,8 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
     missing_fields = set(projection_fields)  # Assume all fields are missing initially
     results = []
 
+    matched_titles_set = set()
+    
     # Step 5: Execute database query
     try:
         # Convert list fields to semicolon-separated strings                        
@@ -330,6 +332,21 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
                         else:
                             logging.warning(f"Expected list for field '{field}', but got {type(document[field])}. Skipping conversion.")
 
+            # Match card titles if requested
+            if match_titles:
+                # Collect matched card titles
+                card_titles = document.get("CardTitles", "")
+                card_names = [name.strip() for name in card_titles.split(";") if name.strip()]
+                
+                # Match user-defined substrings (from query config)
+                for column, value in filter_df.iloc[0].items():
+                    if column in ['Modifier', 'Creature', 'Spell'] and isinstance(value, str):
+                        substrings = re.split(r'\s*[|:;,+&-]\s*', value)  # Split on logical operators
+                        for substring in substrings:
+                            matched_titles_set.update(
+                                [title for title in card_names if re.search(rf'\b{re.escape(substring)}\b', title, re.IGNORECASE)]
+                            )
+
             # if results:
             #     logging.debug("Sample MongoDB Output:")
             #     logging.debug(json.dumps(results[:2], indent=4))
@@ -345,6 +362,14 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
 
     except Exception as e:
         logging.error(f"Error fetching documents from {collection_name}: {e}")
-        return []        
+        return []
+    
+    if matched_titles_set:
+        logging.debug(f"Matched titles: {matched_titles_set}")
             
+        return {
+            "documents": results,
+            "matched_titles": sorted(matched_titles_set)
+        }
+        
     return results

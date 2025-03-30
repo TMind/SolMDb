@@ -108,7 +108,16 @@ class DeckLibrary:
                     if deckName not in deckNamesDatabase:                         
                         self.new_decks.append(deckData)    
                         forgebornId = deckData.get('forgebornId', None)
-                        deckData['Forgeborn'] = forgebornId[5:-3].capitalize() if forgebornId else None
+                        forgeborn_index = 5
+                        if forgebornId and 'blighted' in forgebornId:
+                            # Find position of 'blighted' in the forgebornId
+                            blighted_index = forgebornId.find('blighted')
+                            forgebornId = forgebornId[:2] + forgebornId[blighted_index:]
+                            forgeborn_index = 2
+                            deckData['forgebornId'] = forgebornId
+                            
+                        deckData['Forgeborn'] = forgebornId[forgeborn_index:-3].capitalize() if forgebornId else None
+                        
                         new_deck = Deck.from_data(deckData)
                         
                         if new_deck.children_data:

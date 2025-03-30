@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from pymongo.mongo_client import MongoClient
 from pymongo.collection import Collection
 from pymongo import UpdateOne, InsertOne, DeleteOne
@@ -48,8 +49,22 @@ class MongoDB:
         collection = self.get_collection(collection_name)
         return collection.update_one(identifier, {'$set': data}, upsert=True)
 
-    def find_one(self, collection_name: str, query: dict):
+    def find_one(self, collection_name: str, query: dict, projection: dict = None):
+        """
+        Retrieves a single document from the MongoDB collection.
+
+        Args:
+            collection_name (str): The name of the MongoDB collection.
+            query (dict): The filter criteria.
+            projection (dict, optional): Fields to include/exclude. Default is None (returns full document).
+
+        Returns:
+            dict or None: The found document, or None if no match.
+        """
         collection = self.get_collection(collection_name)
+
+        if projection:
+            return collection.find_one(query, projection)
         return collection.find_one(query)
 
     def find(self, collection_name: str, query: dict = {}, projection: dict = None, batch_size : int = 1000):
@@ -75,7 +90,7 @@ class MongoDB:
                     if not check_keys(value, path + f".{key}"):
                         return False
             elif isinstance(doc, list):
-                for index, item in enumerate(doc):
+                for index, item in enumerate(doc): 
                     if not check_keys(item, path + f"[{index}]"):
                         return False
             return True
@@ -83,31 +98,40 @@ class MongoDB:
         # Prepare bulk operations for upsert
         operations = []
         for doc in data:
-            # Validate document keys
             if not check_keys(doc):
                 print("Skipping document due to invalid keys:", doc)
-                continue  # Skip invalid documents
+                continue  
 
+            # Define the unique filter query
             if '_id' in doc:
                 filter_query = {'_id': doc['_id']}
             else:
-                # Define another unique identifier or criteria for upsert
-                filter_query = {'_id': doc['name'] }
+                filter_query = {'_id': doc.get('name')}  # Fallback if `_id` is missing
             
-            update_doc = {'$set': doc}  # The document to upsert
+            #print(f"Upsert Filter Query: {filter_query}")  # Debugging filter
+
+            # Prepare update document
+            update_doc = {'$set': doc}                        
+            update_doc["$set"]["last_updated"] = datetime.now()
             
-            # Add an upsert operation
+            # Add upsert operation
+            #print("Upsert Data:", update_doc)
             operations.append(UpdateOne(filter_query, update_doc, upsert=True))
-        
+
         if operations:
-            # Execute the bulk upsert operation
+            # Execute bulk operation
             result = self.bulk_write(collection_name, operations)
+            
+            # Debugging info
+            print(f"Matched: {result.matched_count}, Modified: {result.modified_count}, Upserted: {result.upserted_ids}")
+            
             return {
                 "matched_count": result.matched_count,
                 "modified_count": result.modified_count,
                 "upserted_ids": result.upserted_ids
             }
         else:
+            print("No valid operations to upsert.")
             return None
 
     def delete_one(self, collection_name: str, query: dict):
@@ -120,7 +144,7 @@ class MongoDB:
     
     def drop_collection(self, collection_name: str):
         collection = self.get_collection(collection_name)
-        return collection.drop
+        return collection.drop()
     
     def drop_database(self):
         return self.client.drop_database(self.db.name)

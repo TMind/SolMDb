@@ -84,17 +84,11 @@ class UniversalLibrary:
         fb_ability_id = forgeborn_id[-5:]
 
         forgeborn_faction_dict = {
-            # 's1': {
-            #     'aa1': ['ironbeard', 'steel-rosetta', 'crux-cobalt'],
-            #     'nn1': ['nix-nekia', 'cercee'],
-            #     'tt1': ['sunder', 'korok'],
-            #     'uu1': ['oros', 'nova']
-            # },
             's4': {
-                'aa1': ['ironbeard' , 'steel-rosetta' , 'crux-cobalt' ,          'blighted-sunder' , 'blighted-cercee'],
-                'nn1': ['nix-nekyia', 'toxys-mori'    ,                          'blighted-sunder' , 'blighted-cercee'],
-                'tt1': ['korok'                       ,                          'blighted-sunder' , 'blighted-cercee'],
-                'uu1': ['oros'      , 'nova'          ,  'tyran'      ,'tundra', 'blighted-sunder' , 'blighted-cercee']
+                'aa1': ['ironbeard' , 'steel-rosetta' , 'crux-cobalt'   ],
+                'nn1': ['nix-nekyia', 'toxys-mori'                      ],
+                'tt1': ['korok'     , 'tundra'                          ],
+                'uu1': ['oros'      , 'nova'          ,  'tyran'        ]
             }
         }
 

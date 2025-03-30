@@ -183,7 +183,15 @@ class MyGraph:
 
     def _process_forgeborn_child(self, root, db_object, parent_object, child_name, full_class_path):
         forgebornId = child_name
-        forgebornName = child_name[5:-3]
+        
+        forgeborn_index = 5
+        if forgebornId and 'blighted' in forgebornId:
+            # Find position of 'blighted' in the forgebornId
+            blighted_index = forgebornId.find('blighted')
+            forgebornId = forgebornId[:2] + forgebornId[blighted_index:]
+            forgeborn_index = 2
+        
+        forgebornName = forgebornId[forgeborn_index:-3].capitalize()
         cls, child_type = get_class_from_path(full_class_path)
         if not cls or not child_type:
             return

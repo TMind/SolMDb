@@ -15,7 +15,13 @@ from MongoDB.DatabaseManager import DatabaseManager
 from SortingManager import SortingManager
 from CustomGrids import ActionToolbar
 
+from IPython.display import display, Javascript
+
 # module global variables 
+
+# Create an Output widget for opening browser sites 
+out = widgets.Output()
+display(out)
 
 DEFAULT =  pd.DataFrame({
             'Type': ['Deck'],
@@ -1106,6 +1112,7 @@ deck_content_bar = create_styled_html(
 import webbrowser
 import logging
 import numpy as np
+import IPython
 from functools import partial
 from GraphVis import display_graph
 from datetime import datetime
@@ -1655,8 +1662,9 @@ class DynamicGridManager:
         action_toolbar.assign_callback('Solbind', self.solbind_request, grid_id=grid_id)
         #action_toolbar.assign_callback('Rename', partial(self.rename_fusion, grid_id))
         action_toolbar.assign_callback('Export', partial(self.save_dataframes_to_csv, grid_id))
-        action_toolbar.assign_callback('Open', partial(self.open_deck, grid_id))
-        action_toolbar.assign_callback('Graph', partial(self.show_graph, grid_id))
+        action_toolbar.assign_callback('Open', self.open_deck, grid_id=grid_id)
+        #action_toolbar.assign_callback('Open', partial(self.open_deck, grid_id))
+        action_toolbar.assign_callback('Graph', self.show_graph, grid_id=grid_id)
         #action_toolbar.add_widget('Generate Fusions', 'button', description = 'Generate Fusion Data', button_style = 'info')
         # TODO - Add callback for 'Generate Fusions' button
         #action_toolbar.assign_callback('Generate Fusions', partial(self.generate_dataframe, grid_id, 'fusion_stats'))
@@ -2005,12 +2013,23 @@ class DynamicGridManager:
     # TODO: Seperate these functions from the class 
         
     # Function to open the selected deck in the browser
-    def open_deck(self, grid_id, button):
+    def open_deck(self, grid_id):
         
+        # def window_open(self,url):
+        #     IPython.display.display(IPython.display.Javascript('window.open("{url}");'.format(url=url)))
+        #     return None
+            
         if not grid_id in self.grid_widget_states or not 'Selection' in self.grid_widget_states[grid_id]: 
             logging.warning(f"No selection found for grid_id '{grid_id}', skipping...")
             return
-        
+
+        def open_website(item_link):
+            # Use the output widget context to display the Javascript
+            with out:
+                out.clear_output()  # Clear previous output if desired
+                display(Javascript(f"window.open('{item_link}', '_blank');"))
+            return None
+            
        # Get selected items and filter row
         selected_items_list = self.grid_widget_states[grid_id]['Selection']
         filter_row = self.grid_widget_states[grid_id]['filter_row']
@@ -2035,13 +2054,15 @@ class DynamicGridManager:
                 item_link = f'https://solforgefusion.com/{url_collection_name}/{item_id}'
 
                 if utils.running_in_browser():
-                    webbrowser.open_new_tab(item_link)
+                    open_website(item_link)
                 else:
                     webbrowser.open(item_link)
             else:
                 logging.warning(f"Missing 'id' field for item: {item_doc}")
-
-    def show_graph(self, grid_id, button):
+                
+        return None
+    
+    def show_graph(self, grid_id):
         selected_items_list = self.grid_widget_states[grid_id]['Selection']        
         display_graph(selected_items_list)    
 
@@ -2052,7 +2073,7 @@ class DynamicGridManager:
         net_api.authenticate(username=username, password=password)
     
     # # Function for making a solbind request
-    def solbind_request(self, button=None, grid_id=None):
+    def solbind_request(self, grid_id=None):
         
         if not grid_id in self.grid_widget_states or not 'Selection' in self.grid_widget_states[grid_id]: 
             logging.warning(f"No selection found for grid_id '{grid_id}', skipping...")
@@ -2078,7 +2099,7 @@ class DynamicGridManager:
         net_api.post_solbind_request(deck_id)
 
 
-    def generate_dataframe(self, button, grid_id, tasks=None) :
+    def generate_dataframe(self, grid_id, tasks=None) :
         
         # Get the dataframe belonging to the grid_id 
         grid_name = f'filtered_grid_{grid_id}'
@@ -2090,7 +2111,7 @@ class DynamicGridManager:
         self.qm.add_grid(f'{grid_name}_generated', grid_df, options=self.qg_options)
         
 
-    def fuse_filtered(self, button=None, **kwargs):
+    def fuse_filtered(self, **kwargs):
         from DeckLibrary import DeckLibrary
         # Get the filtered items from the grid
         # Get grid_ids from active filters

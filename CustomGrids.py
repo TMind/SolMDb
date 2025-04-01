@@ -562,7 +562,7 @@ class ActionToolbar:
         else:
             raise ValueError(f"Widget '{name}' already exists in the toolbar.")
     
-    def assign_callback(self, widget_name, callback_function, event_type="click", **additional_args):
+    def assign_callback(self, widget_name, callback_function, *, event_type="click", **additional_args):
         """
         Assigns a callback function to a widget in the toolbar.
 
@@ -574,7 +574,7 @@ class ActionToolbar:
         if widget_name in self.widgets:
             widget = self.widgets[widget_name]
             if event_type == "click" and isinstance(widget, widgets.Button):
-                widget.on_click(lambda button: callback_function(button, **additional_args))
+                widget.on_click(lambda _: callback_function(**additional_args))
             elif event_type == "value" and hasattr(widget, "observe"):
                 widget.observe(lambda change: callback_function(change, **additional_args), names='value')
             elif event_type == "submit" and isinstance(widget, widgets.Text):

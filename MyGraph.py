@@ -196,7 +196,7 @@ class MyGraph:
         if not cls or not child_type:
             return
 
-        forgeborn_object = self.get_cached_child_object(full_class_path, forgebornName, field='name')
+        forgeborn_object = self.get_cached_child_object(full_class_path, forgebornName.lower(), field='name')
         if not forgeborn_object:
             #print(f"process_forgeborn: Child Object not found: {child_name}")
             return

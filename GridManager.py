@@ -8,7 +8,7 @@ try:      import qgridnext as qgrid
 except ImportError:    import qgrid
 import ipywidgets as widgets
 from GlobalVariables import global_vars as gv
-from GlobalVariables import rotate_suffix
+from GlobalVariables import rotate_suffix, DEFAULT_FILTER
 
 from DataSelectionManager import DataSelectionManager
 from MongoDB.DatabaseManager import DatabaseManager
@@ -23,42 +23,6 @@ from IPython.display import display, Javascript
 out = widgets.Output()
 display(out)
 
-DEFAULT =  pd.DataFrame({
-            'Type': ['Deck'],
-            'Name': [''],
-            'Modifier': [''],
-            'Creature': [''],
-            'Spell': [''],
-            'Forgeborn Ability': [''],
-            'Active': [True],
-            'Mandatory Fields': ['Name, Forgeborn Ability']
-        })
-
-TESTING =  pd.DataFrame({
-            'Type': ['Deck','Deck'],
-            'Name': ['Princesses of Bee and Growling','The Searching Wine Kings'],
-            'Modifier': ['',''],
-            'Creature': ['',''],
-            'Spell': ['',''],
-            'Forgeborn Ability': ['',''],
-            'Active': [True, True],
-            'Mandatory Fields': ['Name, Forgeborn Ability', 'Name, Forgeborn Ability']
-        })
-
-TESTING2 =  pd.DataFrame({
-            'Type': ['Deck'],
-            'Name': [''],
-            'Modifier': [''],
-            'Creature': ['Hantu; Darkshaper; Blight Witch; Direhound'],
-            'Spell': [''],
-            'Forgeborn Ability': [''],
-            'Active': [True],
-            'Mandatory Fields': ['Name, Modifier']
-        })
-
-DEFAULT_FILTER = DEFAULT
-
-
 class GridManager:
     EVENT_DF_STATUS_CHANGED = 'df_status_changed'
 
@@ -72,7 +36,7 @@ class GridManager:
         self.css_manager = gv.css_manager
         self.sorting_manager = SortingManager(gv.rotated_column_definitions)
         self.custom_css_class = self.css_manager.create_and_inject_css('filter_grids', rotate_suffix)
-        self.grid_initializer = GridInitializer(self.sorting_manager, self.css_manager, gv.rotated_column_definitions, self.custom_css_class, debug_output)
+        #self.grid_initializer = GridInitializer(self.sorting_manager, self.css_manager, gv.rotated_column_definitions, self.custom_css_class, debug_output)
 
 
     def add_grid(self, identifier, df, options=None, grid_type='qgrid'):
@@ -422,450 +386,6 @@ class PandasGrid(BaseGrid):
 
 
 import utils  
-class GridInitializer:
-    def __init__(self, sorting_manager, css_manager, rotated_column_definitions, custom_css_class, debug_output):
-        self.sorting_manager = sorting_manager
-        self.css_manager = css_manager
-        self.rotated_column_definitions = rotated_column_definitions
-        self.custom_css_class = custom_css_class
-        self.out_debug = debug_output
-
-    def initialize_grid_with_totals(self, df, grid_widget=None):
-        """
-        Helper function to create and initialize the qgrid widget with the given DataFrame.
-        This function calculates the sum of numeric columns, inserts the totals row at the top,
-        applies multi-column sorting based on sorting_info, and returns the qgrid widget.
-        """
-        with self.out_debug:
-            # Remove any existing totals row from the DataFrame (if it's already present)
-            data_rows = df[df['DeckName'] != 'Totals'].reset_index(drop=True)
-
-            # Use the utility function to calculate the totals row
-            totals_row = utils.get_totals_row(data_rows, self.rotated_column_definitions)
-
-            # Concatenate the totals row at the top of the DataFrame
-            updated_df = pd.concat([totals_row, data_rows], ignore_index=True)
-
-            # Apply sorting to the DataFrame based on sorting_info
-            if self.sorting_manager.sorting_info:
-                # Sort the columns by their sort_order and prepare them for sorting
-                columns_to_sort = [col for col in sorted(self.sorting_manager.sorting_info, key=lambda x: self.sorting_manager.sorting_info[x]['sort_order'])]
-                ascending_states = [self.sorting_manager.sorting_info[col]['ascending'] for col in columns_to_sort]
-                updated_df = self.sorting_manager.sort_dataframe(updated_df, columns_to_sort, ascending_states)
-
-                #print(f"Initializing grid with sorting. Columns to sort: {columns_to_sort}, Ascending states: {ascending_states}")
-
-            # Update the column definitions for sorted/filtered columns
-            new_column_definitions = gv.all_column_definitions.copy()
-            updated_column_definitions = self.css_manager.get_column_definitions_with_gradient(new_column_definitions, self.sorting_manager.sorting_info)
-
-            # Create the qgrid widget
-            widget = qgrid.show_grid(
-                updated_df,
-                show_toolbar=False,
-                column_definitions=updated_column_definitions,
-                grid_options={'forceFitColumns': False, 'filterable': True, 'sortable': True, 'minVisibleRows': 17, 'maxVisibleRows': 30}
-            )
-
-            # Apply CSS if needed
-            if self.css_manager.needs_custom_styles(widget, rotate_suffix):
-                self.css_manager.apply_css_to_widget(widget, self.custom_css_class)
-            else:
-                widget.remove_class(self.custom_css_class)
-
-            # Register event handlers for sorting and filtering
-            widget.on('sort_changed', self.sorting_manager.handle_sort_changed)
-
-            return widget
-
-from MyWidgets import EnhancedSelect, VBoxManager
-class FilterGrid:
-    """
-    Manages the grid for filtering data based on user-defined criteria.
-    """
-    def __init__(self, function_refresh):
-        """
-        Initializes a new instance of the FilterGrid class.
-
-        Args:
-            update_decks_display (function): The function to call when the filter grid is updated.
-        """
-        self.refresh_function = function_refresh
-        self.df = self.create_initial_dataframe()
-        self.qgrid_filter = self.create_filter_qgrid()
-        self.selection_box, self.selection_widgets, self.toggle_buttons_dict = self.create_selection_box()
-        DataSelectionManager.register_observer(self.update)
-
-    def create_filter_qgrid(self):
-        """
-        Creates the filter qgrid.
-
-        Returns:
-            qgrid.QGridWidget: The qgrid widget for filtering.
-        """
-        qgrid_filter = qgrid.show_grid(
-            self.df,
-            grid_options={'forceFitColumns': False, 'minVisibleRows': 4, 'maxVisibleRows': 5, 'enableColumnReorder': False},
-            column_definitions={'index': {'width': 50}, 'op1': {'width': 50}, 'op2': {'width': 50}},
-            show_toolbar=True
-        )
-        qgrid_filter.layout = widgets.Layout(height='auto')
-        qgrid_filter.on('row_added', self.grid_filter_on_row_added)
-        qgrid_filter.on('row_removed', self.grid_filter_on_row_removed)
-        qgrid_filter.on('cell_edited', self.grid_filter_on_cell_edit)        
-        return qgrid_filter
-
-    @staticmethod
-    def create_initial_dataframe():
-        """
-        Creates the initial dataframe for the filter grid.
-
-        Returns:
-            pandas.DataFrame: The initial dataframe.
-        """
-        
-        return DEFAULT_FILTER
-
-    def grid_filter_on_row_removed(self, event, widget):
-        """
-        Handles the 'row_removed' event for the filter grid.
-
-        Args:
-            event (dict): The event data.
-            widget (qgrid.QGridWidget): The filter grid widget.
-        """
-        if gv.out_debug:
-            with gv.out_debug:
-                print(f"FilterClass::grid_filter_on_row_removed() - Removing row {event['indices']} from filter grid")
-        
-        num_rows = len(widget.get_changed_df())
-        #print(f"Number of rows in filter grid: {num_rows}")
-        
-        if num_rows == 0:                                
-            df = pd.DataFrame({
-                'Type': ['Deck'],
-                'Name': [''],
-                'Modifier': [''],
-                'Creature': [''],                
-                'Spell': [''],            
-                'Forgeborn Ability': [''],                
-                'Active': [False],                
-                'Mandatory Fields': ['Name, Forgeborn Ability']
-            })
-            widget.df = df
-                          
-        widget.df = widget.get_changed_df()
-
-        self.refresh_function(event, widget)
-                
-
-    def grid_filter_on_row_added(self, event, widget, row_data=None):
-        """
-        Handles the 'row_added' event for the filter grid.
-
-        Args:
-            event (dict): The event data.
-            widget (qgrid.QGridWidget): The filter grid widget.
-        """
-        #if gv.out_debug:
-        #    with gv.out_debug:
-        logger.info(f"FilterClass::grid_filter_on_row_added() - Adding new row to filter grid")
-        
-        new_row_index = event['index']
-        df = widget.get_changed_df()
-
-        mandatory_fields = []
-
-        # Set the values for each column in the new row
-        for column in df.columns:
-            
-            if row_data is not None and not row_data.empty:
-                if column in row_data.columns:
-                    widget_value = row_data.iloc[0][column]
-            elif column in self.selection_widgets:
-                widget_value = self.selection_widgets[column].value
-            
-            if widget_value is not None:
-                logger.info(f"FilterClass::grid_filter_on_row_added() - Column: {column}, Value: {widget_value}")
-                # Special handling for the 'Forgeborn Ability' column
-                if column == 'Forgeborn Ability':
-                    fb_ability_list = [fb_ability.split(' : ')[1] for fb_ability in widget_value]
-                    value = '; '.join(fb_ability_list)
-                else:
-                    # Convert the widget value to string, handling different possible types
-                    if isinstance(widget_value, (list, set, tuple)):
-                        if len(widget_value) == 1:
-                            # If there's only one element in the list/set/tuple, use that element directly
-                            value = str(widget_value[0])
-                        else:
-                            # Join multiple values into a semicolon-separated string
-                            value = '; '.join([str(v) for v in widget_value])
-                    elif isinstance(widget_value, str):
-                        value = widget_value
-                    else:
-                        value = str(widget_value)
-
-                # Assign the flattened string value to the DataFrame
-                df.at[new_row_index, column] = value
-
-                # Check if the field is mandatory
-                if column in self.toggle_buttons_dict and self.toggle_buttons_dict[column].value:
-                    mandatory_fields.append(column)
-                    
-
-        # Always set the "Active" column to True for new rows    
-        df.at[new_row_index, 'Active'] = True
-
-        # Update the "Mandatory Fields" column
-        df.at[new_row_index, 'Mandatory Fields'] = ', '.join(mandatory_fields)
-
-        widget.df = df
-
-        logger.info(f"FilterClass::grid_filter_on_row_added() - Calling refresh function for index {new_row_index}")
-        
-        self.refresh_function(event, widget)
-
-    def grid_filter_on_cell_edit(self, event, widget):
-        """
-        Handles the 'cell_edited' event for the filter grid.
-
-        Args:
-            event (dict): The event data.
-            widget (qgrid.QGridWidget): The filter grid widget.
-        """
-        #if gv.out_debug:
-            #with gv.out_debug:
-                #print(f"FilterClass::grid_filter_on_cell_edit() - Editing cell in filter grid")
-        row_index, column_index = event['index'], event['column']
-        widget.df.loc[row_index, column_index] = event['new']
-        
-        widget.df = widget.df
-        #Print the edited row from the widget
-        #if gv.out_debug:
-            #with gv.out_debug:
-                #print(f"Edited row: {widget.df.loc[row_index]}")
-        rebuild = False
-        if column_index == 'Active' and widget.df.loc[row_index, 'Active']: rebuild = True
-        #self.refresh_function({'new': row_index, 'old': None, 'owner': 'filter'})
-        self.refresh_function(event, widget)
-
-    def update(self, event, widget):
-        """
-        Updates the filter grid based on changes in the data selection sets.
-        """
-        if gv.out_debug:
-            with gv.out_debug:
-                print(f"FilterClass::update() -> Updating filter grid with new data selection sets: {gv.data_selection_sets.keys()}")
-        self.selection_widgets['Data Set'].options = gv.data_selection_sets.keys()
-
-    
-    ### Selection Box Functions ###
-    def update_selection_content(self, change):
-        """
-        Updates the selection content based on changes in the widget values.
-
-        Args:
-            change (dict): The change notification data.
-        """
-        if (change['name'] == 'value' or change['name'] == 'selected_index') and change['new'] != change['old']:
-            for cardType in ['Modifier', 'Creature', 'Spell']:
-                widget = self.selection_widgets[cardType]
-                widget.options = [''] + get_cardType_entity_names(cardType)
-            
-        
-            dbDeckNames = gv.myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
-            # Extract the 'name' field from each result and sort alphabetically
-            sorted_deckNames = [''] + sorted([deck.get('name', '') for deck in dbDeckNames if 'name' in deck], key=lambda x: x.lower())
-            #self.selection_widgets['Name'].options = sorted_deckNames
-            self.selection_widgets['Name'].update_options_from_db(sorted_deckNames)
-            #print(f"DeckNames = {self.selection_widgets['Name'].options}")
-
-    def create_cardType_names_selector(self, cardType, options=None):
-        if options is None:
-            options = {}
-        layout_options = {
-            'width': '20%',  # Default width
-            'height': 'auto',
-            'align_items': 'center',
-            'justify_content': 'center',
-            'overflow': 'hidden',
-        }
-        # Update default options with any overrides from 'options'
-        layout_options.update(options)
-        cardType_entity_names = [''] + get_cardType_entity_names(cardType)
-        cardType_name_widget = EnhancedSelect(
-            options=cardType_entity_names,
-            toggle_description = cardType,
-            description='',
-            layout=widgets.Layout(**layout_options)
-        )
-        return cardType_name_widget
-
-    
-    # Create a function to use the EnhancedSelect widget
-    def create_deckName_selector(self):
-        deckNames = []
-        
-        # Query the database to find all deck names
-        dbDeckNames = gv.myDB.find('Deck', {}, {'name': 1})  # Get documents with only 'name' field
-        # Extract the 'name' field from each result
-        deckNames = [deck.get('name', '') for deck in dbDeckNames if 'name' in deck]
-        # Sort the deck names alphabetically
-        deckNames = sorted(deckNames, key=lambda x: x.lower())  # Sort case-insensitively
-
-        # Add an empty option to the beginning of the list
-        deckNames.insert(0, '')
-
-        # Debug statement to verify deckNames before creating the widget
-        #print(f"Deck names before initializing EnhancedSelect: {deckNames}")
-
-        # Create the enhanced SelectMultiple widget with search functionality
-        deckName_widget = EnhancedSelect(
-            options=deckNames,
-            description='',
-            toggle_description='Name',
-            layout=widgets.Layout(width='30%', height='auto', align_items='center', justify_content='center', overflow='hidden'),
-            toggle_default=True
-        )
-        return deckName_widget
-
-    # Function to create aligned selection box with labels
-    def create_selection_box(self):
-        # Define widgets with their layout settings
-        widgets_dict = {
-            'Type': EnhancedSelect( allow_multiple=False,
-                options=['Deck', 'Fusion'],
-                value='Deck',
-                description='',
-                toggle_description='Type',
-                toggle_default=True,
-                toggle_disable=True,
-                #layout=widgets.Layout(width='10%', border='1px solid cyan', align_items='center', justify_content='center')
-                layout=widgets.Layout(width='30%', height='auto', border='1px solid cyan', align_items='center', justify_content='center', overflow='hidden')
-            ),
-            'Name': self.create_deckName_selector(),
-            'Modifier': self.create_cardType_names_selector('Modifier', options={'border': '1px solid blue'}),
-            'Creature': self.create_cardType_names_selector('Creature', options={'border': '1px solid green'}),
-            'Spell': self.create_cardType_names_selector('Spell', options={'border': '1px solid red'}),
-            'Forgeborn Ability': EnhancedSelect(options=[''] + get_forgeborn_abilities(), description='', toggle_description='Forgeborn Ability', toggle_default=True, 
-                                                        layout=widgets.Layout(width='30%', height='auto', border='1px solid orange', align_items='center', justify_content='center', overflow='hidden')),
-        }
-
-        # Create widget row with all selection widgets
-        widget_row_items = [widgets_dict[key] for key in widgets_dict]
-        #widget_row = widgets.HBox(widget_row_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%', align_items='center', justify_content='flex-start', gap='5px'))
-
-        widget_row_items = [widget.get_widget() if isinstance(widget, EnhancedSelect) else widget for widget in widget_row_items]
-        widget_row = widgets.HBox(widget_row_items, layout=widgets.Layout(display='flex', flex_flow='row nowrap', width='100%', align_items='center', justify_content='flex-start', gap='5px'))
-
-
-        # Build the toggle button dictionary
-        toggle_buttons_dict = { key : widget.toggle_button for key, widget in widgets_dict.items() if hasattr(widget, 'toggle_button') and key != 'Type'}
-        
-        # Vertical box to hold both rows
-        selection_box = widgets.VBox([widget_row], layout=widgets.Layout(width='100%'))
-
-        return selection_box, widgets_dict, toggle_buttons_dict
-
-    def get_changed_df(self):
-        """
-        Returns the current DataFrame with any user changes.
-
-        Returns:
-            pandas.DataFrame: The changed dataframe.
-        """
-        return self.qgrid_filter.get_changed_df()
-
-    def get_widgets(self):
-        """
-        Returns the widgets associated with the filter grid.
-
-        Returns:
-            tuple: A tuple containing the selection box and the filter qgrid widget.
-        """
-        return self.selection_box, self.qgrid_filter
-
-
-    def merge_active_filters(self):
-        """
-        Merges multiple deck filters into a single fusion filter.
-        """
-        merged_filter = {
-            "Type": "Fusion",
-            "Active": True,
-            "Mandatory Fields": set()  # Use set to avoid duplicates
-        }
-
-        # Select only active filters from FilterGrid
-        df = self.get_changed_df()
-        filters = df.loc[df['Active'] == True]
-
-        # Iterate over active filters
-        for _, filter_row in filters.iterrows():
-            for field, value in filter_row.items():
-                if field in ["Type", "Active", "Mandatory Fields"] or not value:
-                    continue  # Skip meta fields and empty values
-
-                # Ensure field exists in merged_filter
-                if field not in merged_filter:
-                    merged_filter[field] = set()  # Use set to collect unique values
-
-                merged_filter[field].add(value)
-                merged_filter["Mandatory Fields"].add(field)  # Track mandatory fields
-
-        # Convert sets back to OR-separated strings
-        for field in list(merged_filter.keys()):
-            if field in ["Type", "Active", "Mandatory Fields"]:
-                continue  # Skip meta fields
-            merged_filter[field] = ":".join(merged_filter[field])
-
-        # Convert Mandatory Fields set to a comma-separated string
-        merged_filter["Mandatory Fields"] = ", ".join(merged_filter["Mandatory Fields"])
-
-        return merged_filter
-
-
-def get_cardType_entity_names(cardType):
-    """
-    Retrieves the names of entities that match the specified card type.
-
-    Args:
-        cardType (str): The type of card.
-
-    Returns:
-        list: A list of entiy names that match the card type.
-    """
-    commonDB = DatabaseManager('common')
-    cardType_entities = commonDB.find('Entity', {"attributes.cardType": cardType})
-    cardType_entities_names = [entity['name'] for entity in cardType_entities]
-    
-    # If the user has a database, filter the cardType_entities_names to only include cards that are in the user's database
-    cards = gv.myDB.find('Card', {})
-    cardNames = [card.get('title', card.get('name', '')) for card in cards]
-    cardType_entities_names = [name for name in cardType_entities_names if any(name in cardName for cardName in cardNames)]
-    cardType_entities_names.sort()
-    return cardType_entities_names
-
-def get_forgeborn_abilities():
-    """
-    Retrieves the names of forgeborn abilities.
-
-    Returns:
-        list: A list of forgeborn ability names.
-    """
-    commonDB = DatabaseManager('common')
-    forgeborns = commonDB.find('Forgeborn', {})
-    forgeborn_abilities_list = [forgeborn['abilities'] for forgeborn in forgeborns]
-    ability_names = [ f"{id[5:-5].capitalize()} : {name}" for abilities in forgeborn_abilities_list for id, name in abilities.items() if "Fraud" not in name]
-    # Cut out the forgeborn ability prefix 'C<number> - '
-    ability_names = [re.sub(r'C\d+ - ', '', name) for name in ability_names]
-    # Remove duplicates
-    ability_names = list(set(ability_names))
-    #print(f"Found {len(ability_names)} forgeborn abilities : {ability_names}")
-    ability_names.sort()
-    return ability_names
-
-
 import re
 
 def apply_filter_to_dataframe(df_to_filter, filter_df):
@@ -1022,7 +542,7 @@ def apply_filter_to_dataframe(df_to_filter, filter_df):
         # Apply optional fields (at least one must match)
         optional_results = []
         for column in filter_row.index:
-            if column not in mandatory_fields and column not in ['Type', 'Mandatory Fields', 'Active'] and isinstance(filter_row[column], str) and filter_row[column]:
+            if column not in mandatory_fields and column not in ['Type', 'Mandatory Fields', 'Active', 'ID'] and isinstance(filter_row[column], str) and filter_row[column]:
                 filter_step = determine_filter_config(column, filter_row, filter_row[column]) 
                 current_filter_results = apply_filter(df_filtered, filter_step)
                 optional_results.append(current_filter_results)  # Duplicates will be removed later 
@@ -1112,7 +632,6 @@ deck_content_bar = create_styled_html(
 import webbrowser
 import logging
 import numpy as np
-import IPython
 from functools import partial
 from GraphVis import display_graph
 from datetime import datetime
@@ -1120,9 +639,30 @@ from datetime import datetime
 import FieldUnifier
 from DataFrameGenerator import DataFrameGenerator
 from DBQueryHelper import fetch_filtered_documents
+from DataSelectionManager import Observable
+from FilterGrid import FilterGrid
+from MyWidgets import VBoxManager
 
-logging.basicConfig(level=logging.WARNING)
+from LogLevel import register_logger  # Import the registration function
+
+# Create a logger for this module. Using __name__ helps give it a unique identifier.
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)  # Set the level as desired
+
+# Register this logger in the central registry.
+register_logger(__name__, logger)
+
+# Prevent logs from propagating to the root logger (which is set at WARNING)
+logger.propagate = False
+
+# Only add a handler if this logger does not already have one.
+if not logger.handlers:
+    #handler = logging.StreamHandler()
+    handler = logging.FileHandler("app_gridmanager.log")
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 class DynamicGridManager:
 
@@ -1137,9 +677,11 @@ class DynamicGridManager:
         self.sorting_info = {}
         self.css_manager = gv.css_manager
         self.custom_css_class = self.css_manager.create_and_inject_css('deck_content', rotate_suffix)        
+        
+        # Central grid filter widget info 
         self.grid_widget_states = {}
+        
         self.refresh_needed = False  # Flag to indicate whether refresh is needed
-    
     
         # Toolbar         
         """
@@ -1187,7 +729,17 @@ class DynamicGridManager:
         """
         self.refresh_needed = needed
         logging.info(f"Refresh needed set to {needed}")
-        
+    
+    # Helper functions to manage the grid widget states
+    def update_filter_state(self, grid_identifier, new_filter):
+        # Update the central filter criteria for the given grid_identifier.
+        self.grid_widget_states[grid_identifier]['filter_row'] = new_filter
+        # Notify all observers (grids) about the update.
+        self.filter_observable.notify_observers(grid_identifier, new_filter)
+
+    def register_grid_as_observer(self, grid_identifier, callback):
+        # Each grid provides a callback to update its UI when the filter changes.
+        self.filter_observable.add_observer(callback)
         
     def apply_filters(self, widget_states):
         
@@ -1196,7 +748,12 @@ class DynamicGridManager:
         data_set = widget_states['data_set']
         filter_row = widget_states['filter_row']
         data_type = filter_row['Type']
-        filtered_list = fetch_filtered_documents(data_type,  filter_df=pd.DataFrame([filter_row]), final_format='DF', expanded_field='FrameData')
+        match_titles = True
+        filtered_dict = fetch_filtered_documents(data_type,  filter_df=pd.DataFrame([filter_row]), final_format='DF', expanded_field='FrameData', match_titles=match_titles)
+        if match_titles and 'documents' in filtered_dict:
+            filtered_list = filtered_dict['documents']
+        else:
+            filtered_list = filtered_dict
         filtered_df = convert_to_dataframe(filtered_list)
         data_set_columms = FieldUnifier.generate_final_fields(info_level, data_set, data_type, rename_fields_to='df')
         #filtered_df = self.DataFrameGenerator.generate_statistics_dataframe(filtered_df, data_set_columms, data_type)
@@ -1407,7 +964,7 @@ class DynamicGridManager:
                     specific_index = specific_index.index.tolist()
 
                 # Check for empty or malformed selections
-                if isinstance(specific_index, (list, pd.DataFrame)) and not specific_index:
+                if isinstance(specific_index, (list, pd.DataFrame)) and specific_index is None:
                     logger.info("Received empty selection; no grids to update.")
                     return
 
@@ -1522,26 +1079,87 @@ class DynamicGridManager:
         toolbar_widget = self.create_toolbar(grid_identifier)
         
         # Create a single-row DataFrame and set a custom index label
-        filter_row_df = pd.DataFrame([filter_row])
-        
         filter_row_widget = qgrid.show_grid(
             pd.DataFrame([filter_row]), 
             show_toolbar=False,
             grid_options={'forceFitColumns': True, 'filterable': False, 'sortable': False, 'editable': True}
         )
         filter_row_widget.layout = widgets.Layout(height='70px')
+               
+        # Debug: Print the current DataFrame and its index before updating.
+        logging.debug("Before assignment:")
+        logging.debug("DataFrame:\n", filter_row_widget.df)
+        logging.debug("Index:", filter_row_widget.df.index.tolist())
         
+        # Capture the new grid's unique id.
+        new_grid_id = id(filter_row_widget)
+        logging.debug(f"Computed new_grid_id: {new_grid_id}")
+        
+        # Use the custom index (extracted from grid_identifier) to update the 'ID' column.
+        row_index = int(grid_identifier.split('_')[-1])
+        
+        # Make a copy of the DataFrame and update the 'ID' column.
+        df_copy = filter_row_widget.df.copy()
+        if 'ID' not in df_copy.columns:
+            df_copy['ID'] = ""  # Create the column if it doesn't exist.
+        df_copy.at[row_index, 'ID'] = new_grid_id
+
+        # Debug: Print the DataFrame after assignment.
+        logging.debug("After assignment:")
+        logging.debug("DataFrame:\n", df_copy)
+        logging.debug("Index:", df_copy.index.tolist())
+        
+        # Set the updated DataFrame back into the widget.
+        filter_row_widget.df = df_copy
+        self.filterGridObject.update_filter_row_id(row_index, new_grid_id)
+                
         result_detail_widget = self.create_summary_widget(grid.main_widget.get_changed_df(), filter_row)
 
-        # Add event listener for cell edits in filter_row_widget
-        def on_filter_row_change(event, qgrid_widget=filter_row_widget):
-            # Only trigger update if there's a significant change
-            if event['new'] != event['old']:
-                print(f"Cell edited in filter_row_widget for grid '{grid_identifier}': {event}")  # Debug statement                
-                self.refresh_gridbox(event, qgrid_widget)
+        def make_on_filter_row_change(qgrid_widget):
+            def on_filter_row_change(event, qg_widget = qgrid_widget):
+                logger.debug(f"Event received: {event}")
+                if event['new'] != event['old']:
+                    try:
+                        # Log detailed debugging info
+                        logger.debug(f"Attempting to update row {event['index']} column {event['column']}")
+                        logger.debug(f"DataFrame index before update: {qg_widget.df.index.tolist()}")
+                        logger.debug(f"DataFrame columns: {qg_widget.df.columns.tolist()}")
+                        
+                        # Confirm the row exists
+                        if event['index'] not in qg_widget.df.index:
+                            logger.error(f"Row index {event['index']} not found. DataFrame index: {qg_widget.df.index.tolist()}")
+                            return
+                        
+                        # Print the row before updating
+                        logger.debug("Row before update: %s", qg_widget.df.loc[event['index']])
+                        
+                        # Use the event's index directly
+                        qg_widget.df.at[event['index'], event['column']] = event['new']
+                        # Create a completely new DataFrame to force re‑rendering
+                        new_df = qg_widget.df.copy()
+                        qg_widget.df = new_df
+                        
+                        # Optionally print the updated row
+                        logger.debug("Row after update: %s", qg_widget.df.loc[event['index']])
+                        
+                        # Update central filter, tagging event appropriately
+                        if not ('source' in event and event['source'] == 'central'):
+                            event['source'] = 'local'
+                            self.filterGridObject.grid_filter_on_cell_edit(event, self.filterGridObject.qgrid_filter)
+                    except Exception as e:
+                        logger.exception("Exception in on_filter_row_change:")
+            return on_filter_row_change
 
-        # Attach only one event listener to avoid redundancy
+        # Create the callback function for the filter row change
+        on_filter_row_change = make_on_filter_row_change(filter_row_widget)
+
+        # Register the new grid's callback as an observer
+        logger.debug(f"New filter widget id: {id(filter_row_widget)}")
+        self.filterGridObject.add_filter_observer(grid_identifier, on_filter_row_change)
+        
+        # Attach the event listener if not already attached.
         if not hasattr(filter_row_widget, '_event_listener_attached'):
+            logger.debug(f"Attaching event listener to filter_row_widget {grid_identifier} with id {id(filter_row_widget)}.")
             filter_row_widget.on('cell_edited', on_filter_row_change)
             filter_row_widget._event_listener_attached = True
 
@@ -1600,7 +1218,8 @@ class DynamicGridManager:
             
             # Retrieve the filter row from the filter grid
             filter_row = self.filterGridObject.get_changed_df().loc[int(index)]
-                    
+
+        # Grid Widget State -> Get actual filter row                    
         grid_state = self._get_or_update_grid_state(grid_identifier, filter_row)
         
         if not grid_state:
@@ -1642,14 +1261,14 @@ class DynamicGridManager:
             logging.info(f"Updating grid '{grid_identifier}' with filtered data")
             grid = self.qm.grids[grid_identifier]
             self.qm.update_dataframe(grid_identifier, filtered_df)
-            logging.info(f"Grid '{grid_identifier}' updated with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")
+            logging.info(f"Grid '{grid_identifier} ({id(grid.main_widget)}) ' updated with {len(filtered_df)} rows and {len(filtered_df.columns)} columns")
         
         # Check if grid widget exists already in VBoxGrids
-        if not self.VBoxGrids.has_widget(grid_identifier):
+        index = int(grid_identifier.split('_')[-1])
+        if not self.VBoxGrids.has_widget(index):
             
             # Construct the UI for this grid using the helper function            
             new_widget = self.construct_grid_ui(grid_identifier, filter_row, grid)
-            index = grid_identifier.split('_')[-1]
             self.VBoxGrids.add_widget(new_widget, index)
             logging.info(f"WidgetBox constructed for index '{index}' with grid '{grid_identifier}'")            
                   
@@ -1730,7 +1349,7 @@ class DynamicGridManager:
 
         # Add one summary column per filter column (excluding metadata fields)
         for column in filter_row.index:
-            if column in ['Type', 'Active', 'Mandatory Fields']:
+            if column in ['Type', 'Active', 'Mandatory Fields', 'ID']:
                 continue
 
             value = filter_row[column]
@@ -1886,7 +1505,13 @@ class DynamicGridManager:
                 active_filters.append(filter_row)
 
         return active_filters
-       
+    
+    def on_filter_change(self,updated_grid_id, new_filter):
+        # This callback is triggered when the central filter state is updated.
+        # Check if the update is relevant to the current grid.
+        print(f"Grid {updated_grid_id} updated with new filter: {new_filter}")
+        self.update_or_refresh_grid(updated_grid_id, pd.Series(new_filter))
+    
     def get_selected_grid_items(self, event, widget):
         """
         Retrieves the currently selected 'Name' items from all main_qgrid_widgets within the GridspecLayout.
@@ -2159,7 +1784,7 @@ class DynamicGridManager:
 
         # Refresh the QGrid display if needed
         #self.refresh_gridbox(event, button)
-        new_grid_id = len(grid_ids)
+        new_grid_id = max(grid_id for grid_id in grid_ids) + 1 if grid_ids else 0
         self.update_or_refresh_grid(f"filtered_grid_{new_grid_id}")
         
 

@@ -9,7 +9,7 @@ from CustomCss import CSSManager
 from GSheetsClient import GoogleSheetsClient
 from NetApi import NetApi
 
-default_logging_level = logging.INFO
+default_logging_level = logging.WARNING
 
 # Configure logging
 logging.basicConfig(level=default_logging_level,
@@ -22,6 +22,58 @@ logging.basicConfig(level=default_logging_level,
 # Suppress pymongo debug logs
 logging.getLogger('pymongo').setLevel(logging.WARNING)
 logging.getLogger('qgrid').setLevel(logging.WARNING)
+
+# Default Filter 
+DEFAULT =  pd.DataFrame({
+            'Type': ['Deck'],
+            'Name': [''],
+            'Modifier': [''],
+            'Creature': [''],
+            'Spell': [''],
+            'Forgeborn Ability': [''],
+            'Active': [True],
+            'Mandatory Fields': ['Name, Forgeborn Ability'],            
+            'ID': ['']
+        })
+
+TESTING =  pd.DataFrame({
+            'Type': ['Deck','Deck'],
+            'Name': ['Princesses of Bee and Growling','The Searching Wine Kings'],
+            'Modifier': ['',''],
+            'Creature': ['',''],
+            'Spell': ['',''],
+            'Forgeborn Ability': ['',''],
+            'Active': [True, True],
+            'Mandatory Fields': ['Name, Forgeborn Ability', 'Name, Forgeborn Ability'],
+            'ID': ['','']
+        })
+
+TESTING2 =  pd.DataFrame({
+            'Type': ['Deck'],
+            'Name': [''],
+            'Modifier': [''],
+            'Creature': ['Hantu; Darkshaper; Blight Witch; Direhound'],
+            'Spell': [''],
+            'Forgeborn Ability': [''],
+            'Active': [True],
+            'Mandatory Fields': ['Name, Modifier'],
+            'ID': ['']
+        })
+
+TESTING3 =  pd.DataFrame({
+            'Type': ['Deck','Deck'],
+            'Name': ['',''],
+            'Modifier': ['',''],
+            'Creature': ['Grimgaunt Predator', ''],
+            'Spell': ['','Draconic'],
+            'Forgeborn Ability': ['',''],
+            'Active': [True, True],
+            'Mandatory Fields': ['Name, Creature', 'Name, Spell'],
+            'ID': ['','']
+        })
+
+DEFAULT_FILTER = TESTING3
+
 
 class GlobalVariables:
   
@@ -84,6 +136,7 @@ class GlobalVariables:
         self.rotate_suffix = rotate_suffix
         self.display_data = {}
         self.user_dataframes = {}
+        self.betrayer_statistics = {}
         
         self._myDB = None
         self.fs = None 
@@ -457,6 +510,7 @@ non_rotated_column_defs = {
     'name':             {'width': 250},
     'DeckName':         {'width': 250},
     'Type':             {'width': 60},
+    '#':                {'width': 25},
     'Deck A':           {'width': 250},
     'Deck B':           {'width': 250},
     'id':               {'width': 200},
@@ -756,7 +810,7 @@ data_selection_sets = {
 
 
 GLOBAL_COLUMN_ORDER = [
-    'index', 'Type', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B','id',
+    'index', 'Type', '#', 'Name', 'name', 'DeckName', 'Deck A', 'Deck B','id',
     'registeredDate', 'pExpiry', 'CreatedAt', 'UpdatedAt', 'digital', 'Digital', 'tags', 'nft', 'price', 'owner',
     'xp', 'elo', 'level', 'deckScore', 'Score', 'deckRank', 'Rank', 'rarity',
     'cardSetNo', 'Set', 'faction', 'Faction', 'crossFaction', 'CardTitles', 

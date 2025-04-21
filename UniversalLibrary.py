@@ -146,7 +146,10 @@ class UniversalLibrary:
                         except ValueError:  
                             value = 0 
                             
-                    if value > 0:                                                                
+                    if value > 0:        
+                            if tag == 'Activate' and 'cardSubType' in abilities and abilities['cardSubType'] == 'Exalt':
+                                # Skip the Activate interface for Exalt cards
+                                continue                                       
                             interface_data = InterfaceData(tag, value, vrange)
                             Interface(interface_data).save()        
                             interfaces[tag] = value 

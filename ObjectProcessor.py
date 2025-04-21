@@ -104,12 +104,25 @@ class ObjectProcessor:
 
             crossFaction_betrayer = bool(crossFaction) and crossFaction != faction
 
-            if betrayer is not None:
+            if crossFaction_betrayer:
+                betrayers.append(card['name'])
+            elif betrayer is not None:
                 if betrayer:  
                     betrayers.append(card['name'])
-            elif crossFaction_betrayer:
-                betrayers.append(card['name'])
 
+            # Check if betrayer information is the same for both variable betrayer and crossFaction
+            # If both are present, they should be the same
+            # Make global statistic for all cards 
+            
+            if betrayer is not None and crossFaction_betrayer:
+                if betrayer != crossFaction_betrayer:
+                    gv.betrayer_statistics[card['name']] = {
+                        'betrayer': betrayer,
+                        'crossFaction': crossFaction_betrayer
+                    }
+                    # Log the mismatch
+                    logging.warning(f"Betrayer information mismatch for card: {card['name']}")
+            
         object.data.Betrayers = ', '.join(betrayers)
         object.data.SolBinds  = ', '.join(solbinds.get(k, '') for k in ['Solbind', 'solbindId1', 'solbindId2'] if k in solbinds)
 

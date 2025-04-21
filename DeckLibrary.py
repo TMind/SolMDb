@@ -172,6 +172,9 @@ class DeckLibrary:
                     result = self.dbmgr.upsert_many('Deck', deckDataList)                
                     print(f"Upserted {result} new decks.")
 
+        # Print the betrayer statistics         
+        print(gv.betrayer_statistics)
+
         if fusions_data:
             
             def extract_fb_ids_and_factions(my_decks, fusion_data):
@@ -266,11 +269,13 @@ class DeckLibrary:
                 if deck_a in validDeckNames and deck_b in validDeckNames
             }
 
-            # Add reverse pairs
-            newCombinations |= {(b, a) for a, b in newCombinations}
+            reverse_pairs = False
+            if reverse_pairs :
+                # Add reverse pairs
+                newCombinations |= {(b, a) for a, b in newCombinations}  
 
-            # Convert back to a list
-            newCombinations = list(newCombinations)
+                # Convert back to a list
+                newCombinations = list(newCombinations)
 
         # **Remove already existing fusions**
         newCombinations = [pair for pair in newCombinations if pair not in existing_fusions]

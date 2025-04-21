@@ -111,6 +111,7 @@ class VBoxManager:
         Returns:
             bool: True if a widget exists for the index, False otherwise.
         """
+        # Extract index from the filter_row_id
         return filter_row_index in self.vboxes
 
     def add_widget(self, widget, index):

@@ -23,6 +23,7 @@ import pandas as pd
 from GridManager import GridManager, DynamicGridManager
 from CustomGrids import TemplateGrid
 from helptext import guide_text
+import LogLevel
 from DisplayManager import get_count_display_widget, update_display_data, update_sheet_stats
 
 from icecream import ic
@@ -795,8 +796,10 @@ def setup_interface():
     toggle_dropdown_pairs = [widgets.HBox([factionToggles[i], dropdowns[i]]) for i in range(len(factionToggles))]
 
     # Create a Checkbox widget to toggle debugging
-    debug_toggle = create_debug_widget()
-    debug_toggle.observe(handle_debug_toggle, 'value')
+    #debug_toggle = create_debug_widget()
+    debug_widget = LogLevel.get_debug_tab()
+
+    #debug_toggle.observe(handle_debug_toggle, 'value')
     
     # Create an instance of the manager
     grid_manager = DynamicGridManager(qg_options, gv.out_debug)
@@ -867,7 +870,7 @@ def setup_interface():
     db_tab = widgets.VBox([db_helper, db_accordion, get_count_display_widget(), username_widget, loadSelected, button_load, db_list])
     deck_tab = widgets.VBox([deck_helper, deck_accordion, *grid_manager.get_ui()])
     template_tab = widgets.VBox([template_helper, templateGrid.get_ui()])
-    debug_tab = widgets.VBox([debug_helper, debug_toggle, gv.out_debug])
+    debug_tab = widgets.VBox([debug_helper, debug_widget, gv.out_debug])
     central_frame_tab = widgets.VBox([central_frame_helper, gv.central_frame_output])
 
     # Create the Tab widget with children    

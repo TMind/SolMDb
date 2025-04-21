@@ -1,6 +1,8 @@
 import logging
 import json
 import re
+
+from numpy import mat
 from GlobalVariables import global_vars as gv
 from FieldUnifier import generate_final_fields, DF_TO_DB_FIELDS, DB_TO_DF_FIELDS, CONVERSION_TABLE_2DF, COMPONENTS
 from MongoDB.DatabaseManager import DatabaseManager
@@ -307,7 +309,7 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
     missing_fields = set(projection_fields)  # Assume all fields are missing initially
     results = []
 
-    matched_titles_set = set()
+    matched_titles_overall = set()
     
     # Step 5: Execute database query
     try:
@@ -339,19 +341,29 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
                 card_names = [name.strip() for name in card_titles.split(";") if name.strip()]
                 
                 # Match user-defined substrings (from query config)
+                matched_titles_list = []
                 for column, value in filter_df.iloc[0].items():
-                    if column in ['Modifier', 'Creature', 'Spell'] and isinstance(value, str):
+                    if column in ['Modifier', 'Creature', 'Spell'] and isinstance(value, str) and value.strip():
                         substrings = re.split(r'\s*[|:;,+&-]\s*', value)  # Split on logical operators
-                        for substring in substrings:
-                            matched_titles_set.update(
-                                [title for title in card_names if re.search(rf'\b{re.escape(substring)}\b', title, re.IGNORECASE)]
-                            )
+                        
+                        # Combine substrings into a single regex: "Necromancer|Darkheart|..."
+                        pattern = re.compile("|".join(re.escape(s) for s in substrings), re.IGNORECASE)
+
+                        matched_titles = [title for title in card_names if pattern.search(title)]
+                        if matched_titles:
+                            matched_titles_list.extend(matched_titles)
+                            matched_titles_overall.update(matched_titles)
+
+                document['#'] = len(matched_titles_list)
+                document['matchedTitles'] = matched_titles_list
 
             # if results:
-            #     logging.debug("Sample MongoDB Output:")
-            #     logging.debug(json.dumps(results[:2], indent=4))
-
+            #      logging.debug("Sample MongoDB Output:")
+            #      logging.debug(json.dumps(results[:2], indent=4))
             results.append(document)
+
+            # (optional) sort after gathering all documents
+            results.sort(key=lambda doc: doc.get("matchCount", 0), reverse=True)
 
             # Determine missing fields for this document individually
             missing_fields = set(projection_fields) - set(document.keys())
@@ -364,12 +376,12 @@ def fetch_filtered_documents(collection_name, filter_df=None, filter_query=None,
         logging.error(f"Error fetching documents from {collection_name}: {e}")
         return []
     
-    if matched_titles_set:
-        logging.debug(f"Matched titles: {matched_titles_set}")
+    if matched_titles_overall:
+        logging.debug(f"Matched titles: {matched_titles_overall}")
             
         return {
             "documents": results,
-            "matched_titles": sorted(matched_titles_set)
+            "matched_titles": sorted(matched_titles_overall)
         }
         
     return results

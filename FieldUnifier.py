@@ -2,7 +2,7 @@ from GlobalVariables import GLOBAL_COLUMN_ORDER
 
 # Define fields that apply to all items (both Deck and Fusion)
 BASIC_FIELDS = [
-    'Type', 'name', 'faction', 'digital', 'cardSetNo', 'Forgeborn', 'FB2', 'FB3', 'FB4',
+    'Type', '#', 'name', 'faction', 'digital', 'cardSetNo', 'Forgeborn', 'FB2', 'FB3', 'FB4',
     'Betrayers', 'SolBinds', 'Spells', 'Exalt'
 ]
 
